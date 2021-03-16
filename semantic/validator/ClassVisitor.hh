@@ -2,6 +2,7 @@
 
 #include <ymir/semantic/validator/Visitor.hh>
 #include <ymir/semantic/generator/type/_.hh>
+#include <ymir/semantic/validator/FunctionVisitor.hh>
 
 namespace semantic {
 
@@ -10,6 +11,10 @@ namespace semantic {
 	class ClassVisitor {
 
 	    Visitor & _context;
+
+	    FunctionVisitor _funcVisitor;
+
+	    static std::list <bool> __fast_validation__;
 
 	private :
 
@@ -38,13 +43,15 @@ namespace semantic {
 
 	    /**
 	     * Validate the fields of the class
+	     * If !inModule, then the validation will be fast
 	     */
-	    void validateFields (const semantic::Symbol & cls, const generator::Generator & ancestor, std::list <Ymir::Error::ErrorMsg> & errors);
+	    void validateFields (const semantic::Symbol & cls, const generator::Generator & ancestor, bool inModule, std::list <Ymir::Error::ErrorMsg> & errors);
 
 	    /**
 	     * Validate the fields directly declared inside the class (not the ancestor fields)
+	     * If !inModule, then the validation will be fast
 	     */
-	    std::vector <generator::Generator> validateLocalFields (const semantic::Symbol & cls, std::list <Ymir::Error::ErrorMsg> & errors);
+	    std::vector <generator::Generator> validateLocalFields (const semantic::Symbol & cls, bool inModule, std::list <Ymir::Error::ErrorMsg> & errors);
 
 	    /**
 	     * Verify that there is no collisions with the fields of the ancestors
@@ -144,27 +151,6 @@ namespace semantic {
 	     */
 	    void validateInnerClass (const semantic::Symbol & cls, std::list <Ymir::Error::ErrorMsg> & errors);
 	    
-	    /**
-	     * Validate a constructor of a class (complete validation)
-	     * Insert the validated frame inside the validated frame of the module (for generation)
-	     */
-	    void validateConstructor (const semantic::Symbol & sym, const generator::Generator & classType_, const generator::Generator & ancestor, const std::vector <generator::Generator> & ancestorFields);
-
-	    /**
-	     * Validate the pre construction elements (super or self call, and field initialization)
-	     */
-	    generator::Generator validatePreConstructor (const semantic::Constructor & cs, const generator::Generator & classType, const generator::Generator & ancestor, const std::vector<generator::Generator> & ancestorFields);
-
-	    /**
-	     * Verify that there is no loop of constructors
-	     */
-	    void verifyConstructionLoop (const lexing::Word & location, const generator::Generator & call);
-	    
-	    /**
-	     * Validate a metho of a class (complete validation)
-	     * Insert the validated frame inside the validated frame of the module (for generation)
-	     */
-	    void validateMethod (const semantic::Function & func, const generator::Generator & classType_, bool isWeak = false);
 
 
 	};

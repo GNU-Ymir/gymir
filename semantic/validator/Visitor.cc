@@ -15,6 +15,7 @@
 #include <ymir/semantic/validator/MatchVisitor.hh>
 #include <ymir/semantic/validator/ClassVisitor.hh>
 #include <ymir/semantic/validator/MacroVisitor.hh>
+#include <ymir/semantic/validator/FunctionVisitor.hh>
 #include <ymir/semantic/declarator/Visitor.hh>
 #include <ymir/semantic/generator/Mangler.hh>
 #include <ymir/utils/map.hh>
@@ -139,15 +140,23 @@ namespace semantic {
 		
 		
 		s_of (semantic::TemplateSolution, sol) {
-		    if (insertTemplateSolution (sym)) {
-			//println ("No template solution : ", sol.getSolutionName ());
-			std::list <Ymir::Error::ErrorMsg> errors;			
+		    std::list <Ymir::Error::ErrorMsg> errors;			
+		    if (insertTemplateSolution (sym, errors)) {
+			if (errors.size () != 0) {
+			    if (!global::State::instance ().isVerboseActive ()) {
+				Ymir::Error::occur (sol.getName (), ExternalError::get (INCOMPLETE_TEMPLATE), sol.getSolutionName ());
+			    }
+			    
+			    throw Error::ErrorList {errors};
+			}
+			
 			pushReferent (sym, "validate::tmpl");
 			try {
-			    validateTemplateSolution (sol);
+			    validateTemplateSolution (sym);
 			} catch (Error::ErrorList list) {
 			    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 			    removeTemplateSolution (sym); // If there is an error, we don't wan't to store the template solution anymore
+			    insertErrorTemplateSolution (sym, errors);			    
 			} 
 			
 			popReferent ("validate::tmpl");
@@ -250,14 +259,14 @@ namespace semantic {
 	    return value;
 	}
 	
-	void Visitor::validateTemplateSolution (const semantic::TemplateSolution & sol) {
+	void Visitor::validateTemplateSolution (const semantic::Symbol & sol) {
 	    Visitor::__TEMPLATE_NB_RECURS__ += 1;
 	    std::list <Error::ErrorMsg> errors;
 	    try {
 		if (Visitor::__TEMPLATE_NB_RECURS__ >= VisitConstante::LIMIT_TEMPLATE_RECUR) {
 		    Ymir::Error::occur (sol.getName (), ExternalError::get (TEMPLATE_RECURSION), Visitor::__TEMPLATE_NB_RECURS__);
 		}
-		const std::vector <Symbol> & syms = sol.getAllLocal ();
+		const std::vector <Symbol> & syms = sol.to <TemplateSolution> ().getAllLocal ();
 		for (auto & it : syms) {
 		    validate (it);
 		}
@@ -279,7 +288,15 @@ namespace semantic {
 	    
 	    auto classType = sol.getReferent ().to <semantic::Class> ().getGenerator ().to <generator::Class> ().getClassRef ();
 	    
-	    if (insertTemplateSolution (sol)) { // If it is the first time the solution is presented
+	    if (insertTemplateSolution (sol, errors)) { // If it is the first time the solution is presented
+		if (errors.size () != 0) {
+		    if (!global::State::instance ().isVerboseActive ()) {
+			Ymir::Error::occur (sol.getName (), ExternalError::get (INCOMPLETE_TEMPLATE), sol.to <TemplateSolution> ().getSolutionName ());
+		    }
+			    
+		    throw Error::ErrorList {errors};
+		}
+		
 		pushReferent (sol, "validateTemplateSolutionMethod");
 		enterForeign ();
 		try {
@@ -288,7 +305,7 @@ namespace semantic {
 			Ymir::Error::occur (sol.getName (), ExternalError::get (TEMPLATE_RECURSION), Visitor::__TEMPLATE_NB_RECURS__);
 		    }
 
-		    auto visitor = ClassVisitor::init (*this);
+		    auto visitor = FunctionVisitor::init (*this);
 		    visitor.validateMethod (syms [0].to <semantic::Function> (), classType);
 		} catch (Error::ErrorList list) {
 		    static std::list <Error::ErrorMsg> __last_error__;
@@ -310,6 +327,7 @@ namespace semantic {
 		    
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    removeTemplateSolution (sol); // If there is an error, we don't want to store the solution anymore
+		    insertErrorTemplateSolution (sol, errors);		     
 		}
 		
 		Visitor::__TEMPLATE_NB_RECURS__ -= 1;
@@ -327,7 +345,7 @@ namespace semantic {
 	    pushReferent (syms [0], "validateTemplateSolutionMethod");
 	    Generator proto (Generator::empty ());
 	    try {
-		proto = this-> validateMethodProto (syms [0].to <semantic::Function> (), classType, Generator::empty ());
+		proto = FunctionVisitor::init (*this).validateMethodProto (syms [0].to <semantic::Function> (), classType, Generator::empty ());
 	    } catch (Error::ErrorList list) {
 		errors = list.errors;
 	    }
@@ -386,149 +404,8 @@ namespace semantic {
 	}	
 	
 	void Visitor::validateFunction (const semantic::Function & func) {
-	    auto & function = func.getContent ();
-	    std::vector <Generator> params;
-	    std::list <Ymir::Error::ErrorMsg> errors;
-	    Generator retType (Generator::empty ());
-	    
-	    enterContext (function.getCustomAttributes ());
-	    std::vector <Generator> throwers;
-	    for (auto &it : func.getThrowers ()) {
-		try {
-		    throwers.push_back (Generator::init (it.getLocation (), validateType (it)));
-		} catch (Error::ErrorList list) {
-		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		} 
-	    }
-	    
-	    enterBlock ();
-	    {
-		try {
-		    validatePrototypeForFrame (func.getName (), function.getPrototype (), params, retType);	       	
-		    if (function.getLocation () == Keys::MAIN) {		
-			if (params.size () > 1) {
-			    Ymir::Error::occur (params [1].getLocation (),
-						ExternalError::get (MAIN_FUNCTION_ONE_ARG));		    
-			} else if (params.size () == 1) {
-			    auto argtype =  Slice::init (func.getName (),
-							 Slice::init (
-							     func.getName (),
-							     Char::init (func.getName (), 8) // The input given by the task launcher is in utf8
-							 )
-			    );
-			    
-			    verifyCompatibleTypeWithValue (params [0].getLocation (), argtype, params [0]);
-			}
-		    }
-	    
-		    if (!retType.isEmpty ()) {
-			if (function.getLocation () == Keys::MAIN) {
-			    auto itype       = Integer::init (func.getName (), 32, true);
-			    verifyCompatibleType (itype.getLocation (), retType.getLocation (), itype, retType);
-			}
-		    } else retType = Void::init (func.getName ());
-		} catch (Error::ErrorList list) {
-		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		} 
-	    }
-	    
-	    this-> setCurrentFuncType (retType);
-	    
-	    if (!function.getBody ().isEmpty () && errors.size () == 0) {
-		Generator body (Generator::empty ());
-		bool needFinalReturn = false;				
-		{
-		    try {
-			body = validateValue (function.getBody ());
-		    } catch (Error::ErrorList list) {
-			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		    } 
-		}
-		if (!body.isEmpty ()) {
-		    if (!body.to<Value> ().isReturner ()) {
-			verifyMemoryOwner (function.getBody ().getLocation (), retType, body, true);		    
-			needFinalReturn = !retType.is<Void> ();
-		    }
-		    		    
-		    std::vector <Generator> unused, notfound;		    
-		    verifyThrows (body.getThrowers (), throwers, unused, notfound);
-
-		    std::vector <Generator> types;
-		    std::vector <Error::ErrorMsg> msg_types;
-		    for (auto & it : notfound) {
-			bool found = false;
-			for (auto jt : Ymir::r (0, types.size ())) {
-			    if (it.to <Type> ().isCompatible (types [jt])) {
-				found = true;				
-				msg_types[jt].addNote (Ymir::Error::createNote (it.getLocation ()));
-			    }
-			}
-			if (!found) {
-			    auto note = Ymir::Error::createNote (it.getLocation ());
-			    msg_types.push_back (Error::makeOccurAndNote (func.getName (), note, ExternalError::get (THROWS_NOT_DECLARED), func.getRealName (), it.prettyString ()));
-			    types.push_back (it);
-			}
-		    }
-		    errors.insert (errors.end (), msg_types.begin (), msg_types.end ());			
-		    
-		    for (auto & it : unused) {
-			auto note = Ymir::Error::createNote (it.getLocation ());
-			errors.push_back (Error::makeOccurAndNote (func.getName (), note, ExternalError::get (THROWS_NOT_USED), func.getRealName (), it.prettyString ()));
-		    }
-		    		    
-		    {
-			try {
-			    quitBlock ();
-			} catch (Error::ErrorList list) {
-			    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-			} 
-		    }
-		}
-		
-		exitContext ();
-		if (errors.size () != 0)
-		    throw Error::ErrorList {errors};
-		
-		auto frame = Frame::init (function.getLocation (), func.getRealName (), params, retType, body, needFinalReturn);
-		auto ln = func.getExternalLanguage ();
-		if (ln == Keys::CLANG) 
-		    frame.to <Frame> ().setManglingStyle (Frame::ManglingStyle::C);
-		else if (ln == Keys::CPPLANG)
-		    frame.to <Frame> ().setManglingStyle (Frame::ManglingStyle::CXX);
-
-		frame.to <Frame> ().isWeak (func.isWeak ());
-		frame.to <Frame> ().setMangledName (func.getMangledName ());
-
-		insertNewGenerator (frame);		
-	    } else {
-		// If the function has no body, it is normal that none of the parameters are used
-		this-> discardAllLocals ();
-		try {
-		    quitBlock ();
-		} catch (Error::ErrorList list) {
-		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		} 
-		exitContext ();
-		if (errors.size () != 0)
-		    throw Error::ErrorList {errors};
-	    }
-	}
-
-	Generator Visitor::validateFunctionType (const Generator & proto) {
-	    auto params = proto.to <FrameProto> ().getParameters ();
-	    auto ret = proto.to <FrameProto> ().getReturnType ();
-	    std::vector <Generator> paramTypes;
-	    for (auto & it : params) {
-		paramTypes.push_back (it.to <generator::ProtoVar> ().getType ());
-		bool isMut = false;
-		bool isRef = paramTypes.back ().to <Type> ().isRef ();
-		if (it.to <generator::ProtoVar> ().isMutable ()) isMut = true;
-		if (it.to <generator::ProtoVar> ().getType ().to <Type> ().isRef ()) isRef = true;
-		
-		paramTypes.back () = Type::init (paramTypes.back ().to <Type> (), isMut, isRef);
-	    }
-	    
-	    return FuncPtr::init (proto.getLocation (), ret, paramTypes);
+	    auto visitor = FunctionVisitor::init (*this);
+	    return visitor.validate (func);
 	}
 	
 	void Visitor::validateVarDecl (const semantic::Symbol & sym) {
@@ -725,7 +602,7 @@ namespace semantic {
 			    syms.push_back (gen);
 			} else {
 			    errors.push_back (
-				Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), gen.getName (), validateConstructorProto (gen).prettyString ())					    
+				Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), gen.getName (), FunctionVisitor::init (*this).validateConstructorProto (gen).prettyString ())					    
 				);
 			}
 		    } fo;
@@ -1575,7 +1452,7 @@ namespace semantic {
 	    auto gen = getLocal (var.getName ().getStr ());	    
 	    
 	    if (gen.isEmpty ()) {
-		auto sym = getGlobal (var.getName ().getStr ());
+		auto sym = getGlobal (var.getName ().getStr ());		
 		if (sym.empty ()) {
 		    sym = getGlobalPrivate (var.getName ().getStr ());
 		    std::list <Ymir::Error::ErrorMsg> notes;
@@ -1620,12 +1497,12 @@ namespace semantic {
 		    match (sym) {
 			of (semantic::Function, func) {
 			    if (!func.isMethod ()) {
-				gens.push_back (validateFunctionProto (func));			    
+				gens.push_back (FunctionVisitor::init (*this).validateFunctionProto (func));			    
 			    }
 			    succ = true;
 			}
 			elof_u (semantic::Constructor) {
-			    gens.push_back (validateConstructorProto (sym));		    
+			    gens.push_back (FunctionVisitor::init (*this).validateConstructorProto (sym));		    
 			    succ = true;
 			}
 			elof_u (semantic::ModRef) {
@@ -1744,8 +1621,9 @@ namespace semantic {
 			    locGen = validateAlias (multSym [0]);
 			}
 			elof (semantic::Function, func) {
-			    if (!func.isMethod ())
-			    locGen = validateFunctionProto (func);
+			    if (!func.isMethod ()) {
+				locGen = FunctionVisitor::init (*this).validateFunctionProto (func);
+			    }
 			} elfo {			    
 			    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");				
 			}
@@ -1774,358 +1652,7 @@ namespace semantic {
 		throw Error::ErrorList {errors};
 	    
 	    return gen;
-	}
-	
-	Generator Visitor::validateFunctionProto (const semantic::Function & func) {
-	    enterForeign ();
-	    std::vector <Generator> params;
-	    static std::list <lexing::Word> __validating__; 
-	    auto & function = func.getContent ();
-	    std::list <Ymir::Error::ErrorMsg> errors;
-	    bool no_value = false;
-	    Generator retType (Generator::empty ());
-	    for (auto func_loc : __validating__) {
-		// If there is a foward reference, we can't validate the values
-		if (func_loc.isSame (func.getName ())) no_value = true;		    
-	    }
-
-	    __validating__.push_back (func.getName ());
-	    enterBlock ();
-	    
-	    try {		
-		validatePrototypeForProto (func.getName (), function.getPrototype (), no_value, params, retType);
-	    } catch (Error::ErrorList list) {		
-		errors = list.errors;
-	    } 
-
-	    {
-		try {
-		    this-> discardAllLocals ();
-		    this-> quitBlock ();
-		} catch (Error::ErrorList list) {
-		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		} 
-	    }
-
-	    std::vector <Generator> throwers;
-	    for (auto &it : func.getThrowers ()) {
-		try {
-		    throwers.push_back (validateType (it));
-		} catch (Error::ErrorList list) {
-		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		} 
-	    }
-	    
-	    __validating__.pop_back ();
-	    exitForeign ();
-
-	    if (errors.size () != 0) {
-		throw Error::ErrorList {errors};		
-	    }
-
-
-	    auto frame = FrameProto::init (function.getLocation (), func.getRealName (), retType, params, func.isVariadic (), func.isSafe (), throwers);
-	    auto ln = func.getExternalLanguage ();
-	    auto style = Frame::ManglingStyle::Y;
-	    if (ln == Keys::CLANG) style = Frame::ManglingStyle::C;
-	    else if (ln == Keys::CPPLANG) style = Frame::ManglingStyle::CXX;
-	    
-	    frame = FrameProto::init (frame.to <FrameProto> (), func.getMangledName (), style);
-	    return frame;
-	}
-
-	Generator Visitor::validateConstructorProto (const semantic::Symbol & sym) {
-	    auto & func = sym.to <Constructor> ();	    
-	    pushReferent (sym, "validateConstructorProto");
-	    enterForeign ();
-	    
-	    std::vector <Generator> params;
-	    static std::list <lexing::Word> __validating__;
-	    auto & function = func.getContent ();
-	    std::list <Ymir::Error::ErrorMsg> errors;
-	    bool no_value = false;
-	    Generator retType (Generator::empty ());
-	    
-	    for (auto func_loc : __validating__) {
-		if (func_loc.isSame (func.getName ())) no_value = true;
-	    }
-
-	    Generator cl (Generator::empty ());
-	    try {
-		cl = Type::init (func.getClass ().getName (), ClassPtr::init (func.getClass ().getName (), Type::init (func.getClass ().getName (), validateClass (func.getClass ()).to <Type> (), true, false)).to <Type> (), true, false);
-	    } catch (Error::ErrorList list) {
-		errors = list.errors;
-	    } 
-	    
-	    if (!cl.isEmpty ()) {		
-		__validating__.push_back (func.getName ());
-		enterBlock ();
-		this-> insertLocal (Keys::SELF, ProtoVar::init (func.getName (), cl, Generator::empty (), true, 1, true));
-		try {		
-		    validatePrototypeForProto (func.getName (), function.getPrototype (), no_value, params, retType);
-		} catch (Error::ErrorList list) {
-		    errors = list.errors;
-		} 
-
-		{
-		    try {
-			this-> discardAllLocals ();
-			this-> quitBlock ();
-		    } catch (Error::ErrorList list) {
-			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		    } 
-		}
-
-		__validating__.pop_back ();
-	    }
-	    
-	    std::vector <Generator> throwers;
-	    for (auto &it : func.getThrowers ()) {
-		try {
-		    throwers.push_back (validateType (it));
-		} catch (Error::ErrorList list) {
-		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		} 
-	    }
-	    
-	    exitForeign ();
-	    popReferent ("validateConstructorProto");
-	    	    
-	    if (errors.size () != 0) {
-		throw Error::ErrorList {errors};		
-	    }
-	    
-	    auto frame = ConstructorProto::init (func.getName (), func.getRealName (), sym, cl, params, throwers);	    
-	    frame = ConstructorProto::init (frame.to <ConstructorProto> (), func.getMangledName ());	    
-	    return frame;
-	}
-
-	Generator Visitor::validateMethodProto (const semantic::Function & func, const Generator & classType_, const Generator & trait) {
-	    enterForeign ();	    
-	    std::vector <Generator> params;
-	    static std::list <lexing::Word> __validating__;
-	    auto & function = func.getContent ();
-	    std::list <Ymir::Error::ErrorMsg> errors;
-	    bool no_value = false;
-	    Generator retType (Generator::empty ());
-	    for (auto func_loc : __validating__) {
-		if (func_loc.isSame (func.getName ())) no_value = true;
-	    }
-	    
-	    auto classType = Type::init (function.getLocation (), ClassPtr::init (function.getLocation (), classType_).to <Type> ().toDeeplyMutable ().to <Type> (), true, false);
-
-	    __validating__.push_back (func.getName ());
-	    enterBlock ();
-	    this-> insertLocal (Keys::SELF, ProtoVar::init (func.getName (), classType, Generator::empty (), true, 1, true));
-
-	    try {
-		auto & __params = function.getPrototype ().getParameters ();
-		auto fakeParams = std::vector <syntax::Expression> (__params.begin () + 1, __params.end ());
-		auto proto = syntax::Function::Prototype::init (fakeParams, function.getPrototype ().getType (), false);
-		validatePrototypeForProto (func.getName (), proto, no_value, params, retType);
-	    } catch (Error::ErrorList list) {
-		errors = list.errors;
-	    } 
-
-	    {
-		try {
-		    this-> discardAllLocals ();
-		    this-> quitBlock ();
-		} catch (Error::ErrorList list) {
-		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		} 
-	    }
-
-	    std::vector <Generator> throwers;
-	    for (auto &it : func.getThrowers ()) {
-		try {
-		    throwers.push_back (validateType (it));
-		} catch (Error::ErrorList list) {
-		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		} 
-	    }
-	    
-	    __validating__.pop_back ();
-	    exitForeign ();
-	    
-	    if (errors.size () != 0) {
-		throw Error::ErrorList {errors};		
-	    }
-
-	    if (!function.getPrototype ().getParameters ()[0].to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT))
-		classType = Type::init (classType.getLocation (), classType.to <Type> (), false, false);
-	    
-	    auto frame = MethodProto::init (function.getLocation (), func.getComments (), func.getRealName (), retType, params, false,
-					    classType,
-					    function.getPrototype ().getParameters ()[0].to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT), function.getBody ().isEmpty (), func.isFinal (), func.isSafe (), trait, throwers);
-	    
-	    return FrameProto::init (frame.to <FrameProto> (), func.getMangledName (), Frame::ManglingStyle::Y);	    
-	    return frame;
-	}
-
-	
-
-	void Visitor::validatePrototypeForFrame (const lexing::Word &, const syntax::Function::Prototype & proto,  std::vector <Generator> & params, generator::Generator & retType) {
-	    std::list <Ymir::Error::ErrorMsg> errors;
-	    std::vector <Generator> addedParams;
-	    addedParams.reserve (proto.getParameters ().size ());
-	    for (auto & param : proto.getParameters ()) {
-		try {
-		    auto var = param.to <syntax::VarDecl> ();
-		    Generator type (Generator::empty ());
-		    Generator value (Generator::empty ());
-		    if (!var.getType ().isEmpty ()) {
-			type = validateType (var.getType ());
-		    }
-		
-		    if (!var.getValue ().isEmpty ()) {
-			value = validateValue (var.getValue ());
-			if (!type.isEmpty ())
-			    verifyCompatibleTypeWithValue (type.getLocation (), type, value);
-			else {
-			    type = Type::init (value.to <Value> ().getType ().to <Type> (), false);
-			}
-		    }
-			
-		    bool isMutable = false;
-		    bool isRef = false;
-		    bool dmut = false;
-			
-		    type = applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut);
-						
-		    verifyMutabilityRefParam (var.getLocation (), type, MUTABLE_CONST_PARAM);
-			
-		    if (!value.isEmpty ()) {		    
-			verifyMemoryOwner (value.getLocation (), type, value, true);
-		    }
-
-		    if (type.is <NoneType> () || type.is<Void> ()) {
-			Ymir::Error::occur (var.getLocation (), ExternalError::get (VOID_VAR));
-		    } else if (type.is <generator::LambdaType> ()) {
-			Ymir::Error::occur (type.getLocation (), ExternalError::get (INCOMPLETE_TYPE), type.prettyString ());
-		    }
-		
-		    addedParams.push_back (ParamVar::init (var.getName (), type, isMutable, false));
-		} catch (Error::ErrorList list) {
-		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		} 
-	    }
-
-	    // We insert them after validation to avoid cross referencing value of param
-	    for (auto & param : addedParams) {
-		if (param.getLocation () != Keys::UNDER) {
-		    verifyShadow (param.getLocation ());		
-		    insertLocal (param.getLocation ().getStr (), param);
-		}
-	    }
-	    
-	    params.insert (params.end (), addedParams.begin (), addedParams.end ());
-	    
-	    try {
-		if (!proto.getType ().isEmpty ()) {
-		    retType = validateType (proto.getType (), true);
-		    if (retType.to <Type> ().isRef ()) {
-			Ymir::Error::occur (retType.getLocation (), ExternalError::get (REF_RETURN_TYPE), retType.prettyString ());
-		    }		    
-		}		
-	    } catch (Error::ErrorList list) {
-		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-	    } 	    
-
-	    if (errors.size () != 0) {
-		throw Error::ErrorList {errors};		
-	    }
-	    
-	}	
-	
-	void Visitor::validatePrototypeForProto (const lexing::Word & loc, const syntax::Function::Prototype & proto, bool no_value, std::vector <Generator> & params, generator::Generator & retType) {
-	    std::list <Ymir::Error::ErrorMsg> errors;
-	    std::vector <Generator> addedParams;
-	    addedParams.reserve (proto.getParameters ().size ());
-	    
-	    for (auto & param : proto.getParameters ()) {
-		try {
-		    auto var = param.to <syntax::VarDecl> ();
-		    Generator type (Generator::empty ()); // C++ macros are a mystery to me.
-		    // You just can't declare two vars in a row !!
-
-		    Generator value (Generator::empty ());
-		    
-		    if (!var.getType ().isEmpty ()) {						
-			type = validateType (var.getType ());
-		    }
-		    		
-		    if (!var.getValue ().isEmpty () && !no_value) {
-			value = validateValue (var.getValue ());
-			if (!type.isEmpty ()) 
-			    verifyCompatibleTypeWithValue (param.getLocation (), type, value);
-		    	else {
-		    	    type = value.to <Value> ().getType ();
-		    	}
-		    }
-
-		    if (var.getType ().isEmpty () && no_value && !var.getValue ().isEmpty ()) {
-			Ymir::Error::occur (var.getLocation (), ExternalError::get (FORWARD_REFERENCE_VAR));
-		    }
-				
-		    bool isMutable = false;
-		    bool isRef = false;
-		    bool dmut = false;
-		    type = applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut);
-		    
-		    verifyMutabilityRefParam (var.getLocation (), type, MUTABLE_CONST_PARAM);
-		
-		    if (!value.isEmpty ()) {		    
-		    	verifyMemoryOwner (value.getLocation (), type, value, true);
-		    }
-
-		    if (type.is <NoneType> () || type.is<Void> ()) {
-			Ymir::Error::occur (var.getLocation (), ExternalError::get (VOID_VAR));
-		    }
-		    
-		    if (type.is <generator::LambdaType> ()) {
-			Ymir::Error::occur (type.getLocation (), ExternalError::get (INCOMPLETE_TYPE), type.prettyString ());
-		    }
-
-		    int nb_consumed = 1;
-		    if (!var.getType ().isEmpty () && var.getType ().is <TemplateSyntaxList> ()) {
-			nb_consumed = var.getType ().to <TemplateSyntaxList> ().getContents ().size ();
-		    }
-		    
-		    addedParams.push_back (ProtoVar::init (var.getName (), type, value, isMutable, nb_consumed, false));
-		} catch (Error::ErrorList list) {
-		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		    errors.push_back (Ymir::Error::createNote (param.getLocation ()));
-		} 
-	    }
-
-	    // We insert them after validation to avoid cross referencing value of param
-	    for (auto & param : addedParams) {
-		if (param.getName () != Keys::UNDER) {
-		    verifyShadow (param.getLocation ());		
-		    insertLocal (param.getLocation ().getStr (), param);
-		}
-	    }
-
-	    params.insert (params.end (), addedParams.begin (), addedParams.end ());
-	    
-	    try {
-		if (!proto.getType ().isEmpty ()) {
-		    retType = validateType (proto.getType (), true);
-		    if (retType.to <Type> ().isRef ()) {
-			Ymir::Error::occur (retType.getLocation (), ExternalError::get (REF_RETURN_TYPE), retType.prettyString ());
-		    }		    
-		} else retType = Void::init (loc);
-	    } catch (Error::ErrorList list) {
-		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-	    } 
-	    
-	    
-	    if (errors.size () != 0) {
-		throw Error::ErrorList {errors};		
-	    }
-
-	}
+	}       
 	
 	Generator Visitor::validateVarDeclValue (const syntax::VarDecl & var, bool needInitValue) {
 	    if (var.getName () != Keys::UNDER)
@@ -3059,23 +2586,7 @@ namespace semantic {
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return "";
 	}
-
-	// Generator Visitor::validateDotTemplateCall (const syntax::TemplateCall & bin) {
-	//     auto right = bin.getContent ().to <syntax::Binary> ().getRight ();
-	//     auto rightTmpl = syntax::TemplateCall::init (bin.getLocation (), bin.getParameters (), right);
-	//     auto leftTmpl = bin.getContent ().to<syntax::Binary> ().getLeft ();
-	//     auto bin = syntax::Binary::init (bin.getContent ().getLocation (),
-	// 				     leftTmpl,
-	// 				     rightTmpl,
-	// 				     syntax::Expression::empty ()
-	// 	);
-	//     try {
-		
-	//     }
-	// }
-
-	// I hate the error handling of this function,
-	// TODO refactor all that an factorise it, the errors seem to be handled the same for multsym and simple value
+	
 	Generator Visitor::validateTemplateCall (const syntax::TemplateCall & tcl) {	    
 	    auto value = this-> validateValue (tcl.getContent (), false, true);
 
@@ -5096,46 +4607,7 @@ namespace semantic {
 		Error::occur  (name, ExternalError::get (IS_TYPE), name.getStr ());
 	    }
 	}
-	
-
-	void Visitor::verifyThrows (const std::vector <Generator> & types, const std::vector <Generator> & rethrow, std::vector <Generator> & unused, std::vector <Generator> & notfound) {	    
-	    // This function is ugly, maybe there is a better way to do this
-	    // But still this is working
-	    std::vector <Generator> used;
-	    for (auto &it : types) {
-		bool found = false;
-		for (auto & j : used) {
-		    if (it.to<Type> ().isCompatible (j)) {
-			found = true;
-			break;
-		    }
-		}
 		
-		if (!found) {
-		    for (auto &j : rethrow) {
-			if (it.to<Type> ().isCompatible (j)) {
-			    found = true;
-			    used.push_back (j);
-			    break;
-			}
-		    }
-		    
-		    if (!found) notfound.push_back (it);
-		}
-	    }
-
-	    for (auto & it : rethrow) {
-		bool found = false;
-		for (auto & j : used) {
-		    if (it.to <Type> ().isCompatible (j)) {
-			found = true;
-			break;
-		    }
-		}
-		if (!found) unused.push_back (it);
-	    }
-	}
-	
 	Generator Visitor::retreiveValue (const Generator & gen) {
 	    auto compile_time = CompileTime::init (*this);
 	    return compile_time.execute (gen);
@@ -5152,22 +4624,48 @@ namespace semantic {
 	    return Generator::__empty__;
 	}
 
-	bool Visitor::insertTemplateSolution (const Symbol & sol) {
+	bool Visitor::insertTemplateSolution (const Symbol & sol, std::list <Error::ErrorMsg> & errors) {
 	    for (auto & it : this-> _templateSolutions) {
 		if (it.equals (sol)) return false;		
+	    }
+
+	    for (auto & it : this-> _errorTemplateSolutions) {
+		if (it.first.equals (sol)) {
+		    errors = it.second;
+		    return true;
+		}
 	    }
 	    
 	    this-> _templateSolutions.push_back (sol);
 	    return true;
 	}
 
+	void Visitor::insertErrorTemplateSolution (const Symbol & sol, const std::list <Error::ErrorMsg> & errors) {
+	    this-> _errorTemplateSolutions.push_back (std::pair <Symbol, std::list <Error::ErrorMsg> > (sol, errors));
+	}
+
 	void Visitor::removeTemplateSolution (const Symbol & sol) {
 	    std::vector <Symbol> res;
+	    bool found = false;
 	    for (auto & it : this-> _templateSolutions) {
-		if (!it.equals (sol)) res.push_back (it);
+		if (found) res.push_back (it);
+		else if (!it.equals (sol)) res.push_back (it);
+		else found = true;
 	    }
 
 	    this-> _templateSolutions = res;
+	}
+
+	void Visitor::removeErrorTemplateSolution (const Symbol & sol) {
+	    std::vector <std::pair <Symbol, std::list <Error::ErrorMsg> > > res;
+	    bool found = false;
+	    for (auto & it : this-> _errorTemplateSolutions) {
+		if (found) res.push_back (it);		
+		else if (!it.first.equals (sol)) res.push_back (it);
+		else found = true;
+	    }
+
+	    this-> _errorTemplateSolutions = res;
 	}
 	
 	std::vector <Symbol> Visitor::getGlobal (const std::string & name) {					       

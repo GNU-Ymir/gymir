@@ -1,5 +1,6 @@
 #include <ymir/semantic/validator/UnaryVisitor.hh>
 #include <ymir/semantic/validator/CallVisitor.hh>
+#include <ymir/semantic/validator/FunctionVisitor.hh>
 #include <ymir/semantic/generator/value/_.hh>
 #include <ymir/global/Core.hh>
 
@@ -171,7 +172,7 @@ namespace semantic {
 		    notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (THROWS), it.prettyString ()));
 		Ymir::Error::occurAndNote (un.getLocation (), notes, ExternalError::get (ADDR_MIGHT_THROW), proto.prettyString ());
 	    }
-	    return Addresser::init (un.getLocation (), this-> _context.validateFunctionType (proto), proto);
+	    return Addresser::init (un.getLocation (), FunctionVisitor::init (this-> _context).validateFunctionType (proto), proto);
 	}
 
 	Generator UnaryVisitor::validateDelegatePointer (const syntax::Unary & un, const Generator & gen) {
@@ -219,11 +220,11 @@ namespace semantic {
 			auto rlevel = type.to <Type> ().mutabilityLevel () + 1;
 			auto score = rlevel - llevel;
 			if (score > highest) highest = score;
-
-			auto delType = Delegate::init (un.getLocation (), this-> _context.validateFunctionType (proto));
-			if (results.find (score) != results.end ())
+			
+			auto delType = Delegate::init (un.getLocation (), FunctionVisitor::init (this-> _context).validateFunctionType (proto));
+			if (results.find (score) != results.end ()) {
 			    results[score].push_back (Value::init (del.to <Value> (), delType));
-			else results [score] = {Value::init (del.to <Value> (), delType)};
+			} else results [score] = {Value::init (del.to <Value> (), delType)};
 		    }
 		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());

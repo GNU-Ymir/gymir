@@ -1687,7 +1687,7 @@ namespace syntax {
 	this-> _lex.next ({Token::NOT});
 	auto beg = this-> _lex.consumeIf ({Token::LACC, Token::INF});
 	Expression type (Expression::empty ());
-	if (beg == Token::LACC || beg == Token::INF)
+	if (beg == Token::LACC)
 	    type = visitExpression ();
 	else
 	    type = visitOperand3 ();

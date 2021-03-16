@@ -1,4 +1,5 @@
 #include <ymir/documentation/Visitor.hh>
+#include <ymir/semantic/validator/FunctionVisitor.hh>
 #include <ymir/semantic/declarator/Visitor.hh>
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/utils/string.hh>
@@ -251,7 +252,7 @@ namespace documentation {
     
     JsonValue Visitor::dumpFunction (const semantic::Function & func) {
 	std::map <std::string, JsonValue> val;
-	auto proto = this-> _context.validateFunctionProto (func);
+	auto proto = semantic::validator::FunctionVisitor::init (this-> _context).validateFunctionProto (func);
 	val ["type"] = JsonString::init ("function");
 	this-> dumpStandard (func, val);
 	
@@ -540,7 +541,7 @@ namespace documentation {
 	for (auto & it : cl.getAllInner ()) { // Dump constructors
 	    std::map <std::string, JsonValue> def;
 	    if (it.is <semantic::Constructor> ()) {
-		auto proto = this-> _context.validateConstructorProto (it);
+		auto proto = semantic::validator::FunctionVisitor::init (this-> _context).validateConstructorProto (it);
 		def ["type"] = JsonString::init ("cstr");
 		this-> dumpStandard (it.to <semantic::Constructor> (), def);
 		

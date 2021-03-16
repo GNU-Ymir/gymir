@@ -20,6 +20,8 @@ namespace semantic {
 	     * The parent of the class, it can be empty
 	     */
 	    Generator _parent;
+
+	    bool _isFast;
 	    
 	private :
 
@@ -27,7 +29,7 @@ namespace semantic {
 
 	    ClassRef ();
 
-	    ClassRef (const lexing::Word & loc, const Generator & parent, const Symbol & ref);
+	    ClassRef (const lexing::Word & loc, const Generator & parent, const Symbol & ref, bool isFast);
 
 	public :
 
@@ -37,7 +39,7 @@ namespace semantic {
 	    
 	public :
 
-	    static Generator init (const lexing::Word & loc, const Generator & parent, const Symbol & ref);
+	    static Generator init (const lexing::Word & loc, const Generator & parent, const Symbol & ref, bool isFast = false);
 	    
 	    Generator clone () const override;
 

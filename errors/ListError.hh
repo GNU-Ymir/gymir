@@ -26,6 +26,7 @@ namespace Ymir {
 			 ALIAS_NO_EFFECT,
 			 ALLOC_ABSTRACT_CLASS,
 			 ASSERT_FAILED,
+			 BRANCHING_VALUE,
 			 BREAK_INSIDE_EXPR,
 			 BREAK_NO_LOOP,
 			 CALL_RECURSION,
@@ -68,6 +69,7 @@ namespace Ymir {
 			 INCOMPATIBLE_TOKENS,
 			 INCOMPATIBLE_TYPES,			 
 			 INCOMPATIBLE_VALUES,
+			 INCOMPLETE_TEMPLATE,
 			 INCOMPLETE_TYPE,
 			 INCOMPLETE_TYPE_CLASS,
 			 INFINITE_CONSTRUCTION_LOOP,
@@ -205,7 +207,6 @@ namespace Ymir {
 			 VOID_VAR,
 			 WRONG_IMPLEMENT,
 			 WRONG_MODULE_NAME,
-			 BRANCHING_VALUE,
     );
     
     // 	    SYNTAX_ERROR_FOR = "%%% unexpected when analysing statement %%%",

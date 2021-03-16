@@ -7,6 +7,7 @@ namespace Ymir {
 			    ALIAS_NO_EFFECT                 = "the creation of an alias has no effect on the left operand",
 			    ALLOC_ABSTRACT_CLASS            = "the class %(y) is declared abstract",
 			    ASSERT_FAILED                   = "assertion failed : %(y)",
+			    BRANCHING_VALUE                 = "for branching value",
 			    BREAK_INSIDE_EXPR		    = "the break statement placed here will result in undefined behavior",
 			    BREAK_NO_LOOP		    = "the break statement must be placed inside a loop",
 			    CALL_RECURSION                  = "the limit of the number of call recursions at compilation time has been reached %(y)", 
@@ -49,6 +50,7 @@ namespace Ymir {
 			    INCOMPATIBLE_TOKENS             = "incompatible tokens : [%(y)] and [%(y)]",
 			    INCOMPATIBLE_TYPES		    = "incompatible types %(y) and %(y)",
 			    INCOMPATIBLE_VALUES             = "incompatible values",
+			    INCOMPLETE_TEMPLATE             = "the template %(y) is incomplete due to previous errors, use -v to show them",
 			    INCOMPLETE_TYPE                 = "the type %(y) is not complete",
 			    INCOMPLETE_TYPE_CLASS           = "the type %(y) is not complete due to previous errors",
 			    INFINITE_CONSTRUCTION_LOOP      = "infinite construction loop",
@@ -186,6 +188,5 @@ namespace Ymir {
 			    VOID_VAR			    = "cannot declare a var of type void",
 			    WRONG_IMPLEMENT                 = "the method %(y) was declared by trait %(y), not %(y)",
 			    WRONG_MODULE_NAME		    = "the module named %(y) must be placed in a file named %(y)",
-			    BRANCHING_VALUE                 = "for branching value",
     );    
 }

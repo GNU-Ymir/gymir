@@ -12,12 +12,14 @@ namespace semantic {
 	
 	ClassRef::ClassRef () :
 	    Type (),
-	    _parent (Generator::empty ())
+	    _parent (Generator::empty ()),
+	    _isFast (false)
 	{}
 
-	ClassRef::ClassRef (const lexing::Word & loc, const Generator & parent, const Symbol & ref) :
+	ClassRef::ClassRef (const lexing::Word & loc, const Generator & parent, const Symbol & ref, bool isFast) :
 	    Type (loc, loc.getStr ()),
-	    _parent (parent)
+	    _parent (parent),
+	    _isFast (isFast)
 	{
 	    auto aux = ref;
 	    this-> _ref = aux.getPtr ();
@@ -28,8 +30,8 @@ namespace semantic {
 	    // }
 	}
 
-	Generator ClassRef::init (const lexing::Word&  loc, const Generator & parent, const Symbol & ref) {
-	    return Generator {new (NO_GC) ClassRef (loc, parent, ref)};
+	Generator ClassRef::init (const lexing::Word&  loc, const Generator & parent, const Symbol & ref, bool isFast) {
+	    return Generator {new (NO_GC) ClassRef (loc, parent, ref, isFast)};
 	}
 	
 	Generator ClassRef::clone () const {
@@ -51,6 +53,9 @@ namespace semantic {
 	}
 	
 	std::string ClassRef::typeName () const {
+	    if (this-> _isFast) {
+		return "fast " + (Symbol {this-> _ref}).getRealName ();
+	    }
 	    return (Symbol {this-> _ref}).getRealName ();
 	}
 	

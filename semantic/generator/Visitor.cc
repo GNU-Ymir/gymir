@@ -373,7 +373,7 @@ namespace semantic {
 	    auto typeInfo = classType.to<ClassRef> ().getRef ().to<semantic::Class> ().getTypeInfo ();
 	    // auto gen = classType.to<ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
 	    Tree ancestorSlice (Tree::empty ());
-	    	    
+
 	    if (!classType.to <ClassRef> ().getAncestor ().isEmpty ()) {
 		auto ancestor = generateTypeInfoClass (classType.to<ClassRef> ().getAncestor ());
 		ancestorSlice = Tree::constructField (
@@ -385,7 +385,7 @@ namespace semantic {
 			    Tree::buildAddress (classType.getLocation (), ancestor, Tree::pointerType (Tree::voidType ()))
 			    }
 		);		    
-	    } else {
+	    } else {		
 		ancestorSlice = Tree::constructField (
 		    classType.getLocation (),
 		    generateType (typeInfo.to <StructCst> ().getTypes ()[2]),
@@ -815,7 +815,7 @@ namespace semantic {
 			 
 		s_of (FrameProto, pr)
 		    return generateFrameProto (pr);		
-
+		
 		s_of (ConstructorProto, pr)
 		    return generateConstructorProto (pr);
 
@@ -895,7 +895,6 @@ namespace semantic {
 		    return generateFakeValue (fv);
 	    }	    
 	    
-	    println (gen.prettyString ());
 	    Ymir::Error::halt ("%(r) - reaching impossible point %(y)", "Critical", identify (gen));
 	    return Tree::empty ();
 	}
