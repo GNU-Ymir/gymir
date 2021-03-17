@@ -34,6 +34,12 @@ namespace semantic {
 	    generator::Generator validate (const semantic::Symbol & cls, bool inModule = false);
 
 	    /**
+	     * Actually validates the class content (vtable, fields, ...)
+	     * This function is called if the class is not already validated
+	     */
+	    void validateClassContent (const semantic::Symbol & cls, bool inModule = false);
+	    
+	    /**
 	     * ================================================================================
 	     * ================================================================================
 	     * =================================     ASSERT     ===============================

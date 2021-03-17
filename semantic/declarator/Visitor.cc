@@ -124,7 +124,6 @@ namespace semantic {
 		    pushReferent (glob);
 		} else pushReferent (glob);
 
-		
 		createSubModules (mod.getLocation (), std::vector <std::string> (modules.begin () + 1, modules.end ()), ret);
 		
 		glob = popReferent ();

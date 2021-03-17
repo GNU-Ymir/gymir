@@ -1085,7 +1085,6 @@ namespace semantic {
 	     */
 	    generator::Generator setCompleteConditional (const generator::Generator &cond);
 	    
-	    void verifyRecursivity (const lexing::Word & loc, const generator::Generator & gen, const Symbol & sym) const;
 
 	    generator::Generator getCommonAncestor (const generator::Generator & left, const generator::Generator & right);
 

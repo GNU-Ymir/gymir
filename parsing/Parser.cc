@@ -15,7 +15,7 @@
 #include <ymir/global/State.hh>
 #include <ymir/global/Core.hh>
 #include <ymir/utils/string.hh>
-#include <time.h>       /* clock_t, clock, CLOCKS_PER_SEC */
+
 using namespace Ymir;
 
 
@@ -63,17 +63,17 @@ namespace Ymir {
     
     void Parser::syntaxicTime () {
 	if (!Ymir::file_exists (this-> _path.c_str ())) Error::occur (ExternalError::get (NO_SUCH_FILE), _path);
-	
+
 	auto visitor = syntax::Visitor::init (this-> _path);
 	this-> _module = visitor.visitModGlobal ();
     }
 
-    void Parser::semanticTime () {	
+    void Parser::semanticTime () {
 	auto declarator = semantic::declarator::Visitor::init ();
-	auto module = declarator.visit (this-> _module);	
+	auto module = declarator.visit (this-> _module);
+
 	auto validator = semantic::validator::Visitor::init ();	
 	validator.validate (module);
-
 	
 	if (global::State::instance ().isDocDumpingActive ()) {
 	    auto doc_visit = documentation::Visitor::init (validator);
@@ -84,13 +84,13 @@ namespace Ymir {
 	    fclose (file);
 	}
 
-	auto generator = semantic::generator::Visitor::init ();
+
+	auto generator = semantic::generator::Visitor::init ();	
 	for (auto & gen : validator.getGenerators ()) {
 	    generator.generate (gen);
 	}
-	
-	
-	generator.finalize ();
+
+	generator.finalize ();	
 	semantic::Symbol::purge ();
 	semantic::declarator::Visitor::purge ();
     }

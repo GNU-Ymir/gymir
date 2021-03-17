@@ -1076,38 +1076,6 @@ namespace semantic {
 	    
 	    if (left.isEmpty ())  
 		throw Error::ErrorList {errors};	    
-	    else if (left.to <Value> ().getType ().is<ClassPtr> ()) {
-		bool succ = false;
-		std::list <Ymir::Error::ErrorMsg> localErrors;
-		try {
-		    match (bin.getRight ()) {		    
-			of (syntax::TemplateCall, cl) {
-			    auto loc = left.getLocation ();
-			    auto inner_bin = syntax::Binary::init (
-				lexing::Word::init (loc, Token::DOT),  TemplateSyntaxWrapper::init (loc, left),
-				cl.getContent (), Expression::empty ()
-				);
-			    auto inner_value = this-> _context.validateValue (inner_bin);
-			    succ = true; // If we are here, then the class has field named cl.getContent ()
-			    
-			    auto n_bin = TemplateCall::init (				    
-				cl.getLocation (), cl.getParameters (),
-				TemplateSyntaxWrapper::init (inner_value.getLocation (), inner_value)
-				);
-			    
-			    right = this-> _context.validateValue (n_bin);			
-			} elfo { succ = true; }
-		    }
-		} catch (Error::ErrorList list) {		    
-		    if (succ) { // If we failed, we failed after the DotOp, so the failure is due to template call
-			localErrors = list.errors;
-		    }
-		} 
-		
-		if (succ && localErrors.size () != 0) { // Errors, when processing the template call
-		    throw Error::ErrorList {localErrors};
-		}
-	    }
 	    
 	    if (right.isEmpty ()) {
 		try {

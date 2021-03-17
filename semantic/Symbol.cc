@@ -4,6 +4,7 @@
 #include <ymir/semantic/symbol/Module.hh>
 #include <ymir/semantic/symbol/TemplateSolution.hh>
 #include <ymir/semantic/generator/Mangler.hh>
+#include <time.h>
 
 namespace semantic {
     
@@ -180,7 +181,7 @@ namespace semantic {
     
 
     void Symbol::insert (const Symbol & sym) {
-	if (this-> _value != nullptr) {	    
+	if (this-> _value != nullptr) {
 	    this-> _value-> insert (sym);
 	} else {
 	    // We don't do anything, it is more convinient for global modules

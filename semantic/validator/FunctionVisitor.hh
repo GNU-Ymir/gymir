@@ -28,7 +28,7 @@ namespace semantic {
 
 	    /**
 	     * \brief Create a new visitor
-	     * \param context the context of the operator (used to validate the operands)
+	     * \param context the context of the operator 
 	     */
 	    static FunctionVisitor init (Visitor & context);
 

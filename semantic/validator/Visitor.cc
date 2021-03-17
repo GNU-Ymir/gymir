@@ -1,21 +1,5 @@
-#include <ymir/semantic/validator/Visitor.hh>
-#include <ymir/semantic/validator/BinaryVisitor.hh>
-#include <ymir/semantic/validator/BracketVisitor.hh>
-#include <ymir/semantic/validator/CallVisitor.hh>
-#include <ymir/semantic/validator/ForVisitor.hh>
-#include <ymir/semantic/validator/CompileTime.hh>
+#include <ymir/semantic/validator/_.hh>
 #include <ymir/syntax/visitor/Keys.hh>
-#include <ymir/semantic/validator/UnaryVisitor.hh>
-#include <ymir/semantic/validator/CastVisitor.hh>
-#include <ymir/semantic/validator/SubVisitor.hh>
-#include <ymir/semantic/validator/DotVisitor.hh>
-#include <ymir/semantic/validator/TemplateVisitor.hh>
-#include <ymir/semantic/validator/PragmaVisitor.hh>
-#include <ymir/semantic/validator/UtfVisitor.hh>
-#include <ymir/semantic/validator/MatchVisitor.hh>
-#include <ymir/semantic/validator/ClassVisitor.hh>
-#include <ymir/semantic/validator/MacroVisitor.hh>
-#include <ymir/semantic/validator/FunctionVisitor.hh>
 #include <ymir/semantic/declarator/Visitor.hh>
 #include <ymir/semantic/generator/Mangler.hh>
 #include <ymir/utils/map.hh>
@@ -140,7 +124,7 @@ namespace semantic {
 		
 		
 		s_of (semantic::TemplateSolution, sol) {
-		    std::list <Ymir::Error::ErrorMsg> errors;			
+		    std::list <Ymir::Error::ErrorMsg> errors;
 		    if (insertTemplateSolution (sym, errors)) {
 			if (errors.size () != 0) {
 			    if (!global::State::instance ().isVerboseActive ()) {
@@ -287,7 +271,6 @@ namespace semantic {
 	    if (syms.size () != 1) Ymir::Error::halt ("", "");
 	    
 	    auto classType = sol.getReferent ().to <semantic::Class> ().getGenerator ().to <generator::Class> ().getClassRef ();
-	    
 	    if (insertTemplateSolution (sol, errors)) { // If it is the first time the solution is presented
 		if (errors.size () != 0) {
 		    if (!global::State::instance ().isVerboseActive ()) {
@@ -489,66 +472,8 @@ namespace semantic {
 	}
 
 	generator::Generator Visitor::validateStruct (const semantic::Symbol & str) {	    
-	    if (str.to <semantic::Struct> ().getGenerator ().isEmpty ()) {
-		auto sym = str;
-		auto gen = generator::Struct::init (sym.getName (), sym);
-		sym.to <semantic::Struct> ().setGenerator (gen);
-		std::list <Ymir::Error::ErrorMsg> errors;
-		std::map <std::string, generator::Generator> syms;
-		enterForeign ();
-		pushReferent (sym, "validateStruct");
-		try {
-		    this-> enterBlock ();
-		    std::vector <std::string> fields;
-		    std::vector <generator::Generator> types;
-		    for (auto & it : sym.to<semantic::Struct> ().getFields ()) {
-			this-> validateVarDeclValue (it.to <syntax::VarDecl> (), false);
-			if (str.to <semantic::Struct> ().isUnion () && !it.to <syntax::VarDecl> ().getValue ().isEmpty ())
-			    errors.push_back (Ymir::Error::makeOccur (it.to <syntax::VarDecl> ().getValue ().getLocation (), ExternalError::get (UNION_INIT_FIELD)));
-		    }
-		    		    
-		} catch (Error::ErrorList list) {
-		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		} 		
-
-		{
-		    try {
-			syms = this-> discardAllLocals ();
-			this-> quitBlock ();
-		    } catch (Error::ErrorList list) {
-			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		    } 
-		}
-		
-		exitForeign ();		
-		popReferent ("validateStruct");
-		
-		if (errors.size () != 0) {
-		    sym.to <semantic::Struct> ().setGenerator (NoneType::init (sym.getName ()));
-		    throw Error::ErrorList {errors};
-		}
-		
-		std::vector <Generator> fieldsDecl;
-		for (auto & it : sym.to <semantic::Struct> ().getFields ()) {
-		    auto gen = syms.find (it.to <syntax::VarDecl> ().getName ().getStr ());		    
-		    fieldsDecl.push_back (gen-> second);
-		}
-		
-		gen = generator::Struct::init (gen.to <generator::Struct> (), fieldsDecl);
-		for (auto & it : gen.to <generator::Struct> ().getFields ()) {
-		    verifyRecursivity (it.getLocation (), it.to <generator::VarDecl> ().getVarType (), sym);
-		}
-		
- 		sym.to <semantic::Struct> ().setGenerator (gen);
-		return StructRef::init (str.getName (), sym);
-	    }
-
-	    if (str.to <semantic::Struct> ().getGenerator ().is <generator::Struct> ())
-		return StructRef::init (str.getName (), str);
-	    else {
-		Ymir::Error::occur (str.getName (), ExternalError::get (INCOMPLETE_TYPE_CLASS), str.getRealName ());
-		return Generator::empty ();
-	    }
+	    auto visitor = StructVisitor::init (*this);
+	    return visitor.validate (str);
 	}
 
 	void Visitor::validateTrait (const semantic::Symbol & tr) {
@@ -805,28 +730,6 @@ namespace semantic {
 	    }
 	}
 
-	void Visitor::verifyRecursivity (const lexing::Word & loc, const generator::Generator & gen, const semantic::Symbol & sym) const {
-	    match (gen) {
-		of (StructRef, str_ref) {
-		    if (str_ref.isRefOf (sym)) {
-			auto note = Ymir::Error::createNote (sym.getName ());
-			Ymir::Error::occurAndNote (loc, note, ExternalError::get (NO_SIZE_FORWARD_REF));
-		    } else {
-			auto & str = str_ref.getRef ().to <semantic::Struct> ().getGenerator ();
-			for (auto & it : str.to<generator::Struct> ().getFields ()) {
-			    verifyRecursivity (loc, it.to <generator::VarDecl> ().getVarType (), sym);
-			}
-		    }
-		}
-		elof_u (Pointer) {} // No forward problem on pointer types		    
-		elof_u (Slice) {} // No problem for slice, their size can be 0			 
-		elof (Type, t) {
-		    if (t.isComplex ()) {
-			for (auto & it : t.getInners ()) verifyRecursivity (loc, it, sym);
-		    }
-		} fo;
-	    }
-	}
 
 	Generator Visitor::validateValueNonVoid (const syntax::Expression & expr) {
 	    auto ret = this-> validateValue (expr, false, false);
@@ -3938,7 +3841,7 @@ namespace semantic {
 	    
 	    return Generator::__empty__;
 	}
-
+	
 	void Visitor::printLocal () const {
 	    for (auto _it : Ymir::r (0, this-> _symbols.back ().size ())) {
 		println (Ymir::format ("%* {", (int) _it, '\t'));

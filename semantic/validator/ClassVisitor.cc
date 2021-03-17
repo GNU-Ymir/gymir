@@ -26,58 +26,11 @@ namespace semantic {
 	generator::Generator ClassVisitor::validate (const semantic::Symbol & cls, bool inModule) {
 	    auto sym = cls; // some cheating on c++ const, to store the generator inside the class symbol
 	    // and avoid validating multiple times the same class
-
+	    
 	    auto validated = !cls.to <semantic::Class> ().getGenerator ().isEmpty ();
 	    if (validated) validated = !cls.to <semantic::Class> ().getGenerator ().to <generator::Class> ().getClassRef ().to <generator::ClassRef> ().isFast ();
 	    if (!validated || inModule) {
-		std::list <Error::ErrorMsg> errors;
-		if (__fast_validation__.empty () || !__fast_validation__.back () || inModule) { // if inModule but __fast_validation__, then the class must be a template
-		    auto ancestor = this-> validateAncestor (cls);
-		    auto gen = generator::Class::init (cls.getName (), sym, ClassRef::init (cls.getName (), ancestor, sym));
-		    // To avoid recursive validation 
-		    sym.to <semantic::Class> ().setGenerator (gen);
-		    __fast_validation__.push_back (false);
-		    
-		    this-> validateCtes (cls); // this throws if an error occur anyway,
-		    // we don't wan't to validate the class if an assertion failed
-
-		    // The validation of the vtable, places the vtable inside the symbol 
-		    this-> validateVtable (cls, ancestor, errors);
-
-		    // The validation of the field of the class
-		    this-> validateFields (cls, ancestor, inModule, errors);
-
-		    __fast_validation__.pop_back ();
-		    
-		    if (errors.size () != 0) { // we caught the errors, to display the fields and vtable errors at the same time
-			if (!this-> _context.isInContext ({PragmaVisitor::PRAGMA_COMPILE_CONTEXT})) {  // in pragma compile the errors are not printed, so we need to keep them in case of retry
-			    sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
-			} else {
-			    sym.to <semantic::Class> ().setGenerator (ErrorType::init (cls.getName (), cls.getRealName (), errors));
-			}
-			Ymir::Error::occurAndNote (cls.getName (), errors, ExternalError::get (VALIDATING), cls.getRealName ());
-		    }
-
-		    if (inModule) { // if we are in the module that declared the class, then we have to validate the inner symbols
-			this-> validateInnerClass (cls, errors);
-		
-			if (errors.size () != 0) { // caught the error to add a note
-			    if (!this-> _context.isInContext ({PragmaVisitor::PRAGMA_COMPILE_CONTEXT})) { 
-				sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
-			    } else {
-				sym.to <semantic::Class> ().setGenerator (ErrorType::init (cls.getName (), cls.getRealName (), errors));
-			    }
-			    Ymir::Error::occurAndNote (cls.getName (), errors, ExternalError::get (VALIDATING), cls.getRealName ());
-			}
-		    
-			this-> _context.insertNewGenerator (cls.to <semantic::Class> ().getGenerator ());
-		    
-		    }
-		} else {
-		    auto gen = generator::Class::init (cls.getName (), sym, ClassRef::init (cls.getName (), Generator::empty (), sym, true));
-		    // To avoid recursive validation 
-		    sym.to <semantic::Class> ().setGenerator (gen);
-		}
+		this-> validateClassContent (cls, inModule);
 	    }
 
 	    match (cls.to <semantic::Class> ().getGenerator ()) {
@@ -96,6 +49,61 @@ namespace semantic {
 		}
 	    }
 	}
+
+	void ClassVisitor::validateClassContent (const semantic::Symbol & cls, bool inModule) {
+	    auto sym = cls; // some cheating on c++ const, to store the generator inside the class symbol
+	    // and avoid validating multiple times the same class
+	    
+	    std::list <Error::ErrorMsg> errors;
+	    if (__fast_validation__.empty () || !__fast_validation__.back () || inModule) { // if inModule but __fast_validation__, then the class must be a template
+		auto ancestor = this-> validateAncestor (cls);
+		auto gen = generator::Class::init (cls.getName (), sym, ClassRef::init (cls.getName (), ancestor, sym));
+		// To avoid recursive validation 
+		sym.to <semantic::Class> ().setGenerator (gen);
+		__fast_validation__.push_back (false);
+		    
+		this-> validateCtes (cls); // this throws if an error occur anyway,
+		// we don't wan't to validate the class if an assertion failed
+
+		// The validation of the vtable, places the vtable inside the symbol 
+		this-> validateVtable (cls, ancestor, errors);
+
+		// The validation of the field of the class
+		this-> validateFields (cls, ancestor, inModule, errors);
+
+		__fast_validation__.pop_back ();
+		    
+		if (errors.size () != 0) { // we caught the errors, to display the fields and vtable errors at the same time
+		    if (!this-> _context.isInContext ({PragmaVisitor::PRAGMA_COMPILE_CONTEXT})) {  // in pragma compile the errors are not printed, so we need to keep them in case of retry
+			sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
+		    } else {
+			sym.to <semantic::Class> ().setGenerator (ErrorType::init (cls.getName (), cls.getRealName (), errors));
+		    }
+		    Ymir::Error::occurAndNote (cls.getName (), errors, ExternalError::get (VALIDATING), cls.getRealName ());
+		}
+
+		if (inModule) { // if we are in the module that declared the class, then we have to validate the inner symbols
+		    this-> validateInnerClass (cls, errors);
+		
+		    if (errors.size () != 0) { // caught the error to add a note
+			if (!this-> _context.isInContext ({PragmaVisitor::PRAGMA_COMPILE_CONTEXT})) { 
+			    sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
+			} else {
+			    sym.to <semantic::Class> ().setGenerator (ErrorType::init (cls.getName (), cls.getRealName (), errors));
+			}
+			Ymir::Error::occurAndNote (cls.getName (), errors, ExternalError::get (VALIDATING), cls.getRealName ());
+		    }
+		    
+		    this-> _context.insertNewGenerator (cls.to <semantic::Class> ().getGenerator ());
+		    
+		}
+	    } else {
+		auto gen = generator::Class::init (cls.getName (), sym, ClassRef::init (cls.getName (), Generator::empty (), sym, true));
+		// To avoid recursive validation 
+		sym.to <semantic::Class> ().setGenerator (gen);
+	    }
+	}
+	
 
 	/**
 	 * ================================================================================

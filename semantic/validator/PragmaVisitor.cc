@@ -6,7 +6,7 @@
 #include <ymir/semantic/generator/Mangler.hh>
 #include <ymir/global/Core.hh>
 #include <ymir/errors/_.hh>
-
+#include <time.h>
 
 namespace semantic {
 
@@ -77,7 +77,7 @@ namespace semantic {
 	    } else {
 		Ymir::Error::occur (prg.getLocation (), ExternalError::get (UNKOWN_PRAGMA), prg.getLocation ().getStr ());
 	    }
-
+	    
 	    return ret;
 	}
 
