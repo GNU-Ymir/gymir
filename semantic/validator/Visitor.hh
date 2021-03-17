@@ -21,9 +21,13 @@ namespace semantic {
     namespace validator {
 
 	/**
-	 * \struct Visitor
+	 * @struct Visitor
 	 * This class is the final semantic validation before code production
 	 * It will traverse all the declared symbol of a given module and validated each of them
+	 * This is the most complexe class of the whole compiler, and must be treated as such with a special focus an readability.
+	 * This class unlike every other class is divided in multiple .cc files, to regroups close treatments inside the same sources
+	 * Above method definition, there are names, the declaration of the methods under that name are located inside the file Visitor_{name}.cc
+	 * Except for Debug (located inside management), and (generator api) in Visitor.cc
 	 */
 	class Visitor {
 	public :
@@ -106,553 +110,668 @@ namespace semantic {
 	public :
 
 	    /**
-	     * \brief Create an empty visitor
+	     * Create an empty visitor
 	     */
 	    static Visitor init ();
 
 	    /**
-	     * \brief Validate a symbol 
-	     * \brief Traverse all inner declaration and validate them
-	     * \brief If no errors occurs the returned list of generators are ready for code generation
+	     * Validate a symbol 
+	     * Traverse all inner declaration and validate them
+	     * If no errors occurs the returned list of generators are ready for code generation
 	     */	    
 	    void validate (const semantic::Symbol & sym);
 
 
 	    /**
-	     * \brief Validate a module
+	     * ================================================================================
+	     * ================================================================================
+	     * ================================     SYMBOLS     ===============================
+	     * ================================================================================
+	     * ================================================================================
+	     */
+
+	    /**
+	     * Validate a module
 	     */
 	    void validateModule (const semantic::Module & mod);
 
 	    /**
-	     * \brief Validate a module
-	     */
-	    void validateTemplateSolution (const semantic::Symbol & sol);
-
-	    /**
-	     * \brief Validate a template solution for a method frame
-	     */
-	    generator::Generator validateTemplateSolutionMethod (const semantic::Symbol & sol, const generator::Generator & self);
-
-	    /**
-	     * Validate the content of a macro expression, created by a MacroVisitor, invoked by a MacroCall
-	     */
-	    generator::Generator validateMacroExpression (const semantic::Symbol & sol, const syntax::Expression & expr);
-	    
-	    /**
-	     * \brief Validate a function
+	     * Validate a function
 	     */
 	    void validateFunction (const semantic::Function & func);
 	    
 	    /**
-	     * \brief Validate a global var declaration 
+	     * Validate a global var declaration 
 	     */
 	    void validateVarDecl (const semantic::Symbol & sym);
-
-
+	    	  
 	    /**
-	     * \brief Validate an alias
+	     * Validate an aka declaration (historically called an alias, TODO, change that)
 	     */
 	    generator::Generator validateAlias   (const semantic::Symbol & sym);
-	    
-	    /**
-	     * \brief Validate an enum declaration
-	     * \brief Unlike, function or var decl, this will not create any generator, but just check the integrity of the enum
-	     * \return An EnumRef
-	     */
-	    generator::Generator validateEnum (const semantic::Symbol & en); 
 
 	    /**
-	     * \brief Validate a struct declaration
-	     * \brief unlike, function or var decl, this will not create any generator, but just check the integrity of the structure
-	     * \return A StructRef
+	     * Validate an enum declaration
+	     * Unlike, function or var decl, this will not create any generator, but just check the integrity of the enum
+	     * @return An EnumRef
+	     */
+	    generator::Generator validateEnum (const semantic::Symbol & en);
+
+	    /**
+	     * Validate a struct declaration
+	     * unlike, function or var decl, this will not create any generator, but just check the integrity of the structure
+	     * @return A StructRef
 	     */
 	    generator::Generator validateStruct (const semantic::Symbol & str);
 	    
 	    /**
-	     * \brief Validate a class declaration
-	     * \brief unlike function or vardel, this will not create any generator, but just check the integrity of the the class, and generate all the inner function of the class
-	     * \param inModule validate the inner symbol of the class or just the prototypes?
-	     * \return A ClassRef
+	     * Validate a class declaration
+	     * unlike function or vardel, this will not create any generator, but just check the integrity of the the class, and generate all the inner function of the class
+	     * @param inModule validate the inner symbol of the class or just the prototypes?
+	     * @return A ClassRef
 	     */
 	    generator::Generator validateClass (const semantic::Symbol & cls, bool isModule = false);
 
 	    /**
-	     * \brief Validate the inner symbols of a class definition
-	     * \Warning the class must have been validated beforehand by the function validateClass
-	     * \Warning Actually, the only function that should call this method is validateClass
-	     */
-	    void validateInnerClass (const semantic::Symbol & cls);
-	    
-	    /**
-	     * \brief Make same small verif on trait
-	     * \brief This does not generate any code
+	     * Make same small verif on trait
+	     * This does not generate any code
 	     */
 	    void validateTrait (const semantic::Symbol & tra);
 	    
 	    /**
-	     * \brief Validate the internal declaration of a class
-	     * \param cls the symbol that declare the class
-	     * \param ancestor the ancestor of the class (might be empty)
-	     * \return the vtable of the class
+	     * ================================================================================
+	     * ================================================================================
+	     * ===============================     TEMPLATES     ==============================
+	     * ================================================================================
+	     * ================================================================================
 	     */
-	    std::vector <generator::Generator> validateClassDeclarations (const semantic::Symbol & cls, const generator::Generator & classType, const generator::Generator & ancestor, std::vector <generator::Class::MethodProtection> & protections, std::vector <Symbol> & addMethods);
 	    
 	    /**
-	     * \brief validate an expression, that produce a type
-	     * \return a generator containing the resulting type
-	     * \param lock if the return type is not mutable do we lock the mutability ?
-	     * \      if true, even if we set it to mutable later all the inner types will be immutable
+	     * Validate a module
 	     */
-	    generator::Generator validateType (const syntax::Expression & type, bool lock);
+	    void validateTemplateSolution (const semantic::Symbol & sol);
 
 	    /**
-	     * \brief validate an expression, that produce a type, if it failed with validateType (so it must be a ClassRef)
-	     * \return a generator containing the resulting type
-	     * \param lock if the return type is not mutable do we lock the mutability ?
-	     * \      if true, even if we set it to mutable later all the inner types will be immutable
+	     * Validate a template solution for a method frame
 	     */
-	    generator::Generator validateTypeClassRef (const syntax::Expression & type, bool lock);
+	    generator::Generator validateTemplateSolutionMethod (const semantic::Symbol & sol, const generator::Generator & self);
 
 	    /**
-	     * \brief validate an expression, that produce a type
-	     * \return a generator containing the resulting type
-	     */
-	    generator::Generator validateType (const syntax::Expression & type);
-	    
-	    /**
-	     * \brief validate an expression, that produce a type, if it failed with validateType (so it must be a ClassRef)
-	     * \return a generator containing the resulting type
-	     */
-	    generator::Generator validateTypeClassRef (const syntax::Expression & type);
-
-	    /**
-	     * \brief Validate a decorated type
-	     * \param canBeClassRef, true if it can be a class ref (from a UnaryOp type creation)
-	     */
-	    generator::Generator validateTypeDecorated (const syntax::DecoratedExpression & type, bool canBeClassRef = false);
-	    
-	    /**
-	     * \brief Validate the var using it as a type
-	     */
-	    generator::Generator validateTypeVar (const syntax::Var & var);
-
-	    /**
-	     * \brief Validate the unary using it as a type (for &() for example)
-	     */
-	    generator::Generator validateTypeUnary (const syntax::Unary & var);
-
-	    /**
-	     * \brief Validate the unary using it as a type (for (i32)? for example)
-	     */
-	    generator::Generator validateTypeTry (const syntax::Try & tr);
-	    
-	    /**
-	     * \brief Validate an array allocation as a type
-	     */
-	    generator::Generator validateTypeArrayAlloc (const syntax::ArrayAlloc & alloc);
-
-	    /**
-	     * \brief Validate a slice type from an array literal
-	     */
-	    generator::Generator validateTypeSlice (const syntax::List & array);
-	    
-	    /**
-	     * \brief Validate a tuple type from a tuple literal
-	     */
-	    generator::Generator validateTypeTuple (const syntax::List & tuple);
-
-	    /**
-	     * \brief Validate a tuple type from a template syntax list
-	     */
-	    generator::Generator validateTypeTupleTemplate (const generator::TemplateSyntaxList & tuple);
-	    
-	    /**
-	     * \brief Validate a template call type from a template call literal
+	     * Validate a template call type from a template call literal
 	     */
 	    generator::Generator validateTypeTemplateCall (const syntax::TemplateCall & tmpCall);
 
 	    /**
-	     * \brief Validate a template checker 
+	     * Validate a template checker 
 	     */
 	    generator::Generator validateTemplateChecker (const syntax::TemplateChecker & tmpChecker);
 
 	    /**
-	     * \brief Validate a throw expression
+	     * Validate a template test, a template test must be executed from the context of the template
+	     * @param context the context of the template definition
+	     * @param expr the test of the template
+	     * @return a generator (not cte, just validated)
 	     */
-	    generator::Generator validateThrow (const syntax::Throw & thr);
+	    generator::Generator validateTemplateTest (const Symbol & context, const syntax::Expression & expr);
 
 	    /**
-	     * \brief Validate a match expression
+	     * Validate a symbol created by templateSpecialization
+	     * @param ref is the reference of the template (sometimes it is a MethodTemplateRef and need to be treated like that)
 	     */
-	    generator::Generator validateMatch (const syntax::Match & matcher);
+	    void validateTemplateSymbol (const semantic::Symbol & sym, const generator::Generator & ref);
 
 	    /**
-	     * \brief Validate a catch (this function must be called only if this catch is out from any scope)
-	     * \param cat the catcher to validate
+	     * Validate a template call expression
 	     */
-	    generator::Generator validateCatchOutOfScope (const syntax::Catch & cat);
+	    generator::Generator validateTemplateCall (const syntax::TemplateCall & cl);
 
 	    /**
-	     * \brief Validate an assert
+	     * insert a new prototype
+	     * @return false if the proto already exists, true otherwise
 	     */
-	    generator::Generator validateAssert (const syntax::Assert & assert);
+	    void insertErrorTemplateSolution (const semantic::Symbol & sol, const std::list <Ymir::Error::ErrorMsg> & errors);
 
 	    /**
-	     * \brief Validate a macro call
+	     * Remove a template solution 
+	     */
+	    void removeErrorTemplateSolution (const semantic::Symbol & sol);
+
+	    
+	    /**
+	     * insert a new prototype
+	     * @return false if the proto already exists, true otherwise
+	     */
+	    bool insertTemplateSolution (const semantic::Symbol & sol, std::list <Ymir::Error::ErrorMsg> & errors);
+
+	    /**
+	     * Remove a template solution 
+	     */
+	    void removeTemplateSolution (const semantic::Symbol & sol);
+
+	    /**
+	     * Validate a template generated list of generator (it will create a tuple)
+	     */
+	    generator::Generator validateListTemplate (const generator::TemplateSyntaxList & list);
+	    
+	    /**
+	     * ================================================================================
+	     * ================================================================================
+	     * =================================     MACROS     ===============================
+	     * ================================================================================
+	     * ================================================================================
+	     */
+	    
+	    /**
+	     * Validate the content of a macro expression, created by a MacroVisitor, invoked by a MacroCall
+	     */
+	    generator::Generator validateMacroExpression (const semantic::Symbol & sol, const syntax::Expression & expr);
+
+	    /**
+	     * Validate a macro call
 	     */
 	    generator::Generator validateMacroCall (const syntax::MacroCall & call);
 
-	    /**
-	     * \brief Validate a pragma 
-	     */
-	    generator::Generator validatePragma (const syntax::Pragma & prg);
-
-	    /**
-	     * \brief Validate a dollar expression
-	     */
-	    generator::Generator validateDollar (const syntax::Dollar & dl);
-
-	    /**
-	     * \brief Validate a try expression
-	     */
-	    generator::Generator validateTry (const syntax::Try & tr);
-
-	    /**
-	     * \brief Validate a with expression
-	     */
-	    generator::Generator validateWith (const syntax::With & wh);
-
-	    /**
-	     * \brief Validate an atomic expression
-	     */
-	    generator::Generator validateAtomic (const syntax::Atomic & atom);
 	    
 	    /**
-	     * \brief Validate an assert at compile time, 
+	     * ================================================================================
+	     * ================================================================================
+	     * =================================      TYPES     ===============================
+	     * ================================================================================
+	     * ================================================================================
 	     */
-	    generator::Generator validateCteAssert (const syntax::Assert & assert);
-
-
-	    /**
-	     * \brief Validate a scope guard (this function must be called only if this scope is out from any scope)
-	     * \param sc the scope guard to validate
-	     */
-	    generator::Generator validateScopeOutOfScope (const syntax::Scope & sc);
 	    
 	    /**
-	     * \return the typeinfo of the type type
+	     * validate an expression, that produce a type
+	     * @return a generator containing the resulting type
+	     * @param lock if the return type is not mutable do we lock the mutability ?
+	     * @      if true, even if we set it to mutable later all the inner types will be immutable
+	     */
+	    generator::Generator validateType (const syntax::Expression & type, bool lock);
+
+	    /**
+	     * validate an expression, that produce a type, if it failed with validateType (so it must be a ClassRef)
+	     * @return a generator containing the resulting type
+	     * @param lock if the return type is not mutable do we lock the mutability ?
+	     * @      if true, even if we set it to mutable later all the inner types will be immutable
+	     */
+	    generator::Generator validateTypeClassRef (const syntax::Expression & type, bool lock);
+
+	    /**
+	     * validate an expression, that produce a type
+	     * @return a generator containing the resulting type
+	     */
+	    generator::Generator validateType (const syntax::Expression & type);
+	    
+	    /**
+	     * validate an expression, that produce a type, if it failed with validateType (so it must be a ClassRef)
+	     * @return a generator containing the resulting type
+	     */
+	    generator::Generator validateTypeClassRef (const syntax::Expression & type);
+
+	    /**
+	     * Validate a decorated type
+	     * @param canBeClassRef, true if it can be a class ref (from a UnaryOp type creation)
+	     */
+	    generator::Generator validateTypeDecorated (const syntax::DecoratedExpression & type, bool canBeClassRef = false);
+	    
+	    /**
+	     * Validate the var using it as a type
+	     */
+	    generator::Generator validateTypeVar (const syntax::Var & var);
+
+	    /**
+	     * Validate the unary using it as a type (for &() for example)
+	     */
+	    generator::Generator validateTypeUnary (const syntax::Unary & var);
+
+	    /**
+	     * Validate the unary using it as a type (for (i32)? for example)
+	     */
+	    generator::Generator validateTypeTry (const syntax::Try & tr);
+	    
+	    /**
+	     * Validate an array allocation as a type
+	     */
+	    generator::Generator validateTypeArrayAlloc (const syntax::ArrayAlloc & alloc);
+
+	    /**
+	     * Validate a slice type from an array literal
+	     */
+	    generator::Generator validateTypeSlice (const syntax::List & array);
+	    
+	    /**
+	     * Validate a tuple type from a tuple literal
+	     */
+	    generator::Generator validateTypeTuple (const syntax::List & tuple);
+
+	    /**
+	     * Validate a tuple type from a template syntax list
+	     */
+	    generator::Generator validateTypeTupleTemplate (const generator::TemplateSyntaxList & tuple);
+
+	    /**
+	     * @return the typeinfo of the type type
 	     */
 	    generator::Generator validateTypeInfo (const lexing::Word & loc, const generator::Generator & type);
 
 	    /**
-	     * \return the name of the field in TypeIDs for the type type
+	     * @return the name of the field in TypeIDs for the type type
 	     */
 	    static std::string typeInfoName (const generator::Generator & type);
-	    
-	    /**
-	     * \brief Validate a template test, a template test must be executed from the context of the template
-	     * \param context the context of the template definition
-	     * \param expr the test of the template
-	     * \return a generator (not cte, just validated)
-	     */
-	    generator::Generator validateTemplateTest (const Symbol & context, const syntax::Expression & expr);
-	    
 
 	    /**
-	     * Validate a value, and ensure that it has a type and not a void type
-	     * \return a tree containing the value
-	     */
-	    generator::Generator validateValueNonVoid (const syntax::Expression & expr);
-	    
-	    /**
-	     * \brief validate an expression, that produce a value
-	     * \brief If the value is a breaker or a returner throw an error
-	     * \return a tree containing the result of the value
-	     */
-	    generator::Generator validateValue (const syntax::Expression & value, bool canBeType = false, bool fromCall = false, bool checkReach = false, bool fromValidateType = false);
-
-	    /**
-	     * \brief Validate an compile time expression , that produce a value
-	     * \brief If the value is a breaker or a returner throw an error
-	     * \return a tree containing the result of the value
-	     */
-	    generator::Generator validateCteValue (const syntax::Expression & value);
-	    
-	    /**
-	     * \brief validate an expression, that produce a value
-	     * \return a tree containing the result of the value
-	     */
-	    generator::Generator validateValueNoReachable (const syntax::Expression & value, bool fromCall = false);
-
-	    /**
-	     * \brief Validate a block of expression
-	     * \return a tree containing the result of the block
-	     */
-	    generator::Generator validateBlock (const syntax::Block & block, const std::vector <generator::Generator> & init = {});
-
-	    /**
-	     * \brief Validate a catch block
-	     * \brief return by ref the vardecls and actions to perform in case of catch
-	     * \brief All the actions must return the type type (if type !is void)
-	     * \brief The type of the block may change, in case of common ancestor
-	     */
-	    void validateCatcher (const syntax::Expression & catcher, generator::Generator & varDecl, generator::Generator & typeInfos, generator::Generator & actions, generator::Generator& type, const std::vector <generator::Generator> & throwsTypes);
-	    
-	    
-	    /**
-	     * \brief Validate an inner declaration of a module
-	     * \param decl the module to declare, and validate
-	     */
-	    semantic::Symbol validateInnerModule (const syntax::Declaration & decl);
-
-	    /**
-	     * \brief Validate a symbol created by templateSpecialization
-	     * \param ref is the reference of the template (sometimes it is a MethodTemplateRef and need to be treated like that)
-	     */
-	    void validateTemplateSymbol (const semantic::Symbol & sym, const generator::Generator & ref);
-	    
-	    /**
-	     * \brief Validate a set of expression
-	     * \return a tree containing the result of the block
-	     */
-	    generator::Generator validateSet (const syntax::Set & set);
-	    
-	    /**
-	     * \brief Validate an fixed const integer value
-	     */
-	    generator::Generator validateFixed (const syntax::Fixed & fixed, int base = 0);	    
-
-	    
-	    /**
-	     * \brief Validate a const bool value
-	     */
-	    generator::Generator validateBool (const syntax::Bool & b);
-
-	    /**
-	     * \brief Validate a const floating value
-	     */
-	    generator::Generator validateFloat (const syntax::Float & f);
-
-	    /**
-	     * \brief Validate a literal char
-	     */
-	    generator::Generator validateChar (const syntax::Char & c);
-
-	    /**
-	     * \brief Validate a string literal
-	     */
-	    generator::Generator validateString (const syntax::String & s, bool forceUtf8 = false);
-	    
-	    /**
-	     * \brief Validate a binary expression 
-	     * \brief This generation is a bit complex as it depends on the type of the operands
-	     * \brief All binary operations are handled by BinaryVisitor class
-	     */
-	    generator::Generator validateBinary (const syntax::Binary & bin, bool isFromCall = false);
-
-	    /**
-	     * \brief Validate a unary expression
-	     * \brief All unary operations are handled by UnaryVisitor class
-	     */
-	    generator::Generator validateUnary (const syntax::Unary & un);
-	    
-	    /**
-	     * \brief Validate a var 
-	     * \brief It will check all the local reference
-	     * \brief If no local reference are found, it will find the symbol inside the table of the current frame
-	     * \brief And then produce the generator for this symbol
-	     */
-	    generator::Generator validateVar (const syntax::Var & var);
-
-	    /**
-	     * \brief Transform global extern symbol into valid generators
-	     * \param loc the location of the reference to those symbols
-	     * \param multSym the list of symbols
-	     * \param fromTemplate allow from template frame prototype
-	     */
-	    generator::Generator validateMultSym (const lexing::Word & loc, const std::vector <Symbol> & multSym);
-
-	    /**
-	     * \brief Transform global extern symbol into valid generators
-	     * \param loc the location of the reference to those symbols
-	     * \param multSym the list of symbols
-	     */
-	    generator::Generator validateMultSymType (const lexing::Word & loc, const std::vector <Symbol> & multSym);  
-	    	    
-	    /**
-	     * \brief Validate a var declaration inside a block (or a frame)
-	     * \param needValue Is the value mandatory in this var declaration?
-	     */
-	    generator::Generator validateVarDeclValue (const syntax::VarDecl & decl, bool needValue = true);
-	    
-	    /**
-	     * \brief Validate a decorated expression
-	     */
-	    generator::Generator validateDecoratedExpression (const syntax::DecoratedExpression & dec_expr);
-
-	    /**
-	     * \brief Validate an if expression 
-	     * \return as always a generator 
-	     * \warning the generator is not always a if expression, for optimization purpose (such as the test is always false, ...)
-	     */
-	    generator::Generator validateIfExpression (const syntax::If & _if);
-
-
-	    /**
-	     * \brief Validate an if expression and evaluate it at compile time
-	     * \return as always a generator 
-	     */
-	    generator::Generator validateCteIfExpression (const syntax::If & _if);
-	    
-	    /**
-	     * \brief Validate a while expression 
-	     * \return as always a generator 
-	     */
-	    generator::Generator validateWhileExpression (const syntax::While & _wh);
-
-	    /**
-	     * \brief Validate a for expression
-	     * \return as always a generator
-	     */
-	    generator::Generator validateForExpression (const syntax::For & _for, bool isCte = false);
-	    
-	    /**
-	     * \brief Validate a break expression
-	     */
-	    generator::Generator validateBreak (const syntax::Break & br);
-
-	    /**
-	     * \brief Validate a return expression
-	     */
-	    generator::Generator validateReturn (const syntax::Return & rt);
-	    
-	    /**
-	     * \brief Validate a list, it could be either : 
-	     * \brief - an array
-	     * \brief - a tuple
-	     * \brief - an array type
-	     * \brief - a tuple type
-	     */
-	    generator::Generator validateList (const syntax::List & list);
-
-	    /**
-	     * \brief Validate a template generated list of generator (it will create a tuple)
-	     */
-	    generator::Generator validateListTemplate (const generator::TemplateSyntaxList & list);
-
-	    /**
-	     * \brief Validate a cast expression
-	     */
-	    generator::Generator validateCast (const syntax::Cast & cast);
-
-	    /**
-	     * \brief Validate an array alloc
-	     */
-	    generator::Generator validateArrayAlloc (const syntax::ArrayAlloc & alloc);
-
-	    /**
-	     * \brief Validate a destruct declaration
-	     */
-	    generator::Generator validateDestructDecl (const syntax::DestructDecl & decl);
-
-	    /**
-	     * \brief Validate a lambda function	     
-	     */
-	    generator::Generator validateLambda (const syntax::Lambda & lmbd);
-
-	    /**
-	     * \brief Validate a lambda proto that is validated by calling it
-	     */
-	    generator::Generator validateLambdaProto (const generator::LambdaProto & lmbd, const std::vector <generator::Generator> & types);
-
-	    /**
-	     * \brief Validate a mult sym proto, 
-	     */
-	    generator::Generator validateMultSymProto (const generator::Generator & sym, const std::vector <generator::Generator> & types);	    
-	    
-	    /**
-	     * \brief Create the closure value, that will be passed in the delegate value 
-	     * \brief A closure value is a copy or a ref to all the enclosed variable in a tuple value that is then copied to heap	     
-	     */
-	    generator::Generator validateClosureValue (const generator::Generator & closureType, bool isrefClosure, uint closureIndex);
-	    
-	    /**
-	     * \brief Validate a func ptr type (fn or dg) into generate type
+	     * Validate a func ptr type (fn or dg) into generate type
 	     */
 	    generator::Generator validateFuncPtr (const syntax::FuncPtr & ptr);
 
 	    /**
-	     * \brief Validate a null value
+	     * Validate a type from a class context
 	     */
-	    generator::Generator validateNullValue (const syntax::Null & nl);
+	    generator::Generator validateTypeClassContext (const lexing::Word & loc, const generator::Generator & cl, const syntax::Expression & type);
+
 	    
 	    /**
-	     * \brief Validate intricisics, it could be either :  
-	     * \brief - a copy
-	     * \brief - an expand
-	     * \brief - type informations ...
+	     * ================================================================================
+	     * ================================================================================
+	     * ==============================      STATEMENTS     =============================
+	     * ================================================================================
+	     * ================================================================================
+	     */
+	    
+	    
+	    /**
+	     * Validate a throw expression
+	     */
+	    generator::Generator validateThrow (const syntax::Throw & thr);
+
+	    /**
+	     * Validate a match expression
+	     */
+	    generator::Generator validateMatch (const syntax::Match & matcher);
+
+	    /**
+	     * Validate an assert
+	     */
+	    generator::Generator validateAssert (const syntax::Assert & assert);
+
+	    /**
+	     * Validate an assert at compile time, 
+	     */
+	    generator::Generator validateCteAssert (const syntax::Assert & assert);
+	    
+
+	    /**
+	     * Validate a pragma 
+	     */
+	    generator::Generator validatePragma (const syntax::Pragma & prg);
+
+	    /**
+	     * Validate a with expression
+	     */
+	    generator::Generator validateWith (const syntax::With & wh);
+
+	    /**
+	     * Validate an atomic expression
+	     */
+	    generator::Generator validateAtomic (const syntax::Atomic & atom);
+
+	    /**
+	     * Validate an if expression 
+	     * @return as always a generator 
+	     * @warning the generator is not always a if expression, for optimization purpose (such as the test is always false, ...)
+	     */
+	    generator::Generator validateIfExpression (const syntax::If & _if);
+
+	    /**
+	     * Validate an if expression and evaluate it at compile time
+	     * @return as always a generator 
+	     */
+	    generator::Generator validateCteIfExpression (const syntax::If & _if);
+	    
+	    /**
+	     * Validate a while expression 
+	     * @return as always a generator 
+	     */
+	    generator::Generator validateWhileExpression (const syntax::While & _wh);
+
+	    /**
+	     * Validate a for expression
+	     * @return as always a generator
+	     */
+	    generator::Generator validateForExpression (const syntax::For & _for, bool isCte = false);
+	    
+	    /**
+	     * Validate a break expression
+	     */
+	    generator::Generator validateBreak (const syntax::Break & br);
+
+	    /**
+	     * Validate a return expression
+	     */
+	    generator::Generator validateReturn (const syntax::Return & rt);
+
+	    /**
+	     * Validate a cast expression
+	     */
+	    generator::Generator validateCast (const syntax::Cast & cast);
+	    
+	    /**
+	     * Validate a destruct declaration
+	     */
+	    generator::Generator validateDestructDecl (const syntax::DestructDecl & decl);
+
+	    /**
+	     * Validate a var declaration inside a block (or a frame)
+	     * @param needValue Is the value mandatory in this var declaration?
+	     */
+	    generator::Generator validateVarDeclValue (const syntax::VarDecl & decl, bool needValue = true);
+
+	    /**
+	     * Validate a try expression
+	     */
+	    generator::Generator validateTry (const syntax::Try & tr);
+
+	    /**
+	     * ================================================================================
+	     * ================================================================================
+	     * ===============================     INTRINSICS    ==============================
+	     * ================================================================================
+	     * ================================================================================
+	     */
+	    
+	    /**
+	     * Validate intricisics, it could be either :  
+	     * - a copy
+	     * - an expand
+	     * - type informations ...
 	     */
 	    generator::Generator validateIntrinsics (const syntax::Intrinsics & intr);
-	    
+	    	    
 	    /**
-	     * \brief Validate the copy intrinsics
+	     * Validate the copy intrinsics
 	     */
 	    generator::Generator validateCopy (const syntax::Intrinsics & intr);
 
 	    /**
-	     * \brief Validate the deep copy intrinsics
+	     * Validate the deep copy intrinsics
 	     */
 	    generator::Generator validateDeepCopy (const syntax::Intrinsics & intr);
 
 	    /**
-	     * \brief Validate the alias intrinsics
+	     * Validate the alias intrinsics
 	     */
 	    generator::Generator validateAlias (const syntax::Intrinsics & intr);
 
 	    /**
-	     * \brief Validate the expand intrinsics
+	     * Validate the expand intrinsics
 	     */
 	    generator::Generator validateExpand (const syntax::Intrinsics & intr);
-	    
-	    /**
-	     * \brief Validate a mult operator
-	     * \brief A mult operator is an operator with one left operand and multiple right operand
-	     * \brief It can be either :
-	     * \brief - Brackets
-	     * \brief - Parentheses
-	     */
-	    generator::Generator validateMultOperator (const syntax::MultOperator & mult);
 
 	    
 	    /**
-	     * \brief validate an array literal
+	     * ================================================================================
+	     * ================================================================================
+	     * ===============================      LITERALS     ==============================
+	     * ================================================================================
+	     * ================================================================================
+	     */
+	    	    
+	    
+	    /**
+	     * Validate a dollar expression
+	     */
+	    generator::Generator validateDollar (const syntax::Dollar & dl);
+
+	    
+	    /**
+	     * Validate an fixed const integer value
+	     */
+	    generator::Generator validateFixed (const syntax::Fixed & fixed, int base = 0);	    
+	    
+	    /**
+	     * Validate a const bool value
+	     */
+	    generator::Generator validateBool (const syntax::Bool & b);
+
+	    /**
+	     * Validate a const floating value
+	     */
+	    generator::Generator validateFloat (const syntax::Float & f);
+
+	    /**
+	     * Validate a literal char
+	     */
+	    generator::Generator validateChar (const syntax::Char & c);
+
+	    /**
+	     * Validate a string literal
+	     */
+	    generator::Generator validateString (const syntax::String & s, bool forceUtf8 = false);
+	    	    
+	    /**
+	     * Validate a list, it could be either : 
+	     * - an array
+	     * - a tuple
+	     * - an array type
+	     * - a tuple type
+	     */
+	    generator::Generator validateList (const syntax::List & list);
+
+	    /**
+	     * Validate an array alloc
+	     */
+	    generator::Generator validateArrayAlloc (const syntax::ArrayAlloc & alloc);
+
+	    /**
+	     * Validate a lambda function	     
+	     */
+	    generator::Generator validateLambda (const syntax::Lambda & lmbd);
+
+	    /**
+	     * Validate a lambda proto that is validated by calling it
+	     */
+	    generator::Generator validateLambdaProto (const generator::LambdaProto & lmbd, const std::vector <generator::Generator> & types);
+
+	    /**
+	     * Create the closure value, that will be passed in the delegate value 
+	     * A closure value is a copy or a ref to all the enclosed variable in a tuple value that is then copied to heap	     
+	     */
+	    generator::Generator validateClosureValue (const generator::Generator & closureType, bool isrefClosure, uint closureIndex);
+
+	    /**
+	     * Validate a null value
+	     */
+	    generator::Generator validateNullValue (const syntax::Null & nl);
+
+	    /**
+	     * validate an array literal
 	     */
 	    generator::Generator validateArray (const syntax::List & list);
 
 	    /**
-	     * \brief validate an tuple literal
+	     * validate an tuple literal
 	     */
 	    generator::Generator validateTuple (const syntax::List & list);
-
-	    /**
-	     * \brief Validate a template call expression
-	     */
-	    generator::Generator validateTemplateCall (const syntax::TemplateCall & cl);
-	    
 	    
 	    /**
-	     * \return the list of generator produced by semantic validation
+	     * ================================================================================
+	     * ================================================================================
+	     * =================================      BLOCKS     ==============================
+	     * ================================================================================
+	     * ================================================================================
 	     */
-	    const std::vector <generator::Generator> & getGenerators () const;
+	    	    
+	    
+	    /**
+	     * Validate a scope guard (this function must be called only if this scope is out from any scope)
+	     * @param sc the scope guard to validate
+	     */
+	    generator::Generator validateScopeOutOfScope (const syntax::Scope & sc);
+
 
 	    /**
-	     * \brief this function is called each time a copy is performed
-	     * \param loc the location of the affectation
-	     * \param type the type result of the copy 
-	     * \param gen the generator that will produce the affectation 
-	     * \param construct is this a construction ? (ref are not affected yet)
-	     * \brief This function verify that the mutability of gen is preserved
-	     * \brief And that no implicit operation are performed
+	     * Validate a catch (this function must be called only if this catch is out from any scope)
+	     * @param cat the catcher to validate
+	     */
+	    generator::Generator validateCatchOutOfScope (const syntax::Catch & cat);
+	    
+	    /**
+	     * Validate a block of expression
+	     * @return a tree containing the result of the block
+	     */
+	    generator::Generator validateBlock (const syntax::Block & block, const std::vector <generator::Generator> & init = {});
+
+	    /**
+	     * Validate a catch block
+	     * return by ref the vardecls and actions to perform in case of catch
+	     * All the actions must return the type type (if type !is void)
+	     * The type of the block may change, in case of common ancestor
+	     */
+	    void validateCatcher (const syntax::Expression & catcher, generator::Generator & varDecl, generator::Generator & typeInfos, generator::Generator & actions, generator::Generator& type, const std::vector <generator::Generator> & throwsTypes);
+
+	    /**
+	     * Validate an inner declaration of a module
+	     * @param decl the module to declare, and validate
+	     */
+	    semantic::Symbol validateInnerModule (const syntax::Declaration & decl);
+
+	    /**
+	     * Validate a set of expression
+	     * @return a tree containing the result of the block
+	     */
+	    generator::Generator validateSet (const syntax::Set & set);
+	    
+	    /**
+	     * ================================================================================
+	     * ================================================================================
+	     * =================================      VALUES     ==============================
+	     * ================================================================================
+	     * ================================================================================
+	     */
+	    	    
+	    
+	    /**
+	     * Validate a value, and ensure that it has a type and not a void type
+	     * @return a tree containing the value
+	     */
+	    generator::Generator validateValueNonVoid (const syntax::Expression & expr);
+	    
+	    /**
+	     * validate an expression, that produce a value
+	     * If the value is a breaker or a returner throw an error
+	     * @return a tree containing the result of the value
+	     */
+	    generator::Generator validateValue (const syntax::Expression & value, bool canBeType = false, bool fromCall = false, bool checkReach = false, bool fromValidateType = false);
+
+	    /**
+	     * Validate an compile time expression , that produce a value
+	     * If the value is a breaker or a returner throw an error
+	     * @return a tree containing the result of the value
+	     */
+	    generator::Generator validateCteValue (const syntax::Expression & value);
+	    
+	    /**
+	     * validate an expression, that produce a value
+	     * @return a tree containing the result of the value
+	     */
+	    generator::Generator validateValueNoReachable (const syntax::Expression & value, bool fromCall = false);
+
+	    	    	    	    
+	    /**
+	     * execute the content of the generator in order to retreive the compile time value 
+	     */
+	    generator::Generator retreiveValue (const generator::Generator & gen);
+
+
+	    /**
+	     * ================================================================================
+	     * ================================================================================
+	     * =================================    OPERATORS    ==============================
+	     * ================================================================================
+	     * ================================================================================
+	     */
+	   	   	    	    	    
+	    /**
+	     * Validate a binary expression 
+	     * This generation is a bit complex as it depends on the type of the operands
+	     * All binary operations are handled by BinaryVisitor class
+	     */
+	    generator::Generator validateBinary (const syntax::Binary & bin, bool isFromCall = false);
+
+	    /**
+	     * Validate a unary expression
+	     * All unary operations are handled by UnaryVisitor class
+	     */
+	    generator::Generator validateUnary (const syntax::Unary & un);
+
+	    /**
+	     * Validate a mult operator
+	     * A mult operator is an operator with one left operand and multiple right operand
+	     * It can be either :
+	     * - Brackets
+	     * - Parentheses
+	     */
+	    generator::Generator validateMultOperator (const syntax::MultOperator & mult);
+	    
+	    /**
+	     * ================================================================================
+	     * ================================================================================
+	     * ===============================    VARS AND REFS    ============================
+	     * ================================================================================
+	     * ================================================================================
+	     */
+	   	   	    	    	    
+	    /**
+	     * Validate a var 
+	     * It will check all the local reference
+	     * If no local reference are found, it will find the symbol inside the table of the current frame
+	     * And then produce the generator for this symbol
+	     */
+	    generator::Generator validateVar (const syntax::Var & var);
+
+	    /**
+	     * Transform global extern symbol into valid generators
+	     * @param loc the location of the reference to those symbols
+	     * @param multSym the list of symbols
+	     * @param fromTemplate allow from template frame prototype
+	     */
+	    generator::Generator validateMultSym (const lexing::Word & loc, const std::vector <Symbol> & multSym);
+
+	    /**
+	     * Transform global extern symbol into valid generators
+	     * @param loc the location of the reference to those symbols
+	     * @param multSym the list of symbols
+	     */
+	    generator::Generator validateMultSymType (const lexing::Word & loc, const std::vector <Symbol> & multSym);  
+	    	    
+	    /**
+	     * Validate a decorated expression
+	     */
+	    generator::Generator validateDecoratedExpression (const syntax::DecoratedExpression & dec_expr);
+
+	    /**
+	     * Validate a mult sym proto, 
+	     */
+	    generator::Generator validateMultSymProto (const generator::Generator & sym, const std::vector <generator::Generator> & types);
+	    
+
+	    /**
+	     * ================================================================================
+	     * ================================================================================
+	     * ================================   VERIFICATIONS  ==============================
+	     * ================================================================================
+	     * ================================================================================
+	     */
+	    	    	  	    
+
+	    /**
+	     * this function is called each time a copy is performed
+	     * @param loc the location of the affectation
+	     * @param type the type result of the copy 
+	     * @param gen the generator that will produce the affectation 
+	     * @param construct is this a construction ? (ref are not affected yet)
+	     * This function verify that the mutability of gen is preserved
+	     * And that no implicit operation are performed
 	     */
 	    void verifyMemoryOwner (const lexing::Word & loc, const generator::Generator & type, const generator::Generator & gen, bool construct, bool checkTypes = true, bool inMatch = false);
 
@@ -663,12 +782,93 @@ namespace semantic {
 	    void verifyMutabilityLevel (const lexing::Word & loc, const lexing::Word & rloc, const generator::Generator & leftType, const generator::Generator & rightType, bool construct);
 	    
 	    /**
-	     * \brief Verify that if the type must be copied or aliased, the generator gives an explicitly alias construction
+	     * Verify that if the type must be copied or aliased, the generator gives an explicitly alias construction
 	     */
 	    void verifyImplicitAlias (const lexing::Word & loc, const generator::Generator & type, const generator::Generator & gen);
 
 	    /**
-	     * \return true, if we can make an implicit alias of the value
+	     * Verify that the type is complete and can be used at runtime to store value
+	     */
+	    void verifyCompleteType (const lexing::Word & loc, const generator::Generator & type);
+
+	    /**
+	     * Verify that a parameter (of a function, or a for loop or ...) is mutable iif it is a reference
+	     * There is some exception, you must call this function to verify the correct behavior
+	     * @param loc the location of the variable declaration
+	     * @param type the type of the var
+	     * @param error the error to throw, (in case of error) 
+	     */
+	    void verifyMutabilityRefParam (const lexing::Word & loc, const generator::Generator & type, Ymir::ExternalErrorValue error);
+
+	    /**
+	     * Throw an exception if left.equals (right) is false
+	     * @param left a type
+	     * @param rigth a type
+	     */
+	    void verifySameType (const generator::Generator & left, const generator::Generator & right);
+
+	    /**
+	     * Throw an exception if left.equals (right) is false
+	     * @param left a type
+	     * @param rigth a type
+	     */
+	    void verifyCompleteSameType (const generator::Generator & left, const generator::Generator & right);
+	    
+	    /**
+	     * Verify that the class cl implement the trait tr
+	     */
+	    void verifyClassImpl (const lexing::Word & loc, const generator::Generator & cl, const syntax::Expression & tr);
+
+	    /**
+	     * Verify that the class cl implement the trait tr
+	     */
+	    void verifyClassImpl (const lexing::Word & loc, const generator::Generator & cl, const generator::Generator & tr);
+
+	    /**
+	     * Throw an exception if left.isCompatible (right) is false
+	     * @param left a type
+	     * @param right a type
+	     * @param fromObject, if the left type is an &core::object::Object, and right is a ClassPtr, then the type is compatible iif fromObject 
+	     */
+	    void verifyCompatibleType (const lexing::Word & loc, const lexing::Word & rightLoc, const generator::Generator & left, const generator::Generator & right, bool fromObject = false);
+
+	    
+	    /**
+	     * Throw an exception if left.isCompatible (right.getType ()) is false
+	     * @param left a type
+	     * @param right a value
+	     */
+	    void verifyCompatibleTypeWithValue (const lexing::Word & loc, const generator::Generator & left, const generator::Generator & right);
+
+
+	    /**
+	     * Throw an exception if there is already some var named name
+	     * @param name the forbidden name
+	     */
+	    void verifyShadow (const lexing::Word & name);
+
+	    /**
+	     * Throw an exception if name refer to a primitive type
+	     * @param the possibly forbidden name
+	     */
+	    void verifyNotIsType (const lexing::Word & name);
+
+	    /**
+	     * Verify that a given value is not locked for aliasing
+	     */
+	    void verifyLockAlias (const generator::Generator & gen);	    
+	    
+	    /**
+	     * ================================================================================
+	     * ================================================================================
+	     * =================================      TESTS     ===============================
+	     * ================================================================================
+	     * ================================================================================
+	     */
+	    	    	  
+	    
+	    /**
+	     * @return true, if we can make an implicit alias of the value
 	     */
 	    bool canImplicitAlias (const generator::Generator & value);
 
@@ -676,93 +876,11 @@ namespace semantic {
 	     * Is the type a void array
 	     */
 	    bool isVoidArrayType (const generator::Generator & type);
-	    
 
 	    /**
-	     * \brief Verify that the type is complete and can be used at runtime to store value
-	     */
-	    void verifyCompleteType (const lexing::Word & loc, const generator::Generator & type);
-
-	    
-	    /**
-	     * \brief Applicable to the type of a vardecl, 
-	     * \param decos the decorators of the variable (and not of the type)
-	     * \param type the type of the var declaration
-	     * \return isRef ref decorator found
-	     * \return isMutable mut decorator found
-	     */
-	    generator::Generator applyDecoratorOnVarDeclType (const std::vector <syntax::DecoratorWord> & decos, const generator::Generator & type, bool & isRef, bool & isMutable, bool & dmut);
-
-	    /**
-	     * \brief Verify that a parameter (of a function, or a for loop or ...) is mutable iif it is a reference
-	     * \brief There is some exception, you must call this function to verify the correct behavior
-	     * \param loc the location of the variable declaration
-	     * \param type the type of the var
-	     * \param error the error to throw, (in case of error) 
-	     */
-	    void verifyMutabilityRefParam (const lexing::Word & loc, const generator::Generator & type, Ymir::ExternalErrorValue error);
-
-	    /**
-	     * \brief Throw an exception if left.equals (right) is false
-	     * \param left a type
-	     * \param rigth a type
-	     */
-	    void verifySameType (const generator::Generator & left, const generator::Generator & right);
-
-	    /**
-	     * \brief Throw an exception if left.equals (right) is false
-	     * \param left a type
-	     * \param rigth a type
-	     */
-	    void verifyCompleteSameType (const generator::Generator & left, const generator::Generator & right);
-	    
-	    /**
-	     * \brief Verify that the class cl implement the trait tr
-	     */
-	    void verifyClassImpl (const lexing::Word & loc, const generator::Generator & cl, const syntax::Expression & tr);
-
-	    /**
-	     * \brief Verify that the class cl implement the trait tr
-	     */
-	    void verifyClassImpl (const lexing::Word & loc, const generator::Generator & cl, const generator::Generator & tr);
-
-	    /**
-	     * \return true if left is a classRef that is an ancestor of right also a classref
+	     * @return true if left is a classRef that is an ancestor of right also a classref
 	     */
 	    bool isAncestor (const generator::Generator & left, const generator::Generator & right);
-	    
-	    /**
-	     * \return the list of all implemented traits in the class cl
-	     */
-	    std::vector <generator::Generator> getAllImplClass (const generator::Generator & cl);
-	    
-	    /**
-	     * \brief Throw an exception if left.isCompatible (right) is false
-	     * \param left a type
-	     * \param right a type
-	     * \param fromObject, if the left type is an &core::object::Object, and right is a ClassPtr, then the type is compatible iif fromObject 
-	     */
-	    void verifyCompatibleType (const lexing::Word & loc, const lexing::Word & rightLoc, const generator::Generator & left, const generator::Generator & right, bool fromObject = false);
-
-	    
-	    /**
-	     * \brief Throw an exception if left.isCompatible (right.getType ()) is false
-	     * \param left a type
-	     * \param right a value
-	     */
-	    void verifyCompatibleTypeWithValue (const lexing::Word & loc, const generator::Generator & left, const generator::Generator & right);
-
-
-	    /**
-	     * \brief Deduce the type that can be used as a common ancestor type for left and right
-	     * \brief Might no throw anything even if left and right are incompatible, must verify the compatibility afterwards, between type, left and right
-	     */
-	    generator::Generator deduceTypeBranching (const lexing::Word & lloc, const lexing::Word & rloc, const generator::Generator & left, const generator::Generator & right);
-
-	    /**
-	     * \throw the error saying that left and right are incompatible types
-	     */
-	    void throwIncompatibleTypes (const lexing::Word & loc, const lexing::Word & rightLoc, const generator::Generator & left, const generator::Generator & right, const std::list <Ymir::Error::ErrorMsg> & notes);
 	    
 	    /**
 	     * Is the value known at compile time and is a fixed constant
@@ -773,69 +891,181 @@ namespace semantic {
 	     * Is the value known at compile time and is a float const
 	     */
 	    bool isFloatConstant (const generator::Generator & val);
-	    	    
-	    /**
-	     * \brief Throw an exception if there is already some var named name
-	     * \param name the forbidden name
-	     */
-	    void verifyShadow (const lexing::Word & name);
-
-	    /**
-	     * \brief Throw an exception if name refer to a primitive type
-	     * \param the possibly forbidden name
-	     */
-	    void verifyNotIsType (const lexing::Word & name);
 
 	    
-	public :
+	    /**
+	     * Tell if an expression use alone has any effect, or if it is just a lost of computation power
+	     * @param gen the expression to test
+	     */
+	    bool isUseless (const generator::Generator & gen);
 
+
+	    /**
+	     * ================================================================================
+	     * ================================================================================
+	     * ===================================   GETTERS  =================================
+	     * ================================================================================
+	     * ================================================================================
+	     */
+	    
+	    /**
+	     * Applicable to the type of a vardecl, 
+	     * @param decos the decorators of the variable (and not of the type)
+	     * @param type the type of the var declaration
+	     * @return isRef ref decorator found
+	     * @return isMutable mut decorator found
+	     */
+	    generator::Generator applyDecoratorOnVarDeclType (const std::vector <syntax::DecoratorWord> & decos, const generator::Generator & type, bool & isRef, bool & isMutable, bool & dmut);
+
+	    
+	    /**
+	     * @return the list of all implemented traits in the class cl
+	     */
+	    std::vector <generator::Generator> getAllImplClass (const generator::Generator & cl);
+
+	    /**
+	     * Get the current context for class access
+	     * @param cl a class symbol that we want to access
+	     * @param isPrivate return by ref, will be true if we have the right to access to private elements of cl 
+	     * @param isProtected return by ref, will be true if we have the right to access to protected elements of cl 
+	     * @info as public is always true, it is not a parameter here
+	     */
+	    void getClassContext (const semantic::Symbol & cl, bool & isPrivate, bool & isProtected);
+
+	    /**
+	     * Get the current context for a macro access
+	     */
+	    void getMacroContext (const semantic::Symbol & cl, bool & isPrivate);
+
+	    /**
+	     * @return the list of (in a multsym) of the constructor of the class cl
+	     * @warning cl is assumed to be a generator::Class
+	     */
+	    generator::Generator getClassConstructors (const lexing::Word & loc, const generator::Generator & cl, const lexing::Word & name);
+
+	    /**
+	     * @return the list of constructor of the macro
+	     */
+	    std::vector <semantic::Symbol> getMacroConstructor (const lexing::Word & loc, const generator::MacroRef & mref);
+
+	    /**
+	     * @return the list of macro rule of the macro
+	     * @param name the name of the rule
+	     */
+	    std::vector <semantic::Symbol> getMacroRules (const lexing::Word & loc, const generator::MacroRef & ref, const std::string & name);
+
+	    /**
+	     * @return the list of macro rules of the current macro context
+	     * @param name the name of the rule
+	     */
+	    semantic::Symbol getCurrentMacroRules (const lexing::Word & loc, const std::string & name);
+	    
+	    /**
+	     * @return the list of constructors declared in the class
+	     */
+	    std::vector <syntax::Declaration> getAllConstructors (const std::vector <syntax::Declaration> & innerClass, const lexing::Word & name);
+	    
+	    /**
+	     * Get the current context of the current state
+	     * If mod is an ancestor of the current ref, return will be true
+	     * It means that all the private declaration of mod can be accessed in the current state
+	     */
+	    bool  getModuleContext (const semantic::Symbol & mod);
+
+	    	    
+	    /**
+	     * @returns: the common ancestor from two class refs (or classptrs)
+	     */
+	    generator::Generator getCommonAncestor (const generator::Generator & left, const generator::Generator & right);
+
+	    /**
+	     * ================================================================================
+	     * ================================================================================
+	     * ===============================     INFERENCES    ==============================
+	     * ================================================================================
+	     * ================================================================================
+	     */
+
+
+	    /**
+	     * Deduce the type that can be used as a common ancestor type for left and right
+	     * Might no throw anything even if left and right are incompatible, must verify the compatibility afterwards, between type, left and right
+	     */
+	    generator::Generator inferTypeBranching (const lexing::Word & lloc, const lexing::Word & rloc, const generator::Generator & left, const generator::Generator & right);
+
+
+	    /**
+	     * ================================================================================
+	     * ================================================================================
+	     * ================================       ERRORS     ==============================
+	     * ================================================================================
+	     * ================================================================================
+	     */
+	    
+	    /**
+	     * @throw the error saying that left and right are incompatible types
+	     */
+	    void throwIncompatibleTypes (const lexing::Word & loc, const lexing::Word & rightLoc, const generator::Generator & left, const generator::Generator & right, const std::list <Ymir::Error::ErrorMsg> & notes);
+
+
+	    /**
+	     * ================================================================================
+	     * ================================================================================
+	     * =============================   SCOPE MANAGEMENT  ==============================
+	     * ================================================================================
+	     * ================================================================================
+	     */
+
+	    
 	    /** 
-	     * \brief Enter a foreign definition 
-	     * \brief all the symbol currently declared in local block won't be accessible until we exit the foreign
+	     * Enter a foreign definition 
+	     * all the symbol currently declared in local block won't be accessible until we exit the foreign
 	     */
 	    void enterForeign ();
 
 	    /**
-	     * \brief exit the foreign (Cf. enterForeign)
+	     * exit the foreign (Cf. enterForeign)
 	     */
 	    void exitForeign ();
 	    
 	    /**
-	     * \brief Enter a new closure
+	     * Enter a new closure
 	     */
 	    void enterClosure (bool isRefClosure, uint refId, uint index);
 
 	    /**
-	     * \brief Quit a closure
-	     * \returns all the enclosed vars
+	     * Quit a closure
+	     * @returns all the enclosed vars
 	     */
 	    generator::Generator exitClosure ();
 	    
 	    /**
-	     * \brief enter a new context, 
-	     * \brief A context is a list of Cas (only used in a function)
-	     * \brief This list define the behavior that are not allowed
+	     * enter a new context, 
+	     * A context is a list of Cas (only used in a function)
+	     * This list define the behavior that are not allowed
 	     */
 	    void enterContext (const std::vector <lexing::Word> & Cas);
 
 	    /**
-	     * \brief Exit the context (Cf. enterContext)
+	     * Exit the context (Cf. enterContext)
 	     */
 	    void exitContext ();
 
 	    /**
-	     * \brief enter a new class context
+	     * enter a new class context
 	     */
 	    void enterClassDef (const semantic::Symbol & sym);
 
 
 	    /**
-	     * \brief Exit a class context (Cf. enterClassDef)
+	     * Exit a class context (Cf. enterClassDef)
 	     */
 	    void exitClassDef (const semantic::Symbol & sym);
+
+	    	    
 	    
 	    /**
-	     * \return does the current context include context
+	     * @return does the current context include context
 	     */
 	    bool isInContext (const std::string & context);
 
@@ -843,65 +1073,10 @@ namespace semantic {
 	     * Tell if the current context allows trusted declarations
 	     */
 	    bool isInTrusted () const;	    
+
 	    
 	    /**
-	     * \brief Get the current context for class access
-	     * \param cl a class symbol that we want to access
-	     * \param isPrivate return by ref, will be true if we have the right to access to private elements of cl 
-	     * \param isProtected return by ref, will be true if we have the right to access to protected elements of cl 
-	     * \info as public is always true, it is not a parameter here
-	     */
-	    void getClassContext (const semantic::Symbol & cl, bool & isPrivate, bool & isProtected);
-
-	    /**
-	     * \brief Get the current context for a macro access
-	     */
-	    void getMacroContext (const semantic::Symbol & cl, bool & isPrivate);
-
-	    /**
-	     * \return the list of (in a multsym) of the constructor of the class cl
-	     * \warning cl is assumed to be a generator::Class
-	     */
-	    generator::Generator getClassConstructors (const lexing::Word & loc, const generator::Generator & cl, const lexing::Word & name);
-
-	    /**
-	     * \return the list of constructor of the macro
-	     */
-	    std::vector <semantic::Symbol> getMacroConstructor (const lexing::Word & loc, const generator::MacroRef & mref);
-
-	    /**
-	     * \return the list of macro rule of the macro
-	     * \param name the name of the rule
-	     */
-	    std::vector <semantic::Symbol> getMacroRules (const lexing::Word & loc, const generator::MacroRef & ref, const std::string & name);
-
-	    /**
-	     * \return the list of macro rules of the current macro context
-	     * \param name the name of the rule
-	     */
-	    semantic::Symbol getCurrentMacroRules (const lexing::Word & loc, const std::string & name);
-	    
-	    /**
-	     * \return the list of constructors declared in the class
-	     */
-	    std::vector <syntax::Declaration> getAllConstructors (const std::vector <syntax::Declaration> & innerClass, const lexing::Word & name);
-	    
-	    /**
-	     * \brief Get the current context of the current state
-	     * \brief If mod is an ancestor of the current ref, return will be true
-	     * \brief It means that all the private declaration of mod can be accessed in the current state
-	     */
-	    bool  getModuleContext (const semantic::Symbol & mod);
-
-	    /**
-	     * \brief Insert a new Generator that has passed the semantic validation
-	     * \brief All the symbol passed here, will be transformed at generation time
-	     * \param generator the valid generator
-	     */
-	    void insertNewGenerator (const generator::Generator & generator);
-
-	    /**
-	     * \brief Enter a new scope
+	     * Enter a new scope
 	     */
 	    void enterBlock ();
 
@@ -914,33 +1089,15 @@ namespace semantic {
 	     * Unlock the possibility of alias the content of gen
 	     */
 	    void unlockAliasing (const generator::Generator & gen);
-
-	    /**
-	     * Verify that a given value is not locked for aliasing
-	     */
-	    void verifyLockAlias (const generator::Generator & gen);
 	    
 	    /**
-	     * \brief insert a new symbol in the frame local scope
-	     * \param name the name of the symbol
-	     * \param local the symbol 
-	     */
-	    void insertLocal (const std::string & name, const generator::Generator & local);
-	    
-	    /**
-	     * \brief Get a localy declared symbol
-	     * \param name the name of the symbol to get
-	     */
-	    generator::Generator getLocal (const std::string & name, bool canBeInClosure = true) ;
-
-	    /**
-	     * \brief Exit a scope
+	     * Exit a scope
 	     */
 	    void quitBlock ();
 
 	    /**
-	     * \brief Ignore all the local var declared in the current block
-	     * \return all the local var discarded
+	     * Ignore all the local var declared in the current block
+	     * @return all the local var discarded
 	     */
 	    std::map <std::string, generator::Generator> discardAllLocals ();
 	    
@@ -951,7 +1108,7 @@ namespace semantic {
 	    
 	    /** 
 	     * quit a breakable loop
-	     * \return the type of the inner breakers
+	     * @return the type of the inner breakers
 	     */
 	    generator::Generator quitLoop ();
 
@@ -964,132 +1121,165 @@ namespace semantic {
 	     * Quit a dollar context
 	     */
 	    void quitDollar ();
-	    
+
+
 	    /**
-	     * \return the loop type
+	     * @return the loop type
 	     */
 	    const generator::Generator & getCurrentLoopType () const;
 
 	    /**
-	     * \brief Change the type of the current loop
+	     * Change the type of the current loop
 	     */
 	    void setCurrentLoopType (const generator::Generator & type);
 
 	    /**
-	     * \brief Return the type of the current fn
+	     * Return the type of the current fn
 	     */
 	    generator::Generator getCurrentFuncType () ;
 
 	    /**
-	     * \brief Set the type of the current fn
+	     * Set the type of the current fn
 	     */
 	    void setCurrentFuncType (const generator::Generator & type);
 	    
 	    /**
-	     * \return !this-> _loopBreakTypes.empty ()
+	     * @return !this-> _loopBreakTypes.empty ()
 	     */
 	    bool isInLoop () const;
 
 	    /**
-	     * \return true if we are validating a closure
+	     * @return true if we are validating a closure
 	     */
 	    bool isInClosure ();
 
 	    /**
-	     * \return true if we are validating a closure and it is a ref one
+	     * @return true if we are validating a closure and it is a ref one
 	     */
 	    bool isInRefClosure ();
 
 	    /**
-	     * \brief Get a variable in the encosed element
+	     * Get a variable in the encosed element
 	     */
 	    generator::Generator getInClosure (const std::string & name);
 	    
 	    /**
-	     * \brief execute the content of the generator in order to retreive the compile time value 
+	     * insert a new symbol in the frame local scope
+	     * @param name the name of the symbol
+	     * @param local the symbol 
 	     */
-	    generator::Generator retreiveValue (const generator::Generator & gen);
+	    void insertLocal (const std::string & name, const generator::Generator & local);
+	    
+	    /**
+	     * Get a localy declared symbol
+	     * @param name the name of the symbol to get
+	     */
+	    generator::Generator getLocal (const std::string & name, bool canBeInClosure = true) ;
+
 
 	    /**
-	     * \brief Retreive a globally declared symbol (outside of the frame, or inner declared but not local just private)
-	     * \param name the name of the symbol to retreive
+	     * Retreive a globally declared symbol (outside of the frame, or inner declared but not local just private)
+	     * @param name the name of the symbol to retreive
 	     */
 	    std::vector <Symbol> getGlobal (const std::string & name);
 
 
 	    /**
-	     * \brief Retreive a globally declared symbol (outside of the frame, or inner declared but not local just private)
-	     * \param name the name of the symbol to retreive
+	     * Retreive a globally declared symbol (outside of the frame, or inner declared but not local just private)
+	     * @param name the name of the symbol to retreive
 	     */
 	    std::vector <Symbol> getGlobalPrivate (const std::string & name);
 
-
 	    /**
-	     * \brief Try to retreive the frame from the prototype
-	     * \brief Basically a by name search
-	     * \warning can return an empty generator, if the frame was not found
-	     */
-	    const generator::Generator & retreiveFrameFromProto (const generator::FrameProto & proto);
-
-	    /**
-	     * \brief Tell if an expression use alone has any effect, or if it is just a lost of computation power
-	     * \param gen the expression to test
-	     */
-	    bool isUseless (const generator::Generator & gen);
-
-	    /**
-	     * \brief insert a new prototype
-	     * \return false if the proto already exists, true otherwise
-	     */
-	    void insertErrorTemplateSolution (const semantic::Symbol & sol, const std::list <Ymir::Error::ErrorMsg> & errors);
-
-	    /**
-	     * \brief Remove a template solution 
-	     */
-	    void removeErrorTemplateSolution (const semantic::Symbol & sol);
-
-	    
-	    /**
-	     * \brief insert a new prototype
-	     * \return false if the proto already exists, true otherwise
-	     */
-	    bool insertTemplateSolution (const semantic::Symbol & sol, std::list <Ymir::Error::ErrorMsg> & errors);
-
-	    /**
-	     * \brief Remove a template solution 
-	     */
-	    void removeTemplateSolution (const semantic::Symbol & sol);
-	    
-	    /**
-	     * \brief this-> _referent.push_back (sym)
+	     * this-> _referent.push_back (sym)
 	     */
 	    void pushReferent (const semantic::Symbol & sym, const std::string & msg);
 
 	    /**
-	     * \brief this-> _referent.pop_back ()
+	     * this-> _referent.pop_back ()
 	     */
 	    void popReferent (const std::string & msg);	    
-	    
+
+	    /**
+	     * ================================================================================
+	     * ================================================================================
+	     * ==============================        UTILS        =============================
+	     * ================================================================================
+	     * ================================================================================
+	     */	    	    	  	    
+
+	    /**
+	     * Create an expression, that evaluated will have a value pointing to the var at a given path
+	     * This function can be used to easily refers to variable defined in core files for example
+	     * Such a getting the Object class, by creating the var {"core", "object", "Object"}.
+	     */
 	    syntax::Expression createVarFromPath (const lexing::Word & loc, const std::vector <std::string> & path);
 
-
+	    /**
+	     * Does approximately the same as createVarFromPath, but add an unary expression around tha var to create a ClassPtr once evaluated.
+	     * For example, this function can be used to get an excpetion defined in a core file
+	     */
 	    syntax::Expression createClassTypeFromPath (const lexing::Word & loc, const std::vector <std::string> & path);
 
 	    /**
-	     * \brief Append a else to a conditional (recursively)
+	     * Append a else to a conditional (recursively)
+	     * This will appen an else statement at the end of a list of conditional, for example, with the following conditional: 
+	     * ===================
+	     * (if (test1) { value1 } else if (test2) { value2 }).addElseToConditional ({value3}), => 
+	     *     (if (test1) { value1 } else if (test2) { value2 } else { value3 }
+	     * ===================
+	     * The value added can obviousely be a if conditional
 	     */
 	    generator::Generator addElseToConditional (const generator::Generator & cond, const generator::Generator & _else);
 
 	    /**
 	     * Transform a conditional to a complete conditional (meaning we assure that all the test covers every cases, and thus we enter a branch no matter what)
+	     * This doesn't add anything to the conditional, but is used to remove some errors in the compiler, such as incompatible types with void as there is no final else
+	     * This function can be used when we can ensure the every if condition covers every cases, for example in a pattern matching (or a catcher)
 	     */
 	    generator::Generator setCompleteConditional (const generator::Generator &cond);
-	    
 
-	    generator::Generator getCommonAncestor (const generator::Generator & left, const generator::Generator & right);
 
-	    generator::Generator validateTypeClassContext (const lexing::Word & loc, const generator::Generator & cl, const syntax::Expression & type);
 	    
+	    /**
+	     * ================================================================================
+	     * ================================================================================
+	     * =============================  GENERATION INTERFACE  ===========================
+	     * ================================================================================
+	     * ================================================================================
+	     */
+	    	    	  	    
+	    /**
+	     * @return the list of generator produced by semantic validation
+	     */
+	    const std::vector <generator::Generator> & getGenerators () const;	    
+
+	    /**
+	     * Insert a new Generator that has passed the semantic validation
+	     * All the symbol passed here, will be transformed at generation time
+	     * @param generator the valid generator
+	     */
+	    void insertNewGenerator (const generator::Generator & generator);
+
+
+	    /**
+	     * Try to retreive the frame from the prototype
+	     * Basically a by name search
+	     * @warning can return an empty generator, if the frame was not found
+	     */
+	    const generator::Generator & retreiveFrameFromProto (const generator::FrameProto & proto);
+	    
+	    /**
+	     * ================================================================================
+	     * ================================================================================
+	     * =============================         DEBUG          ===========================
+	     * ================================================================================
+	     * ================================================================================
+	     */
+	    
+	    /**
+	     * Print the variable in the local scopes, for debugging purposes
+	     */
 	    void printLocal () const;
 	    
 	};
