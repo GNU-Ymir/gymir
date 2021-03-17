@@ -63,6 +63,16 @@ namespace semantic {
 	    }
 	}
 
+	
+	/**
+	 * ================================================================================
+	 * ================================================================================
+	 * =================================      BODY      ===============================
+	 * ================================================================================
+	 * ================================================================================
+	 */
+
+
 	Generator FunctionVisitor::validateBody (const lexing::Word & loc, const std::string & funcName, const syntax::Expression & bodyExpr, const std::vector <generator::Generator> & throwers, const Generator & retType, bool & needFinalReturn, std::list <Ymir::Error::ErrorMsg> & errors) {
 	    if (!bodyExpr.isEmpty () && errors.empty ()) {
 		try {
@@ -81,6 +91,21 @@ namespace semantic {
 	}
 
 	
+	bool FunctionVisitor::verifyFinalReturn (const lexing::Word & loc, const generator::Generator & retType, const Generator & body) {
+	    if (!body.to<Value> ().isReturner ()) {
+		this-> _context.verifyMemoryOwner (loc, retType, body, true);
+		return !retType.is<Void> ();
+	    }
+	    return false;
+	}
+
+	/**
+	 * ================================================================================
+	 * ================================================================================
+	 * ================================    PROTO UTILS   ==============================
+	 * ================================================================================
+	 * ================================================================================
+	 */
 
 	void FunctionVisitor::verifyMainPrototype (const lexing::Word & loc, const syntax::Function::Prototype & proto,  const std::vector <Generator> & params, const generator::Generator & retType, std::list <Ymir::Error::ErrorMsg> & errors) {
 	    if (params.size () > 1) {
@@ -112,92 +137,83 @@ namespace semantic {
 	}
 
 
-	void FunctionVisitor::verifyThrowing (const lexing::Word & loc, const std::string & funcName, const std::vector <Generator> & throwers, const std::vector <Generator> & asked, std::list <Ymir::Error::ErrorMsg> & errors) {
-	    std::vector <Generator> unused, notfound;		    
-	    this-> computeThrows (throwers, asked, unused, notfound);
+	void FunctionVisitor::validateParamDecl (const lexing::Word & loc, const syntax::VarDecl & var, bool no_value, Generator & type, Generator & value, bool & isMutable) {		    
+	    if (!var.getType ().isEmpty ()) {						
+		type = this-> _context.validateType (var.getType ());
+	    }
+		    		
+	    if (!var.getValue ().isEmpty () && !no_value) {
+		value = this-> _context.validateValue (var.getValue ());
+		if (!type.isEmpty ()) 
+		this-> _context.verifyCompatibleTypeWithValue (var.getLocation (), type, value);
+		else {
+		    type = value.to <Value> ().getType ();
+		}
+	    }
 
-	    std::vector <Generator> types;
-	    std::vector <Error::ErrorMsg> msg_types;
-	    for (auto & it : notfound) {
-		bool found = false;
-		for (auto jt : Ymir::r (0, types.size ())) {
-		    if (it.to <Type> ().isCompatible (types [jt])) {
-			found = true;				
-			msg_types[jt].addNote (Ymir::Error::createNote (it.getLocation ()));
-		    }
+	    if (var.getType ().isEmpty () && no_value && !var.getValue ().isEmpty ()) {
+		Ymir::Error::occur (var.getLocation (), ExternalError::get (FORWARD_REFERENCE_VAR));
+	    }
+				
+	    bool isRef = false;
+	    bool dmut = false;
+	    type = this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut);
+		    
+	    this-> _context.verifyMutabilityRefParam (var.getLocation (), type, MUTABLE_CONST_PARAM);
+		
+	    if (!value.isEmpty ()) {		    
+		this-> _context.verifyMemoryOwner (value.getLocation (), type, value, true);
+	    }
+	}
+
+
+	Generator FunctionVisitor::validateReturnType (const lexing::Word & loc, const syntax::Expression & ret) {
+	    if (!ret.isEmpty ()) {
+		auto retType = this-> _context.validateType (ret, true);
+		if (retType.to <Type> ().isRef ()) {
+		    Ymir::Error::occur (retType.getLocation (), ExternalError::get (REF_RETURN_TYPE), retType.prettyString ());
 		}
-		if (!found) {
-		    auto note = Ymir::Error::createNote (it.getLocation ());
-		    msg_types.push_back (Error::makeOccurAndNote (loc, note, ExternalError::get (THROWS_NOT_DECLARED), funcName, it.prettyString ()));
-		    types.push_back (it);
+		return retType;
+	    } else return Void::init (loc);
+	}
+
+	void FunctionVisitor::insertParameters (const std::vector <Generator> & params) {
+	    // We insert them after validation to avoid cross referencing value of param
+	    for (auto & param : params) {
+		if (param.getName () != Keys::UNDER) {
+		    this-> _context.verifyShadow (param.getLocation ());		
+		    this-> _context.insertLocal (param.getLocation ().getStr (), param);
 		}
+	    }
+	}
+
+
+	Generator FunctionVisitor::validateFunctionType (const Generator & proto) {
+	    auto params = proto.to <FrameProto> ().getParameters ();
+	    auto ret = proto.to <FrameProto> ().getReturnType ();
+	    std::vector <Generator> paramTypes;
+	    for (auto & it : params) {
+		paramTypes.push_back (it.to <generator::ProtoVar> ().getType ());
+		bool isMut = false;
+		bool isRef = paramTypes.back ().to <Type> ().isRef ();
+		if (it.to <generator::ProtoVar> ().isMutable ()) isMut = true;
+		if (it.to <generator::ProtoVar> ().getType ().to <Type> ().isRef ()) isRef = true;
+		
+		paramTypes.back () = Type::init (paramTypes.back ().to <Type> (), isMut, isRef);
 	    }
 	    
-	    errors.insert (errors.end (), msg_types.begin (), msg_types.end ());			
-		    
-	    for (auto & it : unused) {
-		auto note = Ymir::Error::createNote (it.getLocation ());
-		errors.push_back (Error::makeOccurAndNote (loc, note, ExternalError::get (THROWS_NOT_USED), funcName, it.prettyString ()));
-	    }
-	}
-	
-	void FunctionVisitor::computeThrows (const std::vector <Generator> & types, const std::vector <Generator> & rethrow, std::vector <Generator> & unused, std::vector <Generator> & notfound) {	    
-	    std::vector <Generator> used;
-	    for (auto &it : types) {
-		bool found = false;
-		for (auto & j : used) {
-		    if (it.to<Type> ().isCompatible (j)) {
-			found = true;
-			break;
-		    }
-		}
-		
-		if (!found) {
-		    for (auto &j : rethrow) {
-			if (it.to<Type> ().isCompatible (j)) {
-			    found = true;
-			    used.push_back (j);
-			    break;
-			}
-		    }
-		    
-		    if (!found) notfound.push_back (it);
-		}
-	    }
-
-	    for (auto & it : rethrow) {
-		bool found = false;
-		for (auto & j : used) {
-		    if (it.to <Type> ().isCompatible (j)) {
-			found = true;
-			break;
-		    }
-		}
-		if (!found) unused.push_back (it);
-	    }
+	    return FuncPtr::init (proto.getLocation (), ret, paramTypes);
 	}
 
-	bool FunctionVisitor::verifyFinalReturn (const lexing::Word & loc, const generator::Generator & retType, const Generator & body) {
-	    if (!body.to<Value> ().isReturner ()) {
-		this-> _context.verifyMemoryOwner (loc, retType, body, true);
-		return !retType.is<Void> ();
-	    }
-	    return false;
-	}
 	
-	std::vector <Generator> FunctionVisitor::validateThrowers (const std::vector <syntax::Expression> & throwers, std::list <Error::ErrorMsg> & errors) {
-	    std::vector <Generator> rets;
-	    for (auto &it : throwers) {
-		try {
-		    rets.push_back (Generator::init (it.getLocation (), this-> _context.validateType (it)));
-		} catch (Error::ErrorList list) {
-		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		} 
-	    }
-	    return rets;
-	}
-	
-	
+	/**
+	 * ================================================================================
+	 * ================================================================================
+	 * ================================      PROTO      ===============================
+	 * ================================================================================
+	 * ================================================================================
+	 */
+
 	Generator FunctionVisitor::validateFunctionProto (const semantic::Function & func) {
 	    std::vector <Generator> params;
 	    static std::list <lexing::Word> __validating__; 
@@ -347,56 +363,7 @@ namespace semantic {
 	    return FrameProto::init (frame.to <FrameProto> (), func.getMangledName (), Frame::ManglingStyle::Y);	    
 	    return frame;
 	}
-	
-	void FunctionVisitor::validateParamDecl (const lexing::Word & loc, const syntax::VarDecl & var, bool no_value, Generator & type, Generator & value, bool & isMutable) {		    
-	    if (!var.getType ().isEmpty ()) {						
-		type = this-> _context.validateType (var.getType ());
-	    }
-		    		
-	    if (!var.getValue ().isEmpty () && !no_value) {
-		value = this-> _context.validateValue (var.getValue ());
-		if (!type.isEmpty ()) 
-		this-> _context.verifyCompatibleTypeWithValue (var.getLocation (), type, value);
-		else {
-		    type = value.to <Value> ().getType ();
-		}
-	    }
-
-	    if (var.getType ().isEmpty () && no_value && !var.getValue ().isEmpty ()) {
-		Ymir::Error::occur (var.getLocation (), ExternalError::get (FORWARD_REFERENCE_VAR));
-	    }
-				
-	    bool isRef = false;
-	    bool dmut = false;
-	    type = this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut);
-		    
-	    this-> _context.verifyMutabilityRefParam (var.getLocation (), type, MUTABLE_CONST_PARAM);
 		
-	    if (!value.isEmpty ()) {		    
-		this-> _context.verifyMemoryOwner (value.getLocation (), type, value, true);
-	    }
-	}
-
-	void FunctionVisitor::insertParameters (const std::vector <Generator> & params) {
-	    // We insert them after validation to avoid cross referencing value of param
-	    for (auto & param : params) {
-		if (param.getName () != Keys::UNDER) {
-		    this-> _context.verifyShadow (param.getLocation ());		
-		    this-> _context.insertLocal (param.getLocation ().getStr (), param);
-		}
-	    }
-	}
-
-	Generator FunctionVisitor::validateReturnType (const lexing::Word & loc, const syntax::Expression & ret) {
-	    if (!ret.isEmpty ()) {
-		auto retType = this-> _context.validateType (ret, true);
-		if (retType.to <Type> ().isRef ()) {
-		    Ymir::Error::occur (retType.getLocation (), ExternalError::get (REF_RETURN_TYPE), retType.prettyString ());
-		}
-		return retType;
-	    } else return Void::init (loc);
-	}
-	
 	
 	void FunctionVisitor::validatePrototypeForFrame (const lexing::Word & loc, const syntax::Function::Prototype & proto,  std::vector <Generator> & params, generator::Generator & retType, std::list <Ymir::Error::ErrorMsg> & errors) {
 	    std::vector <Generator> addedParams;
@@ -471,22 +438,99 @@ namespace semantic {
 	    }
 	}
 
-	Generator FunctionVisitor::validateFunctionType (const Generator & proto) {
-	    auto params = proto.to <FrameProto> ().getParameters ();
-	    auto ret = proto.to <FrameProto> ().getReturnType ();
-	    std::vector <Generator> paramTypes;
-	    for (auto & it : params) {
-		paramTypes.push_back (it.to <generator::ProtoVar> ().getType ());
-		bool isMut = false;
-		bool isRef = paramTypes.back ().to <Type> ().isRef ();
-		if (it.to <generator::ProtoVar> ().isMutable ()) isMut = true;
-		if (it.to <generator::ProtoVar> ().getType ().to <Type> ().isRef ()) isRef = true;
-		
-		paramTypes.back () = Type::init (paramTypes.back ().to <Type> (), isMut, isRef);
+	/**
+	 * ================================================================================
+	 * ================================================================================
+	 * ==============================      THROWING      ==============================
+	 * ================================================================================
+	 * ================================================================================
+	 */	    	
+
+	
+	void FunctionVisitor::verifyThrowing (const lexing::Word & loc, const std::string & funcName, const std::vector <Generator> & throwers, const std::vector <Generator> & asked, std::list <Ymir::Error::ErrorMsg> & errors) {
+	    std::vector <Generator> unused, notfound;		    
+	    this-> computeThrows (throwers, asked, unused, notfound);
+
+	    std::vector <Generator> types;
+	    std::vector <Error::ErrorMsg> msg_types;
+	    for (auto & it : notfound) {
+		bool found = false;
+		for (auto jt : Ymir::r (0, types.size ())) {
+		    if (it.to <Type> ().isCompatible (types [jt])) {
+			found = true;				
+			msg_types[jt].addNote (Ymir::Error::createNote (it.getLocation ()));
+		    }
+		}
+		if (!found) {
+		    auto note = Ymir::Error::createNote (it.getLocation ());
+		    msg_types.push_back (Error::makeOccurAndNote (loc, note, ExternalError::get (THROWS_NOT_DECLARED), funcName, it.prettyString ()));
+		    types.push_back (it);
+		}
 	    }
 	    
-	    return FuncPtr::init (proto.getLocation (), ret, paramTypes);
+	    errors.insert (errors.end (), msg_types.begin (), msg_types.end ());			
+		    
+	    for (auto & it : unused) {
+		auto note = Ymir::Error::createNote (it.getLocation ());
+		errors.push_back (Error::makeOccurAndNote (loc, note, ExternalError::get (THROWS_NOT_USED), funcName, it.prettyString ()));
+	    }
 	}
+	
+	void FunctionVisitor::computeThrows (const std::vector <Generator> & types, const std::vector <Generator> & rethrow, std::vector <Generator> & unused, std::vector <Generator> & notfound) {	    
+	    std::vector <Generator> used;
+	    for (auto &it : types) {
+		bool found = false;
+		for (auto & j : used) {
+		    if (it.to<Type> ().isCompatible (j)) {
+			found = true;
+			break;
+		    }
+		}
+		
+		if (!found) {
+		    for (auto &j : rethrow) {
+			if (it.to<Type> ().isCompatible (j)) {
+			    found = true;
+			    used.push_back (j);
+			    break;
+			}
+		    }
+		    
+		    if (!found) notfound.push_back (it);
+		}
+	    }
+
+	    for (auto & it : rethrow) {
+		bool found = false;
+		for (auto & j : used) {
+		    if (it.to <Type> ().isCompatible (j)) {
+			found = true;
+			break;
+		    }
+		}
+		if (!found) unused.push_back (it);
+	    }
+	}
+	
+	std::vector <Generator> FunctionVisitor::validateThrowers (const std::vector <syntax::Expression> & throwers, std::list <Error::ErrorMsg> & errors) {
+	    std::vector <Generator> rets;
+	    for (auto &it : throwers) {
+		try {
+		    rets.push_back (Generator::init (it.getLocation (), this-> _context.validateType (it)));
+		} catch (Error::ErrorList list) {
+		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		} 
+	    }
+	    return rets;
+	}       
+	
+	/**
+	 * ================================================================================
+	 * ================================================================================
+	 * ==============================     CONSTRUCTOR    ==============================
+	 * ================================================================================
+	 * ================================================================================
+	 */
 	
 	void FunctionVisitor::validateConstructor (const semantic::Symbol & sym, const Generator & classType_, const Generator & ancestor, const std::vector <Generator> & ancestorFields) {
 	    auto & cs = sym.to <Constructor> ();
@@ -554,75 +598,6 @@ namespace semantic {
 	    this-> _context.insertNewGenerator (frame);
 	}
 
-	void FunctionVisitor::validateMethod (const semantic::Function & func, const Generator & classType_, bool isWeak) {
-	    auto function = func.getContent ();
-	    std::vector <Generator> params;
-	    Generator retType (Generator::empty ());
-	    std::list <Ymir::Error::ErrorMsg> errors;
-	    
-	    auto classType = classType_;
-	    auto & cs = classType.to <ClassRef> ().getRef ().to <semantic::Class> ();
-	    auto currentClassDef = classType.to <ClassRef> ().getRef ();
-	    this-> _context.enterClassDef (currentClassDef);
-	    this-> _context.enterContext (function.getCustomAttributes ());
-	    
-	    classType = Type::init (function.getLocation (), ClassPtr::init (function.getLocation (), classType).to <Type> ().toDeeplyMutable ().to <Type> (), true, false);
-	    this-> _context.enterForeign ();
-
-	    std::vector <Generator> throwers = this-> validateThrowers (function.getThrowers (), errors);  
-	    this-> _context.enterBlock ();
-	    
-	    try {
-		bool isMutable = false;
-		for (auto & it : function.getPrototype ().getParameters ()[0].to <syntax::VarDecl> ().getDecorators ()) {
-		    if (it.getValue () == syntax::Decorator::MUT) isMutable = true;
-		    else {
-			Ymir::Error::occur (it.getLocation (),
-					    ExternalError::get (DECO_OUT_OF_CONTEXT),
-					    it.getLocation ().getStr ()
-			);				
-		    }
-		}
-		auto & __params = function.getPrototype ().getParameters ();
-		
-		classType = Type::init (__params [0].getLocation (), classType.to <Type> (), isMutable, false);		
-		params.insert (params.begin (), ParamVar::init (lexing::Word::init (__params [0].getLocation (), Keys::SELF), classType, isMutable, true));
-		this-> _context.insertLocal (params [0].getName (), params [0]);		
-
-		auto fakeParams = std::vector <syntax::Expression> (__params.begin () + 1, __params.end ());
-		auto proto = syntax::Function::Prototype::init (fakeParams, function.getPrototype ().getType (), false);
-		
-		this-> validatePrototypeForFrame (cs.getName (), proto, params, retType, errors);
-		if (retType.isEmpty ()) retType = Void::init (func.getName ());
-	    } catch (Error::ErrorList list) {
-		errors = list.errors;
-	    } 
-	    
-	    bool needFinalReturn = false;
-	    Generator body = this-> validateBody (func.getName (), func.getRealName (), function.getBody (), throwers, retType, needFinalReturn, errors);
-	    	    
-	    try {
-		if (errors.size () != 0) {
-		    this-> _context.discardAllLocals ();
-		}		    
-		this-> _context.quitBlock ();
-	    } catch (Error::ErrorList list) {
-		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-	    } 	
-	    
-	    this-> _context.exitForeign ();
-	    this-> _context.exitContext ();
-	    this-> _context.exitClassDef (currentClassDef);
-
-	    if (errors.size () != 0)
-		throw Error::ErrorList {errors};
-		
-	    auto frame = Frame::init (function.getLocation (), func.getRealName (), params, retType, body, needFinalReturn);
-	    frame.to <Frame> ().isWeak (func.isWeak () || isWeak);
-	    frame.to <Frame> ().setMangledName (func.getMangledName ());
-
-	    this-> _context.insertNewGenerator (frame);		
-	}
 
 	generator::Generator FunctionVisitor::validatePreConstructor (const semantic::Constructor & cs, const Generator & classType, const Generator & ancestor, const std::vector<Generator> & ancestorFields) {
 	    auto & superParams = cs.getContent ().getSuperParams ();
@@ -631,11 +606,11 @@ namespace semantic {
 	    std::list <Ymir::Error::ErrorMsg> errors;
 	    
 	    if (!cs.getContent ().getExplicitSuperCall ().isEof () && ancestor.isEmpty ())		
-		Ymir::Error::occur (cs.getContent ().getExplicitSuperCall (), ExternalError::get (NO_SUPER_FOR_CLASS), classR.prettyString ());
+	    Ymir::Error::occur (cs.getContent ().getExplicitSuperCall (), ExternalError::get (NO_SUPER_FOR_CLASS), classR.prettyString ());
 	    
 	    if (!cs.getContent ().getExplicitSelfCall ().isEof ()) {
 		if (cs.getContent ().getFieldConstruction ().size () != 0)
-		    Ymir::Error::occur (cs.getContent ().getFieldConstruction ()[0].first, ExternalError::get (MULTIPLE_FIELD_INIT), cs.getContent ().getFieldConstruction ()[0].first.getStr ());
+		Ymir::Error::occur (cs.getContent ().getFieldConstruction ()[0].first, ExternalError::get (MULTIPLE_FIELD_INIT), cs.getContent ().getFieldConstruction ()[0].first.getStr ());
 		
 		auto loc = cs.getContent ().getExplicitSelfCall ();
 
@@ -649,7 +624,7 @@ namespace semantic {
 			ExternalError::get (UNDEFINED_SUB_PART_FOR),
 			ClassRef::INIT_NAME,
 			classR.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().prettyString ()
-		    );
+			);
 		}
 		
 		if (!cstrs.isEmpty ()) {
@@ -663,7 +638,7 @@ namespace semantic {
 			ExternalError::get (UNDEFINED_SUB_PART_FOR),
 			ClassRef::INIT_NAME,
 			classR.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().prettyString ()
-		    );
+			);
 		}
 	    } else {
 		if (!ancestor.isEmpty ()) {
@@ -679,7 +654,7 @@ namespace semantic {
 			    ExternalError::get (UNDEFINED_SUB_PART_FOR),
 			    ClassRef::INIT_NAME,
 			    ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().prettyString ()
-			);
+			    );
 		    }
 
 		    if (!cstrs.isEmpty ()) {
@@ -694,7 +669,7 @@ namespace semantic {
 			    ExternalError::get (UNDEFINED_SUB_PART_FOR),
 			    ClassRef::INIT_NAME,
 			    ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().prettyString ()
-			);
+			    );
 		    }
 		}
 
@@ -721,7 +696,7 @@ namespace semantic {
 		}
 
 		if (errors.size () != 0)
-		    throw Error::ErrorList {errors};
+		throw Error::ErrorList {errors};
 		
 		for (auto & it : classR.to <ClassRef> ().getRef ().to <semantic::Class> ().getFields ()) {
 		    if (validated.find (it.to <syntax::VarDecl> ().getName ().getStr ()) == validated.end ()) {
@@ -742,7 +717,7 @@ namespace semantic {
 	    }
 	    
 	    if (errors.size () != 0)
-		throw Error::ErrorList {errors};
+	    throw Error::ErrorList {errors};
 	    
 	    auto loc = cs.getName ();
 	    return Block::init (loc, Void::init (loc), instructions);
@@ -873,6 +848,86 @@ namespace semantic {
 		throw Error::ErrorList {errors};
 	    }
 	}	
+
+
+	/**
+	 * ================================================================================
+	 * ================================================================================
+	 * ==============================        METHOD      ==============================
+	 * ================================================================================
+	 * ================================================================================
+	 */
+
+	
+	void FunctionVisitor::validateMethod (const semantic::Function & func, const Generator & classType_, bool isWeak) {
+	    auto function = func.getContent ();
+	    std::vector <Generator> params;
+	    Generator retType (Generator::empty ());
+	    std::list <Ymir::Error::ErrorMsg> errors;
+	    
+	    auto classType = classType_;
+	    auto & cs = classType.to <ClassRef> ().getRef ().to <semantic::Class> ();
+	    auto currentClassDef = classType.to <ClassRef> ().getRef ();
+	    this-> _context.enterClassDef (currentClassDef);
+	    this-> _context.enterContext (function.getCustomAttributes ());
+	    
+	    classType = Type::init (function.getLocation (), ClassPtr::init (function.getLocation (), classType).to <Type> ().toDeeplyMutable ().to <Type> (), true, false);
+	    this-> _context.enterForeign ();
+
+	    std::vector <Generator> throwers = this-> validateThrowers (function.getThrowers (), errors);  
+	    this-> _context.enterBlock ();
+	    
+	    try {
+		bool isMutable = false;
+		for (auto & it : function.getPrototype ().getParameters ()[0].to <syntax::VarDecl> ().getDecorators ()) {
+		    if (it.getValue () == syntax::Decorator::MUT) isMutable = true;
+		    else {
+			Ymir::Error::occur (it.getLocation (),
+					    ExternalError::get (DECO_OUT_OF_CONTEXT),
+					    it.getLocation ().getStr ()
+			    );				
+		    }
+		}
+		auto & __params = function.getPrototype ().getParameters ();
+		
+		classType = Type::init (__params [0].getLocation (), classType.to <Type> (), isMutable, false);		
+		params.insert (params.begin (), ParamVar::init (lexing::Word::init (__params [0].getLocation (), Keys::SELF), classType, isMutable, true));
+		this-> _context.insertLocal (params [0].getName (), params [0]);		
+
+		auto fakeParams = std::vector <syntax::Expression> (__params.begin () + 1, __params.end ());
+		auto proto = syntax::Function::Prototype::init (fakeParams, function.getPrototype ().getType (), false);
+		
+		this-> validatePrototypeForFrame (cs.getName (), proto, params, retType, errors);
+		if (retType.isEmpty ()) retType = Void::init (func.getName ());
+	    } catch (Error::ErrorList list) {
+		errors = list.errors;
+	    } 
+	    
+	    bool needFinalReturn = false;
+	    Generator body = this-> validateBody (func.getName (), func.getRealName (), function.getBody (), throwers, retType, needFinalReturn, errors);
+	    	    
+	    try {
+		if (errors.size () != 0) {
+		    this-> _context.discardAllLocals ();
+		}		    
+		this-> _context.quitBlock ();
+	    } catch (Error::ErrorList list) {
+		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+	    } 	
+	    
+	    this-> _context.exitForeign ();
+	    this-> _context.exitContext ();
+	    this-> _context.exitClassDef (currentClassDef);
+
+	    if (errors.size () != 0)
+	    throw Error::ErrorList {errors};
+		
+	    auto frame = Frame::init (function.getLocation (), func.getRealName (), params, retType, body, needFinalReturn);
+	    frame.to <Frame> ().isWeak (func.isWeak () || isWeak);
+	    frame.to <Frame> ().setMangledName (func.getMangledName ());
+
+	    this-> _context.insertNewGenerator (frame);		
+	}
 	
     }
     
