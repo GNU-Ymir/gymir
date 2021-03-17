@@ -8,13 +8,13 @@
 namespace syntax {
 
     /**
-     * \struct Alias
+     * \struct Aka
      * Declaration of an alias
      * \verbatim
      alias := 'alias' Identifier '=' expression ';'
      \endverbatim
      */
-    class Alias : public IDeclaration {
+    class Aka : public IDeclaration {
 
 	/** The value of the alias */
 	Expression _value;
@@ -23,9 +23,9 @@ namespace syntax {
 
 	friend Declaration; // Needed for dynamic casting 
 
-	Alias ();
+	Aka ();
 	
-	Alias (const lexing::Word & ident, const std::string & comment, const Expression & value);
+	Aka (const lexing::Word & ident, const std::string & comment, const Expression & value);
 	
     public :
 
@@ -37,10 +37,10 @@ namespace syntax {
 	static Declaration init (const lexing::Word& ident, const std::string & comment, const Expression & value);
 	
 	/**
-	 * \brief Create a new Alias from anothe one
+	 * \brief Create a new Aka from anothe one
 	 * \param alias the alias to copy
 	 */
-	static Declaration init (const Alias & alias);
+	static Declaration init (const Aka & alias);
 
 
 	void treePrint (Ymir::OutBuffer & stream, int i = 0) const override;

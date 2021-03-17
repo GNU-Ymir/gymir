@@ -469,7 +469,7 @@ namespace syntax {
     Declaration Visitor::visitDeclaration () {
 	auto location = this-> _lex.next (this-> _declarations);
 
-	if (location == Keys::AKA) return visitAlias ();
+	if (location == Keys::AKA) return visitAka ();
 	if (location == Keys::CLASS) return visitClass ();
 	if (location == Keys::ENUM) return visitEnum ();
 	if (location == Keys::DEF) return visitFunction ();
@@ -486,7 +486,7 @@ namespace syntax {
 	}
     }
 
-    Declaration Visitor::visitAlias () {
+    Declaration Visitor::visitAka () {
 	std::string comments;
 	this-> _lex.rewind ().nextWithDocs (comments);
 	Expression test (Expression::empty ());
@@ -504,12 +504,12 @@ namespace syntax {
 	this-> _lex.consumeIf ({Token::SEMI_COLON});
 	
 	if (!templates.empty ()) {
-	    return Template::init (name, comments, templates, Alias::init (name, comments, value), test);
+	    return Template::init (name, comments, templates, Aka::init (name, comments, value), test);
 	} else {
 	    if (!test.isEmpty ()) {
 		Error::occur (ifLoc, ExternalError::get (SYNTAX_ERROR_IF_ON_NON_TEMPLATE));
 	    }
-	    return Alias::init (name, comments, value);
+	    return Aka::init (name, comments, value);
 	}
     }
     

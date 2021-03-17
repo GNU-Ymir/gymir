@@ -21,97 +21,90 @@ namespace semantic {
 	void Visitor::validateModule (const semantic::Module & mod) {
 	    if (!mod.isExtern ()) {
 		const std::vector <Symbol> & syms = mod.getAllLocal ();
-		for (auto & it : syms) {
-		    validate (it);
+		for (auto & it : syms) { // a module is a just a list of symbol
+		    validate (it); // we simple validate all the symbol inside the module
 		}
 	    }
 	}
 	
 	void Visitor::validateFunction (const semantic::Function & func) {
-	    auto visitor = FunctionVisitor::init (*this);
+	    auto visitor = FunctionVisitor::init (*this); // there is a specific validator for functions
 	    return visitor.validate (func);
 	}
 
 
-	void Visitor::validateVarDecl (const semantic::Symbol & sym) {
+	void Visitor::validateVarDecl (const semantic::Symbol & sym) { // this global var decls are close to vardecl value, but insert a generator 
 	    if (sym.to <semantic::VarDecl> ().getGenerator ().isEmpty ()) {
 		auto var = sym.to <semantic::VarDecl> ();
-		auto elemSym = sym;
+		auto elemSym = sym; // c++ cheating on mutability
 		
-		Generator type (Generator::empty ());
-		Generator value (Generator::empty ());
+		Generator type (Generator::empty ()), value (Generator::empty ());
 	    
-		if (!var.getType ().isEmpty ()) {
-		    type = validateType (var.getType ());
+		if (!var.getType ().isEmpty ()) { // validate the type of the expression, if specified in the source code
+		    type = this-> validateType (var.getType ());
 		}
 
-		if (!var.getValue ().isEmpty ()) {
-		    value = validateValueNonVoid (var.getValue ());		
+		// validate the value, if specified in the source code
+		if (!var.getValue ().isEmpty ()) { // The value can't be of type void, 
+		    value = this-> validateValueNonVoid (var.getValue ());		
 		}
 
-		if (var.getValue ().isEmpty () && !var.isExtern ()) {
+		// if no value, then the variable cannot be validated, it must have a default value
+		// In ymir, we wan't to ensure that everything is initialised
+		if (var.getValue ().isEmpty () && !var.isExtern ()) { 
 		    Error::occur (var.getName (), ExternalError::get (VAR_DECL_WITHOUT_VALUE));
 		} 
 		
-		if (type.isEmpty ()) {
+		if (type.isEmpty ()) { // If the type is empty, then we have at least a value, and we take the type of the value
 		    type = Type::init (value.to <Value> ().getType ().to<Type> (), false, false);
 		}
 
-		bool isMutable = false;		
-		for (auto & deco : var.getDecorators ()) {
-		    switch (deco.getValue ()) {
-		    case syntax::Decorator::MUT : { type = Type::init (type.to <Type> (), true); isMutable = true; } break;
-		    case syntax::Decorator::DMUT : { type = type.to <Type> ().toDeeplyMutable (); isMutable = true; } break;
-		    default :
-			Ymir::Error::occur (deco.getLocation (),
-					    ExternalError::get (DECO_OUT_OF_CONTEXT),
-					    deco.getLocation ().getStr ()
-			    );
-		    }
-		}
+		bool isMutable = false, isRef = false, dmut = false;;
+		type = this-> applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut, false);
 		if (!isMutable) type = Type::init (type.to <Type> (), false);
 
 		if (!value.isEmpty ()) {
-		    if (var.isExtern ())
-		    Ymir::Error::occur (value.getLocation (), ExternalError::get (EXTERNAL_VAR_WITH_VALUE), var.getRealName ());
+		    if (var.isExtern ()) {// can't have a value on external, there are just reference 
+			Ymir::Error::occur (value.getLocation (), ExternalError::get (EXTERNAL_VAR_WITH_VALUE), var.getRealName ());
+		    }
 		    
-		    if (isMutable || !type.is <LambdaType> ())
-		    verifyMemoryOwner (var.getName (), type, value, true);
-		    // verifyCompatibleType (value.getLocation (), type, value.to<Value> ().getType ());
+		    if (!type.is <LambdaType> ()) {// if the var has a real type (not a lambda type), we have to check the mutability 
+			this-> verifyMemoryOwner (var.getName (), type, value, true);
+		    }
 		}
 		
 		auto glbVar = GlobalVar::init (var.getName (), var.getRealName (), var.getExternalLanguage (), isMutable, type, value);		
-		elemSym.to<semantic::VarDecl> ().setGenerator (glbVar);		
+		elemSym.to<semantic::VarDecl> ().setGenerator (glbVar);	 // we store the variable inside the global, to avoid revalidation	
 		
-		insertNewGenerator (glbVar);		
+		insertNewGenerator (glbVar);	// we insert the generator, to generate something in the generation phase	
 	    }
 	}
 
 
-	generator::Generator Visitor::validateAlias (const semantic::Symbol & sym) {
-	    if (sym.to <semantic::Alias> ().getGenerator ().isEmpty ()) {
-		auto alias = sym.to <semantic::Alias> ();
-		auto elemSym = sym;
+	generator::Generator Visitor::validateAka (const semantic::Symbol & sym) { 
+	    if (sym.to <semantic::Aka> ().getGenerator ().isEmpty ()) { // We don't want to validate multiple times the same symbol
+		auto aka = sym.to <semantic::Aka> (); 
+		auto elemSym = sym; // cheating on c++ mutability
 
 		Generator elem (Generator::empty ());
 		try {
-		    elem = validateValue (alias.getValue (), true);
+		    elem = validateValue (aka.getValue (), true);
 		} catch (Error::ErrorList list) {
 		    elem = Generator::empty ();
 		} 
 		
 		if (elem.isEmpty ())
-		elem = validateType (alias.getValue (), true);
+		elem = validateType (aka.getValue (), true);
 		
 		if (elem.is <Value> ()) {
 		    auto type = Type::init (elem.to <Value> ().getType ().to <Type> (), false, false);
 		    elem = Value::init (elem.to <Value> (), type);
 		}
 		
-		elemSym.to <semantic::Alias> ().setGenerator (elem);
+		elemSym.to <semantic::Aka> ().setGenerator (elem);
 	    }
 
-	    return sym.to <semantic::Alias> ().getGenerator ();
+	    return sym.to <semantic::Aka> ().getGenerator ();
 	}
 
 	generator::Generator Visitor::validateStruct (const semantic::Symbol & str) {	    

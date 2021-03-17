@@ -6,7 +6,7 @@
 
 namespace semantic {
 
-    class Alias : public ISymbol {
+    class Aka : public ISymbol {
 
 	
 	/** The content of the alias */
@@ -18,9 +18,9 @@ namespace semantic {
 
 	friend Symbol;
 
-	Alias ();
+	Aka ();
 
-	Alias (const lexing::Word & name, const std::string & comments, const syntax::Expression & expr, bool isWeak);
+	Aka (const lexing::Word & name, const std::string & comments, const syntax::Expression & expr, bool isWeak);
 
     public : 
 

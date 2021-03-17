@@ -133,8 +133,8 @@ namespace semantic {
 			    gens.push_back (VarRef::init (decl.getName (), decl.getName ().getStr (), gen.getType (), gen.getUniqId (), gen.isMutable (), value));
 			    succ = true;
 			}
-			elof_u (semantic::Alias) {
-			    auto al_ref = validateAlias (sym);
+			elof_u (semantic::Aka) {
+			    auto al_ref = validateAka (sym);
 			    gens.push_back (al_ref);
 			    succ = true;
 			} fo;			
@@ -187,8 +187,8 @@ namespace semantic {
 			elof_u (semantic::ModRef) {
 			    Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
 			}
-			elof_u (semantic::Alias) {
-			    locGen = validateAlias (multSym [0]);
+			elof_u (semantic::Aka) {
+			    locGen = validateAka (multSym [0]);
 			}
 			elof (semantic::Function, func) {
 			    if (!func.isMethod ()) {

@@ -87,11 +87,11 @@ namespace semantic {
 		}
 
 
-		s_of_u (semantic::Alias) {
+		s_of_u (semantic::Aka) {
 		    std::list <Ymir::Error::ErrorMsg> errors;
 		    pushReferent (sym, "validate::alias");
 		    try {
-			validateAlias (sym);
+			validateAka (sym);
 		    } catch (Error::ErrorList list) {
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());			    
 		    }

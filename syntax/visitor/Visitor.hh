@@ -224,7 +224,7 @@ namespace syntax {
 	 * \brief Visit an alias
 	 alias := 'alias' Identifier (template)? '=' expression ';'
 	 */
-	Declaration visitAlias ();
+	Declaration visitAka ();
 
 
 	/**

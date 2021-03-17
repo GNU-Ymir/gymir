@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ymir/semantic/symbol/Alias.hh>
+#include <ymir/semantic/symbol/Aka.hh>
 #include <ymir/semantic/symbol/Class.hh>
 #include <ymir/semantic/symbol/Constructor.hh>
 #include <ymir/semantic/symbol/Enum.hh>

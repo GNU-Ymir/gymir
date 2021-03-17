@@ -91,7 +91,7 @@ namespace semantic {
 	    /**
 	     * \brief Transform an alias into a semantic tree
 	     */
-	    semantic::Symbol visitAlias (const syntax::Alias stal);
+	    semantic::Symbol visitAka (const syntax::Aka stal);
 
 	    /**
 	     * \brief Transform a list of declaration into semantic tree 

@@ -31,7 +31,7 @@ YLINKER = $(CXX) $(NO_PIE_CFLAG) -lstdc++
 # The compiler proper
  
 ymir_OBJS = \
-	ymir/decl_Alias.o \
+	ymir/decl_Aka.o \
 	ymir/decl_Block.o \
 	ymir/decl_Class.o \
 	ymir/decl_CondBlock.o \
@@ -234,7 +234,7 @@ ymir_OBJS = \
 	ymir/lexing_Token.o \
 	ymir/lexing_Word.o \
 	ymir/parsing_Parser.o \
-	ymir/semantic_Alias.o \
+	ymir/semantic_Aka.o \
 	ymir/semantic_Class.o \
 	ymir/semantic_Constructor.o \
 	ymir/semantic_Enum.o \

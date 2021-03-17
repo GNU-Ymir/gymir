@@ -1825,8 +1825,8 @@ namespace semantic {
 
 	Declaration TemplateVisitor::replaceAll (const Declaration & decl, const std::map <std::string, Expression> & mapping, const Symbol & _ref) const {
 	    match (decl) {
-		of (syntax::Alias, al) {
-		    return syntax::Alias::init (al.getLocation (), "", replaceAll (al.getValue (), mapping));
+		of (syntax::Aka, al) {
+		    return syntax::Aka::init (al.getLocation (), "", replaceAll (al.getValue (), mapping));
 		}
 		elof (syntax::CondBlock, cd) {
 		    return replaceAll (_ref, cd, mapping);

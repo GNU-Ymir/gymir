@@ -18,19 +18,41 @@ namespace semantic {
 	using namespace generator;
 	using namespace Ymir;       
 
-		Generator Visitor::applyDecoratorOnVarDeclType (const std::vector <syntax::DecoratorWord> & decos, const Generator & type, bool & isRef, bool & isMutable, bool & dmut) {
+	Generator Visitor::applyDecoratorOnVarDeclType (const std::vector <syntax::DecoratorWord> & decos, const Generator & type, bool & isRef, bool & isMutable, bool & dmut, bool canBeRef, bool canBeDmut, bool canBeMut) {
 	    isMutable = false;
 	    isRef = false;
+	    dmut = false;
 	    for (auto & deco : decos) {
 		switch (deco.getValue ()) {
 		case syntax::Decorator::REF : {
-		    isRef = true;
+		    if (canBeRef) { 
+			isRef = true;
+		    } else {
+			Ymir::Error::occur (deco.getLocation (),
+					    ExternalError::get (DECO_OUT_OF_CONTEXT),
+					    deco.getLocation ().getStr ()
+			    );
+		    }
 		} break;
 		case syntax::Decorator::MUT : {
-		    isMutable = true;
+		    if (canBeMut) {
+			isMutable = true;
+		    } else {
+			Ymir::Error::occur (deco.getLocation (),
+					    ExternalError::get (DECO_OUT_OF_CONTEXT),
+					    deco.getLocation ().getStr ()
+			    );
+		    }
 		} break;
 		case syntax::Decorator::DMUT : {
-		    dmut = true;
+		    if (canBeDmut) {
+			dmut = true;
+		    } else {
+			Ymir::Error::occur (deco.getLocation (),
+					    ExternalError::get (DECO_OUT_OF_CONTEXT),
+					    deco.getLocation ().getStr ()
+			    );
+		    }
 		} break;
 		default :
 		    Ymir::Error::occur (deco.getLocation (),

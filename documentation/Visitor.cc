@@ -40,9 +40,9 @@ namespace documentation {
 		    this-> _context.pushReferent (sym, "dump::vardecl");
 		    val = this-> dumpVarDecl (decl);
 		    this-> _context.popReferent ("dump::vardecl");			    
-		} elof (semantic::Alias, al) {
+		} elof (semantic::Aka, al) {
 		    this-> _context.pushReferent (sym, "dump::alias");
-		    val = this-> dumpAlias (al);
+		    val = this-> dumpAka (al);
 		    this-> _context.popReferent ("dump::alias");
 		} elof (semantic::Struct, str) {
 		    this-> _context.pushReferent (sym, "dump::struct");
@@ -354,7 +354,7 @@ namespace documentation {
 	return JsonDict::init (val);
     }
         
-    JsonValue Visitor::dumpAlias (const semantic::Alias & al) {
+    JsonValue Visitor::dumpAka (const semantic::Aka & al) {
 	std::map <std::string, JsonValue> val;
 	auto gen = al.getGenerator ();
 	val ["type"] = JsonString::init ("alias");

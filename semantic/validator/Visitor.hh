@@ -148,7 +148,7 @@ namespace semantic {
 	    /**
 	     * Validate an aka declaration (historically called an alias, TODO, change that)
 	     */
-	    generator::Generator validateAlias   (const semantic::Symbol & sym);
+	    generator::Generator validateAka   (const semantic::Symbol & sym);
 
 	    /**
 	     * Validate an enum declaration
@@ -915,7 +915,7 @@ namespace semantic {
 	     * @return isRef ref decorator found
 	     * @return isMutable mut decorator found
 	     */
-	    generator::Generator applyDecoratorOnVarDeclType (const std::vector <syntax::DecoratorWord> & decos, const generator::Generator & type, bool & isRef, bool & isMutable, bool & dmut);
+	    generator::Generator applyDecoratorOnVarDeclType (const std::vector <syntax::DecoratorWord> & decos, const generator::Generator & type, bool & isRef, bool & isMutable, bool & dmut, bool canBeRef = true, bool canBeMut = true, bool canBeDmut = true);
 
 	    
 	    /**

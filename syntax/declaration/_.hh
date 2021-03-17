@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ymir/syntax/declaration/Alias.hh>
+#include <ymir/syntax/declaration/Aka.hh>
 #include <ymir/syntax/declaration/Block.hh>
 #include <ymir/syntax/declaration/Class.hh>
 #include <ymir/syntax/declaration/CondBlock.hh>

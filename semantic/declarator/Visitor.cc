@@ -37,8 +37,8 @@ namespace semantic {
 		s_of (syntax::Struct, str)
 		    return visitStruct (str);		
 
-		s_of (syntax::Alias, al)
-		    return visitAlias (al);		
+		s_of (syntax::Aka, al)
+		    return visitAka (al);		
 
 		s_of (syntax::DeclBlock, bl)
 		    return visitBlock (bl);		
@@ -229,8 +229,8 @@ namespace semantic {
 	    return structure;
 	}
 
-	semantic::Symbol Visitor::visitAlias (const syntax::Alias stal) {
-	    auto alias = Alias::init (stal.getLocation (), stal.getComments (), stal.getValue (), this-> _isWeak);
+	semantic::Symbol Visitor::visitAka (const syntax::Aka stal) {
+	    auto alias = Aka::init (stal.getLocation (), stal.getComments (), stal.getValue (), this-> _isWeak);
 
 	    auto symbols = getReferent ().getLocal (stal.getLocation ().getStr ());
 	    if (symbols.size () != 0) {

@@ -103,7 +103,7 @@ namespace documentation {
 	 * Dump the documentation of an alias 
 	 * \return the doc
 	 */
-	json::JsonValue dumpAlias (const semantic::Alias & al);
+	json::JsonValue dumpAka (const semantic::Aka & al);
 
 	/**
 	 * Dump the documentation of a struct
