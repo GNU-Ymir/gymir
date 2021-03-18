@@ -225,9 +225,9 @@ namespace semantic {
 	const Generator & Visitor::retreiveFrameFromProto (const FrameProto & proto) {
 	    auto name = Mangler::init ().mangleFrameProto (proto);
 	    for (auto & it : this-> _list) {
-		if (it.is<Frame> ()) {
+		if (it.is<Frame> ()) { // The frames are retreived thanks to their name
 		    auto sec_name = Mangler::init ().mangleFrame (it.to <Frame> ());
-		    if (sec_name == name) return it;
+		    if (sec_name == name) return it;		    
 		}
 	    }
 	    return Generator::__empty__;
