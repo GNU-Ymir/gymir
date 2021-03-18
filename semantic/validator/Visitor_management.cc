@@ -111,6 +111,14 @@ namespace semantic {
 		throw Error::ErrorList {errors};
 	    }
 	}	
+
+	void Visitor::quitBlock (std::list <Error::ErrorMsg> & errors) {
+	    try {
+		this-> quitBlock ();
+	    } catch (Error::ErrorList lst) {
+		errors.insert (errors.end (), lst.errors.begin (), lst.errors.end ());
+	    }
+	}
 	
 	std::map <std::string, generator::Generator> Visitor::discardAllLocals () {
 	    auto ret = this-> _symbols.back ().back ();

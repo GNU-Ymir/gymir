@@ -622,18 +622,36 @@ namespace semantic {
 	    generator::Generator validateBlock (const syntax::Block & block, const std::vector <generator::Generator> & init = {});
 
 	    /**
+	     * Validate the content of a block (the values)
+	     * @returns:
+	     *    - values: the list of values inside the block
+	     *    - type: the type of the block
+	     *    - valueLoc: the location of the last value giving the type of the block
+	     *    - returner: the content of the block necessarily return at some point
+	     *    - rtLoc: the location of the returner
+	     *    - breaker: the content of the block necessarily breaks
+	     *    - brLoc: the location of the breaker
+	     */
+	    void validateInnerBlock (const syntax::Block & block, std::vector <generator::Generator> & values, generator::Generator & type, lexing::Word & valueLoc, bool & returner, lexing::Word & rtLoc, bool & breaker, lexing::Word& brLoc, std::list <Ymir::Error::ErrorMsg> & errors);
+
+	    /**
 	     * Validate a catch block
 	     * return by ref the vardecls and actions to perform in case of catch
 	     * All the actions must return the type type (if type !is void)
 	     * The type of the block may change, in case of common ancestor
 	     */
-	    void validateCatcher (const syntax::Expression & catcher, generator::Generator & varDecl, generator::Generator & typeInfos, generator::Generator & actions, generator::Generator& type, const std::vector <generator::Generator> & throwsTypes);
+	    void validateCatcher (const syntax::Block & block, generator::Generator & varDecl, generator::Generator & typeInfos, generator::Generator & actions, generator::Generator& type, const std::vector <generator::Generator> & throwsTypes, std::list <Ymir::Error::ErrorMsg> & errors);
 
+	    /**
+	     * Validate the scope parts of a block (exit, failure and success)
+	     */
+	    void validateScopes (const syntax::Block & block, std::vector <generator::Generator> & onExit, std::vector <generator::Generator> & onSuccess, std::vector <generator::Generator> & onFailure, bool & returner, bool & breaker, bool hasThrowers, std::list <Ymir::Error::ErrorMsg> & errors);
+	    
 	    /**
 	     * Validate an inner declaration of a module
 	     * @param decl the module to declare, and validate
 	     */
-	    semantic::Symbol validateInnerModule (const syntax::Declaration & decl);
+	    semantic::Symbol validateInnerModule (const syntax::Declaration & decl, std::list <Ymir::Error::ErrorMsg> & errors);
 
 	    /**
 	     * Validate a set of expression
@@ -1095,6 +1113,11 @@ namespace semantic {
 	     */
 	    void quitBlock ();
 
+	    /**
+	     * Exit the scope, but return the errors inside errors, 
+	     */
+	    void quitBlock (std::list <Ymir::Error::ErrorMsg> & errors);
+	    
 	    /**
 	     * Ignore all the local var declared in the current block
 	     * @return all the local var discarded
