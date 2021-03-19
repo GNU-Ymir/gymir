@@ -3,6 +3,8 @@
 #define match(X)				\
     auto & ref = X;
 
+#define match_forall(X)				\
+    for (auto & ref : X)
 
 #define s_of_u(X)				\
     if (ref.is<X> ()) 

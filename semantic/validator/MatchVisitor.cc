@@ -44,7 +44,7 @@ namespace semantic {
 		try {
 		    test = this-> validateMatch (value, matchers [it], local_mandatory);
 		    if (local_mandatory) isMandatory = true;
-		} catch (Error::ErrorList list) {			
+		} catch (Error::ErrorList &list) {			
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
 		
@@ -82,7 +82,7 @@ namespace semantic {
 			this-> _context.discardAllLocals ();
 			
 		    this-> _context.quitBlock ();
-		} catch (Error::ErrorList list) {			
+		} catch (Error::ErrorList &list) {			
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
 		
@@ -196,7 +196,7 @@ namespace semantic {
 		    this-> _context.insertLocal (var.getName ().getStr (), varDecl);
 		}
 				
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		errors = list.errors;
 		errors.back ().addNote (Ymir::Error::createNote (var.getLocation (), ExternalError::get (IN_MATCH_DEF)));
 	    } 
@@ -319,7 +319,7 @@ namespace semantic {
 			globTest = BoolValue::init (value.getLocation (), Bool::init (value.getLocation ()), true);
 		    }
 		}
-	    } catch (Error::ErrorList list) {		
+	    } catch (Error::ErrorList &list) {		
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		errors.back ().addNote (Ymir::Error::createNote (value.getLocation (), ExternalError::get (IN_MATCH_DEF)));
 	    } 
@@ -368,7 +368,7 @@ namespace semantic {
 		    auto type = this-> _context.validateType (call.getLeft ());
 		    this-> _context.verifyCompatibleTypeWithValue (value.getLocation (), type, value);
 		}
-	    } catch (Error::ErrorList list) {	       
+	    } catch (Error::ErrorList &list) {	       
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		errors.back ().addNote (Ymir::Error::createNote (call.getLocation (), ExternalError::get (IN_MATCH_DEF)));
 	    } 
@@ -456,7 +456,7 @@ namespace semantic {
 		} else {
 		    Ymir::Error::occur (loc, ExternalError::get (UNKNOWN_OPTION_NAME), call.getLeft ().prettyString ());
 		}
-	    } catch (Error::ErrorList list) {	       
+	    } catch (Error::ErrorList &list) {	       
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		errors.back ().addNote (Ymir::Error::createNote (call.getLocation (), ExternalError::get (IN_MATCH_DEF)));
 	    } 
@@ -579,7 +579,7 @@ namespace semantic {
 	    Generator retValue (Generator::empty ());
 	    try {
 		retValue = this-> _context.retreiveValue (ret);
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 	    			
 	    } 
 	    
@@ -636,7 +636,7 @@ namespace semantic {
 			    errors.push_back (Error::makeOccurAndNote (matchers [it].getLocation (), note, ExternalError::get (MULTIPLE_CATCH), jt.second.prettyString ()));
 			}
 		    }
-		} catch (Error::ErrorList list) {			
+		} catch (Error::ErrorList &list) {			
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
 		
@@ -675,7 +675,7 @@ namespace semantic {
 			this-> _context.discardAllLocals ();
 			
 		    this-> _context.quitBlock ();
-		} catch (Error::ErrorList list) {			
+		} catch (Error::ErrorList &list) {			
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
 		    
@@ -821,7 +821,7 @@ namespace semantic {
 		    if (!found) Ymir::Error::occur (var.getLocation (), ExternalError::get (USELESS_CATCH), varType.prettyString ());;		    
 		}
 		
-	    } catch (Error::ErrorList list) {		
+	    } catch (Error::ErrorList &list) {		
 		errors = list.errors;
 		errors.back ().addNote (Error::createNote (var.getLocation (), ExternalError::get (IN_MATCH_DEF)));
 	    } 
@@ -859,7 +859,7 @@ namespace semantic {
 		    );
 		    globTest = this-> _context.validateValue (call);		   
 		}
-	    } catch (Error::ErrorList list) {		
+	    } catch (Error::ErrorList &list) {		
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		errors.back ().addNote (Ymir::Error::createNote (call.getLocation (), ExternalError::get (IN_MATCH_DEF)));
 	    } 

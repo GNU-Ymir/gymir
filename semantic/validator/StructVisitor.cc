@@ -58,7 +58,7 @@ namespace semantic {
 		    errors.push_back (Ymir::Error::makeOccur (it.to <syntax::VarDecl> ().getValue ().getLocation (), ExternalError::get (UNION_INIT_FIELD)));
 			
 		    fieldsDecl.push_back (field);		    	    		    
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		}
 	    }

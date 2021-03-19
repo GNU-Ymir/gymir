@@ -67,7 +67,7 @@ namespace semantic {
 		    match (sym) {
 			of (semantic::Function, func) {
 			    if (!func.isMethod ()) {
-				gens.push_back (FunctionVisitor::init (*this).validateFunctionProto (func));			    
+				gens.push_back (FunctionVisitor::init (*this).validateFunctionProto (sym));			    
 			    }
 			    succ = true;
 			}
@@ -139,7 +139,7 @@ namespace semantic {
 			    succ = true;
 			} fo;			
 		    }
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    errors = list.errors;
 		} 		
 
@@ -188,17 +188,17 @@ namespace semantic {
 			    Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
 			}
 			elof_u (semantic::Aka) {
-			    locGen = validateAka (multSym [0]);
+			    locGen = validateAka (multSym [it]);
 			}
 			elof (semantic::Function, func) {
 			    if (!func.isMethod ()) {
-				locGen = FunctionVisitor::init (*this).validateFunctionProto (func);
+				locGen = FunctionVisitor::init (*this).validateFunctionProto (multSym [it]);
 			    }
 			} elfo {			    
 			    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");				
 			}
 		    }
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    errors = list.errors;
 		} 
 

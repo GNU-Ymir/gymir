@@ -261,7 +261,7 @@ namespace semantic {
 		}
 		    
 		values.push_back (Loop::init (lexing::Word::init (expression.getLocation (), "#_for"), loop_type, test, Block::init (expression.getLocation (), loop_type, innerValues), false));
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 
 	    
@@ -269,7 +269,7 @@ namespace semantic {
 	    
 	    try {
 		this-> _context.quitBlock ();
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		    
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 	    
@@ -459,7 +459,7 @@ namespace semantic {
 		}
 		    
 		value.push_back (Loop::init (expression.getLocation (), loop_type, test, Block::init (expression.getLocation (), loop_type, innerValues), false));		    
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		    
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 
@@ -468,7 +468,7 @@ namespace semantic {
 	    
 	    try {
 		this-> _context.quitBlock ();
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		    
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 
@@ -559,13 +559,13 @@ namespace semantic {
 			auto bl = this-> _context.validateValue (expression.getBlock ());
 			loopType = bl.to <Value> ().getType ();
 			innerValues.push_back (bl);
-		    } catch (Error::ErrorList list) {			
+		    } catch (Error::ErrorList &list) {			
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    }
 		
 		    try {
 			this-> _context.quitBlock ();
-		    } catch (Error::ErrorList list) {
+		    } catch (Error::ErrorList &list) {
 			
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    } 
@@ -618,13 +618,13 @@ namespace semantic {
 			auto bl = this-> _context.validateValue (expression.getBlock ());
 			loopType = bl.to <Value> ().getType ();
 			innerValues.push_back (bl);
-		    } catch (Error::ErrorList list) {			
+		    } catch (Error::ErrorList &list) {			
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    }
 		
 		    try {
 			this-> _context.quitBlock ();
-		    } catch (Error::ErrorList list) {
+		    } catch (Error::ErrorList &list) {
 			
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    } 
@@ -638,7 +638,7 @@ namespace semantic {
 	    
 	    try {
 		this-> _context.quitBlock ();
-	    } catch (Error::ErrorList list) {		    
+	    } catch (Error::ErrorList &list) {		    
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 
 		
@@ -750,14 +750,14 @@ namespace semantic {
 		    if (it == (int) type.to <Type> ().getInners ().size () - 1)
 			loopType = bl.to <Value> ().getType ();
 		    innerValues.push_back (bl);			
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 			
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
 
 		try {
 		    this-> _context.quitBlock ();
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 			
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
@@ -771,7 +771,7 @@ namespace semantic {
 	    
 	    try {
 		this-> _context.quitBlock ();
-	    } catch (Error::ErrorList list) {		    
+	    } catch (Error::ErrorList &list) {		    
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 
 		
@@ -873,7 +873,7 @@ namespace semantic {
 		
 		try {
 		    begin = this-> _context.validateValue (syntBegin);
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), syntBegin.prettyString ());
 		    list.errors.back ().addNote (note);
 		    throw list;
@@ -881,7 +881,7 @@ namespace semantic {
 
 		try {
 		    end = this-> _context.validateValue (syntEnd);
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), syntEnd.prettyString ());
 		    list.errors.back ().addNote (note);
 		    throw list;
@@ -962,7 +962,7 @@ namespace semantic {
 		}
 		values.push_back (Loop::init (lexing::Word::init (loc, "#_for"), loop_type, test, Block::init (loc, loop_type, innerValues), false));
 		
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		errors = list.errors;
 		// We discard local to avoid useless error message when quitting the block
 		this-> _context.discardAllLocals ();
@@ -970,7 +970,7 @@ namespace semantic {
 
 	    try {
 		this-> _context.quitBlock ();
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    }
 	    

@@ -84,7 +84,7 @@ namespace semantic {
 			ret = validateMacroRef (mref, expression, errors);
 		    } fo;
 		}
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		ret = Generator::empty ();
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 
@@ -107,7 +107,7 @@ namespace semantic {
 		this-> _context.enterClassDef (sym.getMacroRef ());
 		try {
 		    values.push_back (validateConstructor (it, expression));		    
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		}
 
@@ -144,7 +144,7 @@ namespace semantic {
 			Ymir::Error::halt ("%(r) reaching impossible point", "Critical");
 		    }
 		}
-	    }  catch (Error::ErrorList list) {
+	    }  catch (Error::ErrorList &list) {
 		errors = list.errors;
 	    }
 	    	    
@@ -244,7 +244,7 @@ namespace semantic {
 			values.push_back (local_mapper);
 			current = current_2;
 		    } else break;
-		} catch (Error::ErrorList list) {		   
+		} catch (Error::ErrorList &list) {		   
 		    break; // If there is a throw, there was a failure however we are in a repeat so that's not a problem
 		}
 	    }
@@ -263,7 +263,7 @@ namespace semantic {
 			values.push_back (local_mapper);
 			current = current_2;
 		    } else break;
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    if (values.size () == 0) throw list; // Need at least one valid value
 		    break; // If a throw has been done, there was a failure however we are in a repeat so that's not a problem
 		}
@@ -280,7 +280,7 @@ namespace semantic {
 		    current = current_2;
 		    return local_mapper;
 		} else return Mapper (true);
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		return Mapper (true);
 	    }           
 	}		
@@ -299,7 +299,7 @@ namespace semantic {
 			mapper = validateRule (mult.getLeft (), content, current_left, skips);
 		    }
 		}
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		errors = list.errors;
 	    }
 
@@ -317,7 +317,7 @@ namespace semantic {
 			    mapper = validateRule (mult.getRight (), content, current, skips);
 			}
 		    }
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    errors = list.errors;		    
 		}
 		
@@ -425,7 +425,7 @@ namespace semantic {
 				result.mapping.emplace ("rule", std::vector <Mapper> ({mapper}));
 				return result;
 			    }
-			} catch (Error::ErrorList err) {
+			} catch (Error::ErrorList &err) {
 			    errors = err.errors;
 			}
 
@@ -440,7 +440,7 @@ namespace semantic {
 			);
 		    }
 		}
-	    } catch (Error::ErrorList list) {		
+	    } catch (Error::ErrorList &list) {		
 		if (Visitor::__CALL_NB_RECURS__ == 3 && !global::State::instance ().isVerboseActive ()) {
 		    list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CALL)));	    
 		    list.errors.insert (list.errors.begin (), format ("     : %(B)", "..."));
@@ -716,7 +716,7 @@ namespace semantic {
 		auto visit = syntax::Visitor::init (lex, false);		
 		auto result = visit.visitExpression ();
 		return result;
-	    } catch (Error::ErrorList list) {		
+	    } catch (Error::ErrorList &list) {		
 		list.errors.insert (list.errors.begin (), Ymir::Error::createNote (loc, ExternalError::get (IN_MACRO_EXPANSION)));
 		
 		throw Error::ErrorList {list.errors};
@@ -747,7 +747,7 @@ namespace semantic {
 		lex.skipEnable (Token::TAB,     false);
 		lex.skipEnable (Token::RETURN,  false);
 		lex.skipEnable (Token::RRETURN, false);
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		errors = list.errors;
 	    }
 	    
@@ -821,7 +821,7 @@ namespace semantic {
 			    buf.write (next.getStr ());
 			} else break;		
 		    }
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    errors = list.errors;
 		}
 	    	    
@@ -919,7 +919,7 @@ namespace semantic {
 		    } fo;
 		    
 		}
-	    } catch (Error::ErrorList list) {	
+	    } catch (Error::ErrorList &list) {	
 		errors = list.errors;		
 	    }
 	    	    

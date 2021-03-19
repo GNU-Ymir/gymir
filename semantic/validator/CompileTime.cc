@@ -108,7 +108,7 @@ namespace semantic {
 		    s_of (UniqValue, val)
 			return execute (val.getValue ());		
 		}	    
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		if (global::State::instance ().isVerboseActive ()) {
 		    Ymir::Error::occurAndNote (
 			gen.getLocation (),
@@ -635,7 +635,7 @@ namespace semantic {
 		try {
 		    auto ret = this-> execute (it);
 		    mult.push_back (ret);
-		} catch (Error::ErrorList list) {		    
+		} catch (Error::ErrorList &list) {		    
 		} 
 	    }
 

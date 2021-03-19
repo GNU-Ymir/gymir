@@ -19,8 +19,10 @@ namespace semantic {
 	using namespace Ymir;
 	
 	void Visitor::verifyMemoryOwner (const lexing::Word & loc, const Generator & type, const Generator & gen, bool construct, bool checkTypes, bool inMatch) {
-	    if (checkTypes) 
-	    verifyCompatibleTypeWithValue (loc, type, gen);
+	    if (checkTypes) {
+		verifyCompatibleTypeWithValue (loc, type, gen);
+	    }
+
 
 	    verifyCompleteType (loc, type);
 	    verifyImplicitAlias (loc, type, gen);
@@ -69,6 +71,7 @@ namespace semantic {
 		verifyMutabilityLevel (loc, gen.getLocation (), type, gen.to <Value> ().getType (), construct);
 	    }
 
+
 	    // TODO Verify locality
 	    // if (!type.to<Type> ().isLocal () && gen.to <Value> ().getType ().to <Type> ().isLocal ()) {
 	    // 	Ymir::Error::occur (loc, ExternalError::get (DISCARD_LOCALITY));				    
@@ -85,7 +88,7 @@ namespace semantic {
 					       rightType.to <Tuple> ().getInners ()[it].getLocation (),
 					       leftType.to <Tuple> ().getInners ()[it],
 					       rightType.to <Tuple> ().getInners ()[it], false);
-		    } catch (Error::ErrorList list) {
+		    } catch (Error::ErrorList &list) {
 			auto note = Ymir::Error::createNote (rloc);
 			for (auto &it : list.errors) note.addNote (it);
 			Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST));
@@ -298,7 +301,7 @@ namespace semantic {
 			    try {
 				auto sec_trait = this-> validateType (im.getTrait ());
 				if (trait.equals (sec_trait)) succeed = true;
-			    } catch (Error::ErrorList list) {
+			    } catch (Error::ErrorList &list) {
 				errors = list.errors;
 			    }
 			    
@@ -327,7 +330,7 @@ namespace semantic {
 	    else if (gen.to <Value> ().getType ().is <Slice> () && gen.to <Value> ().getType ().to <Type> ().getInners () [0].is<Void> () && type.is <Slice> ()) return;
 	    // else if (type.is <Integer> () && this-> isIntConstant (gen)) return; // We allow int implicit cast if the operand is knwon at compile time and is a int value
 	    // else if (type.is <Float> () && this-> isFloatConstant (gen)) return; // Idem for float const
-	    
+
 	    verifyCompatibleType (loc, gen.getLocation (), type, gen.to <Value> ().getType ());
 	}	
 

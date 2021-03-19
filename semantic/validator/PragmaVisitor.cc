@@ -96,7 +96,7 @@ namespace semantic {
 		}
 		    
 		return BoolValue::init (prg.getLocation (), Bool::init (prg.getLocation ()), true);
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		return BoolValue::init (prg.getLocation (), Bool::init (prg.getLocation ()), false);
 	    }
 	    
@@ -194,11 +194,11 @@ namespace semantic {
 		}
 
 
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		try {
 		    auto val = this-> _context.validateType (prg.getContent ()[0], true);
 		    res = mangler.mangle (val);
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    Ymir::Error::occurAndNote (prg.getLocation (), list.errors, ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
 		}
 	    }
@@ -256,7 +256,7 @@ namespace semantic {
 	    try {
 		this-> _context.validateValue (syntOp);
 		return BoolValue::init (prg.getLocation (), Bool::init (prg.getLocation ()), true);
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		return BoolValue::init (prg.getLocation (), Bool::init (prg.getLocation ()), false);
 	    }
 	}

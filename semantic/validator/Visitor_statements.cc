@@ -74,7 +74,7 @@ namespace semantic {
 	    try {
 	    	auto val = retreiveValue (test);
 	    	ret = Value::initBrRet (ret.to <Value> (), ret.to <Value> ().isBreaker (), !val.to <BoolValue> ().getValue (), assert.getLocation (), assert.getLocation ());
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 	    } 
 	    
 	    return ret;
@@ -135,7 +135,7 @@ namespace semantic {
 	    for (auto & it : wh.getDecls ()) {
 		try {
 		    varDecls.push_back (this-> validateVarDeclValue (it.to <syntax::VarDecl> (), true));
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		}
 	    }
@@ -164,7 +164,7 @@ namespace semantic {
 			{}, false
 			);
 		    exits.push_back (this-> validateValue (call));
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    list.errors.back ().addNote (Error::createNote (wh.getLocation ()));
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		}
@@ -176,7 +176,7 @@ namespace semantic {
 	    Generator ret (Generator::empty ());
 	    try {
 		ret = this-> validateValue (wh.getContent ());
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    }
 
@@ -185,7 +185,7 @@ namespace semantic {
 		discardAllLocals ();
 		
 		quitBlock ();
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    }
 	    
@@ -289,7 +289,7 @@ namespace semantic {
 
 		    try {
 			type = this-> inferTypeBranching (content.getLocation (), _else.getLocation (), type, _else.to<Value> ().getType ());
-		    } catch (Error::ErrorList list) {
+		    } catch (Error::ErrorList &list) {
 			Ymir::Error::occurAndNote (_if.getLocation (), list.errors, ExternalError::get (BRANCHING_VALUE));
 		    }
 		}
@@ -342,7 +342,7 @@ namespace semantic {
 	    Generator content (Generator::empty ());
 	    try {
 		content = validateValue (_wh.getContent (), false, false, false);
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 	    
 	    
@@ -377,7 +377,7 @@ namespace semantic {
 		content = forVisitor.validateCte (_for);
 		else
 		content = forVisitor.validate (_for);
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 	    
 	    
@@ -428,7 +428,7 @@ namespace semantic {
 		if (set) {
 		    try {
 		    	verifyMemoryOwner (_break.getLocation (), loop_type, value, false);
-		    } catch (Error::ErrorList err) { // Maybe implicit alias problem, we set the type to non mutable, to check
+		    } catch (Error::ErrorList &err) { // Maybe implicit alias problem, we set the type to non mutable, to check
 		    	loop_type = Type::init (loop_type.to <Type> (), false, loop_type.to <Type> ().isRef ());
 		    	setCurrentLoopType (loop_type);
 		    	verifyMemoryOwner (_break.getLocation (), loop_type, value, false); // if this pass, the loop type is const, and it is ok
@@ -475,7 +475,7 @@ namespace semantic {
 		    verifyCompatibleTypeWithValue (fn_type.getLocation (), fn_type, value);
 		} else
 		verifyCompatibleType (fn_type.getLocation (), type.getLocation (), fn_type, type);
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		list.errors.back ().addNote (Ymir::Error::createNote (rt.getLocation()));
 		throw list;
 	    }

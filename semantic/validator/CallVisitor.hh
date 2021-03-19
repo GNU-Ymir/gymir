@@ -25,149 +25,239 @@ namespace semantic {
 	private :
 	    
 	    /**
-	     * \brief As for any not proxied class, it does nothing special
-	     * \brief We just wan't all class to be initialized the same way
+	     *  As for any not proxied class, it does nothing special
+	     *  We just wan't all class to be initialized the same way
 	     */
 	    CallVisitor (Visitor & context);
 
 	public : 
 
 	    /**
-	     * \brief Create a new Visitor
+	     *  Create a new Visitor
 	     * \param context the context of the call visitor (used to validate the operands)
 	     */
 	    static CallVisitor init (Visitor & context);
 
 	    /**
-	     * \brief Validate a call expression and return a generator
-	     * \brief validate left, and params value, and then call the second validate function
+	     *  Validate a call expression and return a generator
+	     *  validate left, and params value, and then call the second validate function
 	     */
 	    generator::Generator validate (const syntax::MultOperator & expression);
 
 	    /**
-	     * \brief Validate a call expression and return a generator
-	     * \brief This validation is done as follow : 
-	     * \brief If left operand type is FrameProto : 
-	     * \brief - Apply call of left operand
-	     * \brief Else If left operand is Function Pointer : 
-	     * \brief - Apply call of left operand
-	     * \brief Else if left operand is MultSym
-	     * \brief - Find the one with the best score
-	     * \brief Else If left operation is Class : 
-	     * \brief - Search for operator overloading
-	     * \brief Else throw an error
+	     *  Validate a call expression and return a generator
+	     *  This validation is done as follow : 
+	     *  If left operand type is FrameProto : 
+	     *  - Apply call of left operand
+	     *  Else If left operand is Function Pointer : 
+	     *  - Apply call of left operand
+	     *  Else if left operand is MultSym
+	     *  - Find the one with the best score
+	     *  Else If left operation is Class : 
+	     *  - Search for operator overloading
+	     *  Else throw an error
 	     */	    
 	    generator::Generator validate (const lexing::Word & location, const generator::Generator & left, const std::vector <generator::Generator> & params, int & score, std::list <Ymir::Error::ErrorMsg> & errors);
+
+
+	    /**
+	     *  Validate a mult sym 
+	     *  A mult sym regroups a list of frameproto
+	     *  It will use the more specialized one
+	     */
+	    generator::Generator validateMultSym (const lexing::Word & expression, const generator::MultSym & sym, const std::vector<generator::Generator> & params, int & score, std::list <Ymir::Error::ErrorMsg> & errors);	    
+
 	    
 	    /**
-	     * \brief Validate a call expression on a frame proto
+	     * ================================================================================
+	     * ================================================================================
+	     * =================================      PROTOS     ==============================
+	     * ================================================================================
+	     * ================================================================================
+	     */
+	    
+	    /**
+	     *  Validate a call expression on a frame proto
 	     * \param expression the call expression 
 	     * \param proto the prototype to use
 	     * \param params the parameter that will be passed to the function 
 	     * \param score the final score of the call 
-	     * \brief It does not throw an exception on failure, 
-	     * \brief It will return a empty generator and a score of -1
+	     *  It does not throw an exception on failure, 
+	     *  It will return a empty generator and a score of -1
 	     */
-	    generator::Generator validateFrameProto (const lexing::Word & location, const generator::FrameProto & proto, const std::vector <generator::Generator> & params, int & score, std::list <Ymir::Error::ErrorMsg> & errors);
+	    generator::Generator validateFrameProto (const lexing::Word & location, const generator::Generator & proto, const std::vector <generator::Generator> & params, int & score, std::list <Ymir::Error::ErrorMsg> & errors);
 
 	    /**
-	     * \brief Validate a call expression on a constructor proto
+	     *  Validate a call expression on a constructor proto
 	     * \param expression the call expression 
 	     * \param proto the prototype to use
 	     * \param params the parameter that will be passed to the function 
 	     * \param score the final score of the call 
-	     * \brief It does not throw an exception on failure, 
-	     * \brief It will return a empty generator and a score of -1
+	     *  It does not throw an exception on failure, 
+	     *  It will return a empty generator and a score of -1
 	     */	    
-	    generator::Generator validateConstructorProto (const lexing::Word & location, const generator::ConstructorProto & proto, const std::vector <generator::Generator> & params, int & score, std::list <Ymir::Error::ErrorMsg> & errors);	    	    
-	    /**
-	     * \brief Find the right parameter assoc to the var
-	     */
-	    generator::Generator findParameter (std::list <generator::Generator> & params, const generator::ProtoVar & var);
+	    generator::Generator validateConstructorProto (const lexing::Word & location, const generator::Generator & proto, const std::vector <generator::Generator> & params, int & score, std::list <Ymir::Error::ErrorMsg> & errors);
 
+	    
 	    /**
-	     * \brief Validate a call expression on a lambda proto
+	     *  Validate a call expression on a lambda proto
 	     * \param expression the call expression 
 	     * \param proto the prototype to use
 	     * \param params the parameter that will be passed to the function 
 	     * \param score the final score of the call 
-	     * \brief It does not throw an exception on failure, 
-	     * \brief It will return a empty generator and a score of -1
+	     *  It does not throw an exception on failure, 
+	     *  It will return a empty generator and a score of -1
 	     */
 	    generator::Generator validateLambdaProto (const lexing::Word & location, const generator::LambdaProto & proto, const std::vector <generator::Generator> & params, int & score, std::list <Ymir::Error::ErrorMsg> & errors);
-	    	    
+
+	    
 	    /**
-	     * \brief Validate a call expression on a frame proto
+	     * ================================================================================
+	     * ================================================================================
+	     * ==================================     STRUCT     ==============================
+	     * ================================================================================
+	     * ================================================================================
+	     */
+
+	    
+	    /**
+	     *  Validate a call expression on a frame proto
 	     * \param expression the call expression 
 	     * \param str the structure to construct
 	     * \param params the parameter that will be passed to the constructor 
 	     * \param score the final score of the call 
-	     * \brief It does not throw an exception on failure, 
-	     * \brief It will return a empty generator and a score of -1
-	     * \brief All the errors will be store into errors
+	     *  It does not throw an exception on failure, 
+	     *  It will return a empty generator and a score of -1
+	     *  All the errors will be store into errors
 	     */
 	    generator::Generator validateStructCst (const lexing::Word & location, const generator::Struct & str, const std::vector <generator::Generator> & params, int & score, std::list <Ymir::Error::ErrorMsg> & errors);
 
 	    /**
-	     * \brief Find the right parameter assoc to the var
+	     * ================================================================================
+	     * ================================================================================
+	     * ================================     POINTERS     ==============================
+	     * ================================================================================
+	     * ================================================================================
 	     */
-	    generator::Generator findParameterStruct (std::vector<generator::Generator> & params, const generator::VarDecl & var);	    
 
 	    /**
-	     * \brief Validate a Function pointer call
+	     *  Validate a Function pointer call
 	     * \param expression the call expression
 	     * \param gen the generator of the function pointer value (assumed to be typed as FuncPtr)
 	     * \param params the parameters of the call
-	     * \brief It does not throw an exception on failure, 
-	     * \brief It will return a empty generator and a score of -1
-	     * \brief All the errors will be store into errors
+	     *  It does not throw an exception on failure, 
+	     *  It will return a empty generator and a score of -1
+	     *  All the errors will be store into errors
 	     */
 	    generator::Generator validateFunctionPointer (const lexing::Word & expression, const generator::Generator & gen, const std::vector <generator::Generator> & params, int & score, std::list <Ymir::Error::ErrorMsg> & errors);
-	    
+
+
 	    /**
-	     * \brief Validate a Function pointer call
+	     *  Validate a Function pointer call
 	     * \param expression the call expression
 	     * \param gen the generator of the delegate value (assumed to be typed as Delegate)
 	     * \param params the parameters of the call
-	     * \brief It does not throw an exception on failure, 
-	     * \brief It will return a empty generator and a score of -1
-	     * \brief All the errors will be store into errors
+	     *  It does not throw an exception on failure, 
+	     *  It will return a empty generator and a score of -1
+	     *  All the errors will be store into errors
 	     * \warning TODO, merge this function and validateFunctionPointer, these two functions do exaclty the same treatment and have only one different code line 
 	     */
 	    generator::Generator validateDelegate (const lexing::Word & expression, const generator::Generator & gen, const std::vector <generator::Generator> & params, int & score, std::list <Ymir::Error::ErrorMsg> & errors);
-	    
-	    /**
-	     * \brief Validate a mult sym 
-	     * \brief A mult sym regroups a list of frameproto
-	     * \brief It will use the more specialized one
-	     */
-	    generator::Generator validateMultSym (const lexing::Word & expression, const generator::MultSym & sym, const std::vector<generator::Generator> & params, int & score, std::list <Ymir::Error::ErrorMsg> & errors);	    
 
 	    /**
-	     * \brief Validate a template ref 
-	     * \brief a template ref can be called if refer to a function 
-	     * \brief It will start by solving the template params with the types of the parameters
+	     * ================================================================================
+	     * ================================================================================
+	     * =================================    TEMPLATES    ==============================
+	     * ================================================================================
+	     * ================================================================================
+	     */
+
+	    
+	    /**
+	     * Validate a template, and dispatch it between template class cst, and template ref
+	     */
+	    generator::Generator validateTemplate (const lexing::Word & expression, const generator::Generator & ref, const std::vector <generator::Generator> & params, int & score, std::list <Ymir::Error::ErrorMsg> & errors, Symbol & sym, generator::Generator & proto_gen);	    
+	    
+	    /**
+	     *  Validate a template ref 
+	     *  a template ref can be called if refer to a function 
+	     *  It will start by solving the template params with the types of the parameters
 	     */
 	    generator::Generator validateTemplateRef (const lexing::Word & expression, const generator::Generator & ref, const std::vector <generator::Generator> & params, int & score, std::list <Ymir::Error::ErrorMsg> & errors, Symbol & sym, generator::Generator & proto_gen);
 
 	    /**
-	     * \brief Validate a template Class Cst
+	     *  Validate a template Class Cst
 	     */
 	    generator::Generator validateTemplateClassCst (const lexing::Word & expression, const generator::Generator & ref, const std::vector <generator::Generator> & params, int & score, std::list <Ymir::Error::ErrorMsg> & errors, Symbol & sym, generator::Generator & proto_gen);
 
 	    /**
-	     * \brief Validate a template class cst prototype
+	     *  Validate a template class cst prototype
 	     */
 	    generator::Generator validateTemplateClassCst (const lexing::Word & expression, const generator::Generator & ref, const syntax::Function::Prototype & prototype, const std::vector <generator::Generator> & params, int & score, std::list <Ymir::Error::ErrorMsg> & errors, Symbol & sym);
 
+	    
+	    /**
+	     * ================================================================================
+	     * ================================================================================
+	     * =================================    ARGUMENTS    ==============================
+	     * ================================================================================
+	     * ================================================================================
+	     */
+	    
+	    /**
+	     * Return the list of the types of the parameters
+	     * If verifyType, then verify the compatibility
+	     * If verifyMemory, then verify the memory borrowing
+	     */
+	    std::vector <generator::Generator> validateTypeParameterList (const generator::Generator & frame, const std::vector <generator::Generator> & proto, const std::vector <generator::Generator> & params, int & score, bool verifyType, bool verifyMemory, std::list<Ymir::Error::ErrorMsg> & errors);
+		    
+	    /**
+	     * Create the list of parameters (resolving the location of each parameter, taking into account the named params)
+	     */
+	    std::vector <generator::Generator> validateParameterList (const std::vector <generator::Generator> & proto, std::list <generator::Generator> & rights, std::list<Ymir::Error::ErrorMsg> & errors);
+	    
+	    /**
+	     *  Find the right parameter assoc to the var
+	     */
+	    generator::Generator findParameter (std::list <generator::Generator> & params, const generator::ProtoVar & var);
 
 	    /**
-	     * \brief Try to validate a dotCall expression
+	     * Find a parameter in param list, for a proto var whose nbConsume is equal to 1
+	     */
+	    generator::Generator findSingleParameter (std::list <generator::Generator> & params, const generator::ProtoVar & var);
+
+	    /**
+	     *  Find the right parameter assoc to the var
+	     */
+	    generator::Generator findParameterStruct (std::vector<generator::Generator> & params, const generator::VarDecl & var);	    
+	    
+	    	    
+	    /**
+	     * ================================================================================
+	     * ================================================================================
+	     * =================================     DOTCALL     ==============================
+	     * ================================================================================
+	     * ================================================================================
+	     */
+
+
+	    /**
+	     *  Try to validate a dotCall expression
 	     * \param left the dot expression (or something else that will fail in any case, but this is handled)
 	     * \param params the parameter to fill with the left expression (a.b ()-> return b; and params.push (a))
 	     * \param errors the errors to throw in case of failure
 	     */
 	    generator::Generator validateDotCall (const syntax::Expression & left, std::vector<generator::Generator> & params, const std::list <Ymir::Error::ErrorMsg> & errors);
+
+
+
+	    /**
+	     * ================================================================================
+	     * ================================================================================
+	     * =================================      ERRORS     ==============================
+	     * ================================================================================
+	     * ================================================================================
+	     */
 	    
 	    /**
 	     * Throw an undefined op error

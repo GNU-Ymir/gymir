@@ -28,7 +28,7 @@ namespace semantic {
 		for (auto & it : expression.getRights ()) {
 		    rights.push_back (this-> _context.validateValue (it));
 		}
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		errors = list.errors;
 	    }
 	    
@@ -67,7 +67,7 @@ namespace semantic {
 			realFailure = true;
 			Ymir::Error::occur (right[0].getLocation (), ExternalError::get (OVERFLOW_ARRAY), x.to<Fixed> ().getUI ().u, left.to <Value> ().getType ().to <Array> ().getSize ());
 		    }
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    if (realFailure) throw list;
 		}
 		

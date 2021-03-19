@@ -32,9 +32,9 @@ namespace documentation {
 		    this-> _context.pushReferent (sym, "dump::module");
 		    val = this-> dumpModule (mod);
 		    this-> _context.popReferent ("dump::module");
-		} elof (semantic::Function, func) {
+		} elof_u (semantic::Function) {
 		    this-> _context.pushReferent (sym, "dump::function");
-		    val = this-> dumpFunction (func);
+		    val = this-> dumpFunction (sym);
 		    this-> _context.popReferent ("dump::function");
 		} elof (semantic::VarDecl, decl) {
 		    this-> _context.pushReferent (sym, "dump::vardecl");
@@ -250,9 +250,10 @@ namespace documentation {
 	return JsonDict::init (val);
     }
     
-    JsonValue Visitor::dumpFunction (const semantic::Function & func) {
+    JsonValue Visitor::dumpFunction (const semantic::Symbol & fSym) {
 	std::map <std::string, JsonValue> val;
-	auto proto = semantic::validator::FunctionVisitor::init (this-> _context).validateFunctionProto (func);
+	auto & func = fSym.to <semantic::Function> ();
+	auto proto = semantic::validator::FunctionVisitor::init (this-> _context).validateFunctionProto (fSym);
 	val ["type"] = JsonString::init ("function");
 	this-> dumpStandard (func, val);
 	

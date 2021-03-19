@@ -133,7 +133,7 @@ namespace semantic {
 
 		gen = generator::Class::initFields (gen.to <generator::Class> (), allFields, localFields);
 		sym.to <semantic::Class> ().setGenerator (gen);
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 
 	}    
@@ -160,14 +160,14 @@ namespace semantic {
 			ClassVisitor::__fast_validation__.push_back (true);
 			try {
 			    syms.push_back (this-> _context.validateVarDeclValue (it.to <syntax::VarDecl> (), false));
-			} catch (Error::ErrorList list) {
+			} catch (Error::ErrorList &list) {
 			    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 			}
 			ClassVisitor::__fast_validation__.pop_back ();
 		    } else {
 			syms.push_back (this-> _context.validateVarDeclValue (it.to <syntax::VarDecl> (), false));
 		    }
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		}		    
 	    }
@@ -178,7 +178,7 @@ namespace semantic {
 		this-> _context.discardAllLocals (); 
 		    
 		this-> _context.quitBlock ();
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 
 
@@ -264,7 +264,7 @@ namespace semantic {
 		// Add methods is the list of methods that have been added by trait implementation
 		sym.to <semantic::Class> ().setAddMethods (addMethods); // We don't put them in the table of the symbol, because they are not declared in it
 
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 
 	}
@@ -302,7 +302,7 @@ namespace semantic {
 			    implemented.push_back (std::pair<semantic::Symbol, generator::Generator> (it, ret));
 			} fo;
 		    }		    		
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
 	    }
@@ -319,7 +319,7 @@ namespace semantic {
 			    }
 			} fo;
 		    }		    		
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
 	    }
@@ -328,7 +328,7 @@ namespace semantic {
 	    for (auto it : implemented) {
 		try {
 		    this-> validateVtableImpl (it.first.to <semantic::Impl> (), it.second, classType, ancestor, vtable, protection, implVtable, addMethods);
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 	
 		
@@ -430,7 +430,7 @@ namespace semantic {
 		    } else {
 			Ymir::Error::halt ("", "");		    			
 		    }
-		} catch (Error::ErrorList list) {		    
+		} catch (Error::ErrorList &list) {		    
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    errors.back ().addNote (Ymir::Error::createNote (impl.getTrait ().getLocation (), ExternalError::get (IN_TRAIT_VALIDATION)));
 		}
@@ -513,7 +513,7 @@ namespace semantic {
 			} else if (!trait.isEmpty () && !ancVtable[i].to <MethodProto> ().getTrait ().isEmpty ()) {
 			    try {
 				this-> _context.verifyCompatibleType (func.getName (), ancVtable [i].to <MethodProto> ().getTrait ().getLocation (), trait, ancVtable [i].to <MethodProto> ().getTrait ());
-			    } catch (Error::ErrorList list) {
+			    } catch (Error::ErrorList &list) {
 				auto note = Ymir::Error::createNote (ancVtable [i].getLocation ());
 				Ymir::Error::occurAndNote (func.getName (), note, ExternalError::get (WRONG_IMPLEMENT), ancVtable [i].prettyString (), ancVtable [i].to<MethodProto> ().getTrait ().prettyString (), trait.prettyString ());
 			    }
@@ -611,7 +611,7 @@ namespace semantic {
 			    this-> _funcVisitor.validateConstructor (it, clRef, ancestor, ancestorFields);
 			} fo;			
 		    }
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
 

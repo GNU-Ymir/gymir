@@ -30,7 +30,7 @@ namespace semantic {
 		    auto intr = syntax::Intrinsics::init (lexing::Word::init (bin.getLocation (), Keys::ALIAS), bin.getLeft ());
 		    auto n_bin = syntax::Binary::init (lexing::Word::init (bin.getLocation (), Token::DOT), intr, bin.getRight (), bin.getType ());
 		    return this-> validateBinary (n_bin.to <syntax::Binary> (), isFromCall);		    
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    auto note = Ymir::Error::createNote (bin.getLocation ());
 		    list.errors.back ().addNote (note);
 		    throw list;

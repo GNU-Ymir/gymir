@@ -115,7 +115,7 @@ namespace semantic {
 	void Visitor::quitBlock (std::list <Error::ErrorMsg> & errors) {
 	    try {
 		this-> quitBlock ();
-	    } catch (Error::ErrorList lst) {
+	    } catch (Error::ErrorList &lst) {
 		errors.insert (errors.end (), lst.errors.begin (), lst.errors.end ());
 	    }
 	}

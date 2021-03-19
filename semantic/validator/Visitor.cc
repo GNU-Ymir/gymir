@@ -39,7 +39,7 @@ namespace semantic {
 		    pushReferent (sym, "validate::module");			
 		    try {
 			validateModule (mod);
-		    } catch (Error::ErrorList list) {
+		    } catch (Error::ErrorList &list) {
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    }
 		       			
@@ -56,7 +56,7 @@ namespace semantic {
 		    pushReferent (sym, "validate::function");			
 		    try {
 			validateFunction (func);
-		    } catch (Error::ErrorList list) {
+		    } catch (Error::ErrorList &list) {
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    }
 			
@@ -74,7 +74,7 @@ namespace semantic {
 		    pushReferent (sym, "validate::vdecl");			
 		    try {
 			validateVarDecl (sym);
-		    } catch (Error::ErrorList list) {
+		    } catch (Error::ErrorList &list) {
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    }
 			
@@ -92,7 +92,7 @@ namespace semantic {
 		    pushReferent (sym, "validate::alias");
 		    try {
 			validateAka (sym);
-		    } catch (Error::ErrorList list) {
+		    } catch (Error::ErrorList &list) {
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());			    
 		    }
 
@@ -109,7 +109,7 @@ namespace semantic {
 		    pushReferent (sym, "validate::struct");			
 		    try {
 			validateStruct (sym);
-		    } catch (Error::ErrorList list) {
+		    } catch (Error::ErrorList &list) {
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    } 
 			
@@ -137,7 +137,7 @@ namespace semantic {
 			pushReferent (sym, "validate::tmpl");
 			try {
 			    validateTemplateSolution (sym);
-			} catch (Error::ErrorList list) {
+			} catch (Error::ErrorList &list) {
 			    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 			    removeTemplateSolution (sym); // If there is an error, we don't wan't to store the template solution anymore
 			    insertErrorTemplateSolution (sym, errors);			    
@@ -156,7 +156,7 @@ namespace semantic {
 		    pushReferent (sym, "validate::enum");
 		    try {
 			validateEnum (sym);
-		    } catch (Error::ErrorList list) {
+		    } catch (Error::ErrorList &list) {
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    } 
 			
@@ -173,7 +173,7 @@ namespace semantic {
 		    pushReferent (sym, "validate::class");
 		    try {
 			validateClass (sym, true);
-		    } catch (Error::ErrorList list) {
+		    } catch (Error::ErrorList &list) {
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    } 
 			
@@ -191,7 +191,7 @@ namespace semantic {
 		    pushReferent (sym, "validate::trait");			
 		    try {
 			validateTrait (sym);
-		    } catch (Error::ErrorList list) {
+		    } catch (Error::ErrorList &list) {
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    } 
 			

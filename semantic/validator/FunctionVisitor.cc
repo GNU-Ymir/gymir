@@ -39,7 +39,7 @@ namespace semantic {
 	    
 	    try { // we enclose that in a try catch, because some vars may be unused
 		this-> _context.quitBlock ();
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 	
 		
@@ -80,7 +80,7 @@ namespace semantic {
 		    needFinalReturn = this-> verifyFinalReturn (bodyExpr.getLocation (), retType, body);
 		    this-> verifyThrowing (loc, funcName, body.getThrowers (), throwers, errors);
 		    return body;
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		}
 	    } else {
@@ -121,7 +121,7 @@ namespace semantic {
 
 		try {
 		    this-> _context.verifyCompatibleTypeWithValue (params [0].getLocation (), argtype, params [0]);
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		}
 	    }
@@ -130,7 +130,7 @@ namespace semantic {
 		auto realRetType = Integer::init (loc, 32, true); // do better 
 		try {
 		    this-> _context.verifyCompatibleType (params [0].getLocation (), loc, realRetType, retType);
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		}
 	    }	    
@@ -214,48 +214,53 @@ namespace semantic {
 	 * ================================================================================
 	 */
 
-	Generator FunctionVisitor::validateFunctionProto (const semantic::Function & func) {
-	    std::vector <Generator> params;
-	    static std::list <lexing::Word> __validating__; 
-	    auto & function = func.getContent ();
-	    std::list <Ymir::Error::ErrorMsg> errors;
-	    bool no_value = false;
-	    Generator retType (Generator::empty ());
+	Generator FunctionVisitor::validateFunctionProto (const semantic::Symbol & fSym) {	    
+	    if (fSym.to <semantic::Function> ().getGenerator ().isEmpty ()) {
+		auto & func = fSym.to <semantic::Function> ();
+		auto sym = fSym;
+		std::vector <Generator> params;
+		static std::list <lexing::Word> __validating__; 
+		auto & function = func.getContent ();
+		std::list <Ymir::Error::ErrorMsg> errors;
+		bool no_value = false;
+		Generator retType (Generator::empty ());
 
-	    for (auto func_loc : __validating__) {
-		// If there is a foward reference, we can't validate the values
-		if (func_loc.isSame (func.getName ())) no_value = true;		    
+		for (auto func_loc : __validating__) {
+		    // If there is a foward reference, we can't validate the values
+		    if (func_loc.isSame (func.getName ())) no_value = true;		    
+		}
+
+		__validating__.push_back (func.getName ());
+		this-> _context.enterForeign ();
+		this-> _context.enterBlock ();
+	    
+		this-> validatePrototypeForProto (func.getName (), function.getPrototype (), no_value, params, retType, errors);
+	    
+		try {
+		    this-> _context.discardAllLocals ();
+		    this-> _context.quitBlock ();
+		} catch (Error::ErrorList &list) {
+		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		} 	
+
+		std::vector <Generator> throwers = this-> validateThrowers (func.getThrowers (), errors);	    
+		__validating__.pop_back ();
+		this-> _context.exitForeign ();
+
+		if (errors.size () != 0) {
+		    throw Error::ErrorList {errors};		
+		}
+
+		auto frame = FrameProto::init (function.getLocation (), func.getRealName (), retType, params, func.isVariadic (), func.isSafe (), throwers);
+		auto ln = func.getExternalLanguage ();
+		auto style = Frame::ManglingStyle::Y;
+		if (ln == Keys::CLANG) style = Frame::ManglingStyle::C;
+		else if (ln == Keys::CPPLANG) style = Frame::ManglingStyle::CXX;
+	    
+		frame = FrameProto::init (frame.to <FrameProto> (), func.getMangledName (), style);
+		sym.to <semantic::Function> ().setGenerator (frame);
 	    }
-
-	    __validating__.push_back (func.getName ());
-	    this-> _context.enterForeign ();
-	    this-> _context.enterBlock ();
-	    
-	    this-> validatePrototypeForProto (func.getName (), function.getPrototype (), no_value, params, retType, errors);
-	    
-	    try {
-		this-> _context.discardAllLocals ();
-		this-> _context.quitBlock ();
-	    } catch (Error::ErrorList list) {
-		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-	    } 	
-
-	    std::vector <Generator> throwers = this-> validateThrowers (func.getThrowers (), errors);	    
-	    __validating__.pop_back ();
-	    this-> _context.exitForeign ();
-
-	    if (errors.size () != 0) {
-		throw Error::ErrorList {errors};		
-	    }
-
-	    auto frame = FrameProto::init (function.getLocation (), func.getRealName (), retType, params, func.isVariadic (), func.isSafe (), throwers);
-	    auto ln = func.getExternalLanguage ();
-	    auto style = Frame::ManglingStyle::Y;
-	    if (ln == Keys::CLANG) style = Frame::ManglingStyle::C;
-	    else if (ln == Keys::CPPLANG) style = Frame::ManglingStyle::CXX;
-	    
-	    frame = FrameProto::init (frame.to <FrameProto> (), func.getMangledName (), style);
-	    return frame;
+	    return fSym.to <semantic::Function> ().getGenerator ();
 	}
 
 
@@ -280,7 +285,7 @@ namespace semantic {
 	    try {
 		auto icl = this-> _context.validateClass (func.getClass ());
 		cl = Type::init (func.getClass ().getName (), ClassPtr::init (func.getClass ().getName (), Type::init (func.getClass ().getName (), icl.to <Type> (), true, false)).to <Type> (), true, false);
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		errors = list.errors;
 	    } 
 	    
@@ -294,7 +299,7 @@ namespace semantic {
 		try {
 		    this-> _context.discardAllLocals ();
 		    this-> _context.quitBlock ();
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 	    
 
@@ -340,7 +345,7 @@ namespace semantic {
 	    try {
 		this-> _context.discardAllLocals ();
 		this-> _context.quitBlock ();
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 	    
 
@@ -383,7 +388,7 @@ namespace semantic {
 		    }
 		
 		    addedParams.push_back (ParamVar::init (var.getName (), type, isMutable, false));
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
 	    }
@@ -392,7 +397,7 @@ namespace semantic {
 		this-> insertParameters (addedParams);
 		params.insert (params.end (), addedParams.begin (), addedParams.end ());
 		retType = this-> validateReturnType (loc, proto.getType ());
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    }
 	    
@@ -423,7 +428,7 @@ namespace semantic {
 		    }
 		    
 		    addedParams.push_back (ProtoVar::init (var.getName (), type, value, isMutable, nb_consumed, false));
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    errors.push_back (Ymir::Error::createNote (param.getLocation ()));
 		} 
@@ -433,7 +438,7 @@ namespace semantic {
 		this-> insertParameters (addedParams);
 		params.insert (params.end (), addedParams.begin (), addedParams.end ());	    	    
 		retType = this-> validateReturnType (loc, proto.getType ());
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    }
 	}
@@ -517,7 +522,7 @@ namespace semantic {
 	    for (auto &it : throwers) {
 		try {
 		    rets.push_back (Generator::init (it.getLocation (), this-> _context.validateType (it)));
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
 	    }
@@ -572,7 +577,7 @@ namespace semantic {
 					 VarRef::init (loc, params [0].to <ParamVar> ().getName (), classType, params [0].getUniqId (), true, Generator::empty (), true)
 		    );	    
 		body = Block::init (loc, Void::init (loc), {preConstruct, body, ret});
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 	    	    
 
@@ -580,7 +585,7 @@ namespace semantic {
 	    	    
 	    try {
 		this-> _context.quitBlock ();
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 	    
 	    
@@ -617,7 +622,7 @@ namespace semantic {
 		Generator cstrs (Generator::empty ());
 		try {
 		    cstrs = this-> _context.getClassConstructors (loc, classR.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator (), lexing::Word::eof ());
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    Ymir::Error::occurAndNote (
 			loc,
 			list.errors, 
@@ -647,7 +652,7 @@ namespace semantic {
 		    Generator cstrs (Generator::empty ());
 		    try {
 			cstrs = this-> _context.getClassConstructors (loc, ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator (), lexing::Word::eof ());
-		    } catch (Error::ErrorList list) {						
+		    } catch (Error::ErrorList &list) {						
 			Ymir::Error::occurAndNote (
 			    loc,
 			    list.errors,
@@ -690,7 +695,7 @@ namespace semantic {
 			this-> _context.verifyMemoryOwner (left.getLocation (), left.to <Value> ().getType (), right, true);
 			instructions.push_back (Affect::init (left.getLocation (), left.to <Value> ().getType (), left, right, true));			
 			validated.emplace (name.getStr ());
-		    } catch (Error::ErrorList list) {
+		    } catch (Error::ErrorList &list) {
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    } 		    
 		}
@@ -789,7 +794,7 @@ namespace semantic {
 			
 			try {
 			    cstrs = this-> _context.getClassConstructors (loc, ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator (), lexing::Word::eof ());
-			} catch (Error::ErrorList list) {
+			} catch (Error::ErrorList &list) {
 			    errors = list.errors;
 			    return;
 			}
@@ -824,7 +829,7 @@ namespace semantic {
 			}
 		    }
 		}		
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 
 
@@ -832,7 +837,7 @@ namespace semantic {
 		try {
 		    this-> _context.discardAllLocals ();
 		    this-> _context.quitBlock ();
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
 	    }
@@ -898,7 +903,7 @@ namespace semantic {
 		
 		this-> validatePrototypeForFrame (cs.getName (), proto, params, retType, errors);
 		if (retType.isEmpty ()) retType = Void::init (func.getName ());
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		errors = list.errors;
 	    } 
 	    
@@ -910,7 +915,7 @@ namespace semantic {
 		    this-> _context.discardAllLocals ();
 		}		    
 		this-> _context.quitBlock ();
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 	
 	    

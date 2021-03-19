@@ -98,7 +98,7 @@ namespace semantic {
 		    valueLoc = value.getLocation ();
 		    
 		    values.push_back (value);		    
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
 	    }
@@ -109,7 +109,7 @@ namespace semantic {
 		} else if (type.is<Void> () && values.size () != 0 && !values.back ().is <None> () && isUseless (values.back ())) { 
 		    Ymir::Error::occur (block.getContent ().back ().getLocation (), ExternalError::get (USE_UNIT_FOR_VOID)); // TODO, this error does not work
 		}
-	    } catch (Error::ErrorList list) {  
+	    } catch (Error::ErrorList &list) {  
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 	    	    
 	}
@@ -144,7 +144,7 @@ namespace semantic {
 		    typeBlock = this-> inferTypeBranching (action.getLocation (), typeBlock.getLocation (), action.to <Value> ().getType (), typeBlock);
 		}
 		
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 
 	    
@@ -171,7 +171,7 @@ namespace semantic {
 		    } else Ymir::Error::occur (scope.getLocation (), ExternalError::get (UNDEFINED_SCOPE_GUARD), scope.getLocation ().getStr ());
 		    // This last error can't really happen actually, but well it guards the compiler from adding things and forgetting some modifications
 		} 
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 
 	}    
@@ -187,7 +187,7 @@ namespace semantic {
 		this-> enterForeign (); // Symbols does not have access to the scope of the block
 		try {
 		    this-> validate (sym); // and we validate all the declared symbols
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 		
 		this-> exitForeign ();
@@ -221,7 +221,7 @@ namespace semantic {
 		    type = value.to <Value> ().getType ();
 		    
 		    values.push_back (value);		    
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());		    
 		} 
 	    }
@@ -230,7 +230,7 @@ namespace semantic {
 		if (!type.is<Void> ()) {
 		    verifyMemoryOwner (set.getLocation (), type, values.back(), false); // If the block has a value, we check for implicitely aliases or else
 		} 
-	    } catch (Error::ErrorList list) {  
+	    } catch (Error::ErrorList &list) {  
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    }
 	    

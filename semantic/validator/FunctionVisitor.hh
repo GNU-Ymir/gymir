@@ -122,7 +122,7 @@ namespace semantic {
 	     * the body of the function 
 	     * \param func the function prototype to validate
 	     */
-	    generator::Generator validateFunctionProto (const semantic::Function & func);
+	    generator::Generator validateFunctionProto (const semantic::Symbol & func);
 
 	    /**
 	     * \brief Validate the prototyp of a constructor in order to refer to it

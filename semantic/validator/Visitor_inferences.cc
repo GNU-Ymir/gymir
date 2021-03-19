@@ -72,7 +72,7 @@ namespace semantic {
 					slc = Type::init (slc.to<Type> (), rs.isMutable ());
 				    }
 				    return slc;
-				} catch (Error::ErrorList list) {
+				} catch (Error::ErrorList &list) {
 				    throwIncompatibleTypes (lloc, rloc, left, right, list.errors);
 				}
 			    }
@@ -118,7 +118,7 @@ namespace semantic {
 				}
 				bool isMutable = lt.isMutable () && rt.isMutable ();
 				return Type::init (Tuple::init (lloc, innerParams).to <Type> (), isMutable);
-			    } catch (Error::ErrorList list) {
+			    } catch (Error::ErrorList &list) {
 				throwIncompatibleTypes (lloc, rloc, left, right, list.errors);
 			    }
 			}

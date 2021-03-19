@@ -78,7 +78,7 @@ namespace documentation {
 	 * Dump the documentation of a function
 	 * \return the doc
 	 */
-	json::JsonValue dumpFunction (const semantic::Function & func);
+	json::JsonValue dumpFunction (const semantic::Symbol & func);
 
 	/**
 	 * Dump the documentation of a function

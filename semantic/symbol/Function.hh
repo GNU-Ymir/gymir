@@ -3,6 +3,7 @@
 #include <ymir/semantic/Symbol.hh>
 #include <ymir/semantic/Table.hh>
 #include <ymir/syntax/declaration/Function.hh>
+#include <ymir/semantic/Generator.hh>
 #include <vector>
 
 namespace semantic {
@@ -18,6 +19,10 @@ namespace semantic {
 
 	/** The syntaxic function */
 	syntax::Declaration _content;
+
+       
+	/** The prototype of the function, set at validation time */
+	generator::Generator _proto;
 
 	/** Is this function @pure ? (it means purely functional, without any side effect)*/
 	bool _isPure;
@@ -121,6 +126,18 @@ namespace semantic {
 	const std::string & getExternalLanguage () const;
 	
 	std::string formatTree (int padd) const override;
+
+	/**
+	 * \brief This information is set at validation time
+	 * \return the generator (function prototype)
+	 */
+	const generator::Generator & getGenerator () const;
+
+	/**
+	 * \brief This information is set at validation time
+	 * \brief set the generator (function prototype)
+	 */
+	void setGenerator (const generator::Generator & gen);
 
 	
     };    

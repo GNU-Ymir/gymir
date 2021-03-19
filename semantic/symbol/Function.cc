@@ -6,12 +6,14 @@ namespace semantic {
 
     Function::Function () :
 	ISymbol (lexing::Word::eof (), "", false),
-	_content (syntax::Declaration::empty ())
+	_content (syntax::Declaration::empty ()),
+	_proto (generator::Generator::empty ())
     {}
 
     Function::Function (const lexing::Word & name, const std::string & comments, const syntax::Function & func, bool isWeak) :
 	ISymbol (name, comments, isWeak),
 	_content (syntax::Function::init (func)),
+	_proto (generator::Generator::empty ()),
 	_isVariadic (func.getPrototype ().isVariadic ()),
 	_isOver (func.isOver ())
     {}
@@ -152,6 +154,15 @@ namespace semantic {
 
     bool Function::isFinal () const {
 	return this-> _isFinal;
+    }
+
+
+    const generator::Generator & Function::getGenerator () const {
+	return this-> _proto;
+    }
+
+    void Function::setGenerator (const generator::Generator & gen) {
+	this-> _proto = gen;
     }
     
 }

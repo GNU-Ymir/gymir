@@ -68,7 +68,7 @@ namespace semantic {
 	    try {
 		auto val = retreiveValue (value);
 		return val.is <Fixed> ();
-	    } catch (Error::ErrorList err) {
+	    } catch (Error::ErrorList &err) {
 		return false;
 	    }
 	}
@@ -78,7 +78,7 @@ namespace semantic {
 	    try {
 		auto val = retreiveValue (value);
 		return val.is <FloatValue> ();		
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		return false;
 	    }
 	}

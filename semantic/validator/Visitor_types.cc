@@ -160,14 +160,14 @@ namespace semantic {
 		try {
 		    auto inner = validateType (un.getContent (), true);		
 		    if (!inner.isEmpty ()) return Pointer::init (un.getLocation (), inner);
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    try {
 			auto inner = validateTypeClassRef (un.getContent (), true);
 			if (inner.is <ClassRef> ()) {
 			    auto ret =  ClassPtr::init (un.getLocation (), inner);
 			    return ret;
 			}
-		    } catch (Error::ErrorList ignore) {
+		    } catch (Error::ErrorList &ignore) {
 			throw list;
 		    }
 		}
@@ -283,7 +283,7 @@ namespace semantic {
 	    pushReferent (sym, "validateTypeClContext");	    
 	    try {
 		gen = this-> validateType (type, true);
-	    } catch (Error::ErrorList list) {
+	    } catch (Error::ErrorList &list) {
 		errors = list.errors;
 	    }
 	    popReferent ("validateTypeClContext");

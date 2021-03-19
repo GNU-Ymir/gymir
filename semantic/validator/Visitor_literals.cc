@@ -286,7 +286,7 @@ namespace semantic {
 			try {
 			    verifyMemoryOwner (params.back ().getLocation (), type, params.back (), false);
 			    types.push_back (Type::init (type.to <Type> (), type.to <Type> ().isMutable (), false));
-			} catch (Error::ErrorList ATTRIBUTE_UNUSED lst) { // maybe there was an implicit alias, that is not a problem
+			} catch (Error::ErrorList &ATTRIBUTE_UNUSED lst) { // maybe there was an implicit alias, that is not a problem
 			    type = Type::init (type.to <Type> (), false); // we just put it as a const one
 			    verifyMemoryOwner (params.back ().getLocation (), type, params.back (), false);
 			    types.push_back (Type::init (type.to <Type> (), type.to <Type> ().isMutable (), false));
@@ -301,7 +301,7 @@ namespace semantic {
 		    try {
 			verifyMemoryOwner (params.back ().getLocation (), type, params.back (), false);
 			types.push_back (Type::init (type.to <Type> (), type.to <Type> ().isMutable (), false));
-		    } catch (Error::ErrorList ATTRIBUTE_UNUSED lst) { // maybe there was an implicit alias, that is not a problem
+		    } catch (Error::ErrorList &ATTRIBUTE_UNUSED lst) { // maybe there was an implicit alias, that is not a problem
 			type = Type::init (type.to <Type> (), false); // we just put it as a const one
 			verifyMemoryOwner (params.back ().getLocation (), type, params.back (), false);
 			types.push_back (Type::init (type.to <Type> (), type.to <Type> ().isMutable (), false));
@@ -421,7 +421,7 @@ namespace semantic {
 			retType = validateType (function.getPrototype ().getType (), true);		
 		    }
 
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
 	    }
@@ -431,7 +431,7 @@ namespace semantic {
 	    {
 		try {
 		    quitBlock ();
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
 	    }
@@ -481,7 +481,7 @@ namespace semantic {
 			}
 		    }
 		    
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 		    
 	    }
@@ -507,7 +507,7 @@ namespace semantic {
 			    retType = body.to <Value> ().getType ();
 			}
 		    }
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 		    
 	    }
@@ -534,7 +534,7 @@ namespace semantic {
 	    {
 		try { // We want to guarantee that we exit the foreign at the end of this function 
 		    quitBlock ();
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
 	    }
