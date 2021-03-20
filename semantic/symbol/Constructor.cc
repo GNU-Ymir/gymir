@@ -5,12 +5,14 @@ namespace semantic {
 
     Constructor::Constructor () :
 	ISymbol (lexing::Word::eof (), "", false),
-	_content (syntax::Declaration::empty ())
+	_content (syntax::Declaration::empty ()),
+	_proto (generator::Generator::empty ())
     {}
 
     Constructor::Constructor (const lexing::Word & name, const std::string & comments, const syntax::Constructor & func, bool isWeak) :
 	ISymbol (name, comments, isWeak),
-	_content (syntax::Constructor::init (func))
+	_content (syntax::Constructor::init (func)),
+	_proto (generator::Generator::empty ())
     {}
 
     Symbol Constructor::init (const lexing::Word & name, const std::string & comments, const syntax::Constructor & func, bool isWeak) {
@@ -121,4 +123,13 @@ namespace semantic {
 	return this-> _content.to <syntax::Constructor> ().getCustomAttributes ();
     }
     
+
+    const generator::Generator & Constructor::getGenerator () const {
+	return this-> _proto;
+    }
+
+    void Constructor::setGenerator (const generator::Generator & gen) {
+	this-> _proto = gen;
+    }
+
 }

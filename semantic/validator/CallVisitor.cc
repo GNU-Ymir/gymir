@@ -23,12 +23,13 @@ namespace semantic {
 
 	generator::Generator CallVisitor::validate (const syntax::MultOperator & expression) {
 	    Generator left (Generator::empty ());
-	    std::list <Ymir::Error::ErrorMsg> errors;	    
+	    std::list <Ymir::Error::ErrorMsg> errors;
+	    
 	    try { // First we try to validate the left operand
 		left = this-> _context.validateValue (expression.getLeft (), false, true);
 	    } catch (Error::ErrorList &list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-	    } 	    
+	    }
 
 	    std::vector <Generator> rights;
 	    if (left.isEmpty () && expression.canBeDotCall ()) { // if the validation failed, then maybe it is a dot call
@@ -49,7 +50,6 @@ namespace semantic {
 	    
 	    int score = 0;
 	    errors = {}; // clear the errors about left, if there was any, if we are here, then we at least validated a dot call
-	    
 	    // Perform the validation
 	    auto ret = validate (expression.getLocation (), left, rights, score, errors);
 	    
@@ -276,7 +276,7 @@ namespace semantic {
 	    
 	    // Compute the list of parameters
 	    std::vector <Generator> params = this-> validateParameterList (fProto.getParameters (), list, errors);
-	    
+
 	    if (errors.size () != 0) return Generator::empty ();	    
 	    if (list.size () != 0 && !fProto.isCVariadic ()) return Generator::empty ();
 	    if (params.size () < fProto.getParameters ().size ()) return Generator::empty ();
@@ -284,7 +284,7 @@ namespace semantic {
 	    
 	    // Compute the list of types, while verifying that the types are compatible, and the memory is correctly borrowed
 	    auto types = this-> validateTypeParameterList (proto, fProto.getParameters (), params, score, true, true, errors);
-
+	    
 	    // If everything succeded, then the call is valid
 	    if (errors.size () != 0) return Generator::empty ();	   
 	    return Call::init (location, fProto.getReturnType (), proto, types, params, addParams);

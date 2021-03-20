@@ -1,5 +1,5 @@
 #include <ymir/semantic/generator/Type.hh>
-
+#include <time.h>
 namespace semantic {
 
     namespace generator {
@@ -97,7 +97,7 @@ namespace semantic {
 	}
 	
 	std::string Type::getTypeName (bool isParentMutable, bool includeRef) const {
-	    auto inner = this-> typeName ();
+	    auto inner = std::move (this-> typeName ());
 	    if (this-> _isMutable && isParentMutable)
 		inner = "mut " + inner;
 	    if (this-> _isRef && includeRef)
@@ -226,12 +226,13 @@ namespace semantic {
 			auto mut = it.to <Type> ().mutabilityLevel (level + 1);
 			if (mut > max) max = mut;
 		    }
-		    
+
 		    return max;
 		}
-		else return level + 1;
+		else {
+		    return level + 1;
+		}
 	    }
-
 	    return level;	    
 	}
 

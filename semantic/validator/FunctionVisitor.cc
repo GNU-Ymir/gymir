@@ -264,63 +264,69 @@ namespace semantic {
 	}
 
 
-	Generator FunctionVisitor::validateConstructorProto (const semantic::Symbol & sym) {
-	    auto & func = sym.to <Constructor> ();
-	    auto & function = func.getContent ();
-	    static std::list <lexing::Word> __validating__;
+	Generator FunctionVisitor::validateConstructorProto (const semantic::Symbol & cSym) {
+	    if (cSym.to <Constructor> ().getGenerator ().isEmpty ()) {
+		auto sym = cSym;
+		auto & func = sym.to <Constructor> ();
+		auto & function = func.getContent ();
+		static std::list <lexing::Word> __validating__;
 		    
-	    this-> _context.pushReferent (sym, "validateConstructorProto");
-	    this-> _context.enterForeign ();
+		this-> _context.pushReferent (sym, "validateConstructorProto");
+		this-> _context.enterForeign ();
 	    
-	    std::vector <Generator> params;
-	    std::list <Ymir::Error::ErrorMsg> errors;
-	    bool no_value = false;
-	    Generator retType (Generator::empty ());
+		std::vector <Generator> params;
+		std::list <Ymir::Error::ErrorMsg> errors;
+		bool no_value = false;
+		Generator retType (Generator::empty ());
 	    
-	    for (auto func_loc : __validating__) {
-		if (func_loc.isSame (func.getName ())) no_value = true;
-	    }
+		for (auto func_loc : __validating__) {
+		    if (func_loc.isSame (func.getName ())) no_value = true;
+		}
 
-	    Generator cl (Generator::empty ());
-	    try {
-		auto icl = this-> _context.validateClass (func.getClass ());
-		cl = Type::init (func.getClass ().getName (), ClassPtr::init (func.getClass ().getName (), Type::init (func.getClass ().getName (), icl.to <Type> (), true, false)).to <Type> (), true, false);
-	    } catch (Error::ErrorList &list) {
-		errors = list.errors;
-	    } 
-	    
-	    if (!cl.isEmpty ()) { // Error in the class validation	
-		__validating__.push_back (func.getName ());
-		this-> _context.enterBlock ();
-		
-		this-> _context.insertLocal (Keys::SELF, ProtoVar::init (func.getName (), cl, Generator::empty (), true, 1, true));
-		this-> validatePrototypeForProto (func.getName (), function.getPrototype (), no_value, params, retType, errors);
-		
+		Generator cl (Generator::empty ());
 		try {
-		    this-> _context.discardAllLocals ();
-		    this-> _context.quitBlock ();
+		    auto icl = this-> _context.validateClass (func.getClass ());
+		    cl = Type::init (func.getClass ().getName (), ClassPtr::init (func.getClass ().getName (), Type::init (func.getClass ().getName (), icl.to <Type> (), true, false)).to <Type> (), true, false);
 		} catch (Error::ErrorList &list) {
-		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		} 	    
+		    errors = list.errors;
+		} 
+	    
+		if (!cl.isEmpty ()) { // Error in the class validation	
+		    __validating__.push_back (func.getName ());
+		    this-> _context.enterBlock ();
+		
+		    this-> _context.insertLocal (Keys::SELF, ProtoVar::init (func.getName (), cl, Generator::empty (), true, 1, true));
+		    this-> validatePrototypeForProto (func.getName (), function.getPrototype (), no_value, params, retType, errors);
+		
+		    try {
+			this-> _context.discardAllLocals ();
+			this-> _context.quitBlock ();
+		    } catch (Error::ErrorList &list) {
+			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		    } 	    
 
-		__validating__.pop_back ();
-	    }
+		    __validating__.pop_back ();
+		}
 	    
-	    std::vector <Generator> throwers = this-> validateThrowers (func.getThrowers (), errors);
-	    this-> _context.exitForeign ();
-	    this-> _context.popReferent ("validateConstructorProto");
+		std::vector <Generator> throwers = this-> validateThrowers (func.getThrowers (), errors);
+		this-> _context.exitForeign ();
+		this-> _context.popReferent ("validateConstructorProto");
 	    	    
-	    if (errors.size () != 0) {
-		throw Error::ErrorList {errors};		
+		if (errors.size () != 0) {
+		    throw Error::ErrorList {errors};		
+		}
+	    
+		auto frame = ConstructorProto::init (func.getName (), func.getRealName (), sym, cl, params, throwers);	    
+		frame = ConstructorProto::init (frame.to <ConstructorProto> (), func.getMangledName ());
+		sym.to <Constructor> ().setGenerator (frame);
 	    }
 	    
-	    auto frame = ConstructorProto::init (func.getName (), func.getRealName (), sym, cl, params, throwers);	    
-	    frame = ConstructorProto::init (frame.to <ConstructorProto> (), func.getMangledName ());	    
-	    return frame;
+	    return cSym.to <Constructor> ().getGenerator ();
 	}
 
 	Generator FunctionVisitor::validateMethodProto (const semantic::Function & func, const Generator & classType_, const Generator & trait) {
-	    std::vector <Generator> params;
+	    // we can't store the prototype, because is depends on classType (for inheritence, of impl), but it is stored inside the vtable, so validated only once
+	    std::vector <Generator> params; 
 	    static std::list <lexing::Word> __validating__;
 	    auto & function = func.getContent ();
 	    std::list <Ymir::Error::ErrorMsg> errors;
@@ -366,7 +372,6 @@ namespace semantic {
 					    function.getPrototype ().getParameters ()[0].to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT), function.getBody ().isEmpty (), func.isFinal (), func.isSafe (), trait, throwers);
 	    
 	    return FrameProto::init (frame.to <FrameProto> (), func.getMangledName (), Frame::ManglingStyle::Y);	    
-	    return frame;
 	}
 		
 	

@@ -3,6 +3,7 @@
 #include <ymir/semantic/Symbol.hh>
 #include <ymir/semantic/Table.hh>
 #include <ymir/syntax/declaration/Constructor.hh>
+#include <ymir/semantic/Generator.hh>
 #include <vector>
 
 namespace semantic {
@@ -19,8 +20,11 @@ namespace semantic {
 	/** The syntaxic function */
 	syntax::Declaration _content;
 
-	std::weak_ptr <ISymbol> _class;
-
+	/** The prototype of the function, set at validation time */
+	generator::Generator _proto;
+	
+	std::weak_ptr <ISymbol> _class;	      
+	
 	std::vector <syntax::Expression> _throwers;
 		
     private :
@@ -80,6 +84,20 @@ namespace semantic {
 	 * \return the list of custom attributs
 	 */
 	const std::vector <lexing::Word> & getCustomAttributes () const;
+
+
+	
+	/**
+	 * \brief This information is set at validation time
+	 * \return the generator (function prototype)
+	 */
+	const generator::Generator & getGenerator () const;
+
+	/**
+	 * \brief This information is set at validation time
+	 * \brief set the generator (function prototype)
+	 */
+	void setGenerator (const generator::Generator & gen);
 	
     };    
 
