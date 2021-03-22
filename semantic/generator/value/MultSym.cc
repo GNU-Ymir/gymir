@@ -45,7 +45,7 @@ namespace semantic {
 	std::string MultSym::prettyString () const {
 	    if (this-> _gens.size () != 1) {
 		Ymir::OutBuffer buf;
-		buf.write ("Multiple Symbols : {");
+		buf.write ("{");
 		for (auto it : Ymir::r (0, std::min (this-> _gens.size (), (unsigned long int) 3))) {
 		    if (it != 0) buf.write (", ");
 		    if (it == 2 && this-> _gens.size () > 3) buf.write (", ..., ");

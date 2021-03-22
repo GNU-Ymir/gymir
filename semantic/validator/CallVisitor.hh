@@ -67,6 +67,30 @@ namespace semantic {
 	     */
 	    generator::Generator validateMultSym (const lexing::Word & expression, const generator::MultSym & sym, const std::vector<generator::Generator> & params, int & score, std::list <Ymir::Error::ErrorMsg> & errors);	    
 
+	    /**
+	     * Validate the multsym generators
+	     * @returns: 
+	     *    - score: the highest score in the multsym
+	     *    - nonTemplScores: the score of the non template element inside the multsym (score => validate (it))  
+	     *    - templScores: the score of the template elements inside the multsym (score => validate (it))
+	     *    - fromTempl: the highest score come from a template specialization
+	     *    - final_gen: the generator with the highest score
+	     *    - used_gen: the generator used for the validation
+	     *    - templSym: the symbol created by template specialization
+	     *    - proto_gen: the proto generator from template validation (if template specialization has the highest score)
+	     *    - errors: the list of errors (valid only if final_gen is empty)
+	     */
+	    void computeScoreOfMultSym (const lexing::Word & location, const generator::MultSym & sym,  const std::vector <generator::Generator> & rights_, int & score, std::map <int, std::vector <generator::Generator>> & nonTemplScores, std::map <int, std::vector <Symbol>> & templScores, bool & fromTempl, generator::Generator & final_gen, generator::Generator & used_gen, Symbol & templSym, generator::Generator & proto_gen, std::list <Ymir::Error::ErrorMsg> & errors);
+
+	    /**
+	     * Validate the proto with the best score, and verify there is only one possibility	     
+	     */
+	    void validateScoreOfMultSym (const lexing::Word & location, const generator::MultSym & sym,  const std::vector <generator::Generator> & rights_, int & score, std::map <int, std::vector <generator::Generator>> & nonTemplScores, std::map <int, std::vector <Symbol>> & templScores, bool & fromTempl, generator::Generator & final_gen, generator::Generator & used_gen, Symbol & templSym, generator::Generator & proto_gen, std::list <Ymir::Error::ErrorMsg> & errors);
+
+	    /**
+	     * Compute the error list of a template validation (other calls, or verbose, etc.)
+	     */
+	    std::list <Ymir::Error::ErrorMsg> computeLastErrorList (const lexing::Word & location, Ymir::Error::ErrorList & errors, const generator::Generator & proto_gen, const generator::Generator & used_gen);
 	    
 	    /**
 	     * ================================================================================
@@ -83,7 +107,7 @@ namespace semantic {
 	     * \param params the parameter that will be passed to the function 
 	     * \param score the final score of the call 
 	     *  It does not throw an exception on failure, 
-	     *  It will return a empty generator and a score of -1
+	     *  It will return a empty generator 
 	     */
 	    generator::Generator validateFrameProto (const lexing::Word & location, const generator::Generator & proto, const std::vector <generator::Generator> & params, int & score, std::list <Ymir::Error::ErrorMsg> & errors);
 
@@ -94,7 +118,7 @@ namespace semantic {
 	     * \param params the parameter that will be passed to the function 
 	     * \param score the final score of the call 
 	     *  It does not throw an exception on failure, 
-	     *  It will return a empty generator and a score of -1
+	     *  It will return a empty generator 
 	     */	    
 	    generator::Generator validateConstructorProto (const lexing::Word & location, const generator::Generator & proto, const std::vector <generator::Generator> & params, int & score, std::list <Ymir::Error::ErrorMsg> & errors);
 
@@ -106,9 +130,8 @@ namespace semantic {
 	     * \param params the parameter that will be passed to the function 
 	     * \param score the final score of the call 
 	     *  It does not throw an exception on failure, 
-	     *  It will return a empty generator and a score of -1
 	     */
-	    generator::Generator validateLambdaProto (const lexing::Word & location, const generator::LambdaProto & proto, const std::vector <generator::Generator> & params, int & score, std::list <Ymir::Error::ErrorMsg> & errors);
+	    generator::Generator validateLambdaProto (const lexing::Word & location, const generator::Generator & proto, const std::vector <generator::Generator> & params, int & score, std::list <Ymir::Error::ErrorMsg> & errors);
 
 	    
 	    /**
@@ -121,17 +144,27 @@ namespace semantic {
 
 	    
 	    /**
-	     *  Validate a call expression on a frame proto
+	     *  Validate a call expression on a structure
 	     * \param expression the call expression 
 	     * \param str the structure to construct
-	     * \param params the parameter that will be passed to the constructor 
+	     * \param rights the parameter that will be passed to the constructor 
 	     * \param score the final score of the call 
 	     *  It does not throw an exception on failure, 
-	     *  It will return a empty generator and a score of -1
 	     *  All the errors will be store into errors
 	     */
 	    generator::Generator validateStructCst (const lexing::Word & location, const generator::Struct & str, const std::vector <generator::Generator> & params, int & score, std::list <Ymir::Error::ErrorMsg> & errors);
 
+	    /**
+	     *  Validate a call expression on a union structure
+	     * \param expression the call expression 
+	     * \param str the structure to construct
+	     * \param rights the parameter that will be passed to the constructor 
+	     * \param score the final score of the call 
+	     *  It does not throw an exception on failure, 
+	     *  All the errors will be store into errors
+	     */
+	    generator::Generator validateUnionCst (const lexing::Word & location, const generator::Struct & str, const std::vector <generator::Generator> & rights, int & score, std::list <Ymir::Error::ErrorMsg> & errors);
+	    
 	    /**
 	     * ================================================================================
 	     * ================================================================================
@@ -146,7 +179,7 @@ namespace semantic {
 	     * \param gen the generator of the function pointer value (assumed to be typed as FuncPtr)
 	     * \param params the parameters of the call
 	     *  It does not throw an exception on failure, 
-	     *  It will return a empty generator and a score of -1
+	     *  It will return a empty generator 
 	     *  All the errors will be store into errors
 	     */
 	    generator::Generator validateFunctionPointer (const lexing::Word & expression, const generator::Generator & gen, const std::vector <generator::Generator> & params, int & score, std::list <Ymir::Error::ErrorMsg> & errors);
@@ -158,7 +191,7 @@ namespace semantic {
 	     * \param gen the generator of the delegate value (assumed to be typed as Delegate)
 	     * \param params the parameters of the call
 	     *  It does not throw an exception on failure, 
-	     *  It will return a empty generator and a score of -1
+	     *  It will return a empty generator
 	     *  All the errors will be store into errors
 	     * \warning TODO, merge this function and validateFunctionPointer, these two functions do exaclty the same treatment and have only one different code line 
 	     */
@@ -208,8 +241,10 @@ namespace semantic {
 	     * Return the list of the types of the parameters
 	     * If verifyType, then verify the compatibility
 	     * If verifyMemory, then verify the memory borrowing
+	     * If isLambda, then some parameter can have no type, then the type of the argument is used
+	     * If isTypeList, then the prototype is composed of only types, otherwise they are values
 	     */
-	    std::vector <generator::Generator> validateTypeParameterList (const generator::Generator & frame, const std::vector <generator::Generator> & proto, const std::vector <generator::Generator> & params, int & score, bool verifyType, bool verifyMemory, std::list<Ymir::Error::ErrorMsg> & errors);
+	    std::vector <generator::Generator> validateTypeParameterList (const generator::Generator & frame, const std::vector <generator::Generator> & proto, const std::vector <generator::Generator> & params, int & score, bool verifyType, bool verifyMemory, bool isLambda, bool isTypeList, std::list<Ymir::Error::ErrorMsg> & errors);
 		    
 	    /**
 	     * Create the list of parameters (resolving the location of each parameter, taking into account the named params)
