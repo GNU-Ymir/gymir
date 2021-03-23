@@ -2,6 +2,7 @@
 #include <string>
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/utils/Memory.hh>
+#include <ymir/global/State.hh>
 #include <ymir/utils/Colors.hh>
 #include <execinfo.h>
 
@@ -10,11 +11,12 @@ using namespace lexing;
 namespace Ymir {
     namespace Error {
 
+	unsigned long MAX_ERROR_DEPTH = 3;	
 	
 	void ErrorList::print () const {
 	    Ymir::OutBuffer buf;
 	    for (auto it : this-> errors) {
-		it.computeMessage (buf);
+		it.computeMessage (buf, 0, it.computeMaxDepth ());
 		buf.writeln ("");
 	    }
 	    
@@ -337,44 +339,71 @@ namespace Ymir {
 	{}
 
 	void ErrorMsg::addNote (const ErrorMsg & other) {
-	    this-> notes.push_back (other);
+	    if (!other.isEmpty ()) {
+		this-> notes.push_back (other);
+	    }
 	}
 
-	void ErrorMsg::computeMessage (Ymir::OutBuffer & buf) const {
-	    if (this-> begin.isEof ()) buf.writeln (msg);
-	    else if (this-> end.isEof ()) {
-		addLine (buf, this-> msg, this-> begin);
-	    } else {
-		addLine (buf, this-> msg, this-> begin, this-> end);
-	    }
-
-	    bool notOneLine = false;
-	    unsigned long int max_padd = 0;
+	unsigned long ErrorMsg::computeMaxDepth () const {
+	    unsigned long depth = 0;
 	    for (auto & it : this-> notes) {
 		if (!it.isEmpty ()) {
-		    Ymir::OutBuffer note;
-		    it.computeMessage (note);
-		    Ymir::Error::addNote (buf, this-> begin, note.str ());
+		    auto nDepth = it.computeMaxDepth ();
+		    if (nDepth + 1 > depth) depth = nDepth + 1;
+		}
+	    }
+	    return depth;
+	}
+		
+	void ErrorMsg::computeMessage (Ymir::OutBuffer & buf, unsigned long depth, unsigned long max_depth, bool writtenSub) const {
+	    Ymir::OutBuffer noteBuf;
+	    bool notOneLine = false, addedNote = false;
+	    unsigned long int max_padd = 0;
+	    unsigned long jt = 1;
+	    auto enpadding = depth < (Error::MAX_ERROR_DEPTH) || global::State::instance ().isVerboseActive () || max_depth - depth < Error::MAX_ERROR_DEPTH;
+	    auto writeSub = !enpadding && depth == Error::MAX_ERROR_DEPTH && !global::State::instance ().isVerboseActive () && this-> notes.size () != 0 && !writtenSub;
+	    for (auto & it : this-> notes) {
+		addedNote = true;
+		if (jt != this-> notes.size () && jt == Error::MAX_ERROR_DEPTH && !global::State::instance ().isVerboseActive ()) {
+		    noteBuf.writef ("     : %(B)\n", "...");
+		    noteBuf.writef ("%(b) : %\n", "Note", ExternalError::get (OTHER_ERRORS));		    
+		} else if (jt < Error::MAX_ERROR_DEPTH || jt == this-> notes.size () || global::State::instance ().isVerboseActive ()) {
+		    it.computeMessage (noteBuf, depth + 1, max_depth, writeSub);
 		    notOneLine = !it.one_line || it.notes.size () != 0;
 		    max_padd = it.begin.getLine ();
 		    if (it.end.getLine () > max_padd) {
 			max_padd = it.end.getLine ();
 		    }
 		}
+		jt += 1;
 	    }
 	    
-	    if (this-> notes.size () != 0) { // Added some notes
-		auto leftLine = center (format ("%", this-> begin.getLine ()), 3, ' ');
-		auto padd = center ("", leftLine.length (), ' ');
-		auto leftLine2 = center (format ("%", max_padd), 3, ' ');
-		auto padd2 = center ("", leftLine2.length (), "━");
-		
-		if (notOneLine) {
-		    buf.write (format ("%% ┗━%━┻━ %", Colors::get (BOLD), padd, padd2, Colors::get (RESET)));
+	    if (writeSub) {
+		buf.writef ("     : %(B)\n", "...");
+		buf.writef ("%(b) : %\n", "Note", ExternalError::get (OTHER_ERRORS));
+		buf.write (noteBuf.str ());
+	    } else if (enpadding) {
+		if (this-> begin.isEof ()) buf.writeln (msg);
+		else if (this-> end.isEof ()) {
+		    addLine (buf, this-> msg, this-> begin);
 		} else {
-		    buf.write (format ("%% ┗━%━━ %", Colors::get (BOLD), padd, padd2, Colors::get (RESET)));
+		    addLine (buf, this-> msg, this-> begin, this-> end);
 		}
-	    }
+		
+		Ymir::Error::addNote (buf, this-> begin, noteBuf.str ());
+		if (addedNote) { // Added some notes
+		    auto leftLine = center (format ("%", this-> begin.getLine ()), 3, ' ');
+		    auto padd = center ("", leftLine.length (), ' ');
+		    auto leftLine2 = center (format ("%", max_padd), 3, ' ');
+		    auto padd2 = center ("", leftLine2.length (), "━");
+		
+		    if (notOneLine) {
+			buf.write (format ("%% ┗━%━┻━ %", Colors::get (BOLD), padd, padd2, Colors::get (RESET)));
+		    } else {
+			buf.write (format ("%% ┗━%━━ %\n", Colors::get (BOLD), padd, padd2, Colors::get (RESET)));
+		    }
+		}
+	    } else buf.write (noteBuf.str ());
 	}
 	
 	bool ErrorMsg::isEmpty () const {

@@ -65,8 +65,10 @@ namespace Ymir {
 	    
 	    void addNote (const ErrorMsg & note);
 	    
-	    void computeMessage (Ymir::OutBuffer & buf) const;
+	    void computeMessage (Ymir::OutBuffer & buf, unsigned long depth, unsigned long max_depth, bool writtenSub = false) const;
 
+	    unsigned long computeMaxDepth () const;
+	    
 	    bool isEmpty () const;
 
 	    const lexing::Word & getLocation () const;

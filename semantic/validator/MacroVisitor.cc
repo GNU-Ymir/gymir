@@ -441,17 +441,8 @@ namespace semantic {
 		    }
 		}
 	    } catch (Error::ErrorList &list) {		
-		if (Visitor::__CALL_NB_RECURS__ == 3 && !global::State::instance ().isVerboseActive ()) {
-		    list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CALL)));	    
-		    list.errors.insert (list.errors.begin (), format ("     : %(B)", "..."));
-		} else if (Visitor::__CALL_NB_RECURS__ <  3 || global::State::instance ().isVerboseActive ()) {   
-		    list.errors.insert (list.errors.begin (), Ymir::Error::createNote (expr.getLocation (), ExternalError::get (IN_MACRO_EXPANSION)));		    
-		    Visitor::__LAST__ = true;
-		} else if (Visitor::__LAST__) {			    
-		    Visitor::__LAST__ = false;
-		}
-		
-		errors = list.errors;
+		list.errors.insert (list.errors.begin (), Ymir::Error::createNote (expr.getLocation (), ExternalError::get (IN_MACRO_EXPANSION)));		    		
+		errors = std::move (list.errors);
 	    }
 	    
 	    Visitor::__CALL_NB_RECURS__ -= 1;
@@ -542,18 +533,8 @@ namespace semantic {
 		lexing::Word word = lexing::Word::init (n.getStr (), this-> _call.getFile (), this-> _call.getFilename (), line, col, seek);
 		
 		list.errors.back () = Ymir::Error::ErrorMsg (word, back_error.getMessage ());
-		    
-		if (Visitor::__CALL_NB_RECURS__ == 3 && !global::State::instance ().isVerboseActive ()) {
-		    list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CALL)));	    
-		    list.errors.insert (list.errors.begin (), format ("     : %(B)", "..."));
-		} else if (Visitor::__CALL_NB_RECURS__ <  3 || global::State::instance ().isVerboseActive ()) {   
-		    list.errors.insert (list.errors.begin (), Ymir::Error::createNote (expr.getLocation (), ExternalError::get (IN_MACRO_EXPANSION)));
-		    Visitor::__LAST__ = true;
-		} else if (Visitor::__LAST__) {			    
-		    Visitor::__LAST__ = false;
-		}
-		
-		errors = list.errors;
+		list.errors.insert (list.errors.begin (), Ymir::Error::createNote (expr.getLocation (), ExternalError::get (IN_MACRO_EXPANSION)));		
+		errors = std::move (list.errors);
 	    }
 	    
 	    if (errors.size () != 0) throw Error::ErrorList {errors};	    

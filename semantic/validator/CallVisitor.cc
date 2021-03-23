@@ -127,7 +127,6 @@ namespace semantic {
 
 	void CallVisitor::computeScoreOfMultSym (const lexing::Word & location, const generator::MultSym & sym,  const std::vector <Generator> & rights_, int & score, std::map <int, std::vector <Generator>> & nonTemplScores, std::map <int, std::vector <Symbol>> & templScores, bool & fromTempl, generator::Generator & final_gen, generator::Generator & used_gen, Symbol & templSym, generator::Generator & proto_gen, std::list <Ymir::Error::ErrorMsg> & errors) {
 	    fromTempl = true;
-	    int nbCand = 0;
 	    score = -1;
 	    for (auto & it : sym.getGenerators ()) {
 		int current = 0;
@@ -170,9 +169,10 @@ namespace semantic {
 			for (auto & it : local_errors) {
 			    note.addNote (it);
 			}
-			this-> insertCandidate (nbCand, errors, {note});
+			
+			errors.push_back (note);
 		    } else { // in the method validation we already added the note
-			this-> insertCandidate (nbCand, errors, local_errors);
+			errors.insert (errors.end (), local_errors.begin (), local_errors.end ());
 		    }
 		}
 	    }
@@ -242,29 +242,14 @@ namespace semantic {
 	}
 
 	std::list <Ymir::Error::ErrorMsg> CallVisitor::computeLastErrorList (const lexing::Word & location, Error::ErrorList & list, const Generator & proto_gen, const Generator & used_gen) {
-	    static std::list <Error::ErrorMsg> __last_error__;
 	    auto note = Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), used_gen.to <TemplateRef> ().getTemplateRef ().getName (), used_gen.prettyString ());
 	    for (auto & it : list.errors) {			
 		note.addNote (it);
 	    }
 	    
 	    list.errors = {note};
-	    if (Visitor::__CALL_NB_RECURS__ == 2 && !global::State::instance ().isVerboseActive ()) {
-		list.errors.push_back (format ("     : %(B)", "..."));
-		list.errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CALL)));
-	    } else if (Visitor::__CALL_NB_RECURS__ <  2 || global::State::instance ().isVerboseActive ()) {
-		list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", proto_gen.getLocation (), proto_gen.prettyString ()));
-		list.errors.insert (list.errors.begin (), Ymir::Error::createNote (location, ExternalError::get (IN_TEMPLATE_DEF)));
-			
-		Visitor::__LAST__ = true;
-		__last_error__ = {};
-	    } else if (Visitor::__LAST__) {			    
-		Visitor::__LAST__ = false;
-		__last_error__ = list.errors;
-	    } else {
-		if (__last_error__.size () != 0)
-		list.errors = __last_error__;
-	    }
+	    list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", proto_gen.getLocation (), proto_gen.prettyString ()));
+	    list.errors.insert (list.errors.begin (), Ymir::Error::createNote (location, ExternalError::get (IN_TEMPLATE_DEF)));
 
 	    return list.errors;
 	}
@@ -495,7 +480,7 @@ namespace semantic {
 		    }
 
 		} catch (Error::ErrorList &list) {		    
-		    errors = list.errors;
+		    errors = std::move (list.errors);
 		}
 		
 		auto params = this-> validateParameterList (fProto.getParameters (), list, errors);
@@ -533,25 +518,10 @@ namespace semantic {
 		try {
 		    Visitor::__CALL_NB_RECURS__ += 1;
 		    this-> _context.validateTemplateSymbol (sym, ref);
-		} catch (Error::ErrorList &list) {
-		    static std::list <Error::ErrorMsg> __last_error__;			
-		    if (Visitor::__CALL_NB_RECURS__ == 2 && !global::State::instance ().isVerboseActive ()) {
-			list.errors.push_back (format ("     : %(B)", "..."));
-			list.errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CALL)));
-		    } else if (Visitor::__CALL_NB_RECURS__ <  2 || global::State::instance ().isVerboseActive ()) {
-			list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", proto_gen.getLocation (), proto_gen.prettyString ()));
-			list.errors.insert (list.errors.begin (), Ymir::Error::createNote (location, ExternalError::get (IN_TEMPLATE_DEF)));
-			Visitor::__LAST__ = true;
-			__last_error__ = {};
-		    } else if (Visitor::__LAST__) {			    
-			Visitor::__LAST__ = false;
-			__last_error__ = list.errors;
-		    } else {
-			if (__last_error__.size () != 0)
-			list.errors = __last_error__;
-		    }
-		    
-		    errors = list.errors;		    
+		} catch (Error::ErrorList &list) {		    
+		    list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", proto_gen.getLocation (), proto_gen.prettyString ()));
+		    list.errors.insert (list.errors.begin (), Ymir::Error::createNote (location, ExternalError::get (IN_TEMPLATE_DEF)));		    
+		    errors = std::move (list.errors);		    
 		    gen = Generator::empty ();
 		} 
 		Visitor::__CALL_NB_RECURS__ -= 1;
@@ -779,7 +749,7 @@ namespace semantic {
 		    params.push_back (param);
 		}
 	    } catch (Error::ErrorList &list) {
-		errors = list.errors;
+		errors = std::move (list.errors);
 	    }
 
 	    if (errors.size () == 0) {
@@ -1026,10 +996,11 @@ namespace semantic {
 		    right = this-> _context.validateValue (bin.getRight ());		    
 		    params.push_back (left);
 		} catch (Error::ErrorList &list) {
-		    std::list <Ymir::Error::ErrorMsg> copyErrors = errors;
+		    std::list <Ymir::Error::ErrorMsg> copyErrors = std::move (errors);
 		    copyErrors.back ().addNote (Ymir::Error::createNoteOneLine (ExternalError::get (UFC_REWRITING)));
-		    for (auto & it : list.errors)
-		    copyErrors.back ().addNote (it);
+		    for (auto & it : list.errors) {
+			copyErrors.back ().addNote (it);
+		    }
 
 		    throw Error::ErrorList {copyErrors};
 		}	    		    		
@@ -1145,18 +1116,7 @@ namespace semantic {
 	    return gen.getLocation ();
 	}
 	
-	void CallVisitor::insertCandidate (int & nb, std::list <Ymir::Error::ErrorMsg> & errors, const std::list <Ymir::Error::ErrorMsg> & candErrors) {	    
-	    if (nb == 3 && !global::State::instance ().isVerboseActive ()) {
-		errors.push_back (format ("     : %(B)", "..."));
-		errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CANDIDATES)));
-		nb += 1;
-	    } else if (nb < 3 || global::State::instance ().isVerboseActive ()) {
-		errors.insert (errors.begin (), candErrors.begin (), candErrors.end ());
-		nb += 1;
-	    }
-	}
 	
-
     }
 
 }

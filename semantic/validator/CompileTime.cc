@@ -109,21 +109,11 @@ namespace semantic {
 			return execute (val.getValue ());		
 		}	    
 	    } catch (Error::ErrorList &list) {
-		if (global::State::instance ().isVerboseActive ()) {
-		    Ymir::Error::occurAndNote (
-			gen.getLocation (),
-			list.errors, 
-			ExternalError::get (COMPILE_TIME_UNKNOWN)
-			);	
-		} else {
-		    errors.push_back (format ("     : %(B)", "..."));
-		    errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CALL)));
-		    Ymir::Error::occurAndNote (
-			gen.getLocation (),
-			errors,
-			ExternalError::get (COMPILE_TIME_UNKNOWN)
-			);	
-		}
+		Ymir::Error::occurAndNote (
+		    gen.getLocation (),
+		    list.errors, 
+		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		    );	
 	    }
 	    
 	    Ymir::Error::occur (

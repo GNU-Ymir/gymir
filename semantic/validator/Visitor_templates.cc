@@ -91,22 +91,8 @@ namespace semantic {
 		    auto visitor = FunctionVisitor::init (*this);
 		    visitor.validateMethod (syms [0].to <semantic::Function> (), classType);
 		} catch (Error::ErrorList &list) {
-		    static std::list <Error::ErrorMsg> __last_error__;
-		    if (Visitor::__TEMPLATE_NB_RECURS__ == 2 && !global::State::instance ().isVerboseActive ()) {
-			// list.errors.push_back (format ("     : %(B)", "..."));
-			// list.errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CALL)));
-		    } else if (Visitor::__TEMPLATE_NB_RECURS__ < 2 || global::State::instance ().isVerboseActive () || Visitor::__LAST_TEMPLATE__) {
-			list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", syms [0].getName (), syms[0].getRealName ()));
-			list.errors.insert (list.errors.begin (), Ymir::Error::createNote (syms [0].getName (), ExternalError::get (IN_TEMPLATE_DEF)));
-			Visitor::__LAST_TEMPLATE__ = true;
-			__last_error__ = {};
-		    } else if (Visitor::__LAST_TEMPLATE__) {
-			Visitor::__LAST_TEMPLATE__ = false;
-			__last_error__ = list.errors;
-		    } else {
-			if (__last_error__.size () != 0)
-			list.errors = __last_error__;
-		    }
+		    list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", syms [0].getName (), syms[0].getRealName ()));
+		    list.errors.insert (list.errors.begin (), Ymir::Error::createNote (syms [0].getName (), ExternalError::get (IN_TEMPLATE_DEF)));
 		    
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    removeTemplateSolution (sol); // If there is an error, we don't want to store the solution anymore
@@ -341,55 +327,23 @@ namespace semantic {
 			    	syms.push_back (element_on_scores [it]);
 			    }
 			} catch (Error::ErrorList &list) {			    
-			    static std::list <Error::ErrorMsg> __last_error__;
-			    if (Visitor::__CALL_NB_RECURS__ == 2 && !global::State::instance ().isVerboseActive ()) {
-				list.errors.insert (list.errors.begin (), format ("     : %(B)", "..."));
-				list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CALL)));
-			    } else if ((Visitor::__CALL_NB_RECURS__ < 2 || global::State::instance ().isVerboseActive ()) && !Visitor::__LAST_TEMPLATE__) {
-				list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", element_on_scores [it].getName (), element_on_scores [it].getRealName ()));
-				list.errors.insert (list.errors.begin (), Ymir::Error::createNote (tcl.getLocation (), ExternalError::get (IN_TEMPLATE_DEF)));
-				Visitor::__LAST_TEMPLATE__ = true;
-
-				std::vector<std::string> names;
-				for (auto & it : params)
+			    list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", element_on_scores [it].getName (), element_on_scores [it].getRealName ()));
+			    list.errors.insert (list.errors.begin (), Ymir::Error::createNote (tcl.getLocation (), ExternalError::get (IN_TEMPLATE_DEF)));
+			    std::vector<std::string> names; 
+			    for (auto & it : params) {
 				names.push_back (it.prettyString ());
-
-				std::string leftName = value.getLocation ().getStr ();				
-				list.errors = {Ymir::Error::makeOccurAndNote (
-					tcl.getLocation (),
-					list.errors,
-					ExternalError::get (UNDEFINED_TEMPLATE_OP),
-					leftName,
-					names
-					)};
-				
-				__last_error__ = {};
-			    } else if (Visitor::__LAST_TEMPLATE__) {
-				list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", element_on_scores [it].getName (), element_on_scores [it].getRealName ()));
-				list.errors.insert (list.errors.begin (), Ymir::Error::createNote (tcl.getLocation (), ExternalError::get (IN_TEMPLATE_DEF)));
-				
-				Visitor::__LAST_TEMPLATE__ = false;
-				std::vector<std::string> names;
-				for (auto & it : params)
-				names.push_back (it.prettyString ());
-
-				std::string leftName = value.getLocation ().getStr ();
-				
-				list.errors = {Ymir::Error::makeOccurAndNote (
-					tcl.getLocation (),
-					list.errors,
-					ExternalError::get (UNDEFINED_TEMPLATE_OP),
-					leftName,
-					names
-					)
-				};				
-				__last_error__ = list.errors;
-			    } else {
-				if (__last_error__.size () != 0)
-				list.errors = __last_error__;
 			    }
-			    
-			    errors = list.errors;
+
+			    std::string leftName = value.getLocation ().getStr ();				
+			    list.errors = {Ymir::Error::makeOccurAndNote (
+				    tcl.getLocation (),
+				    list.errors,
+				    ExternalError::get (UNDEFINED_TEMPLATE_OP),
+				    leftName,
+				    names
+				    )};
+				
+			    errors = std::move (list.errors);
 			}
 			Visitor::__CALL_NB_RECURS__ -= 1;
 		    }

@@ -301,8 +301,6 @@ namespace semantic {
 
 	    static void error (const lexing::Word & expression, const lexing::Word & end, const generator::Generator & left, const std::vector <generator::Generator> & rights, std::list <Ymir::Error::ErrorMsg> & errors);
 
-	    static void insertCandidate (int & nb, std::list <Ymir::Error::ErrorMsg> & errors, const std::list <Ymir::Error::ErrorMsg> & candErrors);
-
 	    static std::string prettyName (const generator::Generator & gen);
 
 	    static lexing::Word realLocation (const generator::Generator & gen);
