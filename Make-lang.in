@@ -251,6 +251,7 @@ ymir_OBJS = \
 	ymir/semantic_Table.o \
 	ymir/semantic_Template.o \
 	ymir/semantic_TemplateSolution.o \
+	ymir/semantic_TemplatePreSolution.o \
 	ymir/semantic_Trait.o \
 	ymir/semantic_VarDecl.o \
 	ymir/syntax_Declaration.o \

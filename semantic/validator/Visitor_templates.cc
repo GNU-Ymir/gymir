@@ -26,15 +26,15 @@ namespace semantic {
 	    
 	    enterForeign ();	    
 	    try {
-		if (gen.is <MethodTemplateRef> () && sym.is <TemplateSolution> ())
-		this-> validateTemplateSolutionMethod (sym, gen.to <MethodTemplateRef> ().getSelf ());
-		else 
-		this-> validate (sym);		
+		if (gen.is <MethodTemplateRef> () && sym.is <TemplateSolution> ()) {
+		    this-> validateTemplateSolutionMethod (sym, gen.to <MethodTemplateRef> ().getSelf ());
+		} else {
+		    this-> validate (sym);
+		}
 	    } catch (Error::ErrorList &list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-	    } 	    
-	    exitForeign ();
-	    
+	    }	    
+	    exitForeign ();	    
 	    popReferent ("validateTemplateSymbol");
 	    
 	    if (errors.size () != 0) {
@@ -42,6 +42,36 @@ namespace semantic {
 	    }
 	}	
 
+	semantic::Symbol Visitor::validateTemplatePreSolution (const semantic::Symbol & sol, const Generator & gen, bool validate) {
+	    auto tmplVisitor = TemplateVisitor::init (*this);
+	    auto preSol = sol.to <semantic::TemplatePreSolution> ();
+	    auto final_syntax = tmplVisitor.replaceAll (preSol.getDeclaration (), preSol.getMapping (), preSol.getTemplateReferent ());
+		    
+	    auto visit = declarator::Visitor::init ();
+	    visit.setWeak ();
+	    visit.pushReferent (preSol.getTemplateReferent ());
+		    
+	    auto soluce = TemplateSolution::init (sol.getName (), sol.getComments (), preSol.getTemplateParams (), preSol.getMapping (), preSol.getNameOrder (), true);
+	    visit.pushReferent (soluce);
+	    visit.visit (final_syntax);
+	    auto glob = visit.popReferent ();
+	    glob.setReferent (visit.getReferent ());
+		    
+	    auto already = tmplVisitor.getTemplateSolution (visit.getReferent (), soluce);
+	    if (already.isEmpty ()) {			
+		visit.getReferent ().insertTemplate (glob);
+	    } else glob = already;
+
+	    if (validate) {
+		if (gen.isEmpty ()) {
+		    this-> validate (glob);
+		} else {
+		    this-> validateTemplateSymbol (glob, gen);
+		}
+	    }
+	    return glob;
+	}
+	
 	
 	void Visitor::validateTemplateSolution (const semantic::Symbol & sol) {
 	    Visitor::__TEMPLATE_NB_RECURS__ += 1;
@@ -179,14 +209,14 @@ namespace semantic {
 	    throw Error::ErrorList {errors};
 
 	    bool succeed = false; // again, due to longjmp
-	    
 	    try {
 		auto visitor = TemplateVisitor::init (*this);
-		auto mapper = visitor.validateFromExplicit (check.getParameters (), params);
-		succeed = mapper.succeed;
+		int consumed = 0;
+		auto mapper = visitor.validateFromExplicit (check.getParameters (), params, consumed);
+		succeed = mapper.succeed && consumed == (int) params.size ();
 	    } catch (Error::ErrorList &list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-	    } 
+	    }
 
 	    return BoolValue::init (check.getLocation (), Bool::init (check.getLocation ()), succeed);
 	}
@@ -303,11 +333,12 @@ namespace semantic {
 			std::vector <Generator> types;
 			Visitor::__CALL_NB_RECURS__ += 1;
 			try {
-			    this-> validateTemplateSymbol (element_on_scores [it], loc_elem.find ((int) all_score)-> second [it]);
+			    Symbol sym (Symbol::empty ());
+			    if (element_on_scores [it].is <TemplatePreSolution> ()) sym = this-> validateTemplatePreSolution (element_on_scores [it], loc_elem.find ((int) all_score)-> second [it]);
 			    if (location_elems [it].is<MethodTemplateRef> ()) { 
-			    	if (element_on_scores [it].is <TemplateSolution> ()) {
+			    	if (!sym.isEmpty () && sym.is <TemplateSolution> ()) {
 			    	    auto self = location_elems [it].to <MethodTemplateRef> ().getSelf ();
-			    	    auto proto = this-> validateTemplateSolutionMethod (element_on_scores [it], self);
+			    	    auto proto = this-> validateTemplateSolutionMethod (sym, self);
 			    	    auto delType = Delegate::init (proto.getLocation (), proto);
 			    	    aux.push_back (				    
 			    		DelegateValue::init (proto.getLocation (),

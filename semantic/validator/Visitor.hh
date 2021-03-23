@@ -185,7 +185,12 @@ namespace semantic {
 	     * ================================================================================
 	     * ================================================================================
 	     */
-	    
+
+	    /**
+	     * Validate a pre solution symbol (a template solution that has not been replaced yet)
+	     */
+	    semantic::Symbol validateTemplatePreSolution (const semantic::Symbol & sol, const generator::Generator & gen, bool validate = true);
+
 	    /**
 	     * Validate a module
 	     */

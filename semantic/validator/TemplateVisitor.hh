@@ -66,7 +66,12 @@ namespace semantic {
 		SCORE_VAR = 1,
 		SCORE_TYPE = 2
 	    };
-	    
+
+	    /**
+	     * The mapper class associates var identifier to expression
+	     * A mapper is constructed by a template resolution, and is then used by template replacement to create a syntax tree with the specialized templates
+	     * The mapper has a score (set at template specialization time) to be able to sort template resolutions
+	     */	    
 	    struct Mapper {
 		bool succeed;
 		uint score;
@@ -109,11 +114,19 @@ namespace semantic {
 
 
 	    /**
+	     * ================================================================================
+	     * ================================================================================
+	     * =================================     EXPLICIT    ==============================
+	     * ================================================================================
+	     * ================================================================================
+	     */
+	    
+	    /**
 	     * \brief Validate a template from template call explicit specialization
 	     * \param params the parameter of the template
 	     * \param valls the parameter pass to the call
 	     */
-	    Mapper validateFromExplicit (const std::vector <syntax::Expression> & params, const std::vector <generator::Generator> & calls) const;
+	    Mapper validateFromExplicit (const std::vector <syntax::Expression> & params, const std::vector <generator::Generator> & calls, int & consumed) const;
 	    
 	    /**
 	     * \brief Validate a template from template call explicit specialization
@@ -124,6 +137,15 @@ namespace semantic {
 
 
 	    Mapper validateParamTemplFromExplicit (const array_view <syntax::Expression> & paramTempl, const syntax::Expression & param, const array_view <generator::Generator> & values, int & consumed) const;
+
+
+	    /**
+	     * ================================================================================
+	     * ================================================================================
+	     * =================================     IMPLICIT    ==============================
+	     * ================================================================================
+	     * ================================================================================
+	     */
 	    
 	    /**
 	     * \brief Validate Template expression from implicit specialistion (call operator) 

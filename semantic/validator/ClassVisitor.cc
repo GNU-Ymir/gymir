@@ -28,7 +28,9 @@ namespace semantic {
 	    // and avoid validating multiple times the same class
 	    
 	    auto validated = !cls.to <semantic::Class> ().getGenerator ().isEmpty ();
-	    if (validated) validated = !cls.to <semantic::Class> ().getGenerator ().to <generator::Class> ().getClassRef ().to <generator::ClassRef> ().isFast ();
+	    if (validated && cls.to <semantic::Class> ().getGenerator ().is <generator::Class> ()) {
+		validated = !cls.to <semantic::Class> ().getGenerator ().to <generator::Class> ().getClassRef ().to <generator::ClassRef> ().isFast ();
+	    }
 	    if (!validated || inModule) {
 		this-> validateClassContent (cls, inModule);
 	    }

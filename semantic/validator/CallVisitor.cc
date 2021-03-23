@@ -599,7 +599,7 @@ namespace semantic {
 	    } catch (Error::ErrorList &list) {		
 		errors.insert (errors.begin (), list.errors.begin (), list.errors.end ());
 		succeed = false;
-	    } 	    	    
+	    }
 
 
 	    if (succeed) {

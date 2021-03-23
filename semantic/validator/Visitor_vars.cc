@@ -124,6 +124,18 @@ namespace semantic {
 				}
 			    }
 			}
+			elof_u (semantic::TemplatePreSolution) {
+			    auto loc_gens = validateMultSym (loc, this-> validateTemplatePreSolution (sym, Generator::empty ()).to <semantic::TemplateSolution> ().getAllLocal ());
+			    match (loc_gens) {
+				of (MultSym, mlt_sym) {
+				    gens.insert (gens.end (), mlt_sym.getGenerators ().begin (), mlt_sym.getGenerators ().end ());
+				    succ = true;
+				} elfo {
+				    gens.push_back (loc_gens);
+				    succ = true;
+				}
+			    }
+			}
 			elof (semantic::VarDecl, decl) {
 			    validateVarDecl (sym);
 			    auto gen = decl.getGenerator ().to <GlobalVar> ();

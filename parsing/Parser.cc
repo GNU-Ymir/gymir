@@ -24,7 +24,6 @@ void ymir_parse_file (const char * filename) {
 	Ymir::Parser parser (filename);
 	parser.run ();
     }
-    
     //control_memory_leakage ();
 }
 
@@ -84,13 +83,13 @@ namespace Ymir {
 	    fclose (file);
 	}
 
-
 	auto generator = semantic::generator::Visitor::init ();	
 	for (auto & gen : validator.getGenerators ()) {
 	    generator.generate (gen);
 	}
 
-	generator.finalize ();	
+	generator.finalize ();
+
 	semantic::Symbol::purge ();
 	semantic::declarator::Visitor::purge ();
     }

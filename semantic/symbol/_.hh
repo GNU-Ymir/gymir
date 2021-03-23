@@ -13,6 +13,7 @@
 #include <ymir/semantic/symbol/ModRef.hh>
 #include <ymir/semantic/symbol/Struct.hh>
 #include <ymir/semantic/symbol/Template.hh>
+#include <ymir/semantic/symbol/TemplatePreSolution.hh>
 #include <ymir/semantic/symbol/TemplateSolution.hh>
 #include <ymir/semantic/symbol/Trait.hh>
 #include <ymir/semantic/symbol/VarDecl.hh>
