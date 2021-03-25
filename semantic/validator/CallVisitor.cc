@@ -63,7 +63,6 @@ namespace semantic {
 	generator::Generator CallVisitor::validate (const lexing::Word & location , const generator::Generator & left, const std::vector <generator::Generator> & rights, int & score, std::list <Ymir::Error::ErrorMsg> & errors) {
 	    bool checked = true;
 	    Generator gen (Generator::empty ());
-
 	    match (left) {
 		of_u (FrameProto) {
 		    gen = validateFrameProto (location, left, rights, score, errors);
@@ -83,12 +82,15 @@ namespace semantic {
 		    Symbol sym (Symbol::empty ());
 		    Generator proto_gen (Generator::empty ());
 		    gen = validateTemplate (location, left, rights, score, errors, sym, proto_gen);
-		} elof (Value, v) {
-		    if (v.getType ().is <FuncPtr> ()) gen = validateFunctionPointer (location, left, rights, score, errors);
-		    else if (v.getType ().is <Delegate> ()) gen = validateDelegate (location, left, rights, score, errors);
-		    else checked = false;
 		} elfo {
 		    checked = false;
+		}
+		
+		if (gen.isEmpty ()) {
+		    s_of (Value, v) {
+			if (v.getType ().is <FuncPtr> ()) gen = validateFunctionPointer (location, left, rights, score, errors);
+			else if (v.getType ().is <Delegate> ()) gen = validateDelegate (location, left, rights, score, errors);
+		    }
 		}
 	    }
 	    

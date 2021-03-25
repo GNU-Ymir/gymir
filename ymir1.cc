@@ -159,9 +159,7 @@ ymir_langhook_handle_option (size_t scode, const char *arg, long int value ATTRI
 static void
 ymir_langhook_parse_file (void)
 {
-  auto t = clock () ;
   ymir_parse_files (num_in_fnames, in_fnames);
-  println ("All : ", ((float) (clock () - t))/CLOCKS_PER_SEC);
 }
  
 static tree
