@@ -18,6 +18,11 @@ namespace semantic {
 	    _gens (gens)
 	{
 	    // MultSym are temporary elements, used only at validation time, they cant be throwers
+	    for (auto & it : this-> _gens) {
+		if (it.isEmpty ()) {
+		    Ymir::Error::halt ("", "");
+		}
+	    }
 	}	
 	
 	Generator MultSym::init (const lexing::Word & loc, const std::vector <Generator> & gens) {
@@ -49,7 +54,7 @@ namespace semantic {
 		for (auto it : Ymir::r (0, std::min (this-> _gens.size (), (unsigned long int) 3))) {
 		    if (it != 0) buf.write (", ");
 		    if (it == 2 && this-> _gens.size () > 3) buf.write (", ..., ");
-		    buf.write (validator::CallVisitor::prettyName (this-> _gens [it]));		    
+		    buf.write (validator::CallVisitor::prettyName (this-> _gens [it]));
 		}
 		
 		buf.writef ("} x %", this-> _gens.size ());

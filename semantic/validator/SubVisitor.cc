@@ -115,39 +115,34 @@ namespace semantic {
 		    }
 		    elof (generator::Enum, en)  {
 			auto res = validateEnum (expression, en);
-			if (!res.isEmpty ())
-			gens.push_back (res);
+			if (!res.isEmpty ()) gens.push_back (res);
 		    }
 		    elof_u (generator::Struct) {
 			auto res = validateStruct (expression, gen);
-			if (!res.isEmpty ())
-			gens.push_back (res);
+			if (!res.isEmpty ()) gens.push_back (res);
 		    }
 		    elof_u (generator::Class) {
 			auto res = validateClass (expression, gen, errors);
-			if (!res.isEmpty ())
-			gens.push_back (res);
+			if (!res.isEmpty ()) gens.push_back (res);
 		    }
 		    elof (ClassRef, cl) {
 			auto res = validateClass (expression, cl.getRef ().to <semantic::Class> ().getGenerator (), errors);
-			if (!res.isEmpty ())
-			gens.push_back (res);
+			if (!res.isEmpty ()) gens.push_back (res);
 		    }
 		    elof_u (Type) {
 			auto res = validateType (expression, gen);
-			if (!res.isEmpty ())
-			gens.push_back (res);
+			if (!res.isEmpty ()) gens.push_back (res);
 		    }
 		    elof_u (TemplateRef) {
 			auto res = validateTemplate (expression, gen, errors);
-			if (res.is <MultSym> ()) {
-			    if (!res.isEmpty ()) {
+			if (!res.isEmpty ()) {
+			    if (res.is <MultSym> ()) {
 				gens.insert (gens.end (), res.to <MultSym> ().getGenerators ().begin (),
 					     res.to <MultSym> ().getGenerators ().end ());
+			    } else {
+				gens.push_back (res);
 			    }
-			} else {
-			    gens.push_back (res);
-			}
+			}		    
 		    }
 		    elof (Value, v) {
 			if (v.getType ().is <ClassPtr> ()) {
@@ -166,10 +161,15 @@ namespace semantic {
 		auto s = this-> _context.validateMultSym (expression.getLocation (), syms);
 		if (s.is <MultSym> ()) {
 		    gens.insert (gens.end (), s.to <MultSym> ().getGenerators ().begin (), s.to <MultSym> ().getGenerators ().end ());
-		} else
+		} else if (!s.isEmpty ()) {
 		    gens.push_back (s);
+		}
 	    }
 
+	    if (gens.size () == 0) {
+		this-> error (expression, mult.clone (), expression.getRight (), errors);
+	    }
+	    
 	    if (gens.size () == 1) return gens [0];
 	    else return MultSym::init (expression.getLocation (), gens);
 	}
@@ -911,7 +911,7 @@ namespace semantic {
 		rightName = val.prettyString ();
 	    }
 
-	    Ymir::Error::occurAndNote (
+	    auto err = Ymir::Error::makeOccurAndNote (
 		expression.getLocation (),
 		expression.getRight ().getLocation (),
 		errors,
@@ -919,6 +919,9 @@ namespace semantic {
 		rightName,
 		leftName
 	    );
+	    
+	    err.setWindable (true);
+	    throw Error::ErrorList {{err}};
 	    
 	    //throw Error::ErrorList {errors};
 	}

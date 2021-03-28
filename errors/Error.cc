@@ -321,21 +321,24 @@ namespace Ymir {
 	    begin (begin),
 	    end (lexing::Word::eof ()),
 	    msg (msg),
-	    one_line (false)
+	    one_line (false),	    
+	    windable (false)
 	{}
 
 	ErrorMsg::ErrorMsg (const lexing::Word & begin, const lexing::Word & end, const std::string & msg) :
 	    begin (begin),
 	    end (end),
 	    msg (msg),
-	    one_line (false)
+	    one_line (false),
+	    windable (false)
 	{}
 
 	ErrorMsg::ErrorMsg (const std::string & msg) :
 	    begin (lexing::Word::eof ()),
 	    end (lexing::Word::eof ()),
 	    msg (msg),
-	    one_line (true)
+	    one_line (true),
+	    windable (false)
 	{}
 
 	void ErrorMsg::addNote (const ErrorMsg & other) {
@@ -344,6 +347,10 @@ namespace Ymir {
 	    }
 	}
 
+	void ErrorMsg::setWindable (bool is) {
+	    this-> windable = is;
+	}
+	
 	unsigned long ErrorMsg::computeMaxDepth () const {
 	    unsigned long depth = 0;
 	    for (auto & it : this-> notes) {
@@ -355,7 +362,8 @@ namespace Ymir {
 	    return depth;
 	}
 		
-	void ErrorMsg::computeMessage (Ymir::OutBuffer & buf, unsigned long depth, unsigned long max_depth, bool writtenSub) const {
+	void ErrorMsg::computeMessage (Ymir::OutBuffer & buf, unsigned long depth, unsigned long max_depth, bool writtenSub, bool windable) const {
+	    windable = windable || this-> windable;
 	    Ymir::OutBuffer noteBuf;
 	    bool notOneLine = false, addedNote = false;
 	    unsigned long int max_padd = 0;
@@ -364,11 +372,11 @@ namespace Ymir {
 	    auto writeSub = !enpadding && depth == Error::MAX_ERROR_DEPTH && !global::State::instance ().isVerboseActive () && this-> notes.size () != 0 && !writtenSub;
 	    for (auto & it : this-> notes) {
 		addedNote = true;
-		if (jt != this-> notes.size () && jt == Error::MAX_ERROR_DEPTH && !global::State::instance ().isVerboseActive ()) {
+		if (jt != this-> notes.size () && jt == Error::MAX_ERROR_DEPTH && !global::State::instance ().isVerboseActive () && windable) {
 		    noteBuf.writef ("     : %(B)\n", "...");
 		    noteBuf.writef ("%(b) : %\n", "Note", ExternalError::get (OTHER_ERRORS));		    
-		} else if (jt < Error::MAX_ERROR_DEPTH || jt == this-> notes.size () || global::State::instance ().isVerboseActive ()) {
-		    it.computeMessage (noteBuf, depth + 1, max_depth, writeSub);
+		} else if (jt < Error::MAX_ERROR_DEPTH || jt == this-> notes.size () || global::State::instance ().isVerboseActive () || !windable) {
+		    it.computeMessage (noteBuf, depth + 1, max_depth, writeSub, windable);
 		    notOneLine = !it.one_line || it.notes.size () != 0;
 		    max_padd = it.begin.getLine ();
 		    if (it.end.getLine () > max_padd) {

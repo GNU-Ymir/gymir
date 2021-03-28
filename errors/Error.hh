@@ -53,6 +53,8 @@ namespace Ymir {
 
 	    bool one_line;
 
+	    bool windable;
+	    
 	    std::list <ErrorMsg> notes;
 	    
 	public :
@@ -65,7 +67,7 @@ namespace Ymir {
 	    
 	    void addNote (const ErrorMsg & note);
 	    
-	    void computeMessage (Ymir::OutBuffer & buf, unsigned long depth, unsigned long max_depth, bool writtenSub = false) const;
+	    void computeMessage (Ymir::OutBuffer & buf, unsigned long depth, unsigned long max_depth, bool writtenSub = false, bool windable = false) const;
 
 	    unsigned long computeMaxDepth () const;
 	    
@@ -76,6 +78,8 @@ namespace Ymir {
 	    const std::string & getMessage () const;
 
 	    std::list <ErrorMsg> getNotes () const;
+
+	    void setWindable (bool windable);
 	    
 	};
 
@@ -186,7 +190,14 @@ namespace Ymir {
 	    return err;
 	}
 
-
+	template <typename ... TArgs>
+	ErrorMsg makeOccurAndNote (const lexing::Word & loc, const lexing::Word & loc2, const std::list <ErrorMsg> & notes, const std::string &content, TArgs ... args) {
+	    auto msg = format ("%(r) : " + content, "Error", args...);
+	    auto err = ErrorMsg (loc, loc2, msg);
+	    for (auto & it : notes)
+		err.addNote (it);
+	    return err;
+	}
 	
 	template <typename ... TArgs>
 	ErrorMsg makeOccur (const lexing::Word & loc, const std::string &content, TArgs ... args) {
