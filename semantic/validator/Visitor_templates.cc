@@ -308,8 +308,9 @@ namespace semantic {
 							}
 						} catch (Error::ErrorList &list) {
 							auto note = Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), elem.getLocation (), elem.prettyString ());
-							for (auto & it : list.errors)
-							note.addNote (it);
+							for (auto & it : list.errors) {
+							    note.addNote (it);
+							}
 							errors.push_back (note);
 							succeed = false;
 						}
@@ -404,19 +405,20 @@ namespace semantic {
 			}
 
 			std::vector<std::string> names;
-			for (auto & it : params)
-			names.push_back (it.prettyString ());
+			for (auto & it : params) {
+			    names.push_back (it.prettyString ());
+			}
 		    
 			std::string leftName = value.getLocation ().getStr ();
-			Ymir::Error::occurAndNote (
+			auto err = Ymir::Error::makeOccurAndNote (
 				tcl.getLocation (),
 				errors,
 				ExternalError::get (UNDEFINED_TEMPLATE_OP),
 				leftName,
 				names
 				);
-	    
-			return Generator::empty ();
+			err.setWindable (true);
+			throw Error::ErrorList {{err}};
 		}
 
 		bool Visitor::insertTemplateSolution (const Symbol & sol, std::list <Error::ErrorMsg> & errors) {

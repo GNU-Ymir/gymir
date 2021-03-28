@@ -473,7 +473,9 @@ namespace semantic {
 		}
 		if (!found) {
 		    auto note = Ymir::Error::createNote (it.getLocation ());
-		    msg_types.push_back (Error::makeOccurAndNote (loc, note, ExternalError::get (THROWS_NOT_DECLARED), funcName, it.prettyString ()));
+		    auto err = Error::makeOccurAndNote (loc, note, ExternalError::get (THROWS_NOT_DECLARED), funcName, it.prettyString ());
+		    err.setWindable (true);
+		    msg_types.push_back (err);
 		    types.push_back (it);
 		}
 	    }

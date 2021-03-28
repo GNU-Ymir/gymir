@@ -406,7 +406,7 @@ namespace Ymir {
 		    auto padd2 = center ("", leftLine2.length (), "━");
 		
 		    if (notOneLine) {
-			buf.write (format ("%% ┗━%━┻━ %", Colors::get (BOLD), padd, padd2, Colors::get (RESET)));
+			buf.write (format ("%% ┗━%━┻━ %\n", Colors::get (BOLD), padd, padd2, Colors::get (RESET)));
 		    } else {
 			buf.write (format ("%% ┗━%━━ %\n", Colors::get (BOLD), padd, padd2, Colors::get (RESET)));
 		    }
