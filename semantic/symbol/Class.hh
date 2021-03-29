@@ -15,6 +15,9 @@ namespace semantic {
 
 	/** The ancestor of the class */
 	syntax::Expression _ancestor;
+
+	/** The destructor of the class */
+	semantic::Symbol _dtor;
 	
 	/** The fields of the class */
 	std::vector <syntax::Expression> _fields;
@@ -190,6 +193,16 @@ namespace semantic {
 	 * \warning we assume that this function is called oif we are sure that the fields exists in the class
 	 */
 	bool isMarkedProtected (const std::string & name) const;
+
+	/**
+	 * Set the destructor of the class
+	 */
+	void setDestructor (const semantic::Symbol & dtor);
+
+	/**
+	 * @return the destructor of the class
+	 */
+	const semantic::Symbol & getDestructor () const;
 
 	/**
 	 * Set the class to abstract if is

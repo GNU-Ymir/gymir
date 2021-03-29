@@ -131,6 +131,11 @@ namespace semantic {
 
 
 	    /**
+	     * Validate the vtable symbol of the destructor
+	     */
+	    generator::Generator validateVtableDtor (const semantic::Symbol & cls, const generator::Generator & classGen, const generator::Generator & ancestor);
+
+	    /**
 	     * ================================================================================
 	     * ================================================================================
 	     * ================================     ANCESTOR     ==============================

@@ -143,4 +143,5 @@ struct Keys {
     static const std::string  MANGLE;
     static const std::string  OK_;
     static const std::string  ERR_;
+    static const std::string  DTOR;
 };

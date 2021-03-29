@@ -36,6 +36,7 @@ ymir_OBJS = \
 	ymir/decl_Class.o \
 	ymir/decl_CondBlock.o \
 	ymir/decl_Constructor.o \
+	ymir/decl_Destructor.o \
 	ymir/decl_Enum.o \
 	ymir/decl_ExpressionWrapper.o \
 	ymir/decl_ExternBlock.o \

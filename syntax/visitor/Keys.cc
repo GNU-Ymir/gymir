@@ -136,3 +136,4 @@ const std::string	Keys::LEN          = "len";
 const std::string       Keys::MANGLE       = "mangle";
 const std::string       Keys::OK_          = "Ok";
 const std::string       Keys::ERR_         = "Err";
+const std::string       Keys::DTOR         = "__dtor";

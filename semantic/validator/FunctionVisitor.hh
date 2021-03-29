@@ -228,6 +228,27 @@ namespace semantic {
 	     */
 	    void validateMethod (const semantic::Function & func, const generator::Generator & classType_, bool isWeak = false);
 
+
+	    
+	    /**
+	     * ================================================================================
+	     * ================================================================================
+	     * ==============================         DTOR       ==============================
+	     * ================================================================================
+	     * ================================================================================
+	     */
+
+	    /**
+	     * Validate the destructor of a class (complete validation)
+	     * Insert the validated frame inside the validated frames of the module (for generation)
+	     * @params: 
+	     *    - func: the destructor symbol
+	     *    - classType: the type of the class
+	     *    - ancDtorProto: the prototype of the ancestor dtor (empty, or NullValue, or a FrameProto)
+	     */
+	    void validateDestructor (const semantic::Function & func, const generator::Generator & classType_, const generator::Generator & ancDtorProto);
+	    
+
 	    
 	};
     }

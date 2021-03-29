@@ -939,7 +939,99 @@ namespace semantic {
 
 	    this-> _context.insertNewGenerator (frame);		
 	}
+
+
+    	/**
+	 * ================================================================================
+	 * ================================================================================
+	 * ==============================         DTOR       ==============================
+	 * ================================================================================
+	 * ================================================================================
+	 */
+
+	void FunctionVisitor::validateDestructor (const semantic::Function & func, const Generator & classType_, const Generator & ancDtorProto) {
+	    auto function = func.getContent ();
+	    std::vector <Generator> params;
+	    Generator retType (Generator::empty ());
+	    std::list <Ymir::Error::ErrorMsg> errors;
+	    
+	    auto classType = classType_;
+	    auto & cs = classType.to <ClassRef> ().getRef ().to <semantic::Class> ();
+	    auto currentClassDef = classType.to <ClassRef> ().getRef ();
+	    this-> _context.enterClassDef (currentClassDef);
+	    auto attrs = function.getCustomAttributes ();
+	    
+	    attrs.push_back (lexing::Word::init (func.getName (), Keys::DTOR));
+	    this-> _context.enterContext (attrs);
+	    
+	    classType = Type::init (function.getLocation (), ClassPtr::init (function.getLocation (), classType).to <Type> ().toDeeplyMutable ().to <Type> (), true, false);
+	    this-> _context.enterForeign ();
+	    
+	    std::vector <Generator> throwers = this-> validateThrowers (function.getThrowers (), errors);  
+	    this-> _context.enterBlock ();
+	    
+	    auto & __params = function.getPrototype ().getParameters ();
+	    
+	    try {
+		bool isMutable = false;
+		for (auto & it : function.getPrototype ().getParameters ()[0].to <syntax::VarDecl> ().getDecorators ()) {
+		    if (it.getValue () == syntax::Decorator::MUT) isMutable = true;
+		    else {
+			Ymir::Error::occur (it.getLocation (),
+					    ExternalError::get (DECO_OUT_OF_CONTEXT),
+					    it.getLocation ().getStr ()
+			    );				
+		    }
+		}
+		
+		classType = Type::init (__params [0].getLocation (), classType.to <Type> (), isMutable, false);		
+		params.insert (params.begin (), ParamVar::init (lexing::Word::init (__params [0].getLocation (), Keys::SELF), classType, isMutable, true));
+		this-> _context.insertLocal (params [0].getName (), params [0]);		
+
+		auto fakeParams = std::vector <syntax::Expression> (__params.begin () + 1, __params.end ());
+		auto proto = syntax::Function::Prototype::init (fakeParams, function.getPrototype ().getType (), false);
+		
+		this-> validatePrototypeForFrame (cs.getName (), proto, params, retType, errors);
+		if (retType.isEmpty ()) retType = Void::init (func.getName ());
+	    } catch (Error::ErrorList &list) {
+		errors = list.errors;
+	    } 
+	    
+	    bool needFinalReturn = false;
+	    Generator body = this-> validateBody (func.getName (), func.getRealName (), function.getBody (), throwers, retType, needFinalReturn, errors);
+	    
+	    if (!ancDtorProto.isEmpty () && !ancDtorProto.is <NullValue> ()) {
+		auto self = this-> _context.validateValue (syntax::Var::init (lexing::Word::init (__params [0].getLocation (), Keys::SELF)));
+		auto ancCall = Call::init (func.getName (), Void::init (func.getName ()), ancDtorProto, {classType}, {self}, {});
+		body = Block::init (func.getName (), Void::init (func.getName ()), {body, ancCall}); 
+	    }		    
+	    
+	    try {
+		if (errors.size () != 0) {
+		    this-> _context.discardAllLocals ();
+		}		    
+		this-> _context.quitBlock ();
+	    } catch (Error::ErrorList &list) {
+		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+	    } 	
+	    
+	    this-> _context.exitForeign ();
+	    this-> _context.exitContext ();
+	    this-> _context.exitClassDef (currentClassDef);
+
+	    if (errors.size () != 0)
+	    throw Error::ErrorList {errors};
+		
+	    auto frame = Frame::init (function.getLocation (), func.getRealName (), params, retType, body, needFinalReturn);
+	    frame.to <Frame> ().isWeak (func.isWeak ());
+	    frame.to <Frame> ().setMangledName (func.getMangledName ());
+
+	    this-> _context.insertNewGenerator (frame);		
+
+	    
+	}
 	
     }
+
     
 }

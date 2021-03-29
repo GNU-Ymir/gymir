@@ -533,7 +533,7 @@ namespace syntax {
 	if (token == Keys::OVER) 
 	    ancestor = visitExpression ();
 	
-	auto decls = visitClassBlock ();
+	auto decls = visitClassBlock (false);
 
 	if (!templates.empty ()) {
 	    return Template::init (name, comments, templates, Class::init (name, comments, ancestor, decls, attribs), test);
@@ -557,7 +557,7 @@ namespace syntax {
 	    } else if (token == Keys::IMMUTABLE) {
 		decls.push_back (visitIfClass (fromTrait));
 	    } else if (token != Token::RACC && token != Token::SEMI_COLON) {
-		decls.push_back (visitClassContent (fromTrait));
+		decls.push_back (visitClassContent (fromTrait, lexing::Word::eof ()));
 	    } 
 	} while (token != Token::RACC);
 	return decls;
@@ -574,7 +574,7 @@ namespace syntax {
 	    token = this-> _lex.consumeIf ({Token::RACC, Token::SEMI_COLON});
 	    if (token == Token::RACC && !end) end = true;
 	    else if (token != Token::SEMI_COLON) {
-		decls.push_back (visitClassContent (fromTrait));		
+		decls.push_back (visitClassContent (fromTrait, location));		
 	    }
 	} while (!end);
 	
@@ -652,13 +652,14 @@ namespace syntax {
 	}
     }
     
-    Declaration Visitor::visitClassContent (bool fromTrait) {
+    Declaration Visitor::visitClassContent (bool fromTrait, const lexing::Word & fromProtection) {
 	lexing::Word token = lexing::Word::eof ();
 	std::string docs;
-	if (fromTrait)
+	if (fromTrait) {
 	    token = this-> _lex.nextWithDocs (docs, {Keys::DEF, Keys::OVER}); // Trait can only have method definitions
-	else
-	    token = this-> _lex.nextWithDocs (docs, {Keys::DEF, Keys::OVER, Keys::LET, Keys::SELF, Keys::IMPL, Keys::IMPORT});
+	} else {
+	    token = this-> _lex.nextWithDocs (docs, {Keys::DEF, Keys::OVER, Keys::LET, Keys::SELF, Keys::IMPL, Keys::IMPORT, Keys::DTOR});
+	}
 
 	if (token == Keys::SELF) {
 	    return visitClassConstructor (fromTrait);
@@ -670,9 +671,23 @@ namespace syntax {
 	    this-> _lex.rewind ();
 	    return Expression::toDeclaration (visitVarDeclaration (), docs);
 	} else if (token == Keys::IMPL) {
+	    if (!fromProtection.isEof ()) {
+		auto note = Ymir::Error::createNote (fromProtection);
+		Ymir::Error::occurAndNote (token, note, ExternalError::get (PROTECTION_NO_IMPACT), fromProtection.getStr (), token.getStr ());
+	    }
 	    return visitClassMixin ();
 	} else if (token == Keys::IMPORT) {
+	    if (!fromProtection.isEof ()) {
+		auto note = Ymir::Error::createNote (fromProtection);
+		Ymir::Error::occurAndNote (token, note, ExternalError::get (PROTECTION_NO_IMPACT), fromProtection.getStr (), token.getStr ());
+	    }
 	    return visitImport ();
+	} else if (token == Keys::DTOR) {
+	    if (!fromProtection.isEof ()) {
+		auto note = Ymir::Error::createNote (fromProtection);
+		Ymir::Error::occurAndNote (token, note, ExternalError::get (PROTECTION_NO_IMPACT), fromProtection.getStr (), token.getStr ());
+	    }
+	    return visitClassDestructor ();
 	} else {
 	    Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Declaration::empty ();	
@@ -685,7 +700,7 @@ namespace syntax {
 	auto content = visitExpression (10); // (priority of dot operator)
 	auto next = this-> _lex.consumeIf ({Token::SEMI_COLON, Token::COMA});
 	if (next != Token::SEMI_COLON && next != Token::COMA) {	    
-	    std::vector <Declaration> decls = visitClassBlock (false);	    
+	    std::vector <Declaration> decls = visitClassBlock (true);	    
 	    return Mixin::init (location, comments, content, decls);
 	} else if (next == Token::COMA) {
 	    std::vector <Declaration> impls;
@@ -700,6 +715,16 @@ namespace syntax {
 	} else
 	    return Mixin::init (location, comments, content, {});
     }
+
+    Declaration Visitor::visitClassDestructor () {
+	std::string comments;
+	auto location = this-> _lex.rewind ().nextWithDocs (comments);
+	this-> _lex.next ({Token::LPAR});
+	auto decl = visitSingleVarDeclaration (false, false, true);
+	this-> _lex.next ({Token::RPAR});
+	auto body = visitExpression ();
+	return Destructor::init (location, comments, decl, body);
+    }    
 
     Declaration Visitor::visitClassConstructor (bool fromTrait) {
 	std::string comments;
@@ -848,7 +873,7 @@ namespace syntax {
 
 	auto attribs = visitAttributes ();
 	auto name = visitIdentifier ();
-	if (name == Keys::SELF)
+	if (name == Keys::SELF || (name == Keys::DTOR && isClass))
 	    Error::occur (name, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), name.getStr ());
 	
 	auto templates = visitTemplateParameters ();	

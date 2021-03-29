@@ -5,6 +5,7 @@
 #include <ymir/syntax/declaration/Class.hh>
 #include <ymir/syntax/declaration/CondBlock.hh>
 #include <ymir/syntax/declaration/Constructor.hh>
+#include <ymir/syntax/declaration/Destructor.hh>
 #include <ymir/syntax/declaration/Enum.hh>
 #include <ymir/syntax/declaration/ExpressionWrapper.hh>
 #include <ymir/syntax/declaration/ExternBlock.hh>

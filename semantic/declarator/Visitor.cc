@@ -26,7 +26,7 @@ namespace semantic {
 	    return Visitor (isTrusted);
 	}
 
-	semantic::Symbol Visitor::visit (const syntax::Declaration ast) {
+	semantic::Symbol Visitor::visit (const syntax::Declaration & ast) {
 	    match (ast) {
 		s_of (syntax::Module, mod) 
 		    return visitModule (mod);		
@@ -88,7 +88,7 @@ namespace semantic {
 	    return Symbol::empty ();
 	}    
 
-	semantic::Symbol Visitor::visitModule (const syntax::Module mod) {
+	semantic::Symbol Visitor::visitModule (const syntax::Module & mod) {
 	    auto path = Path {mod.getLocation ().getStr (), "::"};
 	    bool isTrusted = path.startWith (Path {CoreNames::get (STD_MODULE), "::"}) || path.startWith (Path {CoreNames::get (CORE_MODULE), "::"}) || path.startWith ({CoreNames::get (ETC_MODULE), "::"});
 	    if (mod.isGlobal ()) {
@@ -160,7 +160,7 @@ namespace semantic {
 	    }
 	}
 	
-	semantic::Symbol Visitor::visitFunction (const syntax::Function func, bool isExtern, bool insert) {
+	semantic::Symbol Visitor::visitFunction (const syntax::Function & func, bool isExtern, bool insert) {
 	    auto function = Function::init (func.getLocation (), func.getComments (), func, this-> _isWeak);
 	
 	    auto symbols = getReferent ().getLocal (func.getLocation ().getStr ());	    
@@ -192,7 +192,7 @@ namespace semantic {
 	    return function;
 	}        
 
-	semantic::Symbol Visitor::visitConstructor (const syntax::Constructor cs) {
+	semantic::Symbol Visitor::visitConstructor (const syntax::Constructor & cs) {
 	    auto semcs = semantic::Constructor::init (cs.getLocation (), cs.getComments (), cs, this-> _isWeak);
 	    semcs.to <Constructor> ().setThrowers (cs.getThrowers ());
 	    for (auto & ca : cs.getCustomAttributes ()) {
@@ -202,8 +202,8 @@ namespace semantic {
 	    getReferent ().insert (semcs);
 	    return semcs;
 	}
-	
-	semantic::Symbol Visitor::visitStruct (const syntax::Struct str, bool insert) {
+		
+	semantic::Symbol Visitor::visitStruct (const syntax::Struct & str, bool insert) {
 	    auto structure = Struct::init (str.getLocation (), str.getComments (), str.getDeclarations (), str.getDeclComments (), this-> _isWeak);
 	
 	    auto symbols = getReferent ().getLocal (str.getLocation ().getStr ());	
@@ -229,7 +229,7 @@ namespace semantic {
 	    return structure;
 	}
 
-	semantic::Symbol Visitor::visitAka (const syntax::Aka stal) {
+	semantic::Symbol Visitor::visitAka (const syntax::Aka & stal) {
 	    auto alias = Aka::init (stal.getLocation (), stal.getComments (), stal.getValue (), this-> _isWeak);
 
 	    auto symbols = getReferent ().getLocal (stal.getLocation ().getStr ());
@@ -242,7 +242,7 @@ namespace semantic {
 	    return alias;
 	}    
 
-	semantic::Symbol Visitor::visitBlock (const syntax::DeclBlock block) {
+	semantic::Symbol Visitor::visitBlock (const syntax::DeclBlock &  block) {
 	    pushReferent (Module::init (block.getLocation (), block.getComments (), this-> _isWeak, this-> _isTrusted || State::instance ().isStandalone ()));
 	    // A declaration block is just a list of declaration, we do not enter a new referent
 	    for (syntax::Declaration decl : block.getDeclarations ()) {
@@ -274,7 +274,7 @@ namespace semantic {
 	    return Symbol::empty ();	    
 	}
 
-	semantic::Symbol Visitor::visitExtern (const syntax::ExternBlock ex_block) {
+	semantic::Symbol Visitor::visitExtern (const syntax::ExternBlock & ex_block) {
 	    if (ex_block.getFrom () == Keys::CLANG) {
 		if (!ex_block.getSpace ().isEof ()) 
 		    Ymir::Error::occur (ex_block.getSpace (), ExternalError::get (SPACE_EXTERN_C));
@@ -349,6 +349,16 @@ namespace semantic {
 			if (!sym.isEmpty ()) sym.to <Constructor> ().setClass (cls);
 			if (!sym.isEmpty () && pub)  sym.setPublic ();
 			if (!sym.isEmpty () && prot) sym.setProtected ();					    
+		    } elof (syntax::Destructor, dc) {
+			if (!cls.to <semantic::Class> ().getDestructor ().isEmpty ()) {
+			    auto note = Ymir::Error::createNote (cls.to <semantic::Class> ().getDestructor ().getName ());
+			    Ymir::Error::occurAndNote (dc.getLocation (), note, ExternalError::get (MULTIPLE_DESTRUCTOR));
+			}
+
+			auto sym = Function::init (dc.getLocation (), dc.getComments (), dc, this-> _isWeak);
+			sym.setReferent (cls);
+			cls.to <semantic::Class> ().setDestructor (sym);
+			// Destructor are always public
 		    } elof (syntax::CondBlock, cb) {
 			Ymir::Error::occur (cb.getLocation (), ExternalError::get (CONDITIONAL_NON_TEMPLATE_CLASS));
 		    } elfo {
@@ -386,7 +396,7 @@ namespace semantic {
 	    return ret;
 	}
 	
-	semantic::Symbol Visitor::visitTrait (const syntax::Trait sttrait) {
+	semantic::Symbol Visitor::visitTrait (const syntax::Trait & sttrait) {
 	    auto tr = Trait::init (sttrait.getLocation (), sttrait.getComments (), this-> _isWeak);
 
 	    auto symbols = getReferent ().getLocal (sttrait.getLocation ().getStr ());
@@ -439,7 +449,7 @@ namespace semantic {
 	    return ret;	    
 	}
 	
-	semantic::Symbol Visitor::visitEnum (const syntax::Enum stenm) {
+	semantic::Symbol Visitor::visitEnum (const syntax::Enum & stenm) {
 	    auto enm = Enum::init (stenm.getLocation (), stenm.getComments (), stenm.getValues (), stenm.getType (), stenm.getFieldComments (), this-> _isWeak);
 	    auto symbols = getReferent ().getLocal (stenm.getLocation ().getStr ());
 	    if (symbols.size () != 0) {
@@ -477,7 +487,7 @@ namespace semantic {
 	    }	    
 	}
 	
-	semantic::Symbol Visitor::visitMacro (const syntax::Macro macro) {
+	semantic::Symbol Visitor::visitMacro (const syntax::Macro & macro) {
 	    auto smc = Macro::init (macro.getLocation (), macro.getComments ());
 	    auto symbols = getReferent ().getLocal (macro.getLocation ().getStr ());
 	    if (symbols.size () != 0) {
@@ -493,13 +503,13 @@ namespace semantic {
 	    return ret;
 	}
 
-	semantic::Symbol Visitor::visitMacroConstructor (const syntax::MacroConstructor contr) {
+	semantic::Symbol Visitor::visitMacroConstructor (const syntax::MacroConstructor & contr) {
 	    auto ret = MacroConstructor::init (contr.getLocation (), contr.getComments (), syntax::MacroConstructor::init (contr));
 	    getReferent ().insert (ret);
 	    return ret;
 	}
 
-	semantic::Symbol Visitor::visitMacroRule (const syntax::MacroRule rule) {
+	semantic::Symbol Visitor::visitMacroRule (const syntax::MacroRule & rule) {
 	    auto known_rules = semantic::validator::MacroVisitor::getKnwonRules ();
 	    if (std::find (known_rules.begin (), known_rules.end (), rule.getLocation ().getStr ()) != known_rules.end ()) {
 		Ymir::Error::occur (rule.getLocation (), Ymir::ExternalError::get (Ymir::RESERVED_RULE_NAME), rule.getLocation ().getStr ());
@@ -518,7 +528,7 @@ namespace semantic {
 	    return ret;
 	}
 	
-	semantic::Symbol Visitor::visitVarDecl (const syntax::VarDecl stdecl, const std::string & comments) {
+	semantic::Symbol Visitor::visitVarDecl (const syntax::VarDecl & stdecl, const std::string & comments) {
 	    auto decl = VarDecl::init (stdecl.getLocation (), comments, stdecl.getDecorators (), stdecl.getType (), stdecl.getValue (), this-> _isWeak);
 	    auto symbols = getReferent ().getLocal (stdecl.getLocation ().getStr ());
 	    if (symbols.size () != 0) {
@@ -530,7 +540,7 @@ namespace semantic {
 	    return decl;
 	}
     
-	semantic::Symbol Visitor::visitGlobal (const syntax::Global stglob) {
+	semantic::Symbol Visitor::visitGlobal (const syntax::Global & stglob) {
 	    return visit (syntax::ExpressionWrapper::init (stglob.getLocation (), stglob.getComments (), stglob.getContent ()));	
 	}
 
@@ -584,7 +594,7 @@ namespace semantic {
 	    }
 	}
 
-	semantic::Symbol Visitor::visitImport (const syntax::Import imp) {
+	semantic::Symbol Visitor::visitImport (const syntax::Import & imp) {
 	    auto path = Path {imp.getModule ().getStr (), "::"};
 	    bool success = false;
 
@@ -654,7 +664,7 @@ namespace semantic {
 	    return Symbol::empty ();	    		    
 	}	
 	
-	semantic::Symbol Visitor::visitTemplate (const syntax::Template tep) {
+	semantic::Symbol Visitor::visitTemplate (const syntax::Template & tep) {
 	    std::vector <lexing::Word> used;
 	    for (auto par : tep.getParams ()) {
 		match (par) {

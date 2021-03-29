@@ -89,7 +89,7 @@ namespace syntax {
 	/** Some method can be marked over */
 	bool _isOver;
 	
-    private :
+    protected :
 
 	friend Declaration; // Needed for dynamic casting 
 	

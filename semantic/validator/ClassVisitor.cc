@@ -254,11 +254,10 @@ namespace semantic {
 		// Create the vtable from the class declarations, and ancestor
 		auto vtable = this-> validateClassDeclarations (sym, ClassRef::init (cls.getName (), ancestor, sym), ancestor, protections, addMethods);
 		
-		// for the moment the __dtor is never set, but everything is prepared for it to appear
-		auto nulltype = Pointer::init (gen.getLocation (), Void::init (gen.getLocation ()));
+		auto dtor = this-> validateVtableDtor (sym, ClassRef::init (cls.getName (), ancestor, sym), ancestor);
 
 		// Create a generator with a vtable from the template of the generator without vtable
-		gen = generator::Class::initVtable (gen.to <generator::Class> (), vtable, protections, NullValue::init (gen.getLocation (), nulltype));
+		gen = generator::Class::initVtable (gen.to <generator::Class> (), vtable, protections, dtor);
 			
 		sym.to <semantic::Class> ().setGenerator (gen);
 		sym.to <semantic::Class> ().setTypeInfo (this-> _context.validateTypeInfo (gen.getLocation (), ClassRef::init (cls.getName (), ancestor, sym)));
@@ -577,6 +576,21 @@ namespace semantic {
 	    
 	    return vtable.size () - 1;
 	}
+
+	Generator ClassVisitor::validateVtableDtor (const semantic::Symbol & cls, const Generator & classGen, const Generator & ancestor) {
+	    auto dtor = cls.to <semantic::Class> ().getDestructor ();
+	    if (dtor.isEmpty ()) {
+		if (ancestor.isEmpty ()) {
+		    auto nulltype = Pointer::init (classGen.getLocation (), Void::init (classGen.getLocation ()));
+		    return NullValue::init (classGen.getLocation (), nulltype);
+		} else {
+		    return ancestor.to <generator::ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().to <generator::Class> ().getDestructor ();
+		}
+	    }
+
+	    return this-> _funcVisitor.validateMethodProto (dtor.to <semantic::Function> (), classGen, Generator::empty ());
+	}
+
 	
 	/**
 	 * ================================================================================
@@ -598,7 +612,7 @@ namespace semantic {
 	    
 	    auto allInners = cls.to <semantic::Class> ().getAllInner ();
 	    allInners.insert (allInners.end (), addMethods.begin (), addMethods.end ());
-
+	    
 	    for (auto & it : allInners) {
 		this-> _context.pushReferent (it, "validate::innerClass");
 		try {
@@ -616,10 +630,18 @@ namespace semantic {
 		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
-
+	       		
 		this-> _context.popReferent ("validate::innerClass");			
 	    }
-	    
+
+	    if (!cls.to <semantic::Class> ().getDestructor ().isEmpty ()) {
+		Generator ancestorDtorProto (Generator::empty ());
+		if (!ancestor.isEmpty ()) {
+		    ancestorDtorProto = ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().to <generator::Class> ().getDestructor ();
+		}
+		    		
+		this-> _funcVisitor.validateDestructor (cls.to <semantic::Class> ().getDestructor ().to <semantic::Function> (), clRef, ancestorDtorProto);
+	    }
 	}
 	
 	/**

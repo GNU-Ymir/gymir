@@ -7,6 +7,7 @@ namespace semantic {
     Class::Class () :
 	ISymbol (lexing::Word::eof (), "", false), 
 	_ancestor (syntax::Expression::empty ()),
+	_dtor (semantic::Symbol::empty ()),
 	_fields ({}),
 	_gen (generator::Generator::empty ()),
 	_typeInfo (generator::Generator::empty ())
@@ -15,6 +16,7 @@ namespace semantic {
     Class::Class (const lexing::Word & name, const std::string & comments, const syntax::Expression & ancestor, bool isWeak) :
 	ISymbol (name, comments, isWeak),
 	_ancestor (ancestor),
+	_dtor (semantic::Symbol::empty ()),
 	_fields ({}),
 	_gen (generator::Generator::empty ()),
 	_typeInfo (generator::Generator::empty ())
@@ -166,6 +168,14 @@ namespace semantic {
 
     bool Class::isFinal () const {
 	return this-> _isFinal;
+    }
+
+    void Class::setDestructor (const semantic::Symbol & sym) {
+	this-> _dtor = sym;
+    }
+
+    const semantic::Symbol & Class::getDestructor () const {
+	return this-> _dtor;
     }
     
     void Class::setAddMethods (const std::vector <Symbol> & methods) {

@@ -241,7 +241,7 @@ namespace syntax {
 	 class_block := class_content*
 	 \endverbatim
 	 */
-	std::vector<Declaration> visitClassBlock (bool fromTrait = false);
+	std::vector<Declaration> visitClassBlock (bool fromTrait);
 	
 	/**
 	 * \brief Return a class content
@@ -254,7 +254,7 @@ namespace syntax {
 			  protect_content   
 	 \endverbatim
 	 */
-	Declaration visitClassContent (bool fromTrait = false);
+	Declaration visitClassContent (bool fromTrait, const lexing::Word & fromProtection );
 
 
 	/**
@@ -268,7 +268,7 @@ namespace syntax {
 	/**
 	 * \brief Visit a class destructor
 	 * \verbatim
-	 class_destructor := '~' 'self' '(' ')' expression
+	 class_destructor := '__dtor' '(' ')' expression
 	 \endverbatim
 	 */
 	Declaration visitClassDestructor ();
