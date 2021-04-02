@@ -644,6 +644,15 @@ namespace semantic {
 			    )
 			);
 		    return val;
+		} else if (name == __TYPEID__) {
+		    auto stringLit = syntax::String::init (
+			expression.getLocation (),
+			expression.getLocation (),
+			lexing::Word::init (expression.getLocation (), t.prettyString ()),
+			lexing::Word::eof ()
+			);
+		
+		    return this-> _context.validateValue (stringLit);
 		}
 	    }
 	    return Generator::empty ();
