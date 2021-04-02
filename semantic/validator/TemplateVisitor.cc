@@ -173,8 +173,93 @@ namespace semantic {
 	    mapper.mapping.emplace (ofv.getLocation ().getStr (), createSyntaxType (ofv.getLocation (), type));
 	    mapper.nameOrder.push_back (ofv.getLocation ().getStr ());
 	    return mapper;
-	}    
+	}
 
+
+	TemplateVisitor::Mapper TemplateVisitor::inferArgumentInner (const array_view<Expression>& params, const Expression & elem) const {
+	    match (elem) {
+		of (Var, var) {
+		    auto expr = this-> findExpression (var.getName ().getStr (), params);
+		    if (expr.isEmpty ()) {
+			return Mapper (true, 0);
+		    } else return this-> inferArgumentParamTempl (params, expr);
+		} elof (syntax::Unary, un) {
+		    return this-> inferArgumentInner (params, un.getContent ());
+		} elof (syntax::Try, tr) {
+		    return this-> inferArgumentInner (params, tr.getContent ());
+		} elof (syntax::List, lst) {
+		    Mapper mapper (true, 0);
+		    for (auto & it : lst.getParameters ()) {
+			auto param = this-> replaceAll (it, mapper.mapping);
+			auto loc_mapper = this-> inferArgumentInner (params, param);
+			if (loc_mapper.succeed) {
+			    mapper = std::move (mergeMappers (loc_mapper, mapper));
+			}
+			if (!mapper.succeed || !loc_mapper.succeed) return Mapper (false, 0);
+		    }
+		    return mapper;
+		} elof (syntax::ArrayAlloc, arr) {
+		    auto l_mapper = this-> inferArgumentInner (params, arr.getLeft ());
+		    auto r_mapper = this-> inferArgumentInner (params, arr.getSize ());
+		    return mergeMappers (l_mapper, r_mapper);
+		} elof (syntax::TemplateCall, tm) {
+		    Mapper mapper (true, 0);
+		    for (auto & it : tm.getParameters ()) {
+			auto param = this-> replaceAll (it, mapper.mapping);
+			auto loc_mapper = this-> inferArgumentInner (params, param);
+			if (loc_mapper.succeed) {
+			    mapper = std::move (mergeMappers (loc_mapper, mapper));
+			}
+			if (!mapper.succeed || !loc_mapper.succeed) return Mapper (false, 0);
+		    }
+		    return mapper;		
+		} elof (syntax::DecoratedExpression, dc) {
+		    return this-> inferArgumentInner (params, dc.getContent ());
+		} elof (syntax::FuncPtr, fPtr) {
+		    Mapper mapper (true, 0);
+		    for (auto & it : fPtr.getParameters ()) {
+			auto param = this-> replaceAll (it, mapper.mapping);
+			auto loc_mapper = this-> inferArgumentInner (params, param);
+			if (loc_mapper.succeed) {
+			    mapper = std::move (mergeMappers (loc_mapper, mapper));
+			}
+			if (!mapper.succeed || !loc_mapper.succeed) return Mapper (false, 0);
+		    }
+		    auto param = replaceAll (fPtr.getRetType (), mapper.mapping);
+		    auto loc_mapper = this-> inferArgumentInner (params, param);
+		    if (loc_mapper.succeed) {
+			mapper = std::move (mergeMappers (loc_mapper, mapper));
+		    }
+		    if (!mapper.succeed || !loc_mapper.succeed) return Mapper (false, 0);
+		    return mapper;		
+		} fo;
+	    }
+	    return Mapper (true, 0);
+	}
+
+
+	TemplateVisitor::Mapper TemplateVisitor::inferValueFromVarDecl (const array_view<Expression> & rest, const syntax::VarDecl & param) const {
+	    if (!param.getValue ().isEmpty ()) {
+		auto value = this-> _context.retreiveValue (this-> _context.validateValue (param.getValue ()));
+		Mapper mapper (true, 0);
+		if (!param.getType ().isEmpty ()) {
+		    auto loc_mapper = this-> inferArgumentInner (rest, param.getType ());
+		    if (!loc_mapper.succeed) return Mapper (false, 0);
+		    auto type = this-> _context.validateType (this-> replaceAll (param.getType (), mapper.mapping));
+		    this-> _context.verifySameType (type, value.to <Value> ().getType ());
+		    mapper = std::move (mergeMappers (mapper, loc_mapper));
+		}
+		
+		mapper.mapping.emplace (param.getName ().getStr (), createSyntaxValue (param.getName (), value));
+		mapper.nameOrder.push_back (param.getName ().getStr ());
+		mapper.score += Scores::SCORE_VAR;
+		return mapper;
+	    }
+	    
+	    return Mapper (false, 0);
+	}
+
+	
 	/**
 	 * ================================================================================
 	 * ================================================================================
@@ -237,40 +322,44 @@ namespace semantic {
 				    buf.str ());
 		return Symbol::empty ();
 	    } else {
-		auto prevMapper = Mapper {true, 0, sym.to<Template> ().getPreviousSpecialization (), sym.to<Template> ().getSpecNameOrder ()};
-		auto merge = std::move (mergeMappers (prevMapper, globalMapper));
-		try {
-		    merge.mapping = validateLambdaProtos (sym.to <Template> ().getPreviousParams (), merge.mapping);
-		    merge.nameOrder = sortNames (sym.to<Template> ().getPreviousParams (), merge.mapping);
-		} catch (Error::ErrorList &list) {
-		    list.errors.push_back (this-> partialResolutionNote (ref.getLocation (), merge));
-		    throw list;
-		}
-		
-		auto syntaxTempl = std::move (replaceSyntaxTempl (sym.to <semantic::Template> ().getParams (), merge.mapping));
-		
-		if (syntaxTempl.size () != 0) { // Rest some template that are not validated
-		    static int __tmpTemplate__ = 0;
-		    __tmpTemplate__ += 1;
-		    score = merge.score;
-		    auto tmpl = sym.to <semantic::Template> ();
-		    auto sym2 = Template::init (ref.getLocation (), "",	syntaxTempl, tmpl.getDeclaration (), tmpl.getTest (), tmpl.getParams (), true);
-		    sym2.to <Template> ().setPreviousSpecialization (merge.mapping);
-		    sym2.to <Template> ().setSpecNameOrder (merge.nameOrder);
-		    ref.getTemplateRef ().getReferent ().insertTemplate (sym2);
-		    return sym2;
-		} else {
-		    // Well i did a complex modification here, to gain .. nothing
-		    // So it is worthless to do it in implicit (TemplatePreSolution)
-		    score = merge.score;
-		    finalValidation (ref.getTemplateRef ().getReferent (), sym.to <Template> ().getPreviousParams (), merge, sym.to <semantic::Template> ().getTest ());
-		    auto tmpls = sym.to <semantic::Template> ();
-		    auto sym2 = TemplatePreSolution::init (sym.getName (), sym.getComments (), tmpls.getParams (), tmpls.getDeclaration (), merge.mapping, merge.nameOrder, ref.getTemplateRef ().getReferent ());
-		    return sym2;
-		}
+		return this-> applyMapperOnTemplate (ref.getLocation (), sym, globalMapper, score);
 	    }
 	}
 
+	Symbol TemplateVisitor::applyMapperOnTemplate (const lexing::Word & loc, const Symbol & sym, const TemplateVisitor::Mapper & mapper, int & score) const {
+	    auto prevMapper = Mapper {true, 0, sym.to<Template> ().getPreviousSpecialization (), sym.to<Template> ().getSpecNameOrder ()};
+	    auto merge = std::move (mergeMappers (prevMapper, mapper));
+	    try {
+		merge.mapping = validateLambdaProtos (sym.to <Template> ().getPreviousParams (), merge.mapping);
+		merge.nameOrder = sortNames (sym.to<Template> ().getPreviousParams (), merge.mapping);
+	    } catch (Error::ErrorList &list) {
+		list.errors.push_back (this-> partialResolutionNote (loc, merge));
+		throw list;
+	    }
+		
+	    auto syntaxTempl = std::move (replaceSyntaxTempl (sym.to <semantic::Template> ().getParams (), merge.mapping));
+		
+	    if (syntaxTempl.size () != 0) { // Rest some template that are not validated
+		static int __tmpTemplate__ = 0;
+		__tmpTemplate__ += 1;
+		score = merge.score;
+		auto tmpl = sym.to <semantic::Template> ();
+		auto sym2 = Template::init (loc, "", syntaxTempl, tmpl.getDeclaration (), tmpl.getTest (), tmpl.getParams (), true);
+		sym2.to <Template> ().setPreviousSpecialization (merge.mapping);
+		sym2.to <Template> ().setSpecNameOrder (merge.nameOrder);
+		sym.getReferent ().insertTemplate (sym2);
+		return sym2;
+	    } else {
+		// Well i did a complex modification here, to gain .. nothing
+		// So it is worthless to do it in implicit (TemplatePreSolution)
+		score = merge.score;
+		finalValidation (sym.getReferent (), sym.to <Template> ().getPreviousParams (), merge, sym.to <semantic::Template> ().getTest ());
+		auto tmpls = sym.to <semantic::Template> ();
+		auto sym2 = TemplatePreSolution::init (sym.getName (), sym.getComments (), tmpls.getParams (), tmpls.getDeclaration (), merge.mapping, merge.nameOrder, sym.getReferent ());
+		return sym2;
+	    }	    
+	}
+	
 	TemplateVisitor::Mapper TemplateVisitor::validateParamTemplFromExplicit (const array_view <syntax::Expression> & syntaxTempl, const syntax::Expression & param, const array_view <Generator> & values, int & consumed) const {
 	    match (param) {
 		of (Var, var) {
@@ -471,16 +560,7 @@ namespace semantic {
 	    return mapper;
 	}
 
-	TemplateVisitor::Mapper TemplateVisitor::inferArgumentInner (const array_view<Expression> & rest, const Expression & param) const {
-	    return Mapper (false, 0);
-	}
-
-	TemplateVisitor::Mapper TemplateVisitor::inferValueFromVarDecl (const array_view<Expression> & rest, const syntax::VarDecl & param) const {
-	    return Mapper (false, 0);
-	}
-
-	
-	
+             	
 	/**
 	 * ================================================================================
 	 * ================================================================================

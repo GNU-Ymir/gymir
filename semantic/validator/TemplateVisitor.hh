@@ -181,6 +181,11 @@ namespace semantic {
 	     */
 	    semantic::Symbol validateFromExplicit (const generator::TemplateRef & ref, const std::vector <generator::Generator> & params, int & score) const;
 
+	    /**
+	     * Apply a successful mapper on a symbol to generate the TemplatePreSolution (or another template if the validation is not full)
+	     */
+	    semantic::Symbol applyMapperOnTemplate (const lexing::Word & loc, const semantic::Symbol & sym, const Mapper & mapper, int & score) const;
+	    
 
 	    Mapper validateParamTemplFromExplicit (const array_view <syntax::Expression> & paramTempl, const syntax::Expression & param, const array_view <generator::Generator> & values, int & consumed) const;
 
