@@ -19,11 +19,19 @@ namespace semantic {
 	using namespace Ymir;
 
 	void Visitor::validateModule (const semantic::Module & mod) {
+	    std::list <Error::ErrorMsg> errors;
 	    if (!mod.isExtern ()) {
 		const std::vector <Symbol> & syms = mod.getAllLocal ();
 		for (auto & it : syms) { // a module is a just a list of symbol
-		    validate (it); // we simple validate all the symbol inside the module
+		    try {
+			validate (it); // we simple validate all the symbol inside the module
+		    } catch (Error::ErrorList lst) {
+			errors.insert (errors.end (), lst.errors.begin (), lst.errors.end ());
+		    }
 		}
+	    }
+	    if (errors.size () != 0) {
+		throw Error::ErrorList {errors};
 	    }
 	}
 	
