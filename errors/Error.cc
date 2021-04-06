@@ -11,7 +11,7 @@ using namespace lexing;
 namespace Ymir {
     namespace Error {
 
-	unsigned long MAX_ERROR_DEPTH = 3;	
+	unsigned long MAX_ERROR_DEPTH = 4;	
 	
 	void ErrorList::print () const {
 	    Ymir::OutBuffer buf;
