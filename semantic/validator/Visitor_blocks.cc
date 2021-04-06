@@ -57,7 +57,7 @@ namespace semantic {
 		this-> discardAllLocals (); 
 	    }
 	    
-	    this-> quitBlock (errors);
+	    this-> quitBlock (errors.size () == 0, errors);
 	    
 	    auto ret = Value::initBrRet (Block::init (valueLoc, type, values).to <Value> (), breaker, returner, brLoc, rtLoc);	    
 	    Generator catchVar (Generator::empty ()), catchInfo (Generator::empty ()), catchAction (Generator::empty ());
@@ -150,7 +150,7 @@ namespace semantic {
 	    
 	    
 	    this-> discardAllLocals (); // We discard the var #catch
-	    this-> quitBlock (errors);	    
+	    this-> quitBlock (errors.size () == 0, errors);	    
 	}
 
 	void Visitor::validateScopes (const syntax::Block & block, std::vector <Generator> & onExit, std::vector <Generator> & onSuccess, std::vector <Generator> & onFailure, bool & returner, bool & breaker, bool hasThrowers, std::list <Error::ErrorMsg> & errors) {	    	    

@@ -64,7 +64,7 @@ namespace semantic {
 	    }
 		
 	    this-> _context.discardAllLocals (); // we don't use the fields, that's normal, so we discard them
-	    this-> _context.quitBlock (); // no error possible, no need to catch		
+	    this-> _context.quitBlock (errors.size () == 0); // no error possible, no need to catch		
 		
 	    this-> _context.exitForeign ();	       
 	    this-> _context.popReferent ("validateStruct");

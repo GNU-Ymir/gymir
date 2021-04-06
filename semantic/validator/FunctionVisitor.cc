@@ -38,7 +38,7 @@ namespace semantic {
 	    auto body = this-> validateBody (func.getName (), func.getRealName (), function.getBody (), throwers, retType, needFinalReturn, errors); 
 	    
 	    try { // we enclose that in a try catch, because some vars may be unused
-		this-> _context.quitBlock ();
+		this-> _context.quitBlock (errors.size () == 0);
 	    } catch (Error::ErrorList &list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 	
@@ -238,7 +238,7 @@ namespace semantic {
 	    
 		try {
 		    this-> _context.discardAllLocals ();
-		    this-> _context.quitBlock ();
+		    this-> _context.quitBlock (errors.size () == 0);
 		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 	
@@ -300,7 +300,7 @@ namespace semantic {
 		
 		    try {
 			this-> _context.discardAllLocals ();
-			this-> _context.quitBlock ();
+			this-> _context.quitBlock (errors.size () == 0);
 		    } catch (Error::ErrorList &list) {
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    } 	    
@@ -350,7 +350,7 @@ namespace semantic {
 	    
 	    try {
 		this-> _context.discardAllLocals ();
-		this-> _context.quitBlock ();
+		this-> _context.quitBlock (errors.size () == 0);
 	    } catch (Error::ErrorList &list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 	    
@@ -591,7 +591,7 @@ namespace semantic {
 	    this-> verifyThrowing (sym.getName (), sym.getRealName (), body.getThrowers (), throwers, errors);
 	    	    
 	    try {
-		this-> _context.quitBlock ();
+		this-> _context.quitBlock (errors.size () == 0);
 	    } catch (Error::ErrorList &list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 	    
@@ -843,7 +843,7 @@ namespace semantic {
 	    {
 		try {
 		    this-> _context.discardAllLocals ();
-		    this-> _context.quitBlock ();
+		    this-> _context.quitBlock (errors.size () == 0);
 		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
@@ -921,7 +921,7 @@ namespace semantic {
 		if (errors.size () != 0) {
 		    this-> _context.discardAllLocals ();
 		}		    
-		this-> _context.quitBlock ();
+		this-> _context.quitBlock (errors.size () == 0);
 	    } catch (Error::ErrorList &list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 	
@@ -1010,7 +1010,7 @@ namespace semantic {
 		if (errors.size () != 0) {
 		    this-> _context.discardAllLocals ();
 		}		    
-		this-> _context.quitBlock ();
+		this-> _context.quitBlock (errors.size () == 0);
 	    } catch (Error::ErrorList &list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 	

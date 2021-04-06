@@ -81,7 +81,7 @@ namespace semantic {
 		    if (errors.size () != 0)
 			this-> _context.discardAllLocals ();
 			
-		    this-> _context.quitBlock ();
+		    this-> _context.quitBlock (errors.size () == 0);
 		} catch (Error::ErrorList &list) {			
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
@@ -674,7 +674,7 @@ namespace semantic {
 		    if (errors.size () != 0)
 			this-> _context.discardAllLocals ();
 			
-		    this-> _context.quitBlock ();
+		    this-> _context.quitBlock (errors.size () == 0);
 		} catch (Error::ErrorList &list) {			
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 

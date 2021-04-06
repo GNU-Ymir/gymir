@@ -180,11 +180,8 @@ namespace semantic {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    }
 
-	    try {
-		if (errors.size () != 0)
-		discardAllLocals ();
-		
-		quitBlock ();
+	    try {		
+		quitBlock (errors.size () == 0);
 	    } catch (Error::ErrorList &list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    }

@@ -326,7 +326,7 @@ namespace semantic {
 			    for (auto & it : list.errors) {
 				note.addNote (it);
 			    }
-			    errors.push_back (note);
+			    errors.push_back (note);			    
 			    succeed = false;
 			}
 
@@ -399,7 +399,7 @@ namespace semantic {
 			Visitor::__CALL_NB_RECURS__ -= 1;
 		    }
 		    		    
-		    if (errors.size () == 0) {
+		    if (aux.size () != 0 || syms.size () != 0) {
 			
 			if (syms.size () != 0) {
 			    ret = this-> validateMultSym (value.getLocation (), syms);
@@ -408,14 +408,13 @@ namespace semantic {
 			    else aux.push_back (ret);
 			}
 			
-			if (aux.size () == 1)
-			ret = aux [0];
-			else ret = MultSym::init (value.getLocation (), aux);
+			if (aux.size () == 1) {
+			    ret = aux [0];
+			} else ret = MultSym::init (value.getLocation (), aux);
 		    		    
 			if (!ret.isEmpty ())
 			return ret;
 		    }
-		    
 		}
 	    }
 

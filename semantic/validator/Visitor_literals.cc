@@ -319,6 +319,7 @@ namespace semantic {
 	Generator Visitor::validateList (const syntax::List & list) {
 	    if (list.isArray ()) return validateArray (list);
 	    if (list.isTuple ()) return validateTuple (list);
+	    
 	    println (list.prettyString ());
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Generator::empty ();
@@ -430,7 +431,7 @@ namespace semantic {
 
 	    {
 		try {
-		    quitBlock ();
+		    quitBlock (errors.size () == 0);
 		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
@@ -533,7 +534,7 @@ namespace semantic {
 	    
 	    {
 		try { // We want to guarantee that we exit the foreign at the end of this function 
-		    quitBlock ();
+		    quitBlock (errors.size () == 0);
 		} catch (Error::ErrorList &list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 

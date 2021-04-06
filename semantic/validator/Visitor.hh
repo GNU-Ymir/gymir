@@ -1121,12 +1121,12 @@ namespace semantic {
 	    /**
 	     * Exit a scope
 	     */
-	    void quitBlock ();
+	    void quitBlock (bool warnUnused);
 
 	    /**
 	     * Exit the scope, but return the errors inside errors,
 	     */
-	    void quitBlock (std::list <Ymir::Error::ErrorMsg> & errors);
+	    void quitBlock (bool warnUnused, std::list <Ymir::Error::ErrorMsg> & errors);
 	    
 	    /**
 	     * Ignore all the local var declared in the current block

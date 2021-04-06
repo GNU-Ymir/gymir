@@ -211,7 +211,7 @@ namespace semantic {
 		{
 		    try {
 			syms = this-> discardAllLocals ();
-			this-> quitBlock ();
+			this-> quitBlock (errors.size () == 0);
 		    } catch (Error::ErrorList &list) {
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    } 
