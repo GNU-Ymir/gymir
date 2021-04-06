@@ -105,21 +105,22 @@ namespace semantic {
 
     void ModRef::getLocal (const std::string & name, std::vector <Symbol> & rets) const {
 	// This is a leaf, we have the right to access to the data of this module
+	
+	this-> _table-> get (name, rets);
 	auto real_name = this-> getRealName ();
 	auto mod = Symbol::getModuleByPath (real_name);
 	mod.getLocal (name, rets);
-	this-> _table-> get (name, rets);
 	
 	Symbol::mergeEqSymbols (rets);
     }
 
     void ModRef::getLocalPublic (const std::string & name, std::vector <Symbol> & rets) const {
-	// This is a leaf, we have the right to access to the data of this module	
+	// This is a leaf, we have the right to access to the data of this module
+	this-> _table-> getPublic (name, rets);
 	auto real_name = this-> getRealName ();
 	auto  mod = Symbol::getModuleByPath (real_name);
 	mod.getLocalPublic (name, rets);
-
-	this-> _table-> getPublic (name, rets);
+	
 	Symbol::mergeEqSymbols (rets);
     }
 

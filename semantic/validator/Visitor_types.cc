@@ -101,6 +101,7 @@ namespace semantic {
 		val = validateValue (type, true, true, false, true); // Can't make a implicit call validation if we are looking for a type
 	    }
 
+	    
 	    if (val.is <ClassRef> () || val.is <generator::Class> ()) {
 		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (FORGET_TOKEN), Token::AND);
 		Ymir::Error::occurAndNote (type.getLocation (), note, ExternalError::get (USE_AS_TYPE));
@@ -111,7 +112,6 @@ namespace semantic {
 	    return StructRef::init (type.getLocation (), val.to <generator::Struct> ().getRef ());
 	    
 	    // if (val.is <StructCst> ()) return val.to <StructCst> ().getStr ();, Why?
-
 	    Ymir::Error::occur (type.getLocation (), ExternalError::get (USE_AS_TYPE));
 	    return Generator::empty ();	    	   
 	}

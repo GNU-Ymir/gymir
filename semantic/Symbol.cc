@@ -584,9 +584,14 @@ namespace semantic {
 	std::vector <Symbol> result;
 	result.reserve (multSym.size ());
 	for (auto & it : multSym) {
+	    if (it.is <Module> () && it.to <Module> ().isGlobal ()) {
+		it = it.to <Module> ().getModRef ();
+	    } // we cant return module, we have to get their references (if they are global)
+	    
 	    bool add = true;
-	    for (auto & zt : result)
+	    for (auto & zt : result) {
 		if (zt.isSameRef (it)) { add = false; break; }
+	    }
 	    
 	    if (add)
 		result.push_back (it);

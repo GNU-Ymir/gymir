@@ -101,14 +101,15 @@ namespace semantic {
 		match (gen) {
 		    of (ModuleAccess, md ATTRIBUTE_UNUSED) {
 			if (this-> _context.getModuleContext (gen.to <ModuleAccess> ().getModRef ())) {
-			    auto elems = gen.to <ModuleAccess> ().getLocal (right);		    
+			    auto elems = gen.to <ModuleAccess> ().getLocal (right);
 			    syms.insert (syms.end (), elems.begin (), elems.end ());
 			} else {
 			    auto elems = gen.to <ModuleAccess> ().getLocalPublic (right);		    
 			    if (elems.size () == 0) {
 				elems = gen.to <ModuleAccess> ().getLocal (right);
-				for (auto & it : elems)
-				errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), it.getName (), right));
+				for (auto & it : elems) {
+				    errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), it.getName (), right));
+				}
 			    }
 			    syms.insert (syms.end (), elems.begin (), elems.end ());
 			}
@@ -169,7 +170,7 @@ namespace semantic {
 	    if (gens.size () == 0) {
 		this-> error (expression, mult.clone (), expression.getRight (), errors);
 	    }
-	    
+
 	    if (gens.size () == 1) return gens [0];
 	    else return MultSym::init (expression.getLocation (), gens);
 	}
