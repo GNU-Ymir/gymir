@@ -141,6 +141,10 @@ namespace semantic {
 	    } else if (mod.isGlobal ()) {
 		if (modules.size () == 1) {
 		    Symbol::registerModule (modules [0], ret);
+		} else if (modules.size () == 0) {
+		    auto path = Path {ret.to <Module> ().getRealName (), "::"};
+		    auto modules = path.getFiles ();	   		    
+		    Symbol::registerModule (modules [0], ret);
 		}
 	    } else getReferent ().insert (ret);
 	    
