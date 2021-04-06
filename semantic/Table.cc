@@ -31,7 +31,7 @@ namespace semantic {
 	return Symbol {this-> _attached};
     }
     
-    void Table::insert (const Symbol & sym) {
+    void Table::insert (const Symbol & sym) {	
 	Symbol toInsert = sym;
 	toInsert.setReferent (Symbol {this-> _attached});
 	auto it = this-> _syms.find (toInsert.getName ().getStr ());

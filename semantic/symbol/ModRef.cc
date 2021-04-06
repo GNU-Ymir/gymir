@@ -144,7 +144,7 @@ namespace semantic {
     
     std::string ModRef::formatTree (int i) const {
 	Ymir::OutBuffer buf;	
-	buf.writefln ("%*- %", i, "|\t", this-> getModName ());
+	buf.writefln ("%*- %", i, "|\t", this-> getRealName ());
 	for (auto inner : this-> _table-> getAll ())
 	    buf.write (inner.formatTree (i + 1));
 	return buf.str ();

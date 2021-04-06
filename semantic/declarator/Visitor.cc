@@ -90,6 +90,7 @@ namespace semantic {
 
 	semantic::Symbol Visitor::visitModule (const syntax::Module & mod) {
 	    auto path = Path {mod.getLocation ().getStr (), "::"};
+	    auto modules = path.getFiles ();	    
 	    bool isTrusted = path.startWith (Path {CoreNames::get (STD_MODULE), "::"}) || path.startWith (Path {CoreNames::get (CORE_MODULE), "::"}) || path.startWith ({CoreNames::get (ETC_MODULE), "::"});
 	    if (mod.isGlobal ()) {
 		auto file_location = Path {mod.getLocation ().getFilename ()}.stripExtension ();
@@ -102,9 +103,18 @@ namespace semantic {
 		}
 	    }
 
-
-	    auto semMod = Module::init (lexing::Word::init (mod.getLocation (), path.fileName ().toString ()), mod.getComments (), this-> _isWeak, this-> _isTrusted || State::instance ().isStandalone () || isTrusted, mod.isGlobal ());
-	    pushReferent (semMod);	    
+	    if (mod.isGlobal () && modules.size () != 0) {
+		auto sym = Symbol::getModuleByPath (path.fileName ().toString ());
+		if (!sym.isEmpty ()) {
+		    pushReferent (sym);
+		} else {
+		    auto semMod = Module::init (lexing::Word::init (mod.getLocation (), path.fileName ().toString ()), mod.getComments (), this-> _isWeak, this-> _isTrusted || State::instance ().isStandalone () || isTrusted, mod.isGlobal ());
+		    pushReferent (semMod);
+		}
+	    } else {
+		auto semMod = Module::init (lexing::Word::init (mod.getLocation (), path.fileName ().toString ()), mod.getComments (), this-> _isWeak, this-> _isTrusted || State::instance ().isStandalone () || isTrusted, mod.isGlobal ());
+		pushReferent (semMod);
+	    }
 
 	    if (mod.isGlobal () && !State::instance ().isStandalone ()) {
 		importAllCoreFiles ();
@@ -115,7 +125,6 @@ namespace semantic {
 	    }
 
 	    auto ret = popReferent ();
-	    auto modules = path.getFiles ();	    
 	    
 	    if (mod.isGlobal () && modules.size () > 1) {
 		auto glob = Symbol::getModule (modules [0]);
@@ -130,8 +139,9 @@ namespace semantic {
 		Symbol::registerModule (modules [0], glob);		
 		return ret;
 	    } else if (mod.isGlobal ()) {
-		if (modules.size () == 1) 
+		if (modules.size () == 1) {
 		    Symbol::registerModule (modules [0], ret);
+		}
 	    } else getReferent ().insert (ret);
 	    
 	    return ret;
@@ -150,7 +160,8 @@ namespace semantic {
 			}
 		    }
 		}
-		getReferent ().insertOrReplace (last);		
+
+		getReferent ().insertOrReplace (last);
 	    } else if (names.size () != 0) {
 		auto symbols = getReferent ().getLocal (names [0]);
 		for (auto sym : symbols) {
@@ -163,6 +174,7 @@ namespace semantic {
 			return;
 		    }
 		}
+		
 		auto semMod = Module::init (lexing::Word::init (loc, names [0]), "", this-> _isWeak, this-> _isTrusted || State::instance ().isStandalone (), true);
 		pushReferent (semMod);
 		std::vector<std::string> modules (names.begin () + 1, names.end ());
