@@ -31,6 +31,10 @@ namespace semantic {
 	Ymir::Error::halt (Ymir::ExternalError::get (Ymir::INSERT_NO_TABLE));
     }
 
+    void ISymbol::insertOrReplace (const Symbol &) {
+	Ymir::Error::halt (Ymir::ExternalError::get (Ymir::INSERT_NO_TABLE));
+    }
+
     void ISymbol::insertTemplate (const Symbol &) {
 	Ymir::Error::halt (Ymir::ExternalError::get (Ymir::INSERT_NO_TABLE));
     }
@@ -188,6 +192,15 @@ namespace semantic {
 	}
     }
 
+    void Symbol::insertOrReplace (const Symbol & sym) {
+	if (this-> _value != nullptr) {
+	    this-> _value-> insertOrReplace (sym);
+	} else {
+	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	}
+    }
+
+    
     void Symbol::insertTemplate (const Symbol & sym) {
 	if (this-> _value != nullptr) {
 	    

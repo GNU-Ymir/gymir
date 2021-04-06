@@ -103,8 +103,8 @@ namespace semantic {
 	    }
 
 
-	    pushReferent (Module::init (lexing::Word::init (mod.getLocation (), path.fileName ().toString ()), mod.getComments (), this-> _isWeak, this-> _isTrusted || State::instance ().isStandalone () || isTrusted));	    
-	    getReferent ().insert (ModRef::init (mod.getLocation (), mod.getComments (), path.getFiles (), this-> _isWeak, this-> _isTrusted || State::instance ().isStandalone () || isTrusted));
+	    auto semMod = Module::init (lexing::Word::init (mod.getLocation (), path.fileName ().toString ()), mod.getComments (), this-> _isWeak, this-> _isTrusted || State::instance ().isStandalone () || isTrusted, mod.isGlobal ());
+	    pushReferent (semMod);	    
 
 	    if (mod.isGlobal () && !State::instance ().isStandalone ()) {
 		importAllCoreFiles ();
@@ -120,7 +120,7 @@ namespace semantic {
 	    if (mod.isGlobal () && modules.size () > 1) {
 		auto glob = Symbol::getModule (modules [0]);
 		if (glob.isEmpty ()) {
-		    glob = Module::init (lexing::Word::init (mod.getLocation (), modules [0]), mod.getComments (), this-> _isWeak, this-> _isTrusted || State::instance ().isStandalone ());
+		    glob = Module::init (lexing::Word::init (mod.getLocation (), modules [0]), mod.getComments (), this-> _isWeak, this-> _isTrusted || State::instance ().isStandalone (), mod.isGlobal ());
 		    pushReferent (glob);
 		} else pushReferent (glob);
 
@@ -139,7 +139,18 @@ namespace semantic {
 
 	void Visitor::createSubModules (const lexing::Word & loc, const std::vector <std::string> & names, semantic::Symbol last) {
 	    if (names.size () == 1) {
-		getReferent ().insert (last);
+		auto symbols = getReferent ().getLocal (names [0]);
+		for (auto sym : symbols) {
+		    if (sym.is<Module> ()) {
+			for (auto &it : sym.to <Module> ().getAllLocal ()) {
+			    last.insert (it);
+			}
+			for (auto & it : sym.getUsedSymbols ()) {
+			    last.use (it.first, it.second);
+			}
+		    }
+		}
+		getReferent ().insertOrReplace (last);		
 	    } else if (names.size () != 0) {
 		auto symbols = getReferent ().getLocal (names [0]);
 		for (auto sym : symbols) {
@@ -148,11 +159,12 @@ namespace semantic {
 			std::vector<std::string> modules (names.begin () + 1, names.end ());
 			createSubModules (loc, modules, last);
 			auto mod = popReferent ();
-			getReferent ().insert (mod);
+			getReferent ().insertOrReplace (mod);
 			return;
 		    }
 		}
-		pushReferent (Module::init (lexing::Word::init (loc, names [0]), "", this-> _isWeak, this-> _isTrusted || State::instance ().isStandalone ()));
+		auto semMod = Module::init (lexing::Word::init (loc, names [0]), "", this-> _isWeak, this-> _isTrusted || State::instance ().isStandalone (), true);
+		pushReferent (semMod);
 		std::vector<std::string> modules (names.begin () + 1, names.end ());
 		createSubModules (loc, modules, last);
 		auto mod = popReferent ();
@@ -243,7 +255,8 @@ namespace semantic {
 	}    
 
 	semantic::Symbol Visitor::visitBlock (const syntax::DeclBlock &  block) {
-	    pushReferent (Module::init (block.getLocation (), block.getComments (), this-> _isWeak, this-> _isTrusted || State::instance ().isStandalone ()));
+	    pushReferent (Module::init (block.getLocation (), block.getComments (), this-> _isWeak, this-> _isTrusted || State::instance ().isStandalone (), false));
+	    
 	    // A declaration block is just a list of declaration, we do not enter a new referent
 	    for (syntax::Declaration decl : block.getDeclarations ()) {
 		if (block.getDeclarations ().size () == 1)

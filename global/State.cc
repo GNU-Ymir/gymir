@@ -56,6 +56,10 @@ namespace global {
 
     void State::activateStandalone (bool stand) {
 	this-> _isStandalone = stand;
+	if (stand) {
+	    this-> _includeDir.erase (Ymir::Path::build (this-> _prefixPath, __includeInPrefix__).toString ());
+	    this-> _corePath = "";
+	}
     }
     
     bool State::isStandalone () const {
@@ -70,8 +74,10 @@ namespace global {
     
     void State::setPrefix (const std::string & path) {
 	this-> _prefixPath = path;
-	this-> _includeDir.emplace (Ymir::Path::build (path, __includeInPrefix__).toString ());	
-	this-> _corePath = Ymir::Path::build (Ymir::Path::build (path, __includeInPrefix__), "core").toString ();
+	if (!this-> _isStandalone) {
+	    this-> _includeDir.emplace (Ymir::Path::build (path, __includeInPrefix__).toString ());	
+	    this-> _corePath = Ymir::Path::build (Ymir::Path::build (path, __includeInPrefix__), "core").toString ();
+	}
     }
 
     const std::string & State::getCorePath () const {

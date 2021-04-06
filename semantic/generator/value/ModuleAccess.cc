@@ -43,6 +43,9 @@ namespace semantic {
 	}
 
 	std::string ModuleAccess::prettyString () const {
+	    if ((Symbol {this-> _ref}).is<ModRef> ()) {		
+		return Ymir::format ("ref %", (Symbol {this-> _ref}).getRealName ());
+	    } 
 	    return Ymir::format ("%", (Symbol {this-> _ref}).getRealName ());
 	}
 	

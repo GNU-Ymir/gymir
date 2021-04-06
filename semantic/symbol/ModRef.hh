@@ -32,6 +32,8 @@ namespace semantic {
 	static Symbol init (const lexing::Word & loc, const std::string & comments, const std::vector <std::string> & names, bool isWeak, bool isTrusted);
 
 	void insert (const Symbol & sym) override;
+	
+	void insertOrReplace (const Symbol & sym) override;
 
 	void insertTemplate (const Symbol & sym) override;
 	

@@ -52,7 +52,7 @@ namespace semantic {
 	
 	this-> _all.push_back (sym);
     }
-
+    
     void Table::insertTemplate (const Symbol & sym) {
 	Symbol toInsert = sym;
 	toInsert.setReferent (Symbol {this-> _attached});
@@ -63,14 +63,13 @@ namespace semantic {
 	return this-> _templates;
     }
     
-    // void Table::replace (const Symbol & sym) {
-    // 	Ymir::Error::halt ("ici", "");
-    // 	this-> _syms.erase (sym.getName ().getStr ());
-    // 	this-> _public_syms.erase (sym.getName ().getStr ());
-    // 	this-> insert (sym);
-    // 	this-> recomputeAll ();
-    // }
-    
+    void Table::replace (const Symbol & sym) {
+    	this-> _syms.erase (sym.getName ().getStr ());
+    	this-> _public_syms.erase (sym.getName ().getStr ());
+    	this-> insert (sym);
+    	this-> recomputeAll ();
+    }
+       
     void Table::get (const std::string & name, std::vector <Symbol> & rets) const {
 	auto it = this-> _syms.find (name);
 	if (it != this-> _syms.end ()) {
@@ -90,6 +89,7 @@ namespace semantic {
     }
 
     void Table::recomputeAll () {
+	this-> _all.clear ();
 	for (auto & it : this-> _syms) {
 	    this-> _all.insert (this-> _all.end (), it.second.begin (), it.second.end ());
 	}

@@ -79,12 +79,12 @@ namespace semantic {
 	 */
 	const std::vector<Symbol> & getTemplates () const;
 	
-	// /**
-	//  * \brief Insert a new symbol in the table
-	//  * \brief if the symbol already exists, it will replace it
-	//  * \param sym the symbol to insert
-	//  */
-	// void replace (const Symbol & sym);
+	/**
+	 * \brief Insert a new symbol in the table
+	 * \brief if the symbol already exists, it will replace it
+	 * \param sym the symbol to insert
+	 */
+	void replace (const Symbol & sym);
 	
 	/**
 	 * \brief Get a symbol from this table

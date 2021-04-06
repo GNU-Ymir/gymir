@@ -74,6 +74,13 @@ namespace semantic {
 	virtual void insert (const Symbol & sym);
 
 	/**
+	 * \brief Insert a new symbol in the current one
+	 * \brief If the symbol identifier already exists it is replace
+	 * \param sym the symbol to insert
+	 */
+	virtual void insertOrReplace (const Symbol & sym);
+	
+	/**
 	 * \brief Insert a template symbol 
 	 * \brief This is working for some kind of symbol only
 	 * \brief Unlike classic insert, a template symbol cannot be retreived
@@ -285,6 +292,11 @@ namespace semantic {
 	 */
 	void insert (const Symbol & sym);
 
+	/**
+	 * Proxy function for symbol
+	 */
+	void insertOrReplace (const Symbol & sym);
+	
 	/**
 	 * Proxy function for symbol
 	 */

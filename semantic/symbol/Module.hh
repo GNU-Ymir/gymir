@@ -19,6 +19,14 @@ namespace semantic {
 
 	/** set to true, if the module was imported  */
 	bool _isExtern;
+
+	/**
+	 * The mod ref of the module
+	 */
+	Symbol _modRef;
+
+	
+	bool _isGlobal;
 	
     private :
 
@@ -26,15 +34,17 @@ namespace semantic {
 
 	Module ();
 	
-	Module (const lexing::Word & name, const std::string & comments, bool isWeak, bool isTrusted);
+	Module (const lexing::Word & name, const std::string & comments, bool isWeak, bool isTrusted, bool isGlobal);
 
 	Module (const Module & mod);
 	
     public :
 
-	static Symbol init (const lexing::Word & name, const std::string & comments, bool isWeak, bool isTrusted);
+	static Symbol init (const lexing::Word & name, const std::string & comments, bool isWeak, bool isTrusted, bool isGlobal);
 	
 	void insert (const Symbol & sym) override;
+
+	void insertOrReplace (const Symbol & sym) override;
 
 	void insertTemplate (const Symbol & sym) override;
 
@@ -64,10 +74,14 @@ namespace semantic {
 	 */
 	void isExtern (bool is);
 
+	bool isGlobal () const;
+	
 	/**
 	 * \return a formated string of the hierarchy of the modules and all declared symbols
 	 */
 	std::string formatTree (int padd) const override;
+
+	const Symbol & getModRef () const;
 	
     };
     
