@@ -319,7 +319,7 @@ namespace semantic {
 	Generator Visitor::validateList (const syntax::List & list) {
 	    if (list.isArray ()) return validateArray (list);
 	    if (list.isTuple ()) return validateTuple (list);
-	    
+	    println (list.prettyString ());
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Generator::empty ();
 	}

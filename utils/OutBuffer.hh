@@ -16,6 +16,18 @@ namespace lexing {
     struct Word;
 }
 
+namespace syntax {
+    class Expression;
+}
+
+namespace semantic {
+    namespace generator {
+	class Generator;	
+    }
+
+    class Symbol;
+}
+
 typedef char ubyte ;
 
 namespace Ymir {
@@ -242,6 +254,12 @@ namespace Ymir {
 	void write_ (double);
 		
 	void write_ (bool);
+
+	void write_ (const syntax::Expression & expr);
+
+	void write_ (const semantic::generator::Generator & gen);
+
+	void write_ (const semantic::Symbol & sym);
 	
 	void throwError ();
 

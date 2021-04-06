@@ -2,6 +2,9 @@
 #include <ymir/utils/Memory.hh>
 #include <ymir/lexing/Word.hh>
 #include <cstring>
+#include <ymir/syntax/Expression.hh>
+#include <ymir/semantic/Generator.hh>
+#include <ymir/semantic/Symbol.hh>
 
 namespace Ymir {    
    
@@ -145,6 +148,18 @@ namespace Ymir {
     }
     
     void OutBuffer::write () {}
+
+    void OutBuffer::write_ (const syntax::Expression & expr) {
+	this-> write (expr.prettyString ());
+    }
+
+    void OutBuffer::write_ (const semantic::generator::Generator & gen) {
+	this-> write (gen.prettyString ());
+    }
+
+    void OutBuffer::write_ (const semantic::Symbol & sym) {
+	this-> write (sym.getRealName ());
+    }
     
     void OutBuffer::throwError () {
 	//Ymir::Error::assert ("error");

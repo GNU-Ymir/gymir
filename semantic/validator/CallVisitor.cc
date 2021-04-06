@@ -24,7 +24,7 @@ namespace semantic {
 	generator::Generator CallVisitor::validate (const syntax::MultOperator & expression) {
 	    Generator left (Generator::empty ());
 	    std::list <Ymir::Error::ErrorMsg> errors;
-	    
+	    println (expression.getLeft ().prettyString (), " ", expression.getLeft ().getLocation ());
 	    try { // First we try to validate the left operand
 		left = this-> _context.validateValue (expression.getLeft (), false, true);
 	    } catch (Error::ErrorList &list) {

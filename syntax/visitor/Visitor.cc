@@ -1922,7 +1922,7 @@ namespace syntax {
 		this-> _lex.rewind ();
 		do {
 		    params.push_back (visitExpression ());
-		    token = this-> _lex.next ();
+		    token = this-> _lex.next ({Token::COMA, Token::RPAR});
 		} while (token == Token::COMA);
 	    }
 	    
