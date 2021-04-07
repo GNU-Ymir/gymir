@@ -56,7 +56,8 @@ namespace semantic {
     void Module::get (const std::string & name, std::vector <Symbol>& rets) const {
 	getReferent ().get (name, rets);
 	this-> _table-> get (name, rets);
-	if (this-> _isGlobal && name == this-> getName ().getStr ()) {
+	if (// this-> _isGlobal && 
+	    name == this-> getName ().getStr ()) {
 	    rets.push_back (this-> _modRef);
 	}
     }
@@ -64,21 +65,24 @@ namespace semantic {
     void Module::getPublic (const std::string & name, std::vector <Symbol> & rets) const {
 	getReferent ().getPublic (name, rets);
 	this-> _table-> getPublic (name, rets);
-	if (this-> _isGlobal && name == this-> getName ().getStr ()) {
+	if (// this-> _isGlobal &&
+	    name == this-> getName ().getStr ()) {
 	    rets.push_back (this-> _modRef);
 	}
     }
         
     void Module::getLocal (const std::string & name, std::vector<Symbol> & rets) const {
 	this-> _table-> get (name, rets);
-	if (this-> _isGlobal && name == this-> getName ().getStr ()) {
+	if (// this-> _isGlobal && 
+	    name == this-> getName ().getStr ()) {
 	    rets.push_back (this-> _modRef);
 	}
     }
 
     void Module::getLocalPublic (const std::string & name, std::vector <Symbol> & rets) const {
 	this-> _table-> getPublic (name, rets);
-	if (this-> _isGlobal && name == this-> getName ().getStr ()) {
+	if (// this-> _isGlobal && 
+	    name == this-> getName ().getStr ()) {
 	    rets.push_back (this-> _modRef);
 	}
     }
