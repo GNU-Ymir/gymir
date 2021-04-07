@@ -47,7 +47,7 @@ namespace semantic {
 	    
 	    if (right.is <ClassPtr> ()) right = right.to <Type>().getInners ()[0];
 	    if (left.is <ClassPtr> ()) left = left.to <Type>().getInners ()[0];
-	    
+	    	    
 	    if (right.is <ClassRef> () && !right.to <ClassRef> ().getRef ().to <semantic::Class> ().getAncestor ().isEmpty ()) {
 		auto ancestor = right.to <ClassRef> ().getAncestor ();
 		while (!ancestor.isEmpty ()) {

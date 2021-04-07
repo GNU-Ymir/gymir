@@ -763,6 +763,7 @@ namespace semantic {
 		bool isRef = false;
 		bool dmut = false;
 		varType = this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), varType, isRef, isMutable, dmut);
+		
 		// value is typed exception, this will pass if varType is an heir 
 		this-> _context.verifyCompatibleType (var.getLocation (), varType.getLocation (), value.to <Value> ().getType (), varType, true);
 
@@ -824,7 +825,9 @@ namespace semantic {
 		    if (!found) Ymir::Error::occur (var.getLocation (), ExternalError::get (USELESS_CATCH), varType.prettyString ());;		    
 		}
 		
-	    } catch (Error::ErrorList list) {		
+	    } catch (Error::ErrorList list) {
+		println ("ici ?");
+		list.print ();
 		errors = list.errors;
 		errors.back ().addNote (Error::createNote (var.getLocation (), ExternalError::get (IN_MATCH_DEF)));
 	    } 

@@ -31,22 +31,22 @@ namespace semantic {
 	    if (validated && cls.to <semantic::Class> ().getGenerator ().is <generator::Class> ()) {
 		validated = !cls.to <semantic::Class> ().getGenerator ().to <generator::Class> ().getClassRef ().to <generator::ClassRef> ().isFast ();
 	    }
+	    
 	    if (!validated || inModule) {
 		this-> validateClassContent (cls, inModule);
 	    }
-
+	    
 	    match (cls.to <semantic::Class> ().getGenerator ()) {
 		of (generator::Class, cl) {
 		    return cl.getClassRef ();
 		} elof (ErrorType, err) {
 		    auto lst = err.getErrors (); // it cannot be a ref, because it is suppressed by the following if
-		    println (this-> _context.isInContext ({PragmaVisitor::PRAGMA_COMPILE_CONTEXT}));
 		    // if we are still in a pragma compile, we don't wan't to lose the errors
 		    if (!this-> _context.isInContext ({PragmaVisitor::PRAGMA_COMPILE_CONTEXT})) {  
 			sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
 			Ymir::Error::occur (cls.getName (), ExternalError::get (INCOMPLETE_TYPE_CLASS), cls.getRealName ());
 		    }
-		    println ("La : ", cls.getRealName ());
+		    
 		    auto error = Ymir::Error::makeOccurAndNote (cls.getName (), lst, ExternalError::get (VALIDATING), cls.getRealName ());
 		    error.setWindable (true);
 		    throw Error::ErrorList {{error}};
@@ -105,7 +105,8 @@ namespace semantic {
 		    
 		}
 	    } else {
-		auto gen = generator::Class::init (cls.getName (), sym, ClassRef::init (cls.getName (), Generator::empty (), sym, true));
+		auto ancestor = this-> validateAncestor (cls);
+		auto gen = generator::Class::init (cls.getName (), sym, ClassRef::init (cls.getName (), ancestor, sym, true));
 		// To avoid recursive validation 
 		sym.to <semantic::Class> ().setGenerator (gen);
 	    }

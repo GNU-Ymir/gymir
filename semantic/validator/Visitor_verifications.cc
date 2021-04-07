@@ -347,7 +347,7 @@ namespace semantic {
 	    std::string leftName;	    
 	    if (!left.to<Type> ().isCompatible (right)) {
 		// It can be compatible with an ancestor of right
-		error = !isAncestor (left, right);
+		error = !isAncestor (left, right); 
 		if (!error) return;
 		
 		leftName = left.to<Type> ().getTypeName ();
