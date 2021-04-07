@@ -280,10 +280,10 @@ namespace semantic {
 
 	void Visitor::verifyClassImpl (const lexing::Word & loc, const Generator & cl, const syntax::Expression & trait) {
 	    auto type = this-> validateTypeClassContext (loc, cl, trait);
-	    return verifyClassImpl (loc, cl, type);
+	    verifyClassImpl (loc, cl, type);
 	}
 	
-	void Visitor::verifyClassImpl (const lexing::Word & loc, const Generator & cl, const Generator & trait) {
+	bool Visitor::verifyClassImpl (const lexing::Word & loc, const Generator & cl, const Generator & trait, bool thr) {
 	    if (!trait.is <TraitRef> ()) {
 		Ymir::Error::occur (trait.getLocation (), ExternalError::get (IMPL_NO_TRAIT), trait.prettyString ());
 	    }
@@ -308,23 +308,30 @@ namespace semantic {
 			    exitForeign ();
 			    popReferent ("verifyClassImpl");
 			    
-			    if (errors.size () != 0)
-			    throw Error::ErrorList {errors};
-			    if (succeed) return;
+			    if (errors.size () != 0) {
+				if (thr) throw Error::ErrorList {errors};
+				else return false;
+			    }
+			    if (succeed) return true;
 			} fo;
 		    }		
 		}
 		
 		auto ancestor = sym.to <semantic::Class> ().getGenerator ().to <generator::Class> ().getClassRef ().to <ClassRef> ().getAncestor ();
-		if (!ancestor.isEmpty ())
-		sym = ancestor.to <ClassRef> ().getRef ();
+		if (!ancestor.isEmpty ()) {
+		    sym = ancestor.to <ClassRef> ().getRef ();
+		}
 		else break;
-	    } 
-
-	    auto note = Ymir::Error::createNote (loc);
-	    Ymir::Error::occurAndNote (cl.getLocation (), note, ExternalError::get (NOT_IMPL_TRAIT), cl.prettyString (), trait.prettyString ());
+	    }
+	    
+	    if (thr) {
+		auto note = Ymir::Error::createNote (loc);
+		Ymir::Error::occurAndNote (cl.getLocation (), note, ExternalError::get (NOT_IMPL_TRAIT), cl.prettyString (), trait.prettyString ());
+	    }
+	    
+	    return false;
 	}
-
+	
 	void Visitor::verifyCompatibleTypeWithValue (const lexing::Word & loc, const Generator & type, const Generator & gen) {
 	    if (gen.is <NullValue> () && type.is <Pointer> ())  return;
 	    else if (gen.to <Value> ().getType ().is <Slice> () && gen.to <Value> ().getType ().to <Type> ().getInners () [0].is<Void> () && type.is <Slice> ()) return;

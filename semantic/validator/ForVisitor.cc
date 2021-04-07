@@ -844,6 +844,8 @@ namespace semantic {
 	    auto loc = expr.getLocation ();
 	    
 	    Generator loop_type (Void::init (loc));
+	    Generator iterType (Generator::empty ());
+	    syntax::Expression syntIterVal (syntax::Expression::empty ());
 	    
 	    this-> _context.enterBlock ();
 
@@ -887,7 +889,7 @@ namespace semantic {
 		    throw list;
 		}
 
-		auto iterType = begin.to <Value> ().getType ().to <Type> ().toDeeplyMutable ();		
+		iterType = begin.to <Value> ().getType ().to <Type> ().toDeeplyMutable ();		
 		this-> _context.verifyMemoryOwner (loc, iterType, begin, false);
 		
 		
@@ -906,7 +908,7 @@ namespace semantic {
 		values.push_back (iterVal);		
 		values.push_back (endVal);
 		
-		auto syntIterVal = TemplateSyntaxWrapper::init (expr.getLocation (), iterRef);
+		syntIterVal = TemplateSyntaxWrapper::init (expr.getLocation (), iterRef);
 		auto syntEndVal  = TemplateSyntaxWrapper::init (expr.getLocation (), endRef);
 		
 		auto test = this-> _context.validateValue (
@@ -960,8 +962,7 @@ namespace semantic {
 		    innerValues.push_back (VarRef::init (loc, "#_for", loop_type, valVar.to <generator::VarDecl> ().getUniqId (), false, Generator::empty ()));
 		    values.push_back (valVar);
 		}
-		values.push_back (Loop::init (lexing::Word::init (loc, "#_for"), loop_type, test, Block::init (loc, loop_type, innerValues), false));
-		
+		values.push_back (Loop::init (lexing::Word::init (loc, "#_for"), loop_type, test, Block::init (loc, loop_type, innerValues), false));		
 	    } catch (Error::ErrorList &list) {
 		errors = list.errors;
 		// We discard local to avoid useless error message when quitting the block
@@ -976,8 +977,27 @@ namespace semantic {
 	    
 	    if (errors.size () != 0)
 		throw Error::ErrorList {errors};
+
+	    auto ret = Block::init (lexing::Word::init (expr.getLocation (), "#_for_block"), loop_type, values);
+
+	    auto trait = this-> _context.createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (DISPOSING_MODULE), CoreNames::get (DISPOSABLE_TRAITS)});		
+	    auto impl = this-> _context.validateType (trait);
+	    auto doesImpl = this-> _context.verifyClassImpl (loc, iterType, impl, false);
+	    if (doesImpl) {
+		auto call = syntax::MultOperator::init (
+		    lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
+		    syntax::Binary::init (lexing::Word::init (loc, Token::DOT),
+					  syntIterVal,
+					  syntax::Var::init (lexing::Word::init (loc, global::CoreNames::get (DISPOSE_OP_OVERRIDE))),
+					  syntax::Expression::empty ()),
+		    {}, false
+		    );
+		auto exit = this-> _context.validateValue (call);
+		auto jmp_buf_type = this-> _context.validateType (syntax::Var::init (lexing::Word::init (loc, global::CoreNames::get (JMP_BUF_TYPE))));
+		ret = ExitScope::init (loc, ret.to <Value> ().getType (), jmp_buf_type, ret, {exit}, {}, Generator::empty (), Generator::empty (), Generator::empty ());
+	    }
 	    
-	    return Block::init (lexing::Word::init (expr.getLocation (), "#_for_block"), loop_type, values);
+	    return ret;
 	}
 	
 	

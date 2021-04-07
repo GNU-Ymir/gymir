@@ -844,13 +844,17 @@ namespace semantic {
 	    
 	    /**
 	     * Verify that the class cl implement the trait tr
+
 	     */
 	    void verifyClassImpl (const lexing::Word & loc, const generator::Generator & cl, const syntax::Expression & tr);
 
 	    /**
 	     * Verify that the class cl implement the trait tr
+	     * @params: 
+	     *   - thr: if thr is true, then throw errors if the class does not impl
+	     * @returns: true if the class impl, false otherwise (if !thr)
 	     */
-	    void verifyClassImpl (const lexing::Word & loc, const generator::Generator & cl, const generator::Generator & tr);
+	    bool verifyClassImpl (const lexing::Word & loc, const generator::Generator & cl, const generator::Generator & tr, bool thr = true);
 
 	    /**
 	     * Throw an exception if left.isCompatible (right) is false
