@@ -108,7 +108,7 @@ namespace semantic {
 		    s_of (UniqValue, val)
 			return execute (val.getValue ());		
 		}	    
-	    } catch (Error::ErrorList &list) {
+	    } catch (Error::ErrorList list) {
 		Ymir::Error::occurAndNote (
 		    gen.getLocation (),
 		    list.errors, 
@@ -625,7 +625,7 @@ namespace semantic {
 		try {
 		    auto ret = this-> execute (it);
 		    mult.push_back (ret);
-		} catch (Error::ErrorList &list) {		    
+		} catch (Error::ErrorList list) {		    
 		} 
 	    }
 

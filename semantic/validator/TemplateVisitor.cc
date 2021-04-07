@@ -302,7 +302,7 @@ namespace semantic {
 	    Mapper globalMapper (true, 0);
 	    try {
 		globalMapper = std::move (this-> validateFromExplicit (sym.to <semantic::Template> ().getParams (), values, consumed));
-	    } catch (Error::ErrorList & list) {
+	    } catch (Error::ErrorList  list) {
 		auto prevMapper = Mapper {true, 0, sym.to<Template> ().getPreviousSpecialization (), sym.to<Template> ().getSpecNameOrder ()};
 		auto merge = std::move (mergeMappers (prevMapper, globalMapper));
 		list.errors.push_back (this-> partialResolutionNote (ref.getLocation (), merge));
@@ -332,7 +332,7 @@ namespace semantic {
 	    try {
 		merge.mapping = validateLambdaProtos (sym.to <Template> ().getPreviousParams (), merge.mapping);
 		merge.nameOrder = sortNames (sym.to<Template> ().getPreviousParams (), merge.mapping);
-	    } catch (Error::ErrorList &list) {
+	    } catch (Error::ErrorList list) {
 		list.errors.push_back (this-> partialResolutionNote (loc, merge));
 		throw list;
 	    }
@@ -483,7 +483,7 @@ namespace semantic {
 			    // The type can be uncomplete, so it is enclosed it in a try catch
 			    try {
 				type = this-> _context.validateType (replaceAll (decl.getType (), mapper.mapping));
-			    } catch (Error::ErrorList &list) {}
+			    } catch (Error::ErrorList list) {}
 				
 			    if (!type.isEmpty ())
 			    this-> _context.verifySameType (type, values [0].to <Value> ().getType ());
@@ -608,7 +608,7 @@ namespace semantic {
 		bool succeed = true;
 		try {
 		    mapper = std::move (validateVarDeclFromImplicit (syntaxTempl, param, current_types, current_consumed));
-		} catch (Error::ErrorList &list) {
+		} catch (Error::ErrorList list) {
 		    errors = list.errors;
 		    succeed = false;
 		}
@@ -657,7 +657,7 @@ namespace semantic {
 		try {
 		    merge.mapping = validateLambdaProtos (sym.to <Template> ().getPreviousParams (), merge.mapping);
 		    merge.nameOrder = sortNames (sym.to<Template> ().getPreviousParams (), merge.mapping);
-		} catch (Error::ErrorList &list) {
+		} catch (Error::ErrorList list) {
 		    list.errors.push_back (this-> partialResolutionNote (ref.getLocation (), merge));
 		    throw list;
 		}
@@ -727,7 +727,7 @@ namespace semantic {
 		    } else {
 			proto = FunctionVisitor::init (this-> _context).validateFunctionProto (sym_func);
 		    }
-		} catch (Error::ErrorList &list) {
+		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		}
 		
@@ -1530,7 +1530,7 @@ namespace semantic {
 			    Expression realType = this-> replaceAll (implv.getType (), loc_mapper.mapping);
 			    this-> _context.verifyClassImpl (implv.getType ().getLocation (), type, realType);
 			    mapper = std::move (mergeMappers (loc_mapper, mapper));
-			} catch (Error::ErrorList &list) {
+			} catch (Error::ErrorList list) {
 			    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 			    succeed = false;
 			}
@@ -2513,7 +2513,7 @@ namespace semantic {
 	    Generator gen (Generator::empty ());
 	    try {
 		gen = this-> _context.validateType (param, true);
-	    } catch (Error::ErrorList &list) {}
+	    } catch (Error::ErrorList list) {}
 	    
 	    return gen;
 	}
@@ -2531,7 +2531,7 @@ namespace semantic {
 		} else {
 		    gen.push_back (this-> _context.validateType (param, true));
 		}
-	    } catch (Error::ErrorList &list) {
+	    } catch (Error::ErrorList list) {
 		return {};
 	    }
 	    

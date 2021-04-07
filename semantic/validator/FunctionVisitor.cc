@@ -33,13 +33,13 @@ namespace semantic {
 	    }	    
 	    
 	    this-> _context.setCurrentFuncType (retType); // used for the return statement
-
+	    
 	    bool needFinalReturn = false; // if true, the body is not a returner
 	    auto body = this-> validateBody (func.getName (), func.getRealName (), function.getBody (), throwers, retType, needFinalReturn, errors); 
 	    
 	    try { // we enclose that in a try catch, because some vars may be unused
 		this-> _context.quitBlock (errors.size () == 0);
-	    } catch (Error::ErrorList &list) {
+	    } catch (Error::ErrorList list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 	
 		
@@ -80,7 +80,7 @@ namespace semantic {
 		    needFinalReturn = this-> verifyFinalReturn (bodyExpr.getLocation (), retType, body);
 		    this-> verifyThrowing (loc, funcName, body.getThrowers (), throwers, errors);
 		    return body;
-		} catch (Error::ErrorList &list) {
+		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		}
 	    } else {
@@ -121,7 +121,7 @@ namespace semantic {
 
 		try {
 		    this-> _context.verifyCompatibleTypeWithValue (params [0].getLocation (), argtype, params [0]);
-		} catch (Error::ErrorList &list) {
+		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		}
 	    }
@@ -130,7 +130,7 @@ namespace semantic {
 		auto realRetType = Integer::init (loc, 32, true); // do better 
 		try {
 		    this-> _context.verifyCompatibleType (params [0].getLocation (), loc, realRetType, retType);
-		} catch (Error::ErrorList &list) {
+		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		}
 	    }	    
@@ -138,8 +138,12 @@ namespace semantic {
 
 
 	void FunctionVisitor::validateParamDecl (const lexing::Word & loc, const syntax::VarDecl & var, bool no_value, Generator & type, Generator & value, bool & isMutable) {		    
-	    if (!var.getType ().isEmpty ()) {						
-		type = this-> _context.validateType (var.getType ());
+	    if (!var.getType ().isEmpty ()) {
+		try {
+		    type = this-> _context.validateType (var.getType ());
+		} catch (Ymir::Error::ErrorList list) {
+		    Ymir::Error::occurAndNote (var.getType ().getLocation (), list.errors, "");
+		}
 	    }
 		    		
 	    if (!var.getValue ().isEmpty () && !no_value) {
@@ -169,7 +173,13 @@ namespace semantic {
 
 	Generator FunctionVisitor::validateReturnType (const lexing::Word & loc, const syntax::Expression & ret) {
 	    if (!ret.isEmpty ()) {
-		auto retType = this-> _context.validateType (ret, true);
+		Generator retType (Generator::empty ());
+		try {
+		    retType = this-> _context.validateType (ret, true);
+		} catch (Ymir::Error::ErrorList list) {
+		    Ymir::Error::noteAndNote (ret.getLocation (), list.errors, "");
+		}
+		
 		if (retType.to <Type> ().isRef ()) {
 		    Ymir::Error::occur (retType.getLocation (), ExternalError::get (REF_RETURN_TYPE), retType.prettyString ());
 		}
@@ -239,7 +249,7 @@ namespace semantic {
 		try {
 		    this-> _context.discardAllLocals ();
 		    this-> _context.quitBlock (errors.size () == 0);
-		} catch (Error::ErrorList &list) {
+		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 	
 
@@ -287,7 +297,7 @@ namespace semantic {
 		try {
 		    auto icl = this-> _context.validateClass (func.getClass ());
 		    cl = Type::init (func.getClass ().getName (), ClassPtr::init (func.getClass ().getName (), Type::init (func.getClass ().getName (), icl.to <Type> (), true, false)).to <Type> (), true, false);
-		} catch (Error::ErrorList &list) {
+		} catch (Error::ErrorList list) {
 		    errors = list.errors;
 		} 
 	    
@@ -301,7 +311,7 @@ namespace semantic {
 		    try {
 			this-> _context.discardAllLocals ();
 			this-> _context.quitBlock (errors.size () == 0);
-		    } catch (Error::ErrorList &list) {
+		    } catch (Error::ErrorList list) {
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    } 	    
 
@@ -351,7 +361,7 @@ namespace semantic {
 	    try {
 		this-> _context.discardAllLocals ();
 		this-> _context.quitBlock (errors.size () == 0);
-	    } catch (Error::ErrorList &list) {
+	    } catch (Error::ErrorList list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 	    
 
@@ -393,7 +403,7 @@ namespace semantic {
 		    }
 		
 		    addedParams.push_back (ParamVar::init (var.getName (), type, isMutable, false));
-		} catch (Error::ErrorList &list) {
+		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
 	    }
@@ -402,7 +412,7 @@ namespace semantic {
 		this-> insertParameters (addedParams);
 		params.insert (params.end (), addedParams.begin (), addedParams.end ());
 		retType = this-> validateReturnType (loc, proto.getType ());
-	    } catch (Error::ErrorList &list) {
+	    } catch (Error::ErrorList list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    }
 	    
@@ -433,7 +443,7 @@ namespace semantic {
 		    }
 		    
 		    addedParams.push_back (ProtoVar::init (var.getName (), type, value, isMutable, nb_consumed, false));
-		} catch (Error::ErrorList &list) {
+		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    errors.push_back (Ymir::Error::createNote (param.getLocation ()));
 		} 
@@ -443,7 +453,7 @@ namespace semantic {
 		this-> insertParameters (addedParams);
 		params.insert (params.end (), addedParams.begin (), addedParams.end ());	    	    
 		retType = this-> validateReturnType (loc, proto.getType ());
-	    } catch (Error::ErrorList &list) {
+	    } catch (Error::ErrorList list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    }
 	}
@@ -529,7 +539,7 @@ namespace semantic {
 	    for (auto &it : throwers) {
 		try {
 		    rets.push_back (Generator::init (it.getLocation (), this-> _context.validateType (it)));
-		} catch (Error::ErrorList &list) {
+		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
 	    }
@@ -584,7 +594,7 @@ namespace semantic {
 					 VarRef::init (loc, params [0].to <ParamVar> ().getName (), classType, params [0].getUniqId (), true, Generator::empty (), true)
 		    );	    
 		body = Block::init (loc, Void::init (loc), {preConstruct, body, ret});
-	    } catch (Error::ErrorList &list) {
+	    } catch (Error::ErrorList list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 	    	    
 
@@ -592,7 +602,7 @@ namespace semantic {
 	    	    
 	    try {
 		this-> _context.quitBlock (errors.size () == 0);
-	    } catch (Error::ErrorList &list) {
+	    } catch (Error::ErrorList list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 	    
 	    
@@ -629,7 +639,7 @@ namespace semantic {
 		Generator cstrs (Generator::empty ());
 		try {
 		    cstrs = this-> _context.getClassConstructors (loc, classR.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator (), lexing::Word::eof ());
-		} catch (Error::ErrorList &list) {
+		} catch (Error::ErrorList list) {
 		    Ymir::Error::occurAndNote (
 			loc,
 			list.errors, 
@@ -659,7 +669,7 @@ namespace semantic {
 		    Generator cstrs (Generator::empty ());
 		    try {
 			cstrs = this-> _context.getClassConstructors (loc, ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator (), lexing::Word::eof ());
-		    } catch (Error::ErrorList &list) {						
+		    } catch (Error::ErrorList list) {						
 			Ymir::Error::occurAndNote (
 			    loc,
 			    list.errors,
@@ -702,7 +712,7 @@ namespace semantic {
 			this-> _context.verifyMemoryOwner (left.getLocation (), left.to <Value> ().getType (), right, true);
 			instructions.push_back (Affect::init (left.getLocation (), left.to <Value> ().getType (), left, right, true));			
 			validated.emplace (name.getStr ());
-		    } catch (Error::ErrorList &list) {
+		    } catch (Error::ErrorList list) {
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    } 		    
 		}
@@ -801,7 +811,7 @@ namespace semantic {
 			
 			try {
 			    cstrs = this-> _context.getClassConstructors (loc, ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator (), lexing::Word::eof ());
-			} catch (Error::ErrorList &list) {
+			} catch (Error::ErrorList list) {
 			    errors = list.errors;
 			    return;
 			}
@@ -836,7 +846,7 @@ namespace semantic {
 			}
 		    }
 		}		
-	    } catch (Error::ErrorList &list) {
+	    } catch (Error::ErrorList list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 
 
@@ -844,7 +854,7 @@ namespace semantic {
 		try {
 		    this-> _context.discardAllLocals ();
 		    this-> _context.quitBlock (errors.size () == 0);
-		} catch (Error::ErrorList &list) {
+		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
 	    }
@@ -910,7 +920,7 @@ namespace semantic {
 		
 		this-> validatePrototypeForFrame (cs.getName (), proto, params, retType, errors);
 		if (retType.isEmpty ()) retType = Void::init (func.getName ());
-	    } catch (Error::ErrorList &list) {
+	    } catch (Error::ErrorList list) {
 		errors = list.errors;
 	    } 
 	    
@@ -922,7 +932,7 @@ namespace semantic {
 		    this-> _context.discardAllLocals ();
 		}		    
 		this-> _context.quitBlock (errors.size () == 0);
-	    } catch (Error::ErrorList &list) {
+	    } catch (Error::ErrorList list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 	
 	    
@@ -993,7 +1003,7 @@ namespace semantic {
 		
 		this-> validatePrototypeForFrame (cs.getName (), proto, params, retType, errors);
 		if (retType.isEmpty ()) retType = Void::init (func.getName ());
-	    } catch (Error::ErrorList &list) {
+	    } catch (Error::ErrorList list) {
 		errors = list.errors;
 	    } 
 	    
@@ -1011,7 +1021,7 @@ namespace semantic {
 		    this-> _context.discardAllLocals ();
 		}		    
 		this-> _context.quitBlock (errors.size () == 0);
-	    } catch (Error::ErrorList &list) {
+	    } catch (Error::ErrorList list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 	
 	    

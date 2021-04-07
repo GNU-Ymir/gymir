@@ -151,7 +151,7 @@ namespace semantic {
 			    succ = true;
 			} fo;			
 		    }
-		} catch (Error::ErrorList &list) {
+		} catch (Error::ErrorList list) {
 		    errors = list.errors;
 		} 		
 
@@ -210,7 +210,7 @@ namespace semantic {
 			    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");				
 			}
 		    }
-		} catch (Error::ErrorList &list) {
+		} catch (Error::ErrorList list) {
 		    errors = list.errors;
 		} 
 

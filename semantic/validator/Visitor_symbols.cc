@@ -49,7 +49,11 @@ namespace semantic {
 		Generator type (Generator::empty ()), value (Generator::empty ());
 	    
 		if (!var.getType ().isEmpty ()) { // validate the type of the expression, if specified in the source code
-		    type = this-> validateType (var.getType ());
+		    try {
+			type = this-> validateType (var.getType ());
+		    } catch (Ymir::Error::ErrorList list) {
+			Ymir::Error::occurAndNote (var.getType ().getLocation (), list.errors, "");
+		    }
 		}
 
 		// validate the value, if specified in the source code
@@ -97,7 +101,7 @@ namespace semantic {
 		Generator elem (Generator::empty ());
 		try {
 		    elem = validateValue (aka.getValue (), true);
-		} catch (Error::ErrorList &list) {
+		} catch (Error::ErrorList list) {
 		    elem = Generator::empty ();
 		} 
 		
@@ -138,7 +142,7 @@ namespace semantic {
 		for (auto & it : tr.to <semantic::Trait> ().getAssertions ()) {
 		    try {
 			this-> validateCteValue (it);
-		    } catch (Error::ErrorList &list) {
+		    } catch (Error::ErrorList list) {
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    }
 		}
@@ -196,7 +200,7 @@ namespace semantic {
 			    if (type.isEmpty ()) {
 				type = Generator::init (gen.getLocation (), val.to <generator::VarDecl> ().getVarType ());
 			    } else verifyCompatibleType (val.getLocation (), type.getLocation (), type, val.to<generator::VarDecl> ().getVarType ());
-			} catch (Error::ErrorList &list) {
+			} catch (Error::ErrorList list) {
 			    auto note = Ymir::Error::createNote (it.getLocation ());
 			    for (auto it : list.errors) 
 				note.addNote (it);
@@ -204,7 +208,7 @@ namespace semantic {
 			}
 		    }
 		    
-		} catch (Error::ErrorList &list) {
+		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
 
@@ -212,7 +216,7 @@ namespace semantic {
 		    try {
 			syms = this-> discardAllLocals ();
 			this-> quitBlock (errors.size () == 0);
-		    } catch (Error::ErrorList &list) {
+		    } catch (Error::ErrorList list) {
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    } 
 		}

@@ -93,7 +93,7 @@ namespace semantic {
 			try {
 			    auto sec_trait = this-> validateType (im.getTrait ());
 			    traits.push_back (sec_trait);
-			} catch (Error::ErrorList &list) {
+			} catch (Error::ErrorList list) {
 			    errors = list.errors;
 			}
 			    

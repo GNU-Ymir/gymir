@@ -88,19 +88,20 @@ namespace semantic {
 	 * ========================================================
 	 */
 
-	Generator PragmaVisitor::validateCompile (const syntax::Pragma & prg) {	    
+	Generator PragmaVisitor::validateCompile (const syntax::Pragma & prg) {
 	    this-> _context.enterContext ({lexing::Word::init (prg.getLocation (), PragmaVisitor::PRAGMA_COMPILE_CONTEXT)});
-	    try {
+	    try {		
 		for (auto & it : prg.getContent ()) {
 		    this-> _context.validateValue (it);
 		}
-		    
+
+		this-> _context.exitContext();		
 		return BoolValue::init (prg.getLocation (), Bool::init (prg.getLocation ()), true);
-	    } catch (Error::ErrorList &list) {
+	    } catch (Error::ErrorList list) {
+		this-> _context.exitContext();
 		return BoolValue::init (prg.getLocation (), Bool::init (prg.getLocation ()), false);
 	    }
 	    
-	    this-> _context.exitContext();
 	}
 
 	
@@ -194,11 +195,11 @@ namespace semantic {
 		}
 
 
-	    } catch (Error::ErrorList &list) {
+	    } catch (Error::ErrorList list) {
 		try {
 		    auto val = this-> _context.validateType (prg.getContent ()[0], true);
 		    res = mangler.mangle (val);
-		} catch (Error::ErrorList &list) {
+		} catch (Error::ErrorList list) {
 		    Ymir::Error::occurAndNote (prg.getLocation (), list.errors, ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
 		}
 	    }
@@ -256,7 +257,7 @@ namespace semantic {
 	    try {
 		this-> _context.validateValue (syntOp);
 		return BoolValue::init (prg.getLocation (), Bool::init (prg.getLocation ()), true);
-	    } catch (Error::ErrorList &list) {
+	    } catch (Error::ErrorList list) {
 		return BoolValue::init (prg.getLocation (), Bool::init (prg.getLocation ()), false);
 	    }
 	}

@@ -240,8 +240,9 @@ namespace Ymir {
 	void occurAndNote (const lexing::Word & loc, const std::list <ErrorMsg> & notes, const std::string &content, TArgs ... args) {
 	    auto msg = format ("%(r) : " + content, "Error", args...);
 	    auto err = ErrorMsg (loc, msg);
-	    for (auto & it : notes)
-		err.addNote (it);	    
+	    for (auto & it : notes) {
+		err.addNote (it);		
+	    }
 	    throw ErrorList {std::list <ErrorMsg> {err}};
 	}
        

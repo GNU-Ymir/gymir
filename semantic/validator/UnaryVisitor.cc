@@ -157,7 +157,7 @@ namespace semantic {
 
 	    try {
 		return this-> _context.validateValue (call);
-	    } catch (Error::ErrorList &list) {
+	    } catch (Error::ErrorList list) {
 		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), call.prettyString ());
 		list.errors.back ().addNote (note);
 		throw list;
@@ -208,7 +208,7 @@ namespace semantic {
 			    // Verify that the delegate won't implicitly alias the closure
 			    this-> _context.verifyImplicitAlias (un.getLocation (), type, del.to <DelegateValue> ().getClosure ());
 			    this-> _context.verifyMemoryOwner (un.getLocation (), type, del.to <DelegateValue> ().getClosure (), true);
-			} catch (Error::ErrorList &list) {
+			} catch (Error::ErrorList list) {
 			    auto note = Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), del.to <Value> ().getType ().getLocation (), proto.prettyString ());
 
 			    for (auto & i : list.errors)
@@ -226,7 +226,7 @@ namespace semantic {
 			    results[score].push_back (Value::init (del.to <Value> (), delType));
 			} else results [score] = {Value::init (del.to <Value> (), delType)};
 		    }
-		} catch (Error::ErrorList &list) {
+		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		}
 	    }

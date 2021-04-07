@@ -34,7 +34,7 @@ namespace semantic {
 		else
 		    value = validateValueNoReachable (expr, fromCall);
 		// If it can be a type, that means we are looking for a type, and that implicit call is not an option
-	    } catch (Error::ErrorList & list) {
+	    } catch (Error::ErrorList  list) {
 		if (!canBeType || fromValidateType) throw list;
 	    }
 	    

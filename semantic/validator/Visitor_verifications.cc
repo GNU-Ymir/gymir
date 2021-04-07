@@ -88,7 +88,7 @@ namespace semantic {
 					       rightType.to <Tuple> ().getInners ()[it].getLocation (),
 					       leftType.to <Tuple> ().getInners ()[it],
 					       rightType.to <Tuple> ().getInners ()[it], false);
-		    } catch (Error::ErrorList &list) {
+		    } catch (Error::ErrorList list) {
 			auto note = Ymir::Error::createNote (rloc);
 			for (auto &it : list.errors) note.addNote (it);
 			Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST));
@@ -301,7 +301,7 @@ namespace semantic {
 			    try {
 				auto sec_trait = this-> validateType (im.getTrait ());
 				if (trait.equals (sec_trait)) succeed = true;
-			    } catch (Error::ErrorList &list) {
+			    } catch (Error::ErrorList list) {
 				errors = list.errors;
 			    }
 			    

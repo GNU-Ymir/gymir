@@ -53,9 +53,10 @@ namespace semantic {
 	}
 
 	void Visitor::exitContext () {
-	    if (this-> _contextCas.empty ())
-	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-
+	    if (this-> _contextCas.empty ()) {
+		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+	    }
+	    
 	    this-> _contextCas.pop_back ();
 	}
 
@@ -92,8 +93,9 @@ namespace semantic {
 	}
 	
 	void Visitor::quitBlock (bool warnUnused) {	    
-	    if (this-> _symbols.back ().empty ())
-	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+	    if (this-> _symbols.back ().empty ()) {
+		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+	    }
 
 	    std::list <Ymir::Error::ErrorMsg> errors;
 	    if (warnUnused) {
@@ -117,7 +119,7 @@ namespace semantic {
 	void Visitor::quitBlock (bool warnUnused, std::list <Error::ErrorMsg> & errors) {
 	    try {
 		this-> quitBlock (warnUnused);
-	    } catch (Error::ErrorList &lst) {
+	    } catch (Error::ErrorList lst) {
 		errors.insert (errors.end (), lst.errors.begin (), lst.errors.end ());
 	    }
 	}
@@ -129,7 +131,7 @@ namespace semantic {
 	}
 
 
-		void Visitor::insertLocal (const std::string & name, const Generator & gen) {
+	void Visitor::insertLocal (const std::string & name, const Generator & gen) {
 	    if (this-> _symbols.back ().empty ())
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    if (this-> _symbols.back ().back ().find (name) == this-> _symbols.back ().back ().end ()) {

@@ -32,7 +32,7 @@ namespace semantic {
 		}
 
 		gen = this-> validateValue (content);
-	    } catch (Error::ErrorList &list) {
+	    } catch (Error::ErrorList list) {
 		static std::list <Error::ErrorMsg> __last_error__;			
 		if (Visitor::__TEMPLATE_NB_RECURS__ == 2 && !global::State::instance ().isVerboseActive ()) {
 		    // list.errors.push_back (format ("     : %(B)", "..."));

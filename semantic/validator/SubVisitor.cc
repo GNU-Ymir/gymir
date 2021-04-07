@@ -34,7 +34,7 @@ namespace semantic {
 	    {
 		try {
 		    left = this-> _context.validateValue (expression.getLeft ());
-		} catch (Error::ErrorList &list) {
+		} catch (Error::ErrorList list) {
 		    
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    failed = true;
@@ -45,7 +45,7 @@ namespace semantic {
 		failed = false;
 	    	try {
 	    	    left = this-> _context.validateType (expression.getLeft (), true);		    
-	    	} catch (Error::ErrorList &list) {
+	    	} catch (Error::ErrorList list) {
 	    	    
 		    failed = true;
 	    	} 
@@ -323,7 +323,7 @@ namespace semantic {
 		    auto inner = validateType (bin.to <syntax::Binary> (), b.to <Type> ().getInners ()[0]);
 		    for (auto it ATTRIBUTE_UNUSED : Ymir::r (0, b.to <Array> ().getSize ()))
 			params.push_back (inner);
-		} catch (Error::ErrorList &list) {
+		} catch (Error::ErrorList list) {
 		    
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
@@ -550,7 +550,7 @@ namespace semantic {
 			    auto bin = syntax::Binary::init (field.getLocation (), expression.getLeft (), expression.getRight (), syntax::Expression::empty ());
 			    params.push_back (validateType (bin.to <syntax::Binary> (), field));
 			}
-		    } catch (Error::ErrorList &list) {
+		    } catch (Error::ErrorList list) {
 			
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    } 
@@ -591,7 +591,7 @@ namespace semantic {
 				params.push_back (field.to <generator::VarDecl> ().getVarValue ());
 			    }
 			}
-		    } catch (Error::ErrorList &list) {			
+		    } catch (Error::ErrorList list) {			
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    }
 			    
@@ -674,7 +674,7 @@ namespace semantic {
 		    Generator gen (Generator::empty ());
 		    try {			
 			gen = this-> _context.getClassConstructors (expression.getLocation (), t, lexing::Word::eof ());
-		    } catch (Error::ErrorList &list) {			
+		    } catch (Error::ErrorList list) {			
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 			succeed = false;
 		    } 
@@ -714,7 +714,7 @@ namespace semantic {
 		    Generator gen (Generator::empty ());
 		    try {			
 			gen = this-> _context.getClassConstructors (expression.getLocation (), t, expression.getRight ().to <syntax::Var> ().getName ());
-		    } catch (Error::ErrorList &list) {			
+		    } catch (Error::ErrorList list) {			
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 			succeed = false;
 		    } 

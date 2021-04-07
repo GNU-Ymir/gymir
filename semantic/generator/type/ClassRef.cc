@@ -53,9 +53,9 @@ namespace semantic {
 	}
 	
 	std::string ClassRef::typeName () const {
-	    if (this-> _isFast) {
-		return "fast " + (Symbol {this-> _ref}).getRealName ();
-	    }
+	    // if (this-> _isFast) {
+	    // 	return (Symbol {this-> _ref}).getRealName ();
+	    // }
 	    return (Symbol {this-> _ref}).getRealName ();
 	}
 	

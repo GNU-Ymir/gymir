@@ -87,7 +87,7 @@ namespace semantic {
 					} fo;
 				}
 		
-			} catch (Error::ErrorList &list) {
+			} catch (Error::ErrorList list) {
 				errors = list.errors;
 			}
 	    	    	    
@@ -96,7 +96,7 @@ namespace semantic {
 				try {
 					if (right.to <Value> ().getType ().is<ClassPtr> ())
 					ret = validateMathClassRight (op, expression, left, right);
-				} catch (Error::ErrorList &list) {
+				} catch (Error::ErrorList list) {
 					errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 				}
 		
@@ -311,7 +311,7 @@ namespace semantic {
 	    
 			try {
 				return this-> _context.validateValue (call);
-			}  catch (Error::ErrorList &list) {
+			}  catch (Error::ErrorList list) {
 				auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
 				list.errors.back ().addNote (note);
 				throw list;
@@ -341,7 +341,7 @@ namespace semantic {
 
 			try {
 				return this-> _context.validateValue (call);
-			} catch (Error::ErrorList &list) {
+			} catch (Error::ErrorList list) {
 				auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
 				list.errors.back ().addNote (note);
 				throw list;
@@ -387,7 +387,7 @@ namespace semantic {
 					} fo;
 				}
 		
-			} catch (Error::ErrorList &list) {
+			} catch (Error::ErrorList list) {
 				errors = list.errors;
 			}
 	    
@@ -396,7 +396,7 @@ namespace semantic {
 				try {
 					if (right.to <Value> ().getType ().is<ClassPtr> ())
 					ret = validateLogicalClassRight (op, expression, left, right);
-				} catch (Error::ErrorList &list) {
+				} catch (Error::ErrorList list) {
 					errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 				}
 		
@@ -591,7 +591,7 @@ namespace semantic {
 				{
 					try {
 						result = validateEqualClass (op, expression, left, right);
-					} catch (Error::ErrorList &list) {
+					} catch (Error::ErrorList list) {
 						errors = list.errors;
 					}
 				}
@@ -618,7 +618,7 @@ namespace semantic {
 			Generator cl (Generator::empty ());
 			try {
 				cl = this-> _context.validateValue (call);
-			} catch (Error::ErrorList &list) {
+			} catch (Error::ErrorList list) {
 				auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
 				list.errors.back ().addNote (note);
 				errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
@@ -653,7 +653,7 @@ namespace semantic {
 				{
 					try {
 						result = validateEqualClassRight (op, expression, left, right);
-					} catch (Error::ErrorList &list) {
+					} catch (Error::ErrorList list) {
 						errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 					}
 		
@@ -682,7 +682,7 @@ namespace semantic {
 	    
 			try {
 				cl = this-> _context.validateValue (call);
-			} catch (Error::ErrorList &list) {
+			} catch (Error::ErrorList list) {
 				auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
 				list.errors.back ().addNote (note);
 				errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
@@ -727,7 +727,7 @@ namespace semantic {
 
 			try {
 				return this-> _context.validateValue (call);
-			} catch (Error::ErrorList &list) {
+			} catch (Error::ErrorList list) {
 				auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
 				list.errors.back ().addNote (note);
 				throw list;
@@ -758,7 +758,7 @@ namespace semantic {
 
 			try {
 				return this-> _context.validateValue (call);
-			} catch (Error::ErrorList &list) {
+			} catch (Error::ErrorList list) {
 				auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
 				list.errors.back ().addNote (note);
 				throw list;
@@ -771,7 +771,7 @@ namespace semantic {
 				//try {
 				auto gen = validateIndexAssign (op, expression);
 				if (!gen.isEmpty ()) return gen;
-				// } catch (Error::ErrorList &list) {}
+				// } catch (Error::ErrorList list) {}
 			} else if (expression.getLeft ().is <syntax::Unary> () &&
 					   expression.getLeft ().to <syntax::Unary> ().getLocation () == Token::STAR) {
 				auto gen = validateUnaryAssign (op, expression);
@@ -829,7 +829,7 @@ namespace semantic {
 
 			try {
 				return this-> _context.validateValue (call);
-			} catch (Error::ErrorList &list) {
+			} catch (Error::ErrorList list) {
 				auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), bin.prettyString ());
 				list.errors.back ().addNote (note);
 				throw list;
@@ -875,7 +875,7 @@ namespace semantic {
 
 			try {
 				return this-> _context.validateValue (call);
-			} catch (Error::ErrorList &list) {
+			} catch (Error::ErrorList list) {
 				auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
 				list.errors.back ().addNote (note);
 				throw list;
@@ -1080,7 +1080,7 @@ namespace semantic {
 
 			try {
 				return this-> _context.validateValue (call);
-			} catch (Error::ErrorList &list) {
+			} catch (Error::ErrorList list) {
 				auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
 				list.errors.back ().addNote (note);
 				throw list;

@@ -43,7 +43,7 @@ namespace semantic {
 		} else {
 		    this-> validate (sym, false);
 		}
-	    } catch (Error::ErrorList &list) {
+	    } catch (Error::ErrorList list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    }
 	    exitForeign ();
@@ -105,7 +105,7 @@ namespace semantic {
 			validate (it, true);
 		    }
 		}
-	    } catch (Error::ErrorList &lst) {
+	    } catch (Error::ErrorList lst) {
 		errors = lst.errors;
 	    }
 	    
@@ -139,7 +139,7 @@ namespace semantic {
 
 		    auto visitor = FunctionVisitor::init (*this);
 		    visitor.validateMethod (syms [0].to <semantic::Function> (), classType);
-		} catch (Error::ErrorList &list) {
+		} catch (Error::ErrorList list) {
 		    list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", syms [0].getName (), syms[0].getRealName ()));
 		    list.errors.insert (list.errors.begin (), Ymir::Error::createNote (syms [0].getName (), ExternalError::get (IN_TEMPLATE_DEF)));
 		    
@@ -164,7 +164,7 @@ namespace semantic {
 	    Generator proto (Generator::empty ());
 	    try {
 		proto = FunctionVisitor::init (*this).validateMethodProto (syms [0].to <semantic::Function> (), classType, Generator::empty ());
-	    } catch (Error::ErrorList &list) {
+	    } catch (Error::ErrorList list) {
 		errors = list.errors;
 	    }
 	    
@@ -204,7 +204,7 @@ namespace semantic {
 		std::list <Ymir::Error::ErrorMsg> locErrors;
 		try {
 		    params.push_back (validateType (it, true));
-		} catch (Error::ErrorList &list) {
+		} catch (Error::ErrorList list) {
 		    locErrors.insert (locErrors.begin (), list.errors.begin (), list.errors.end ());
 		    succeed = false;
 		}
@@ -215,7 +215,7 @@ namespace semantic {
 			auto val = validateValue (it);
 			auto rvalue = retreiveValue (val);
 			params.push_back (rvalue);
-		    } catch (Error::ErrorList &list) {
+		    } catch (Error::ErrorList list) {
 			succeed = false;
 		    }
 		}
@@ -233,7 +233,7 @@ namespace semantic {
 		int consumed = 0;
 		auto mapper = visitor.validateFromExplicit (check.getParameters (), params, consumed);
 		succeed = mapper.succeed && consumed == (int) params.size ();
-	    } catch (Error::ErrorList &list) {
+	    } catch (Error::ErrorList list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    }
 
@@ -248,7 +248,7 @@ namespace semantic {
 	    enterForeign ();
 	    try {
 		value = this-> validateValue (expr);
-	    } catch (Error::ErrorList &list) {
+	    } catch (Error::ErrorList list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    }
 
@@ -271,7 +271,7 @@ namespace semantic {
 		std::list <Ymir::Error::ErrorMsg> locErrors;
 		try {
 		    params.push_back (validateType (it, true));
-		} catch (Error::ErrorList &list) {
+		} catch (Error::ErrorList list) {
 		    locErrors.insert (locErrors.begin (), list.errors.begin (), list.errors.end ());
 		    succeed = false;
 		}
@@ -282,7 +282,7 @@ namespace semantic {
 			auto val = validateValue (it);
 			auto rvalue = retreiveValue (val);
 			params.push_back (rvalue);
-		    } catch (Error::ErrorList &list) {
+		    } catch (Error::ErrorList list) {
 			auto note = Ymir::Error::createNoteOneLine (ExternalError::get (TEMPLATE_VALUE_TRY));
 			for (auto & it : list.errors)
 			note.addNote (it);
@@ -321,7 +321,7 @@ namespace semantic {
 				loc_scores [local_score].push_back (local_sym);
 				loc_elem [local_score].push_back (elem);
 			    }
-			} catch (Error::ErrorList &list) {
+			} catch (Error::ErrorList list) {
 			    auto note = Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), elem.getLocation (), elem.prettyString ());
 			    for (auto & it : list.errors) {
 				note.addNote (it);
@@ -377,7 +377,7 @@ namespace semantic {
 			    } else {
 				syms.push_back (element_on_scores [it]);
 			    }
-			} catch (Error::ErrorList &list) {
+			} catch (Error::ErrorList list) {
 			    list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", element_on_scores [it].getName (), element_on_scores [it].getRealName ()));
 			    list.errors.insert (list.errors.begin (), Ymir::Error::createNote (tcl.getLocation (), ExternalError::get (IN_TEMPLATE_DEF)));
 			    std::vector<std::string> names;
