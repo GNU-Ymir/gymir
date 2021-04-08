@@ -148,8 +148,9 @@ namespace semantic {
 		    		
 	    if (!var.getValue ().isEmpty () && !no_value) {
 		value = this-> _context.validateValue (var.getValue ());
-		if (!type.isEmpty ()) 
-		this-> _context.verifyCompatibleTypeWithValue (var.getLocation (), type, value);
+		if (!type.isEmpty ()) {
+		    this-> _context.verifyCompatibleTypeWithValue (var.getValue ().getLocation (), type, value);
+		}
 		else {
 		    type = value.to <Value> ().getType ();
 		}
@@ -445,7 +446,7 @@ namespace semantic {
 		    addedParams.push_back (ProtoVar::init (var.getName (), type, value, isMutable, nb_consumed, false));
 		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		    errors.push_back (Ymir::Error::createNote (param.getLocation ()));
+		    errors.back ().addNote (Ymir::Error::createNote (param.getLocation ()));
 		} 
 	    }
 

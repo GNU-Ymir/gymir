@@ -35,7 +35,7 @@ namespace semantic {
 	    if (left.isEmpty () && expression.canBeDotCall ()) { // if the validation failed, then maybe it is a dot call
 		left = this-> validateDotCall (expression.getLeft (), rights, errors); // so we try a dot call validation
 	    } else if (left.isEmpty ()) {
-		throw Error::ErrorList {errors}; // if it cannot be a dot call then, it is an error
+		this-> error (expression.getLocation (), expression.getEnd (), left, rights, errors);
 	    }
 
 	    for (auto & it : expression.getRights ()) { // Validation of the rights operands
@@ -983,16 +983,19 @@ namespace semantic {
 		
 	    } else if  (exp.is <syntax::Binary> () && exp.to <syntax::Binary> ().getLocation () == Token::DOT) {
 		synthBin = exp;
-	    } else throw Error::ErrorList {errors};
-
+	    } else {
+		this-> error (exp.getLocation (), left, params, errors);
+	    }
+	    
 	    auto bin = synthBin.to <syntax::Binary> ();
 
 	    try {
 		left = this-> _context.validateValue (bin.getLeft ());
 	    } catch (Error::ErrorList list) {}
 	    
-	    if (left.isEmpty ())
-	    throw Error::ErrorList {errors};
+	    if (left.isEmpty ()) {
+		this-> error (exp.getLocation (), left, params, errors);
+	    }
 	    
 	    if (right.isEmpty ()) {
 		try {
@@ -1008,8 +1011,9 @@ namespace semantic {
 		    throw Error::ErrorList {copyErrors};
 		}
 
-		if (right.isEmpty ())
-		throw Error::ErrorList {errors};
+		if (right.isEmpty ()) {
+		    this-> error (exp.getLocation (), left, params, errors);
+		}
 	    }
 	    
 	    return right;
@@ -1024,21 +1028,24 @@ namespace semantic {
 	 */
 	    
 	
-	void CallVisitor::error (const lexing::Word & location, const Generator & left, const std::vector <Generator> & rights, std::list <Ymir::Error::ErrorMsg> & errors) {
+	void CallVisitor::error (const lexing::Word & location, const Generator & left, const std::vector <Generator> & rights, const std::list <Ymir::Error::ErrorMsg> & errors) {
 	    std::list <std::string> names;
 	    for (auto & it : rights)
 	    names.push_back (it.to <Value> ().getType ().to <Type> ().getTypeName ());
 
 	    std::string leftName;
-	    match (left) {
-		of (FrameProto,          proto) leftName = proto.getName ();
-		elof (generator::Struct, str)   leftName = str.getName ();
-		elof (MultSym,           sym)   leftName = sym.getLocation ().getStr ();
-		elof (TemplateRef,       cl)    leftName = cl.prettyString ();
-		elof (TemplateClassCst,  cl)    leftName = cl.prettyString ();
-		elof (ModuleAccess,      acc)   leftName = acc.prettyString ();
-		elof (Value,             val)   leftName = val.getType ().to <Type> ().getTypeName ();
-		fo;
+	    if (left.isEmpty ()) leftName = (NoneType::init (location)).prettyString ();
+	    else {
+		match (left) {
+		    of (FrameProto,          proto) leftName = proto.getName ();
+		    elof (generator::Struct, str)   leftName = str.getName ();
+		    elof (MultSym,           sym)   leftName = sym.getLocation ().getStr ();
+		    elof (TemplateRef,       cl)    leftName = cl.prettyString ();
+		    elof (TemplateClassCst,  cl)    leftName = cl.prettyString ();
+		    elof (ModuleAccess,      acc)   leftName = acc.prettyString ();
+		    elof (Value,             val)   leftName = val.getType ().to <Type> ().getTypeName ();
+		    fo;
+		}
 	    }
 	    
 	    auto err = Ymir::Error::makeOccurAndNote (
@@ -1054,22 +1061,25 @@ namespace semantic {
 	    // throw Error::ErrorList {errors};
 	}
 
-	void CallVisitor::error (const lexing::Word & location, const lexing::Word & end, const Generator & left, const std::vector <Generator> & rights, std::list <Ymir::Error::ErrorMsg> & errors) {
+	void CallVisitor::error (const lexing::Word & location, const lexing::Word & end, const Generator & left, const std::vector <Generator> & rights, const std::list <Ymir::Error::ErrorMsg> & errors) {
 	    std::list <std::string> names;
 	    for (auto & it : rights)
 	    names.push_back (it.to <Value> ().getType ().to <Type> ().getTypeName ());
 
 	    std::string leftName;
-	    match (left) {
-		of (FrameProto, proto) leftName = proto.getName ();
-		elof (ConstructorProto, proto) leftName = proto.getName ();
-		elof (generator::Struct, str) leftName = str.getName ();
-		elof (MultSym,    sym)  leftName = sym.prettyString ();
-		elof (ModuleAccess, acc) leftName = acc.prettyString ();
-		elof (TemplateRef, cl) leftName = cl.prettyString ();
-		elof (TemplateClassCst, cl) leftName = cl.prettyString ();
-		elof (Value,      val)  leftName = val.getType ().to <Type> ().getTypeName ();
-		fo;
+	    if (left.isEmpty ()) leftName = (NoneType::init (location)).prettyString ();
+	    else {
+		match (left) {
+		    of (FrameProto, proto) leftName = proto.getName ();
+		    elof (ConstructorProto, proto) leftName = proto.getName ();
+		    elof (generator::Struct, str) leftName = str.getName ();
+		    elof (MultSym,    sym)  leftName = sym.prettyString ();
+		    elof (ModuleAccess, acc) leftName = acc.prettyString ();
+		    elof (TemplateRef, cl) leftName = cl.prettyString ();
+		    elof (TemplateClassCst, cl) leftName = cl.prettyString ();
+		    elof (Value,      val)  leftName = val.getType ().to <Type> ().getTypeName ();
+		    fo;
+		}
 	    }
 	    
 	    auto err = Ymir::Error::makeOccurAndNote (

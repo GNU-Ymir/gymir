@@ -297,9 +297,9 @@ namespace semantic {
 	    /**
 	     * Throw an undefined op error
 	     */
-	    static void error (const lexing::Word & expression, const generator::Generator & left, const std::vector <generator::Generator> & rights, std::list <Ymir::Error::ErrorMsg> & errors);
+	    static void error (const lexing::Word & expression, const generator::Generator & left, const std::vector <generator::Generator> & rights, const std::list <Ymir::Error::ErrorMsg> & errors);
 
-	    static void error (const lexing::Word & expression, const lexing::Word & end, const generator::Generator & left, const std::vector <generator::Generator> & rights, std::list <Ymir::Error::ErrorMsg> & errors);
+	    static void error (const lexing::Word & expression, const lexing::Word & end, const generator::Generator & left, const std::vector <generator::Generator> & rights, const std::list <Ymir::Error::ErrorMsg> & errors);
 
 	    static std::string prettyName (const generator::Generator & gen);
 
