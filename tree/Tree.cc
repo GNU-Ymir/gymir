@@ -303,7 +303,7 @@ namespace generic {
 
     Tree Tree::affect (generic::TreeChain & stackContext, const generic::Tree & segmentContext, const lexing::Word & loc, const Tree & left, const Tree & right) {
 	if (right.isCompound () || right.isStmtList ())
-	    Ymir::Error::halt ("", "");
+	Ymir::Error::halt ("", "");
 	
 	if (left.getType ().isScalar ()) {
 	    return Tree::build (MODIFY_EXPR, loc, left.getType (), left,

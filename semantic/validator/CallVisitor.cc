@@ -35,7 +35,7 @@ namespace semantic {
 	    if (left.isEmpty () && expression.canBeDotCall ()) { // if the validation failed, then maybe it is a dot call
 		left = this-> validateDotCall (expression.getLeft (), rights, errors); // so we try a dot call validation
 	    } else if (left.isEmpty ()) {
-		this-> error (expression.getLocation (), expression.getEnd (), left, rights, errors);
+		throw Error::ErrorList {errors};
 	    }
 
 	    for (auto & it : expression.getRights ()) { // Validation of the rights operands
@@ -984,7 +984,7 @@ namespace semantic {
 	    } else if  (exp.is <syntax::Binary> () && exp.to <syntax::Binary> ().getLocation () == Token::DOT) {
 		synthBin = exp;
 	    } else {
-		this-> error (exp.getLocation (), left, params, errors);
+		throw Error::ErrorList {errors};
 	    }
 	    
 	    auto bin = synthBin.to <syntax::Binary> ();
@@ -994,7 +994,7 @@ namespace semantic {
 	    } catch (Error::ErrorList list) {}
 	    
 	    if (left.isEmpty ()) {
-		this-> error (exp.getLocation (), left, params, errors);
+		throw Error::ErrorList {errors};
 	    }
 	    
 	    if (right.isEmpty ()) {

@@ -1465,10 +1465,11 @@ namespace semantic {
 	    TreeStmtList list = TreeStmtList::init ();
 	    if (!br.getValue ().to <Value> ().getType ().is<Void> ()) {
 	    	auto value = generateValue (br.getValue ());		 // Loop will never be lvalue, and therefore cannot return a ref
+		list.append (value.getList ());
 	    	list.append (
 	    	    Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), br.getLocation (),
 	    			  this-> _loopVars.back (),
-	    			  value)
+	    			  value.getValue ())
 	    	);
 	    }
 

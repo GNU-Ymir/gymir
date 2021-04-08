@@ -153,6 +153,9 @@ namespace semantic {
 		    }
 		} catch (Error::ErrorList list) {
 		    errors = list.errors;
+		    errors.back ().addNote (
+			Ymir::Error::createNote (loc)
+			);
 		} 		
 
 		popReferent ("validateMultSym");
