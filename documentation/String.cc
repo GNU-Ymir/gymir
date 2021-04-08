@@ -24,7 +24,17 @@ namespace documentation {
 	}
 
 	std::string JsonString::toString () const {
-	    return Ymir::format ("\"%\"", this-> _content);
+	    Ymir::OutBuffer buf;
+	    buf.write ("\"");
+	    bool escaped = false;
+	    for (auto & it : this-> _content) {
+		if (it == '\"' && !escaped) buf.write ("\\\"");
+		else buf.write (it);
+		if (it == '\\') escaped = true;
+		else escaped = false;
+	    }
+	    buf.write ("\"");
+	    return buf.str ();
 	}
 	
     }    
