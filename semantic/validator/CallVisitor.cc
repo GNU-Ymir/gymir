@@ -30,7 +30,7 @@ namespace semantic {
 	    } catch (Error::ErrorList list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    }
-
+	    
 	    std::vector <Generator> rights;
 	    if (left.isEmpty () && expression.canBeDotCall ()) { // if the validation failed, then maybe it is a dot call
 		left = this-> validateDotCall (expression.getLeft (), rights, errors); // so we try a dot call validation
@@ -52,7 +52,7 @@ namespace semantic {
 	    errors = {}; // clear the errors about left, if there was any, if we are here, then we at least validated a dot call
 	    // Perform the validation
 	    auto ret = validate (expression.getLocation (), left, rights, score, errors);
-	    
+		
 	    if (ret.isEmpty ()) {
 		this-> error (expression.getLocation (), expression.getEnd (), left, rights, errors);
 		return Generator::empty ();

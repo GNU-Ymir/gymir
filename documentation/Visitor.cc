@@ -15,6 +15,7 @@ namespace documentation {
 
     using namespace semantic;
     using namespace json;
+    using namespace generator;
     
     Visitor::Visitor (validator::Visitor & context):
 	_context (context)
@@ -267,7 +268,7 @@ namespace documentation {
 	for (auto & it : proto.to<generator::FrameProto> ().getParameters ()) {
 	    std::map <std::string, JsonValue> param;
 	    param ["name"] = JsonString::init (it.to <generator::ProtoVar> ().getLocation ().getStr ());
-	    param ["type"] = JsonString::init (it.to <generator::Value> ().getType ().prettyString ());
+	    param ["type"] = dumpType (it.to <generator::Value> ().getType ());
 	    param ["mut"] = JsonString::init (it.to <generator::ProtoVar> ().isMutable ()? "true" : "false");
 
 	    if (!it.to <generator::ProtoVar> ().getValue ().isEmpty ())
@@ -275,7 +276,7 @@ namespace documentation {
 	    params.push_back (JsonDict::init (param));
 	}
 	val ["params"] = JsonArray::init (params);
-	val ["type"] = JsonString::init (proto.to <generator::FrameProto> ().getReturnType ().prettyString ());
+	val ["ret_type"] = JsonString::init (proto.to <generator::FrameProto> ().getReturnType ().prettyString ());
 	
 	
 	std::vector <JsonValue> throwers;
@@ -303,7 +304,7 @@ namespace documentation {
 	for (auto & it : decl.getPrototype ().getParameters ()) {
 	    std::map <std::string, JsonValue> param;
 	    param ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getLocation ().getStr ());
-	    param ["type"] = JsonString::init (it.to <syntax::VarDecl> ().getType ().prettyString ());
+	    param ["type"] = dumpType (it.to <syntax::VarDecl> ().getType ());
 	    param ["mut"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT)? "true" : "false");
 	    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ())
 		param ["value"] = JsonString::init (it.to <syntax::VarDecl> ().getValue ().prettyString ());
@@ -311,7 +312,7 @@ namespace documentation {
 	}
 	
 	val ["param"] = JsonArray::init (params);
-	val ["type"] = JsonString::init (decl.getPrototype ().getType ().prettyString ());
+	val ["ret_type"] = dumpType (decl.getPrototype ().getType ());
 
 	std::vector <JsonValue> throwers;
 	for (auto & it : decl.getThrowers ()) {
@@ -330,7 +331,7 @@ namespace documentation {
 	auto gen = decl.getGenerator ();
 	
 	val ["mut"] = JsonString::init (gen.to <generator::GlobalVar> ().isMutable () ? "true" : "false");
-	val ["var_type"] = JsonString::init (gen.to <generator::GlobalVar> ().getType ().prettyString ());
+	val ["var_type"] = dumpType (gen.to <generator::GlobalVar> ().getType ());
 		
 	if (!gen.to <generator::GlobalVar> ().getValue ().isEmpty ()){
 	    val ["value"] = JsonString::init (gen.to <generator::GlobalVar> ().getValue ().prettyString ());
@@ -346,7 +347,7 @@ namespace documentation {
 	auto & vdecl = gv.getContent ().to <syntax::VarDecl> ();
 	
 	val ["mut"] = JsonString::init (vdecl.hasDecorator (syntax::Decorator::MUT)? "true" : "false");
-	val ["var_type"] = JsonString::init (vdecl.getType ().prettyString ());
+	val ["var_type"] = dumpType (vdecl.getType ());
 		
 	if (!vdecl.getValue ().isEmpty ()){
 	    val ["value"] = JsonString::init (vdecl.getValue ().prettyString ());
@@ -417,7 +418,7 @@ namespace documentation {
 	for (auto & it : str.getDeclarations ()) {
 	    std::map <std::string, JsonValue> field;
 	    field ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getName ().getStr ());
-	    field ["type"] = JsonString::init (it.to <syntax::VarDecl> ().getType ().prettyString ());
+	    field ["type"] = dumpType (it.to <syntax::VarDecl> ().getType ());
 	    field ["mut"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT) ? "true" : "false");
 	    field ["doc"] = JsonString::init (field_coms [i]);
 	    i += 1;
@@ -438,7 +439,7 @@ namespace documentation {
 	this-> dumpStandard (en, val);
 	auto gen = en.getGenerator ();
 	
-	val ["en_type"] = JsonString::init (gen.to <semantic::generator::Enum> ().getType ().prettyString ());
+	val ["en_type"] = dumpType (gen.to <semantic::generator::Enum> ().getType ());
 	
 	std::vector <JsonValue> childs;
 	const std::vector <std::string> & field_coms = en.getFieldComments ();
@@ -463,7 +464,7 @@ namespace documentation {
 	std::map <std::string, JsonValue> val;
 	val ["type"] = JsonString::init ("enum");
 	this-> dumpStandard (en, pub, prot, val);
-	val ["en_type"] = JsonString::init (en.getType ().prettyString ());
+	val ["en_type"] = dumpType (en.getType ());
 
 	
 	std::vector <JsonValue> childs;
@@ -551,7 +552,7 @@ namespace documentation {
 		for (auto & it : proto.to <generator::ConstructorProto> ().getParameters ()) {
 		    std::map <std::string, JsonValue> param;
 		    param ["name"] = JsonString::init (it.to <generator::ProtoVar> ().getLocation ().getStr ());
-		    param ["type"] = JsonString::init (it.to <generator::Value> ().getType ().prettyString ());
+		    param ["type"] = dumpType (it.to <generator::Value> ().getType ());
 		    param ["mut"] = JsonString::init (it.to <generator::ProtoVar> ().isMutable ()? "true" : "false");
 		    if (!it.to <generator::ProtoVar> ().getValue ().isEmpty ())
 			param ["value"] = JsonString::init (it.to<generator::ProtoVar> ().getValue ().prettyString ());
@@ -592,7 +593,7 @@ namespace documentation {
 		    auto de = wrap.getContent ().to <syntax::VarDecl> ();		
 		    std::map <std::string, JsonValue> param;
 		    param ["name"] = JsonString::init (de.getName ().getStr ());
-		    param ["type"] = JsonString::init (de.getType ().prettyString ());
+		    param ["type"] = dumpType (de.getType ());
 		    param ["mut"] = JsonString::init (de.hasDecorator (syntax::Decorator::MUT) ? "true" : "false");
 		    param ["doc"] = JsonString::init (wrap.getComments ());
 				    	
@@ -608,7 +609,7 @@ namespace documentation {
 			auto de = it.to <syntax::VarDecl> ();
 			std::map <std::string, JsonValue> param;
 			param ["name"] = JsonString::init (de.getName ().getStr ());
-			param ["type"] = JsonString::init (de.getType ().prettyString ());
+			param ["type"] = dumpType (de.getType ());
 			param ["mut"] = JsonString::init (de.hasDecorator (syntax::Decorator::MUT) ? "true" : "false");
 			param ["doc"] = JsonString::init (wrap.getComments ());
 				    	
@@ -720,7 +721,7 @@ namespace documentation {
 	for (auto & it : proto.getParameters ()) {
 	    std::map <std::string, JsonValue> param;
 	    param ["name"] = JsonString::init (it.to <generator::ProtoVar> ().getLocation ().getStr ());
-	    param ["type"] = JsonString::init (it.to <generator::Value> ().getType ().prettyString ());
+	    param ["type"] = dumpType (it.to <generator::Value> ().getType ());
 	    param ["mut"] = JsonString::init (it.to <generator::ProtoVar> ().isMutable ()? "true" : "false");
 	    
 	    if (!it.to <generator::ProtoVar> ().getValue ().isEmpty ())
@@ -759,7 +760,7 @@ namespace documentation {
 	for (auto & it : decl.getPrototype ().getParameters ()) {
 	    std::map <std::string, JsonValue> param;
 	    param ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getLocation ().getStr ());
-	    param ["type"] = JsonString::init (it.to <syntax::VarDecl> ().getType ().prettyString ());
+	    param ["type"] = dumpType (it.to <syntax::VarDecl> ().getType ());
 	    param ["mut"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT)? "true" : "false");
 	    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ())
 		param ["value"] = JsonString::init (it.to <syntax::VarDecl> ().getValue ().prettyString ());
@@ -948,6 +949,129 @@ namespace documentation {
 	
 	return JsonDict::init (val);
     }
+
+    JsonValue Visitor::dumpType (const generator::Generator & type) {
+	std::map <std::string, JsonValue> val;
+	if (type.is <generator::Type> ()) {
+	    val ["mut"] = JsonString::init (type.to <generator::Type> ().isMutable () ? "true" : "false");
+	} else val ["mut"] = JsonString::init ("false");
+	match (type) {
+	    of (Integer, i) {
+		val ["type"] = JsonString::init ("int");
+		val ["name"] = JsonString::init (i.prettyString ());
+	    }
+	    elof (Void, v) {
+		val ["type"] = JsonString::init ("void");
+		val ["name"] = JsonString::init (v.prettyString ());
+	    }
+	    elof (Bool, b) {
+		val ["type"] = JsonString::init ("bool");
+		val ["name"] = JsonString::init (b.prettyString ());
+	    }
+	    elof (Float, f) {
+		val ["type"] = JsonString::init ("float");
+		val ["name"] = JsonString::init (f.prettyString ());
+	    }
+	    elof (Char, c) {
+		val ["type"] = JsonString::init ("char");
+		val ["name"] = JsonString::init (c.prettyString ());
+	    }
+	    elof (Array, ar) {
+		val ["type"] = JsonString::init ("array");
+		val ["size"] = JsonString::init (Ymir::format ("%", ar.getSize ()));
+		val ["childs"] = JsonArray::init ({dumpType (ar.getInners ()[0])});
+	    }
+	    elof (Slice, sl) {
+		val ["type"] = JsonString::init ("slice");
+		val ["childs"] = JsonArray::init ({dumpType (sl.getInners ()[0])});
+	    }
+	    elof (Tuple, tl) {
+		val ["type"] = JsonString::init ("tuple");
+		std::vector <JsonValue> childs;
+		for (auto & it : tl.getInners ()) {
+		    childs.push_back (dumpType (it));
+		}
+		val ["childs"] = JsonArray::init (childs);
+	    }
+	    elof (StructRef, r) {
+		val ["type"] = JsonString::init ("struct");
+		val ["name"] = JsonString::init (r.prettyString ());
+	    }
+	    elof (EnumRef, e) {
+		val ["type"] = JsonString::init ("enum");
+		val ["name"] = JsonString::init (e.prettyString ());
+	    }
+	    elof (ClassRef, c) {
+		val ["type"] = JsonString::init ("class");
+		val ["name"] = JsonString::init (c.prettyString ());
+	    }
+	    elof (Pointer, p) {
+		val ["type"] = JsonString::init ("pointer");
+		val ["childs"] = JsonArray::init ({dumpType (p.getInners ()[0])});
+	    }
+	    elof (ClassPtr, p) {
+		val ["type"] = JsonString::init ("class_pointer");
+		val ["childs"] = JsonArray::init ({dumpType (p.getInners ()[0])});
+	    }
+	    elof (Range, r) {
+		val ["type"] = JsonString::init ("range");
+		val ["childs"] = JsonArray::init ({dumpType (r.getInners ()[0])});
+	    }
+	    elof (FuncPtr, fn) {
+		val ["type"] = JsonString::init ("fn_pointer");
+		std::vector <JsonValue> childs;
+		for (auto & it : fn.getParamTypes ()) {
+		    childs.push_back (dumpType (it));
+		}
+		val ["childs"] = JsonArray::init (childs);
+		val ["ret_type"] = dumpType (fn.getReturnType ());
+	    }
+	    elof (Closure, c) {
+		val ["type"] = JsonString::init ("closure");
+		std::vector <JsonValue> childs;
+		for (auto & it : c.getInners ()) {
+		    childs.push_back (dumpType (it));
+		}
+		val ["childs"] = JsonArray::init (childs);
+	    }
+	    elof (Delegate, d) {
+		val ["type"] = JsonString::init ("dg_pointer");
+		std::vector <JsonValue> childs;
+		if (d.getInners () [0].is <FrameProto> ()) {
+		    std::map <std::string, JsonValue> val2;
+		    auto & proto = d.getInners ()[0];
+		    auto params = proto.to <FrameProto> ().getParameters ();
+		    auto ret = proto.to <FrameProto> ().getReturnType ();
+		    std::vector <Generator> paramTypes;
+		    for (auto & it : params) {
+			childs.push_back (dumpType (it.to <generator::ProtoVar> ().getType ()));
+		    }
+		    val2 ["type"] = JsonString::init ("fn_pointer");
+		    val2 ["childs"] = JsonArray::init (childs);
+		    val2 ["ret_type"] = dumpType (ret);
+		    val ["childs"] = JsonArray::init ({JsonDict::init (val2)});
+		} else {
+		    val ["childs"] = JsonArray::init ({dumpType (d.getInners () [0])});
+		}
+	    }
+	    elof (Option, o) {
+		val ["type"] = JsonString::init ("type");
+		val ["childs"] = JsonArray::init ({dumpType (o.getInners ()[0])});
+	    } elfo {
+		val ["type"] = JsonString::init ("unknown");
+		val ["name"] = JsonString::init (type.prettyString ());		    
+	    }
+	}	
+	return JsonDict::init (val);	
+    }
+
+    JsonValue Visitor::dumpType (const syntax::Expression & type) {
+	std::map <std::string, JsonValue> val;
+	val ["type"] = JsonString::init ("unknown");
+	val ["name"] = JsonString::init (type.prettyString ());
+	return JsonDict::init (val);	
+    }
+
     
     
     

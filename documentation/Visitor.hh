@@ -190,6 +190,18 @@ namespace documentation {
 	 */
 	json::JsonValue dumpMacroUnvalidated (const syntax::Macro & x, bool pub, bool prot);
 
+	/**
+	 * Dump a type
+	 * \return the doc of the type
+	 */
+	json::JsonValue dumpType (const semantic::generator::Generator & type);
+
+	/**
+	 * Dump a type
+	 * \return the doc of the type
+	 */
+	json::JsonValue dumpType (const syntax::Expression & type);
+	
     private :
 
 	/**

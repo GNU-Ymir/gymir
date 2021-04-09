@@ -263,10 +263,10 @@ namespace semantic {
 	    std::vector <Generator> syms;
 	    auto & vtable = cl.to <generator::Class> ().getVtable ();
 	    auto & protVtable = cl.to <generator::Class> ().getProtectionVtable ();
-
+	    
 	    for (auto i : Ymir::r (0, vtable.size ())) {
 		if (Ymir::Path (vtable [i].to <FrameProto> ().getName (), "::").fileName ().toString () == name) {
-		    if (prv || (prot && protVtable [i] == generator::Class::MethodProtection::PROT) || protVtable [i] == generator::Class::MethodProtection::PUB) {			
+		    if (prv || (prot && protVtable [i] == generator::Class::MethodProtection::PROT) || protVtable [i] == generator::Class::MethodProtection::PUB) {
 			std::vector <Generator> types;
 			for (auto & it : vtable [i].to <FrameProto> ().getParameters ())
 			    types.push_back (it.to <ProtoVar> ().getType ());
@@ -304,7 +304,6 @@ namespace semantic {
 		    }
 		}
 	    }
-
 	    cl = left.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef ().to <semantic::Class> ().getGenerator ();
 
 	    int i = 0;
