@@ -123,13 +123,13 @@ namespace semantic {
 		}
 		
 		
-		s_of (semantic::TemplateSolution, sol) {
+		s_of_u (semantic::TemplateSolution) {
 		    std::list <Ymir::Error::ErrorMsg> errors;
 		    if (insertTemplateSolution (sym, errors) || inModule) {
 			if (errors.size () != 0) {
-			    if (!global::State::instance ().isVerboseActive ()) {
-				Ymir::Error::occur (sol.getName (), ExternalError::get (INCOMPLETE_TEMPLATE), sol.getSolutionName ());
-			    }
+			    // if (!global::State::instance ().isVerboseActive ()) {
+			    // 	Ymir::Error::occur (sol.getName (), ExternalError::get (INCOMPLETE_TEMPLATE), sol.getSolutionName ());
+			    // }
 			    
 			    throw Error::ErrorList {errors};
 			}

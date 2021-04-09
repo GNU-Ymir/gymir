@@ -122,9 +122,9 @@ namespace semantic {
 	    auto classType = sol.getReferent ().to <semantic::Class> ().getGenerator ().to <generator::Class> ().getClassRef ();
 	    if (insertTemplateSolution (sol, errors)) { // If it is the first time the solution is presented
 		if (errors.size () != 0) {
-		    if (!global::State::instance ().isVerboseActive ()) {
-			Ymir::Error::occur (sol.getName (), ExternalError::get (INCOMPLETE_TEMPLATE), sol.to <TemplateSolution> ().getSolutionName ());
-		    }
+		    // if (!global::State::instance ().isVerboseActive ()) {
+		    // 	Ymir::Error::occur (sol.getName (), ExternalError::get (INCOMPLETE_TEMPLATE), sol.to <TemplateSolution> ().getSolutionName ());
+		    // }
 			    
 		    throw Error::ErrorList {errors};
 		}

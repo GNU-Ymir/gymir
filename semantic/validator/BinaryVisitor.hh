@@ -131,6 +131,27 @@ namespace semantic {
 
 
 	    /**
+	     * \brief Validate a binary math operator with a struct as the left operand
+	     * \param op the operator of the expression
+	     * \param expression the syntaxic node that will produce the generator
+	     * \param left the left operand that we assume to be a Struct value
+	     * \param right the right operand that we don't know the type yet
+	     */
+	    generator::Generator validateMathStruct (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
+
+
+	    /**
+	     * \brief Validate a binary math operator with a struct as the right operand
+	     * \param op the operator of the expression
+	     * \param expression the syntaxic node that will produce the generator
+	     * \param left the left operand that we don't know the type yet
+	     * \param right the right operand that we assume to be a Struct value
+	     */
+	    generator::Generator validateMathStructRight (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
+
+	    
+
+	    /**
 	     * \brief Validate a logical operation from two operands
 	     * \brief Logical operations are operations that typically create boolean
 	     */
@@ -204,6 +225,26 @@ namespace semantic {
 	     */
 	    generator::Generator validateEqualClassRight (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
 	    
+	    /**
+	     * \brief Validate a binary logical operator with a class on left operand
+	     */
+	    generator::Generator validateLogicalStruct (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
+
+	    /**
+	     * \brief Validate a equality operator with a class on left operand
+	     */
+	    generator::Generator validateEqualStruct (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
+	    
+	    /**
+	     * \brief Validate a binary logical operator with a class on right operand
+	     */
+	    generator::Generator validateLogicalStructRight (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
+
+	    /**
+	     * \brief Validate a equality operator with a class on right operand
+	     */
+	    generator::Generator validateEqualStructRight (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
+
 	    
 	    /**
 	     * \brief Validate an affectation, the pre operation is a mathetical one (or concat, but its considered math)
