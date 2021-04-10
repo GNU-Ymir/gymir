@@ -826,8 +826,6 @@ namespace semantic {
 		}
 		
 	    } catch (Error::ErrorList list) {
-		println ("ici ?");
-		list.print ();
 		errors = list.errors;
 		errors.back ().addNote (Error::createNote (var.getLocation (), ExternalError::get (IN_MATCH_DEF)));
 	    } 

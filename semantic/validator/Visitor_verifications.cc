@@ -276,7 +276,7 @@ namespace semantic {
 		}
 	    }
 	}
-
+	
 
 	void Visitor::verifyClassImpl (const lexing::Word & loc, const Generator & cl, const syntax::Expression & trait) {
 	    auto type = this-> validateTypeClassContext (loc, cl, trait);

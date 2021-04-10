@@ -20,8 +20,8 @@ namespace semantic {
 	}
 
 	Generator DotVisitor::validate (const syntax::Binary & expression, bool isFromCall) {
-	    std::list <Ymir::Error::ErrorMsg> errors;
-	    auto left = this-> _context.validateValue (expression.getLeft ());
+	    std::list <Ymir::Error::ErrorMsg> errors;	    
+	    auto left = this-> _context.validateValue (expression.getLeft ());	    
 	    
 	    Generator ret (Generator::empty ());
 	    match (left.to <Value> ().getType ()) {
@@ -260,10 +260,11 @@ namespace semantic {
 	    // Method
 	    auto cl = left.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef ().to <semantic::Class> ().getGenerator ();
 
+	    if (!cl.to <generator::Class> ().isFinalized ())
+	    Ymir::Error::halt ("%(r)", cl.prettyString ());
 	    std::vector <Generator> syms;
 	    auto & vtable = cl.to <generator::Class> ().getVtable ();
 	    auto & protVtable = cl.to <generator::Class> ().getProtectionVtable ();
-	    
 	    for (auto i : Ymir::r (0, vtable.size ())) {
 		if (Ymir::Path (vtable [i].to <FrameProto> ().getName (), "::").fileName ().toString () == name) {
 		    if (prv || (prot && protVtable [i] == generator::Class::MethodProtection::PROT) || protVtable [i] == generator::Class::MethodProtection::PUB) {

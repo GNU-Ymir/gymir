@@ -33,6 +33,8 @@ namespace semantic {
 	    Generator _classRef;
 
 	    generator::Generator _destructor;
+
+	    bool _finalized = false;
 	    
 	private :
 
@@ -42,15 +44,15 @@ namespace semantic {
 	    
 	    Class ();
 
-	    Class (const lexing::Word & loc, const Symbol & ref, const Generator & classRef);
+	    Class (const lexing::Word & loc, const Symbol & ref, const Generator & classRef, bool finalized);
 
 	public : 
 	    
 	    static Generator init (const lexing::Word & loc, const Symbol & ref, const Generator & classRef);
 
-	    static Generator initFields (const Class & other, const std::vector <generator::Generator> & fields, const std::vector <generator::Generator> & localFields);
+	    static Generator initFields (const Class & other, const std::vector <generator::Generator> & fields, const std::vector <generator::Generator> & localFields, bool finalized);
 
-	    static Generator initVtable (const Class & other, const std::vector <generator::Generator> & vtable, const std::vector <MethodProtection> & prots, const generator::Generator & destructor);
+	    static Generator initVtable (const Class & other, const std::vector <generator::Generator> & vtable, const std::vector <MethodProtection> & prots, const generator::Generator & destructor, bool finalized);
 	    
 	    
 	    Generator clone () const override;
@@ -126,11 +128,16 @@ namespace semantic {
 	     * \return the symbol responsible of the declaration of this structure prototype
 	     */
 	    Symbol getRef () const;
-
+	    
 	    /**
 	     * \return a classRef, containing the information about this class and ancestor
 	     */
 	    const Generator & getClassRef () const;
+
+	    /**
+	     * The validation of the class is finished
+	     */
+	    bool isFinalized () const;
 	    
 	};
     }

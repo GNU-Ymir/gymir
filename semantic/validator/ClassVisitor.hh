@@ -14,8 +14,6 @@ namespace semantic {
 
 	    FunctionVisitor _funcVisitor;
 
-	    static std::list <bool> __fast_validation__;
-
 	private :
 
 	    ClassVisitor (Visitor & context);
@@ -158,9 +156,15 @@ namespace semantic {
 	     */
 
 	    /**
+	     * Validate the inner symbols of a class, whose vtable and fields are already validated
+	     */
+	    void validateClassFull (const semantic::Symbol & cls);
+	    
+	    /**
 	     * Validate the content symbol of the class (constructors, and methods)
 	     */
 	    void validateInnerClass (const semantic::Symbol & cls, std::list <Ymir::Error::ErrorMsg> & errors);
+
 	    
 
 

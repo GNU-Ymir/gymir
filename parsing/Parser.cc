@@ -73,6 +73,7 @@ namespace Ymir {
 
 	auto validator = semantic::validator::Visitor::init ();	
 	validator.validate (module);
+	validator.validateAllClasses ();
 	
 	if (global::State::instance ().isDocDumpingActive ()) {
 	    auto doc_visit = documentation::Visitor::init (validator);
@@ -89,7 +90,7 @@ namespace Ymir {
 	}
 
 	generator.finalize ();
-
+	
 	semantic::Symbol::purge ();
 	semantic::declarator::Visitor::purge ();
     }

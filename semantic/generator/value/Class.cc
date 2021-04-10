@@ -15,31 +15,34 @@ namespace semantic {
 	{
 	}
 
-	Class::Class (const lexing::Word & loc, const Symbol & ref, const Generator & clRef) :
+	Class::Class (const lexing::Word & loc, const Symbol & ref, const Generator & clRef, bool finalized) :
 	    Value (loc, loc.getStr (), NoneType::init (loc, "class " + ref.getRealName ())),
 	    _classRef (clRef),
-	    _destructor (Generator::empty ())
+	    _destructor (Generator::empty ()),
+	    _finalized (finalized)
 	{
 	    auto aux = ref;
 	    this-> _ref = aux.getPtr ();
 	}
 
 	Generator Class::init (const lexing::Word & loc, const Symbol & ref, const Generator & clRef) {
-	    return Generator {new (NO_GC) Class (loc, ref, clRef)};
+	    return Generator {new (NO_GC) Class (loc, ref, clRef, false)};
 	}
 
-	Generator Class::initFields (const Class & other, const std::vector <generator::Generator> & fields, const std::vector <generator::Generator> & localFields) {
+	Generator Class::initFields (const Class & other, const std::vector <generator::Generator> & fields, const std::vector <generator::Generator> & localFields, bool finalized) {
 	    auto ret = other.clone ();
 	    ret.to <Class> ()._fields = fields;
 	    ret.to <Class> ()._localFields = localFields;
+	    ret.to <Class> ()._finalized = finalized;
 	    return ret;
 	}
 
-	Generator Class::initVtable (const Class & other, const std::vector <generator::Generator> & vtable, const std::vector <MethodProtection> & prots, const Generator & destructor) {
+	Generator Class::initVtable (const Class & other, const std::vector <generator::Generator> & vtable, const std::vector <MethodProtection> & prots, const Generator & destructor, bool finalized) {
 	    auto ret = other.clone ();
 	    ret.to <Class> ()._vtable = vtable;
 	    ret.to <Class> ()._prots = prots;
 	    ret.to <Class> ()._destructor = destructor;
+	    ret.to <Class> ()._finalized = finalized;
 	    return ret;
 	}
 	
@@ -167,6 +170,10 @@ namespace semantic {
 
 	const Generator & Class::getClassRef () const {
 	    return this-> _classRef;
+	}
+
+	bool Class::isFinalized () const {
+	    return this-> _finalized;
 	}
 	
     }

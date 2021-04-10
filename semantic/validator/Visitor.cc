@@ -230,6 +230,28 @@ namespace semantic {
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	}
 
+	void Visitor::validateAllClasses () {
+	    auto classes = std::move (this-> _classToValidate);
+	    std::list <Error::ErrorMsg> errors;
+	    for (auto & it : classes) {
+		try {
+		    auto clVisitor = ClassVisitor::init (*this);
+		    clVisitor.validateClassFull (it);
+		} catch (Error::ErrorList & list) {
+		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		}
+	    }
+	    
+	    if (errors.size () != 0) {
+		throw Error::ErrorList {errors};
+	    }
+	    
+	    // we might add new class ref while validating the others
+	    if (this-> _classToValidate.size () != 0) {
+	    	this-> validateAllClasses (); 
+	    }
+	}	
+
 	const std::vector <generator::Generator> & Visitor::getGenerators () const {
 	    return this-> _list;
 	}

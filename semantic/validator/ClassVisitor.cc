@@ -4,6 +4,7 @@
 #include <ymir/utils/Path.hh>
 #include <ymir/syntax/visitor/Keys.hh>
 #include <ymir/semantic/validator/PragmaVisitor.hh>
+#include <ymir/semantic/validator/DotVisitor.hh>
 
 namespace semantic {
 
@@ -11,8 +12,6 @@ namespace semantic {
 
 	using namespace generator;
 	using namespace Ymir;
-
-	std::list <bool> ClassVisitor::__fast_validation__;
 	
 	ClassVisitor::ClassVisitor (Visitor & context) :
 	    _context (context),
@@ -31,13 +30,14 @@ namespace semantic {
 	    if (validated && cls.to <semantic::Class> ().getGenerator ().is <generator::Class> ()) {
 		validated = !cls.to <semantic::Class> ().getGenerator ().to <generator::Class> ().getClassRef ().to <generator::ClassRef> ().isFast ();
 	    }
-	    
+
 	    if (!validated || inModule) {
 		this-> validateClassContent (cls, inModule);
 	    }
 	    
+	    
 	    match (cls.to <semantic::Class> ().getGenerator ()) {
-		of (generator::Class, cl) {
+		of (generator::Class, cl) {		    
 		    return cl.getClassRef ();
 		} elof (ErrorType, err) {
 		    auto lst = err.getErrors (); // it cannot be a ref, because it is suppressed by the following if
@@ -62,12 +62,10 @@ namespace semantic {
 	    // and avoid validating multiple times the same class
 	    
 	    std::list <Error::ErrorMsg> errors;
-	    // if (__fast_validation__.empty () || !__fast_validation__.back () || inModule) { // if inModule but __fast_validation__, then the class must be a template
 	    auto ancestor = this-> validateAncestor (cls);
 	    auto gen = generator::Class::init (cls.getName (), sym, ClassRef::init (cls.getName (), ancestor, sym));
 	    // To avoid recursive validation 
-	    sym.to <semantic::Class> ().setGenerator (gen);
-	    __fast_validation__.push_back (false);
+	    sym.to <semantic::Class> ().setGenerator (gen);	    
 		    
 	    this-> validateCtes (cls); // this throws if an error occur anyway,
 	    // we don't wan't to validate the class if an assertion failed
@@ -77,8 +75,6 @@ namespace semantic {
 
 	    // The validation of the field of the class
 	    this-> validateFields (cls, ancestor, inModule, errors);
-
-	    __fast_validation__.pop_back ();
 		    
 	    if (errors.size () != 0) { // we caught the errors, to display the fields and vtable errors at the same time
 		if (!this-> _context.isInContext ({PragmaVisitor::PRAGMA_COMPILE_CONTEXT})) {  // in pragma compile the errors are not printed, so we need to keep them in case of retry
@@ -90,26 +86,8 @@ namespace semantic {
 	    }
 
 	    if (inModule) { // if we are in the module that declared the class, then we have to validate the inner symbols
-		this-> validateInnerClass (cls, errors);
-		
-		if (errors.size () != 0) { // caught the error to add a note
-		    if (!this-> _context.isInContext ({PragmaVisitor::PRAGMA_COMPILE_CONTEXT})) { 
-			sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
-		    } else {
-			sym.to <semantic::Class> ().setGenerator (ErrorType::init (cls.getName (), cls.getRealName (), errors));
-		    }
-		    Ymir::Error::occurAndNote (cls.getName (), errors, ExternalError::get (VALIDATING), cls.getRealName ());
-		}
-		    
-		this-> _context.insertNewGenerator (cls.to <semantic::Class> ().getGenerator ());
-		    
-	    }
-	    // } else {
-	    // 	auto ancestor = this-> validateAncestor (cls);
-	    // 	auto gen = generator::Class::init (cls.getName (), sym, ClassRef::init (cls.getName (), ancestor, sym, true));
-	    // 	// To avoid recursive validation 
-	    // 	sym.to <semantic::Class> ().setGenerator (gen);
-	    // }
+		this-> _context.insertClassValidation (cls);
+	    }	   
 	}
 	
 
@@ -139,7 +117,7 @@ namespace semantic {
 		} else allFields = localFields;
 		
 
-		gen = generator::Class::initFields (gen.to <generator::Class> (), allFields, localFields);
+		gen = generator::Class::initFields (gen.to <generator::Class> (), allFields, localFields, true);
 		sym.to <semantic::Class> ().setGenerator (gen);
 	    } catch (Error::ErrorList list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
@@ -160,21 +138,7 @@ namespace semantic {
 	    std::vector <generator::Generator> types;
 	    for (auto & it : cls.to<semantic::Class> ().getFields ()) {
 		try {
-		    auto fast = !inModule;
-		    auto prv = cls.to <semantic::Class> ().isMarkedPrivate (it.to <syntax::VarDecl> ().getName ().getStr ());
-		    prv = prv || (cls.to <semantic::Class> ().isFinal () && cls.to <semantic::Class> ().isMarkedProtected (it.to <syntax::VarDecl> ().getName ().getStr ()));
-
-		    if (fast && prv) {
-			ClassVisitor::__fast_validation__.push_back (true);
-			try {
-			    syms.push_back (this-> _context.validateVarDeclValue (it.to <syntax::VarDecl> (), false));
-			} catch (Error::ErrorList list) {
-			    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-			}
-			ClassVisitor::__fast_validation__.pop_back ();
-		    } else {
-			syms.push_back (this-> _context.validateVarDeclValue (it.to <syntax::VarDecl> (), false));
-		    }
+		    syms.push_back (this-> _context.validateVarDeclValue (it.to <syntax::VarDecl> (), false));
 		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		}		    
@@ -263,7 +227,7 @@ namespace semantic {
 		auto dtor = this-> validateVtableDtor (sym, ClassRef::init (cls.getName (), ancestor, sym), ancestor);
 
 		// Create a generator with a vtable from the template of the generator without vtable
-		gen = generator::Class::initVtable (gen.to <generator::Class> (), vtable, protections, dtor);
+		gen = generator::Class::initVtable (gen.to <generator::Class> (), vtable, protections, dtor, true);
 			
 		sym.to <semantic::Class> ().setGenerator (gen);
 		sym.to <semantic::Class> ().setTypeInfo (this-> _context.validateTypeInfo (gen.getLocation (), ClassRef::init (cls.getName (), ancestor, sym)));
@@ -606,6 +570,21 @@ namespace semantic {
 	 * ================================================================================
 	 */
 
+
+	void ClassVisitor::validateClassFull (const semantic::Symbol & cls) {
+	    this-> _context.pushReferent (cls, "validate::class");
+	    std::list <Error::ErrorMsg> errors;
+	    this-> validateInnerClass (cls, errors);
+	    
+	    this-> _context.popReferent ("validate::class");
+	    
+	    if (errors.size () != 0) { // caught the error to add a note
+		Ymir::Error::occurAndNote (cls.getName (), errors, ExternalError::get (VALIDATING), cls.getRealName ());
+	    }
+		    
+	    this-> _context.insertNewGenerator (cls.to <semantic::Class> ().getGenerator ());		    
+	}
+	
 
 	void ClassVisitor::validateInnerClass (const semantic::Symbol & cls, std::list <Ymir::Error::ErrorMsg> & errors) {
 	    auto & clRef = cls.to <semantic::Class> ().getGenerator ().to <generator::Class> ().getClassRef ();

@@ -96,7 +96,9 @@ namespace semantic {
 	    std::vector <generator::Generator> _lockedAlias;
 	    
 	    std::vector <lexing::Word> _lockedAliasLoc;
-	    
+
+	    /** The list of class symbol we need to validate */
+	    std::vector <Symbol> _classToValidate;	    
 	    
 	private :
 
@@ -121,6 +123,11 @@ namespace semantic {
 	     */
 	    void validate (const semantic::Symbol & sym, bool inModule = true);
 
+	    /**
+	     * To run after the validation of the global module
+	     * This function validate all the inner symbols of the locally declared classes
+	     */
+	    void validateAllClasses ();
 
 	    /**
 	     * ================================================================================
@@ -1236,6 +1243,11 @@ namespace semantic {
 	     * this-> _referent.pop_back ()
 	     */
 	    void popReferent (const std::string & msg);
+
+	    /**
+	     * Insert a new class to validate
+	     */
+	    void insertClassValidation (const semantic::Symbol & sym);
 
 	    /**
 	     * ================================================================================

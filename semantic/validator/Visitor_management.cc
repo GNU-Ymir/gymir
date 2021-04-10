@@ -322,6 +322,10 @@ namespace semantic {
 	    auto ret = this-> getLocal ("#{CLOSURE}", false);
 	    return !ret.isEmpty () && ret.to<BoolValue> ().getValue ();
 	}
+
+	void Visitor::insertClassValidation (const semantic::Symbol & sym) {
+	    this-> _classToValidate.push_back (sym);
+	}
 	
     }
 }
