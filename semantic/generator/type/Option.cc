@@ -41,7 +41,11 @@ namespace semantic {
 	}
 
 	bool Option::needExplicitAlias () const {
-	    return true;
+	    for (auto it : Ymir::r (0, 1)) {
+		if (this-> getInners () [it].to <Type> ().needExplicitAlias ()
+		    && this-> getInners ()[it].to <Type> ().isMutable ()) return true;
+	    }
+	    return false;
 	}
 	
 	bool Option::containPointers () const {

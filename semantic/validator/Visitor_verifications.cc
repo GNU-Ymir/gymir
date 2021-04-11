@@ -147,8 +147,7 @@ namespace semantic {
 		Ymir::Error::occur (rloc, ExternalError::get (DISCARD_CONST_LEVEL),
 				    1, 0
 		    );	 
-	    } else {
-		
+	    } else {		
 		// Verify mutability
 		if (leftType.to<Type> ().isComplex () || leftType.to <Type> ().isRef ()) {
 		    auto rlevel = rightType.to <Type> ().mutabilityLevel ();
@@ -200,14 +199,15 @@ namespace semantic {
 		    elof (Conditional,  arr) max_level = arr.getType ().to <Type> ().mutabilityLevel ();
 		    elof (ExitScope,    arr) max_level = arr.getType ().to <Type> ().mutabilityLevel ();
 		    elof (SuccessScope, arr) max_level = arr.getType ().to <Type> ().mutabilityLevel ();
-		    elof (Call,         arr) max_level = arr.getType ().to <Type> ().mutabilityLevel ();
+		    elof (Call,         arr) max_level = arr.getType ().to <Type> ().mutabilityLevel ();	    
 		    fo;
 		}
 	    }
 	    
 
 	    max_level = std::max (1, max_level);
-		
+	    if (type.is <StructRef> () || type.is <Tuple> ()) max_level = 0;
+	    
 	    // If the type is totally immutable, it's it not necessary to make an explicit alias 
 	    if (llevel > max_level) {
 		std::list <Ymir::Error::ErrorMsg> notes;

@@ -66,11 +66,12 @@ namespace semantic {
 	    auto ref = Symbol {this-> _ref};
 	    for (auto & it : ref.to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().getFields ()) {
 
-		auto mut = it.to <generator::VarDecl> ().isMutable ()
-		    && it.to <generator::VarDecl> ().getVarType ().to <Type> ().needExplicitAlias ();
-		
-		if (mut)
-		    return true;
+		auto & field_type = it.to <generator::VarDecl> ().getVarType ();
+		auto mut = field_type.to <Type> ().isMutable () && 
+		    field_type.to <Type> ().needExplicitAlias ();
+				
+		if (mut) 
+		    return true;		
 	    }
 	    
 	    return false;
@@ -89,8 +90,9 @@ namespace semantic {
 	const Generator & StructRef::getExplicitAliasTypeLoc () const {
 	    auto ref = Symbol {this-> _ref};
 	    for (auto & it : ref.to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().getFields ()) {		
-		auto mut = it.to <generator::VarDecl> ().isMutable ()
-		    && it.to <generator::VarDecl> ().getVarType ().to <Type> ().needExplicitAlias ();
+		auto & field_type = it.to <generator::VarDecl> ().getVarType ();
+		auto mut = field_type.to <Type> ().isMutable () && 
+		    field_type.to <Type> ().needExplicitAlias ();
 		
 		if (mut)
 		    return it;
