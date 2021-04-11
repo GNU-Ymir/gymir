@@ -126,11 +126,7 @@ namespace semantic {
 		s_of_u (semantic::TemplateSolution) {
 		    std::list <Ymir::Error::ErrorMsg> errors;
 		    if (insertTemplateSolution (sym, errors) || inModule) {
-			if (errors.size () != 0) {
-			    // if (!global::State::instance ().isVerboseActive ()) {
-			    // 	Ymir::Error::occur (sol.getName (), ExternalError::get (INCOMPLETE_TEMPLATE), sol.getSolutionName ());
-			    // }
-			    
+			if (errors.size () != 0) {			    
 			    throw Error::ErrorList {errors};
 			}
 			
@@ -147,7 +143,7 @@ namespace semantic {
 			if (errors.size () != 0) {
 			    throw Error::ErrorList {errors};
 			}
-		    }
+		    }		    
 		    return;
 		}
 		

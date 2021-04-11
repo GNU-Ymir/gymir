@@ -34,7 +34,7 @@ namespace semantic {
 
 	    generator::Generator _destructor;
 
-	    bool _finalized = false;
+	    bool _finalized;
 	    
 	private :
 

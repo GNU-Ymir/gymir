@@ -134,7 +134,7 @@ namespace semantic {
 	     * \brief Validate the method prototype of a method in order to refer to it
 	     * \param mt the method to validate
 	     */
-	    generator::Generator validateMethodProto (const semantic::Function & mt, const generator::Generator &classType, const generator::Generator & trait);
+	    generator::Generator validateMethodProto (const semantic::Function & mt, const generator::Generator &classType, const generator::Generator & trait, bool no_value);
 	    
 
 	    /**

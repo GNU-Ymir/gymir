@@ -5,6 +5,7 @@
 #include <ymir/syntax/visitor/Keys.hh>
 #include <ymir/semantic/validator/PragmaVisitor.hh>
 #include <ymir/semantic/validator/DotVisitor.hh>
+#include <time.h>
 
 namespace semantic {
 
@@ -12,6 +13,9 @@ namespace semantic {
 
 	using namespace generator;
 	using namespace Ymir;
+
+	std::list <semantic::Symbol> ClassVisitor::__validation__;
+	std::list <semantic::Symbol> ClassVisitor::__post_validation__;
 	
 	ClassVisitor::ClassVisitor (Visitor & context) :
 	    _context (context),
@@ -27,17 +31,25 @@ namespace semantic {
 	    // and avoid validating multiple times the same class
 	    
 	    auto validated = !cls.to <semantic::Class> ().getGenerator ().isEmpty ();
-	    if (validated && cls.to <semantic::Class> ().getGenerator ().is <generator::Class> ()) {
-		validated = !cls.to <semantic::Class> ().getGenerator ().to <generator::Class> ().getClassRef ().to <generator::ClassRef> ().isFast ();
+	    if (validated) {
+		for (auto & it : __validation__) {
+		    if (it.isSameRef (cls)) {
+			validated = true;
+			break;
+		    }
+		}
 	    }
 
 	    if (!validated || inModule) {
 		this-> validateClassContent (cls, inModule);
 	    }
-	    
+
 	    
 	    match (cls.to <semantic::Class> ().getGenerator ()) {
-		of (generator::Class, cl) {		    
+		of (generator::Class, cl) {
+		    if (__validation__.size () == 0) {
+			this-> postValidateAll ();
+		    }
 		    return cl.getClassRef ();
 		} elof (ErrorType, err) {
 		    auto lst = err.getErrors (); // it cannot be a ref, because it is suppressed by the following if
@@ -60,34 +72,75 @@ namespace semantic {
 	void ClassVisitor::validateClassContent (const semantic::Symbol & cls, bool inModule) {
 	    auto sym = cls; // some cheating on c++ const, to store the generator inside the class symbol
 	    // and avoid validating multiple times the same class
-	    
 	    std::list <Error::ErrorMsg> errors;
 	    auto ancestor = this-> validateAncestor (cls);
+	    
 	    auto gen = generator::Class::init (cls.getName (), sym, ClassRef::init (cls.getName (), ancestor, sym));
 	    // To avoid recursive validation 
-	    sym.to <semantic::Class> ().setGenerator (gen);	    
-		    
-	    this-> validateCtes (cls); // this throws if an error occur anyway,
-	    // we don't wan't to validate the class if an assertion failed
+	    sym.to <semantic::Class> ().setGenerator (gen);
+
+	    __validation__.push_back (cls);
+	    if (__validation__.size () == 1) {
+		this-> validateCtes (cls); // this throws if an error occur anyway,
+		// we don't wan't to validate the class if an assertion failed
+	    }
 
 	    // The validation of the vtable, places the vtable inside the symbol 
 	    this-> validateVtable (cls, ancestor, errors);
 
 	    // The validation of the field of the class
-	    this-> validateFields (cls, ancestor, inModule, errors);
-		    
+	    this-> validateFields (cls, ancestor, inModule, errors);	    
+	    __validation__.pop_back ();
+
+
 	    if (errors.size () != 0) { // we caught the errors, to display the fields and vtable errors at the same time
-		if (!this-> _context.isInContext ({PragmaVisitor::PRAGMA_COMPILE_CONTEXT})) {  // in pragma compile the errors are not printed, so we need to keep them in case of retry
-		    sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
-		} else {
-		    sym.to <semantic::Class> ().setGenerator (ErrorType::init (cls.getName (), cls.getRealName (), errors));
-		}
-		Ymir::Error::occurAndNote (cls.getName (), errors, ExternalError::get (VALIDATING), cls.getRealName ());
+		this-> throwErrors (sym, errors);
 	    }
 
 	    if (inModule) { // if we are in the module that declared the class, then we have to validate the inner symbols
 		this-> _context.insertClassValidation (cls);
-	    }	   
+	    }
+
+	    if (__validation__.size () != 0) __post_validation__.push_back (cls);	    
+	}
+
+	void ClassVisitor::postValidate (const semantic::Symbol & cls) {
+	    auto sym = cls; // some cheating on c++ const, to store the generator inside the class symbol
+	    
+	    std::list <Ymir::Error::ErrorMsg> errors;
+	    this-> _context.pushReferent (sym, "post_validate::class");
+	    try {
+		auto ancestor = this-> validateAncestor (sym);
+		__validation__.push_back (sym);
+		this-> validateCtes (cls); // this throws if an error occur anyway,
+		this-> validateVtable (sym, ancestor, errors);
+		__validation__.pop_back ();
+	    }  catch (Error::ErrorList list) {
+		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+	    }
+	    
+	    this-> _context.popReferent ("post_validate::class");
+	    if (errors.size () != 0) { // we caught the errors, to display the fields and vtable errors at the same time
+		this-> throwErrors (sym, errors);
+	    }
+	}
+
+	void ClassVisitor::postValidateAll () {
+	    while (__post_validation__.size () != 0) {
+		auto aux = std::move (__post_validation__);
+		for (auto & it : aux) {
+		    this-> postValidate (it);
+		}
+	    }
+	}
+	
+	void ClassVisitor::throwErrors (semantic::Symbol & sym, const std::list <Error::ErrorMsg> & errors) const {
+	    if (!this-> _context.isInContext ({PragmaVisitor::PRAGMA_COMPILE_CONTEXT})) {  // in pragma compile the errors are not printed, so we need to keep them in case of retry
+		sym.to <semantic::Class> ().setGenerator (NoneType::init (sym.getName ()));
+	    } else {
+		sym.to <semantic::Class> ().setGenerator (ErrorType::init (sym.getName (), sym.getRealName (), errors));
+	    }
+	    Ymir::Error::occurAndNote (sym.getName (), errors, ExternalError::get (VALIDATING), sym.getRealName ());
 	}
 	
 
@@ -363,7 +416,7 @@ namespace semantic {
 			std::list <Ymir::Error::ErrorMsg> names;
 			for (auto & ft : trait.to <TraitRef> ().getRef ().to <semantic::Trait> ().getAllInner ()) { // It is necessarily a trait, we verified that earlier
 			    if (ft.getName ().getStr () == func.getName ().getStr () && ft.is <semantic::Function> ()) {
-				auto proto = this-> _funcVisitor.validateMethodProto (ft.to <semantic::Function> (), classType, trait);
+				auto proto = this-> _funcVisitor.validateMethodProto (ft.to <semantic::Function> (), classType, trait, ClassVisitor::__validation__.size () != 1);
 				names.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), proto.getLocation (), proto.prettyString ()));
 			    }
 			}
@@ -415,7 +468,7 @@ namespace semantic {
 	}
 
 	int ClassVisitor::validateVtableTraitMethod (const semantic::Function & func, const Generator & classType, const Generator &, std::vector <Generator> & vtable, std::vector <generator::Class::MethodProtection> & protection, const std::vector <Generator> & ancVtable, const generator::Generator & trait) {
-	    auto proto = this-> _funcVisitor.validateMethodProto (func, classType, trait);
+	    auto proto = this-> _funcVisitor.validateMethodProto (func, classType, trait, ClassVisitor::__validation__.size () != 1);
 	    auto protoFptr = this-> _funcVisitor.validateFunctionType  (proto);
 	    for (auto i : Ymir::r (0, ancVtable.size ())) {
 		if (Ymir::Path (ancVtable[i].to <FrameProto> ().getName (), "::").fileName ().toString () == func.getName ().getStr ()) {		    
@@ -444,7 +497,7 @@ namespace semantic {
 	}	
 	
 	int ClassVisitor::validateVtableMethod (const semantic::Function & func, const Generator & classType, const Generator &, std::vector <Generator> & vtable, std::vector <generator::Class::MethodProtection> & protection, const std::vector <Generator> & ancVtable, const Generator & trait) {	    
-	    auto proto = this-> _funcVisitor.validateMethodProto (func, classType, trait);	    
+	    auto proto = this-> _funcVisitor.validateMethodProto (func, classType, trait, ClassVisitor::__validation__.size () != 1);	    
 	    auto protoFptr = this-> _funcVisitor.validateFunctionType  (proto);
 	    for (auto i : Ymir::r (0, ancVtable.size ())) {
 		if (Ymir::Path (ancVtable[i].to <FrameProto> ().getName (), "::").fileName ().toString () == func.getName ().getStr ()) {		    
@@ -558,7 +611,7 @@ namespace semantic {
 		}
 	    }
 
-	    return this-> _funcVisitor.validateMethodProto (dtor.to <semantic::Function> (), classGen, Generator::empty ());
+	    return this-> _funcVisitor.validateMethodProto (dtor.to <semantic::Function> (), classGen, Generator::empty (), ClassVisitor::__validation__.size () != 1);
 	}
 
 	
@@ -579,7 +632,7 @@ namespace semantic {
 	    this-> _context.popReferent ("validate::class");
 	    
 	    if (errors.size () != 0) { // caught the error to add a note
-		Ymir::Error::occurAndNote (cls.getName (), errors, ExternalError::get (VALIDATING), cls.getRealName ());
+	    	Ymir::Error::occurAndNote (cls.getName (), errors, ExternalError::get (VALIDATING), cls.getRealName ());
 	    }
 		    
 	    this-> _context.insertNewGenerator (cls.to <semantic::Class> ().getGenerator ());		    
@@ -587,8 +640,8 @@ namespace semantic {
 	
 
 	void ClassVisitor::validateInnerClass (const semantic::Symbol & cls, std::list <Ymir::Error::ErrorMsg> & errors) {
-	    auto & clRef = cls.to <semantic::Class> ().getGenerator ().to <generator::Class> ().getClassRef ();
-	    auto & ancestor = clRef.to <ClassRef> ().getAncestor ();
+	    auto clRef = cls.to <semantic::Class> ().getGenerator ().to <generator::Class> ().getClassRef ();
+	    auto ancestor = clRef.to <ClassRef> ().getAncestor ();
 	    auto & addMethods = cls.to <semantic::Class> ().getAddMethods ();
 	    
 	    std::vector <Generator> ancestorFields;

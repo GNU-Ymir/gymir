@@ -13,7 +13,11 @@ namespace semantic {
 	    Visitor & _context;
 
 	    FunctionVisitor _funcVisitor;
+	public :
 
+	    static std::list <semantic::Symbol>  __validation__;
+	    static std::list <semantic::Symbol>  __post_validation__;
+	    
 	private :
 
 	    ClassVisitor (Visitor & context);
@@ -36,11 +40,26 @@ namespace semantic {
 	     * This function is called if the class is not already validated
 	     */
 	    void validateClassContent (const semantic::Symbol & cls, bool inModule = false);
+
+	    /**
+	     * Revalidate the vtable of class when all the vtable are correctly set
+	     */
+	    void postValidate (const semantic::Symbol & sym);
+
+	    /**
+	     * Validate all the class needing a post validation
+	     */
+	    void postValidateAll ();
+	    
+	    /**
+	     * Throw the errors and set an error symbol to Sym to avoid multiple validation of an invalid class type
+	     */
+	    void throwErrors (semantic::Symbol & sym, const std::list <Ymir::Error::ErrorMsg> & errors) const;
 	    
 	    /**
 	     * ================================================================================
 	     * ================================================================================
-	     * =================================     ASSERT     ===============================
+	     * =================================     FIELDS     ===============================
 	     * ================================================================================
 	     * ================================================================================
 	     */

@@ -163,7 +163,7 @@ namespace semantic {
 	    pushReferent (syms [0], "validateTemplateSolutionMethod");
 	    Generator proto (Generator::empty ());
 	    try {
-		proto = FunctionVisitor::init (*this).validateMethodProto (syms [0].to <semantic::Function> (), classType, Generator::empty ());
+		proto = FunctionVisitor::init (*this).validateMethodProto (syms [0].to <semantic::Function> (), classType, Generator::empty (), false);
 	    } catch (Error::ErrorList list) {
 		errors = list.errors;
 	    }

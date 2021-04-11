@@ -1,5 +1,6 @@
 #include <ymir/semantic/validator/DotVisitor.hh>
 #include <ymir/semantic/validator/CompileTime.hh>
+#include <ymir/semantic/validator/FunctionVisitor.hh>
 #include <ymir/semantic/validator/CallVisitor.hh>
 #include <ymir/semantic/generator/value/_.hh>
 #include <ymir/utils/Path.hh>
@@ -259,59 +260,62 @@ namespace semantic {
 
 	    // Method
 	    auto cl = left.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef ().to <semantic::Class> ().getGenerator ();
-
-	    if (!cl.to <generator::Class> ().isFinalized ())
-	    Ymir::Error::halt ("%(r)", cl.prettyString ());
 	    std::vector <Generator> syms;
-	    auto & vtable = cl.to <generator::Class> ().getVtable ();
-	    auto & protVtable = cl.to <generator::Class> ().getProtectionVtable ();
-	    for (auto i : Ymir::r (0, vtable.size ())) {
-		if (Ymir::Path (vtable [i].to <FrameProto> ().getName (), "::").fileName ().toString () == name) {
-		    if (prv || (prot && protVtable [i] == generator::Class::MethodProtection::PROT) || protVtable [i] == generator::Class::MethodProtection::PUB) {
-			std::vector <Generator> types;
-			for (auto & it : vtable [i].to <FrameProto> ().getParameters ())
+	    // if the class if finalized, we can look inside its vtable
+	    if (cl.to <generator::Class> ().isFinalized ()) {
+		auto & vtable = cl.to <generator::Class> ().getVtable ();
+		auto & protVtable = cl.to <generator::Class> ().getProtectionVtable ();
+		for (auto i : Ymir::r (0, vtable.size ())) {
+		    if (Ymir::Path (vtable [i].to <FrameProto> ().getName (), "::").fileName ().toString () == name) {
+			if (prv || (prot && protVtable [i] == generator::Class::MethodProtection::PROT) || protVtable [i] == generator::Class::MethodProtection::PUB) {
+			    std::vector <Generator> types;
+			    for (auto & it : vtable [i].to <FrameProto> ().getParameters ())
 			    types.push_back (it.to <ProtoVar> ().getType ());
 		    
-			auto delType = Delegate::init (vtable [i].getLocation (), vtable [i]);
-			// If the class is final, then no need to access the vtable
-			if (left.to <Value> ().getType ().is <ClassProxy> () || cl.to <generator::Class> ().getClassRef ().to <ClassRef> ().getRef ().to <semantic::Class> ().isFinal ()) {
-			    syms.push_back (
-				DelegateValue::init (lexing::Word::init (expression.getLocation (), name), delType,
-						     vtable [i].to <MethodProto> ().getClassType (),
-						     left,
-						     vtable [i]
-				    )
-				);
+			    auto delType = Delegate::init (vtable [i].getLocation (), vtable [i]);
+			    // If the class is final, then no need to access the vtable
+			    if (left.to <Value> ().getType ().is <ClassProxy> () || cl.to <generator::Class> ().getClassRef ().to <ClassRef> ().getRef ().to <semantic::Class> ().isFinal ()) {
+				syms.push_back (
+				    DelegateValue::init (lexing::Word::init (expression.getLocation (), name), delType,
+							 vtable [i].to <MethodProto> ().getClassType (),
+							 left,
+							 vtable [i]
+					)
+				    );
+			    } else {
+				syms.push_back (
+				    DelegateValue::init (lexing::Word::init (expression.getLocation (), name), delType,
+							 vtable [i].to <MethodProto> ().getClassType (),
+							 left,
+							 VtableAccess::init (expression.getLocation (),
+									     FuncPtr::init (expression.getLocation (),
+											    vtable [i].to <FrameProto> ().getReturnType (),
+											    types),
+									     left,
+									     i + 2, // + 2 to ignore the typeinfo, and dtor
+									     name
+							     )
+					)
+				    );
+			    }
 			} else {
-			    syms.push_back (
-				DelegateValue::init (lexing::Word::init (expression.getLocation (), name), delType,
-						     vtable [i].to <MethodProto> ().getClassType (),
-						     left,
-						     VtableAccess::init (expression.getLocation (),
-									 FuncPtr::init (expression.getLocation (),
-											vtable [i].to <FrameProto> ().getReturnType (),
-											types),
-									 left,
-									 i + 2, // + 2 to ignore the typeinfo, and dtor
-									 name
-							 )
-				    )
+			    errors.push_back (
+				Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), vtable [i].getLocation (), vtable[i].prettyString ())
 				);
 			}
-		    } else {
-			errors.push_back (
-			    Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), vtable [i].getLocation (), vtable[i].prettyString ())
-			);
 		    }
 		}
-	    }
+	    }	  	    
 	    cl = left.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef ().to <semantic::Class> ().getGenerator ();
 
 	    int i = 0;
 	    if (left.to <Value> ().getType ().is <ClassProxy> ()) i += 1; // can't access private of ancestor even through proxy
-	    
+
+	    bool isFinalized = cl.to <generator::Class> ().isFinalized ();
+	    bool addInSub = false;
 	    // Template methods
 	    while (!cl.isEmpty ()) {
+		bool added = false;
 		auto clRef = left.to <Value> ().getType ();//Type::init (cl.to <generator::Class> ().getClassRef ().to <Type> (), true);
 		clRef = Type::init (clRef.to <Type> (), clRef.to<Type> ().isMutable (), false);
 		
@@ -342,13 +346,33 @@ namespace semantic {
 					);			    
 				}
 			    }			    
+			} elof (Function, fn) {
+			    // if it is not finalized, then we need to make a static call by iterating through its symbols
+			    if (!isFinalized && !addInSub) {
+				if (fn.getName () == name) {
+				    if ((i == 0 && prv) || (prot && it.isProtected ()) || it.isPublic ()) {
+					added = true;
+					auto proto = FunctionVisitor::init (this-> _context).validateMethodProto (fn, cl.to <generator::Class> ().getClassRef (), Generator::empty (), true);
+					auto delType = Delegate::init (proto.getLocation (), proto);
+					syms.push_back (
+					    DelegateValue::init (lexing::Word::init (expression.getLocation (), name), delType,
+								 proto.to <MethodProto> ().getClassType (),
+								 left,
+								 proto
+						)
+					    );
+				    }
+				}
+			    }
 			} fo;			
 		    }
 		}
+		
+		addInSub = addInSub || added;
 		auto ancestor = cl.to <generator::Class> ().getClassRef ().to <ClassRef> ().getAncestor ();
-		if (!ancestor.isEmpty ())
+		if (!ancestor.isEmpty ()) {
 		    cl = ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
-		else cl = Generator::empty ();
+		} else cl = Generator::empty ();
 		i += 1;
 	    }
 	    

@@ -721,7 +721,7 @@ namespace semantic {
 		    if (ref.is <MethodTemplateRef> ()) {
 			auto & self = ref.to <MethodTemplateRef> ().getSelf ();
 			auto classType = self.to <Value> ().getType ().to <ClassPtr> ().getInners ()[0].to<Type> ().toDeeplyMutable ();
-			proto = FunctionVisitor::init (this-> _context).validateMethodProto (sym_func.to <semantic::Function> (), classType, Generator::empty ());
+			proto = FunctionVisitor::init (this-> _context).validateMethodProto (sym_func.to <semantic::Function> (), classType, Generator::empty (), false);
 		    } else if (ref.is <TemplateClassCst> ()) {
 			proto = this-> _context.validateClass (sym_func, false);
 		    } else {

@@ -335,13 +335,12 @@ namespace semantic {
 	    return cSym.to <Constructor> ().getGenerator ();
 	}
 
-	Generator FunctionVisitor::validateMethodProto (const semantic::Function & func, const Generator & classType_, const Generator & trait) {
+	Generator FunctionVisitor::validateMethodProto (const semantic::Function & func, const Generator & classType_, const Generator & trait, bool no_value) {
 	    // we can't store the prototype, because is depends on classType (for inheritence, of impl), but it is stored inside the vtable, so validated only once
 	    std::vector <Generator> params; 
 	    static std::list <lexing::Word> __validating__;
 	    auto & function = func.getContent ();
 	    std::list <Ymir::Error::ErrorMsg> errors;
-	    bool no_value = false;
 	    Generator retType (Generator::empty ());	    
 	    for (auto func_loc : __validating__) {
 		if (func_loc.isSame (func.getName ())) no_value = true;
