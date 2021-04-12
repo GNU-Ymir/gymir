@@ -138,15 +138,15 @@ namespace Ymir {
 			auto color = *(s + 1);
 			s += 3; // (r)
 			switch (color) {
-			case 'r' : this-> _currentColor.push_back (Colors::get (RED)); break;
-			case 'b' : this-> _currentColor.push_back (Colors::get (BLUE)); break;
-			case 'y' : this-> _currentColor.push_back (Colors::get (YELLOW)); break;
-			case 'g' : this-> _currentColor.push_back (Colors::get (GREEN)); break;
-			case 'B' : this-> _currentColor.push_back (Colors::get (BOLD)); break;
+			case 'r' : this-> _currentColor.push_back (Colors::RED); break;
+			case 'b' : this-> _currentColor.push_back (Colors::BLUE); break;
+			case 'y' : this-> _currentColor.push_back (Colors::YELLOW); break;
+			case 'g' : this-> _currentColor.push_back (Colors::GREEN); break;
+			case 'B' : this-> _currentColor.push_back (Colors::BOLD); break;
 			}
 			write (this-> _currentColor.back ());
 			write (f);
-			write (Colors::get (RESET));
+			write (Colors::RESET);
 			this-> _currentColor.pop_back ();
 			mwritef (s, args...);
 		    } else {			
@@ -168,7 +168,7 @@ namespace Ymir {
 		write_ (elem [it]);
 		if (it < (int) elem.size () - 1) {
 		    if (this-> _currentColor.size () != 0)
-			write (Colors::get (RESET));
+			write (Colors::RESET);
 		    write (", ");
 		    if (this-> _currentColor.size () != 0)
 			write (this-> _currentColor.back ());
@@ -194,7 +194,7 @@ namespace Ymir {
 	    for (auto &it : elem) {
 		if (i != 0) {
 		    if (this-> _currentColor.size () != 0)
-			write (Colors::get (RESET));
+			write (Colors::RESET);
 		    write (", ");
 		    if (this-> _currentColor.size () != 0)
 			write (this-> _currentColor.back ());
@@ -213,7 +213,7 @@ namespace Ymir {
 		it ++;
 		if (it != elem.end ()) {
 		    if (this-> _currentColor.size () != 0)
-			write (Colors::get (RESET));
+			write (Colors::RESET);
 		    write (", ");
 		    if (this-> _currentColor.size () != 0)
 			write (this-> _currentColor.back ());

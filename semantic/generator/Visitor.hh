@@ -335,6 +335,11 @@ namespace semantic {
 	     * \brief Transform a class construction into gimple
 	     */
 	    generic::Tree generateClassCst (const ClassCst & cl);
+
+	    /**
+	     * \brief transform a static type info access into gimple
+	     */
+	    generic::Tree generateTypeInfoAccess (const TypeInfoAccess & ac);
 	    
 	    /**
 	     * \brief Transform a frame call into gimple

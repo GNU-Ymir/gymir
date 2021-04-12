@@ -358,8 +358,7 @@ namespace semantic {
 	    }
 	    	    
 	    if (right.is <ClassPtr> () && fromObject) {
-		auto syntaxType = this-> createClassTypeFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (OBJECT_MODULE), CoreNames::get (OBJECT_TYPE)});
-		auto objectType = this-> validateType (syntaxType);
+		auto objectType = this-> _cache.objectType.getValue ();
 		if (objectType.to <Type> ().isCompatible (left)) return;
 	    }
 	    

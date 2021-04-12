@@ -56,7 +56,7 @@ namespace semantic {
 
 	semantic::Symbol Visitor::validateTemplatePreSolution (const semantic::Symbol & sol, const Generator & gen, bool validate, bool inModule) {
 	    auto tmplVisitor = TemplateVisitor::init (*this);
-	    auto preSol = sol.to <semantic::TemplatePreSolution> ();	    
+	    auto & preSol = sol.to <semantic::TemplatePreSolution> ();	    
 	    auto final_syntax = tmplVisitor.replaceAll (preSol.getDeclaration (), preSol.getMapping (), preSol.getTemplateReferent ());
 		    
 	    auto visit = declarator::Visitor::init ();

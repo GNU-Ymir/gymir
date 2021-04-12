@@ -116,7 +116,7 @@ namespace semantic {
 	bool isMarkedProtected (const std::string & name) const;	
 
 	/** The name of the trait must be ignored */
-	std::string getRealName () const override;
+	std::string computeRealName () const override;
 	
 	/**
 	 * \brief Add an assertion to validate in the class

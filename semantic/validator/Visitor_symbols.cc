@@ -43,7 +43,7 @@ namespace semantic {
 
 	void Visitor::validateVarDecl (const semantic::Symbol & sym) { // this global var decls are close to vardecl value, but insert a generator 
 	    if (sym.to <semantic::VarDecl> ().getGenerator ().isEmpty ()) {
-		auto var = sym.to <semantic::VarDecl> ();
+		auto & var = sym.to <semantic::VarDecl> ();
 		auto elemSym = sym; // c++ cheating on mutability
 		
 		Generator type (Generator::empty ()), value (Generator::empty ());
@@ -77,7 +77,7 @@ namespace semantic {
 
 		if (!value.isEmpty ()) {
 		    if (var.isExtern ()) {// can't have a value on external, there are just reference 
-			Ymir::Error::occur (value.getLocation (), ExternalError::get (EXTERNAL_VAR_WITH_VALUE), var.getRealName ());
+			Ymir::Error::occur (value.getLocation (), ExternalError::get (EXTERNAL_VAR_WITH_VALUE), var.getRealName ().getValue ());
 		    }
 		    
 		    if (!type.is <LambdaType> ()) {// if the var has a real type (not a lambda type), we have to check the mutability 
@@ -85,7 +85,7 @@ namespace semantic {
 		    }
 		}
 		
-		auto glbVar = GlobalVar::init (var.getName (), var.getRealName (), var.getExternalLanguage (), isMutable, type, value);		
+		auto glbVar = GlobalVar::init (var.getName (), var.getRealName ().getValue (), var.getExternalLanguage (), isMutable, type, value);		
 		elemSym.to<semantic::VarDecl> ().setGenerator (glbVar);	 // we store the variable inside the global, to avoid revalidation	
 		
 		insertNewGenerator (glbVar);	// we insert the generator, to generate something in the generation phase	
@@ -95,7 +95,7 @@ namespace semantic {
 
 	generator::Generator Visitor::validateAka (const semantic::Symbol & sym) { 
 	    if (sym.to <semantic::Aka> ().getGenerator ().isEmpty ()) { // We don't want to validate multiple times the same symbol
-		auto aka = sym.to <semantic::Aka> (); 
+		auto & aka = sym.to <semantic::Aka> (); 
 		auto elemSym = sym; // cheating on c++ mutability
 
 		Generator elem (Generator::empty ());

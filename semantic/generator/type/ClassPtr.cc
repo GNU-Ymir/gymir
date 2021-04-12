@@ -57,7 +57,7 @@ namespace semantic {
 	
 	std::string ClassPtr::typeName () const {
 	    Ymir::OutBuffer buf;
-	    buf.write ("&(", this-> _ref.to <ClassRef> ().getTypeName (this-> isMutable ()), ")");
+	    buf.write ("&(", this-> _ref.to <ClassRef> ().computeTypeName (this-> isMutable ()), ")");
 	    return buf.str ();
 	}
 		

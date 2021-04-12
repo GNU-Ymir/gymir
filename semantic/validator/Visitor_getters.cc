@@ -270,7 +270,7 @@ namespace semantic {
 
 	bool Visitor::getModuleContext (const semantic::Symbol & cl) {
 	    auto module = cl;
-	    if (module.is <ModRef> ()) module = module.to <ModRef> ().getModule ();
+	    if (module.is <ModRef> ()) module = module.to <ModRef> ().getModule ().getValue ();
 	    
 	    if (this-> _referent.size () != 0) {
 		auto curr = this-> _referent.back ();
@@ -304,6 +304,59 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 
+	Generator Visitor::getTypeInfoType () {	    
+	    auto typeInfo = createVarFromPath (lexing::Word::eof (), {CoreNames::get (CORE_MODULE), CoreNames::get (TYPE_INFO_MODULE), CoreNames::get (TYPE_INFO)});
+	    return this-> validateType (typeInfo);
+	}
+
+	Generator Visitor::getTypeInfoIds () {
+	    auto typeIDs = createVarFromPath (lexing::Word::eof (), {CoreNames::get (CORE_MODULE), CoreNames::get (TYPE_INFO_MODULE), CoreNames::get (TYPE_IDS)});
+	    return this-> validateValue (typeIDs);
+	}
+
+	Generator Visitor::getOutOfArrayCall () {
+	    auto func = this-> createVarFromPath (lexing::Word::eof (), {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (OUT_OF_ARRAY)});
+	    auto proto = this-> validateValue (func);
+	    auto callvisitor = CallVisitor::init (*this);
+	    std::list <Error::ErrorMsg> errors;
+
+	    if (proto.is <FrameProto> ()) {
+		int score = 0;
+		auto ret = callvisitor.validateFrameProto (lexing::Word::eof  (), proto, {}, score, errors);
+		if (errors.size () != 0) {
+		    throw Error::ErrorList {errors};
+		}
+		return ret;
+	    } else {
+		Error::occurAndNote (lexing::Word::eof (), ExternalError::get (UNDEF_VAR), func.prettyString ());
+		return Generator::empty ();
+	    }
+	}
+	
+	Generator Visitor::getDisposeTrait () {
+	    auto trait = this-> createVarFromPath (lexing::Word::eof (), {CoreNames::get (CORE_MODULE), CoreNames::get (DISPOSING_MODULE), CoreNames::get (DISPOSABLE_TRAITS)});		
+	    return this-> validateType (trait);
+	}
+
+	Generator Visitor::getExceptionType () {
+	    auto syntaxType = this-> createClassTypeFromPath (lexing::Word::eof (), {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (EXCEPTION_TYPE)});
+	    return this-> validateType (syntaxType);
+	}
+
+	Generator Visitor::getObjectType () {
+	    auto syntaxType = this-> createClassTypeFromPath (lexing::Word::eof (), {CoreNames::get (CORE_MODULE), CoreNames::get (OBJECT_MODULE), CoreNames::get (OBJECT_TYPE)});
+	    return this-> validateType (syntaxType);
+	}
+
+	Generator Visitor::getSegFault () {
+	    auto syntaxType = this-> createClassTypeFromPath (lexing::Word::eof (), {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (SEG_FAULT_TYPE)});
+	    return this-> validateType (syntaxType);
+	}
+
+	const VisitorCache & Visitor::getCache () const {
+	    return this-> _cache;
+	}
+	
 	
     }
 }

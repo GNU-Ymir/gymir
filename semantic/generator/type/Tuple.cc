@@ -68,7 +68,7 @@ namespace semantic {
 	    buf.write ("(");
 	    for (auto it  : Ymir::r (0, this-> getInners ().size ())) {
 		if (it != 0) buf.write (", ");
-		buf.write (this-> getInners () [it].to <Type> ().getTypeName (this-> isMutable ()));
+		buf.write (this-> getInners () [it].to <Type> ().computeTypeName (this-> isMutable ()));
 	    }
 	    if (this-> getInners ().size () == 1) buf.write (",");
 	    buf.write (")");

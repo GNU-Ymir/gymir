@@ -48,7 +48,7 @@ namespace lexing {
 	lexing::File file;
 
 	ulong start = 0;
-	
+
 	/**
 	 * Create a word with all field initialized
 	 */

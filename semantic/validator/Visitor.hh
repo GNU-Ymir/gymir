@@ -20,6 +20,21 @@ namespace semantic {
 
     namespace validator {
 
+	class Visitor;
+	
+	struct VisitorCache {
+	    Ymir::Lazy <generator::Generator, Visitor> typeInfo;	    
+	    Ymir::Lazy <generator::Generator, Visitor> typeIds;
+	    Ymir::Lazy <generator::Generator, Visitor> outOfArray;
+	    Ymir::Lazy <generator::Generator, Visitor> disposeTrait;
+	    Ymir::Lazy <generator::Generator, Visitor> exceptionType;
+	    Ymir::Lazy <generator::Generator, Visitor> objectType;
+	    Ymir::Lazy <generator::Generator, Visitor> segFault;
+
+	    VisitorCache (Visitor & context);	    
+	};
+	
+	
 	/**
 	 * @struct Visitor
 	 * This class is the final semantic validation before code production
@@ -98,7 +113,9 @@ namespace semantic {
 	    std::vector <lexing::Word> _lockedAliasLoc;
 
 	    /** The list of class symbol we need to validate */
-	    std::vector <Symbol> _classToValidate;	    
+	    std::vector <Symbol> _classToValidate;
+
+	    VisitorCache _cache;
 	    
 	private :
 
@@ -369,7 +386,7 @@ namespace semantic {
 	    /**
 	     * @return the typeinfo of the type type
 	     */
-	    generator::Generator validateTypeInfo (const lexing::Word & loc, const generator::Generator & type);
+	    generator::Generator validateTypeInfo (const lexing::Word & loc, const generator::Generator & type, bool force = false);
 
 	    /**
 	     * @return the name of the field in TypeIDs for the type type
@@ -1017,6 +1034,47 @@ namespace semantic {
 	     */
 	    generator::Generator getCommonAncestor (const generator::Generator & left, const generator::Generator & right);
 
+
+	    /**
+	     * @returns: the struct TypeInfo in core::typeinfo
+	     */
+	    generator::Generator getTypeInfoType ();
+
+	    /**
+	     * @returns: the enum TypeIDS in core::typeinfo
+	     */
+	    generator::Generator getTypeInfoIds ();
+
+	    /**
+	     * @returns: the function outofarray
+	     */
+	    generator::Generator getOutOfArrayCall ();
+
+	    /**
+	     * @returns: the trait Disposable
+	     */
+	    generator::Generator getDisposeTrait ();
+
+	    /**
+	     * @returns: the type Exception
+	     */
+	    generator::Generator getExceptionType ();
+
+	    /**
+	     * @returns: the Object type
+	     */
+	    generator::Generator getObjectType ();
+
+	    /**
+	     * @returns: the SegFault type
+	     */
+	    generator::Generator getSegFault ();
+	    
+	    /**
+	     * @return the cache of the visitor
+	     */
+	    const VisitorCache & getCache () const;
+	    
 	    /**
 	     * ================================================================================
 	     * ================================================================================

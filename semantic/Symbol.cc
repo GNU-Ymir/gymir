@@ -16,9 +16,24 @@ namespace semantic {
     ISymbol::ISymbol (const lexing::Word & name, const std::string & comments, bool isWeak)
 	: _name (name),
 	  _comments (comments),
-	  _isWeak (isWeak)
+	  _isWeak (isWeak),
+	  _realName (this, &ISymbol::performComputeRealName),
+	  _mangledName (this, &ISymbol::performComputeMangledName)
     {}
-        
+
+    // ISymbol::ISymbol (const ISymbol & other) :
+    // 	_name (other._name),
+    // 	_comments (other._comments),
+    // 	_referent (other._referent),
+    // 	_used (other._used),
+    // 	_isPublic (other._isPublic),
+    // 	_isProtected (other._isProtected),
+    // 	_isWeak (other._isWeak),
+    // 	_isTrusted (other._isTrusted),
+    // 	_realName (this, &ISymbol::performComputeRealName),
+    // 	_mangledName (this, &ISymbol::performComputeMangledName)
+    // {}
+    
     const lexing::Word & ISymbol::getName () const {
 	return this-> _name;
     }
@@ -125,9 +140,11 @@ namespace semantic {
     
     void ISymbol::setReferent (const Symbol & ref) {
 	this-> _referent = ref.getPtr ();
+	this-> _realName.unvalidate ();
+	this-> _mangledName.unvalidate ();
     }
     
-    std::string ISymbol::getRealName () const {
+    std::string ISymbol::computeRealName () const {
 	if (!this-> _referent.lock ()) return this-> _name.getStr ();
 	else {
 	    auto ft = (Symbol {this-> _referent}).getRealName ();
@@ -136,8 +153,20 @@ namespace semantic {
 	    else return this-> _name.getStr ();
 	}
     }
+
+    std::string ISymbol::performComputeRealName () const {
+	return this-> computeRealName ();
+    }
     
-    std::string ISymbol::getMangledName () const {
+    const Ymir::Lazy<std::string, ISymbol> & ISymbol::getRealName () const {
+	return this-> _realName;
+    }
+
+    std::string ISymbol::performComputeMangledName () const {
+	return this-> computeMangledName ();
+    }
+    
+    std::string ISymbol::computeMangledName () const {
 	std::string ret;
 	if (!this-> _referent.lock ()) ret = this-> _name.getStr ();
 	else {
@@ -146,10 +175,14 @@ namespace semantic {
 		ret = ft + "::" + this-> _name.getStr ();
 	    else ret = this-> _name.getStr ();
 	}
-	
 	return ret;
     }
 
+    const Ymir::Lazy<std::string, ISymbol> & ISymbol::getMangledName () const {
+	return this-> _mangledName;
+    }
+    
+    
     ISymbol::~ISymbol () {}
 
     Symbol::Symbol (ISymbol * value) : RefProxy<ISymbol, Symbol> (value)
@@ -470,14 +503,17 @@ namespace semantic {
     }
     
     std::string Symbol::getRealName () const {
-	if (this-> _value != nullptr) return this-> _value-> getRealName ();
-	else {
+	if (this-> _value != nullptr) {
+	    return this-> _value-> getRealName ().getValue ();
+	} else {
 	    return "";
 	}
     }
 
     std::string Symbol::getMangledName () const {
-	if (this-> _value != nullptr) return this-> _value-> getMangledName ();
+	if (this-> _value != nullptr) {
+	    return this-> _value-> getMangledName ().getValue ();
+	}
 	else {
 	    return "";
 	}

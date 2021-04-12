@@ -980,8 +980,7 @@ namespace semantic {
 
 	    auto ret = Block::init (lexing::Word::init (expr.getLocation (), "#_for_block"), loop_type, values);
 
-	    auto trait = this-> _context.createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (DISPOSING_MODULE), CoreNames::get (DISPOSABLE_TRAITS)});		
-	    auto impl = this-> _context.validateType (trait);
+	    auto impl = this-> _context.getCache ().disposeTrait.getValue ();
 	    auto doesImpl = this-> _context.verifyClassImpl (loc, iterType, impl, false);
 	    if (doesImpl) {
 		auto call = syntax::MultOperator::init (

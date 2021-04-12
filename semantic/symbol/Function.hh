@@ -111,9 +111,9 @@ namespace semantic {
 	/**
 	 * \brief Override the space name, to avoid spacing the name of main function
 	 */
-	std::string getRealName () const override;
+	std::string computeRealName () const override;
 
-	std::string getMangledName () const override;
+	std::string computeMangledName () const override;
 	
 	/**
 	 * \brief Change the external language (for external function declaration)

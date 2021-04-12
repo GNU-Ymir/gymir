@@ -11,7 +11,8 @@ namespace semantic {
 	    _isLocal (false),
 	    _isMutable (false),
 	    _inners ({}),
-	    _proxy (Generator::empty ())
+	    _proxy (Generator::empty ()),
+	    _typeName (this, &Type::performComputeTypeName)
 	{}
 
 	Type::Type (const lexing::Word & loc, const std::string & name) :
@@ -21,7 +22,18 @@ namespace semantic {
 	    _isLocal (false),
 	    _isMutable (false),
 	    _inners ({}),
-	    _proxy (Generator::empty ())
+	    _proxy (Generator::empty ()),
+	    _typeName (this, &Type::performComputeTypeName)
+	{}
+
+	Type::Type (const Type & other) :
+	    IGenerator (other),
+	    _isRef (other._isRef),
+	    _isComplex (other._isComplex),
+	    _isLocal (other._isLocal),
+	    _inners (other._inners),
+	    _proxy (other._proxy),
+	    _typeName (this, &Type::performComputeTypeName)
 	{}
 	
 	Generator Type::clone () const {
@@ -96,7 +108,7 @@ namespace semantic {
 	    return this-> equals (gen);
 	}
 	
-	std::string Type::getTypeName (bool isParentMutable, bool includeRef) const {
+	std::string Type::computeTypeName (bool isParentMutable, bool includeRef) const {
 	    auto inner = std::move (this-> typeName ());
 	    if (this-> _isMutable && isParentMutable)
 		inner = "mut " + inner;
@@ -107,6 +119,14 @@ namespace semantic {
 		return this-> _proxy.to <Type> ().getTypeName () + Ymir::format ("(%)", inner);
 	    
 	    return inner;
+	}
+
+	std::string Type::performComputeTypeName () const {
+	    return this-> computeTypeName ();
+	}
+	
+	const std::string & Type::getTypeName () const {
+	    return this-> _typeName.getValue ();
 	}
 	
 	std::string Type::typeName () const {
@@ -141,11 +161,13 @@ namespace semantic {
 		
 	void Type::setMutable (bool is) {
 	    this-> _isMutable = is;
+	    this-> _typeName.unvalidate ();
 	}
 	
 
 	void Type::isComplex (bool is) {
 	    this-> _isComplex = is;
+	    this-> _typeName.unvalidate ();
 	}
 
 	bool Type::isLocal () const {
@@ -169,6 +191,7 @@ namespace semantic {
 	void Type::setInners (const std::vector <Generator> & inner) {
 	    if (this-> _isComplex) {
 		this-> _inners = inner;
+		this-> _typeName.unvalidate ();
 	    } else
 		Ymir::Error::halt ("%(r) - Getting inner data of a simple type !", "Critical");
 	}

@@ -812,7 +812,10 @@ namespace semantic {
 			 
 		s_of (ClassCst, cs)
 		    return generateClassCst (cs);
-			 
+
+		s_of (TypeInfoAccess, ac)
+		    return generateTypeInfoAccess (ac);
+		
 		s_of (FrameProto, pr)
 		    return generateFrameProto (pr);		
 		
@@ -1719,6 +1722,8 @@ namespace semantic {
 	}
 
 	generic::Tree Visitor::generateThrow (const Throw & thr) {
+	    static std::map<std::string, Tree> __global__;
+	    
 	    auto value = castTo (thr.getValue ().to <Value> ().getType (), thr.getValue ());
 	    TreeStmtList list = TreeStmtList::init ();
 	    list.append (value.getList ());
@@ -1726,9 +1731,23 @@ namespace semantic {
 	    
 	    auto info = generateValue (thr.getTypeInfo ());
 	    auto file = thr.getLocation ().getFilename ();
-	    auto lit = Tree::buildStringLiteral (thr.getLocation (), file.c_str (), file.length () + 1, 8);
+	    auto res = __global__.find (file);
+	    Tree lit (Tree::empty ());
+	    if (res != __global__.end ()) lit = res-> second;
+	    else {
+		lit = Tree::buildStringLiteral (thr.getLocation (), file.c_str (), file.length () + 1, 8);
+		__global__.emplace (file, lit);
+	    }
+	    
 	    auto context = getCurrentContext ().funcDeclName ();
-	    auto func = Tree::buildStringLiteral (thr.getLocation (), context.c_str (), context.length () + 1, 8);
+
+	    Tree func (Tree::empty ());
+	    res = __global__.find (context);
+	    if (res != __global__.end ()) func = res-> second;
+	    else {
+		func = Tree::buildStringLiteral (thr.getLocation (), context.c_str (), context.length () + 1, 8);
+		__global__.emplace (context, func);
+	    }
 	    
 	    auto line = Tree::buildIntCst (thr.getLocation (), (ulong) thr.getLocation ().getLine (), Tree::intType (32, false));
 
@@ -2122,11 +2141,18 @@ namespace semantic {
 	}	
 
 	generic::Tree Visitor::generateStringValue (const StringValue & str) {
+	    static std::map <std::vector <char>, Tree> __globalConstant__;
+	    auto res = __globalConstant__.find (str.getValue ());
+	    if (res != __globalConstant__.end ()) { return res-> second; }
+	    
 	    auto inner = str.getType ().to <Array> ().getInners () [0];
 	    auto len = str.getLen ();
 	    auto size = inner.to<Char> ().getSize ();
 	    const char * data = str.getValue ().data ();
-	    return Tree::buildStringLiteral (str.getLocation (), data, len, size);
+	    auto ret = Tree::buildStringLiteral (str.getLocation (), data, len, size);
+	    __globalConstant__.emplace (str.getValue (), ret);
+	    
+	    return ret;
 	}
 	
 	generic::Tree Visitor::generateFrameProto (const FrameProto & proto) {
@@ -2283,6 +2309,10 @@ namespace semantic {
 		pre.toTree ()
 	    );
 	}
+
+	generic::Tree Visitor::generateTypeInfoAccess (const TypeInfoAccess & ac) {
+	    return generateTypeInfoClass (ac.getClassRef ());
+	}	
 
 	generic::Tree Visitor::generateStructCst (const StructCst & cl) {
 	    std::vector <std::string> names;

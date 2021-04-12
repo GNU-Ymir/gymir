@@ -70,22 +70,22 @@ namespace semantic {
 	return this-> _content.to <syntax::Constructor> ();
     }
 
-    std::string Constructor::getRealName () const {
+    std::string Constructor::computeRealName () const {
 	if (this-> getRename ().isEof ()) 
-	    return ISymbol::getRealName ();
+	    return ISymbol::computeRealName ();
 	else {
 	    Ymir::OutBuffer buf;
-	    buf.writef ("%::%", ISymbol::getRealName (), this-> getRename ().getStr ());
+	    buf.writef ("%::%", ISymbol::computeRealName (), this-> getRename ().getStr ());
 	    return buf.str ();
 	}
     }
 
-    std::string Constructor::getMangledName () const {
+    std::string Constructor::computeMangledName () const {
 	if (this-> getRename ().isEof ()) 
-	    return ISymbol::getMangledName ();
+	    return ISymbol::computeMangledName ();
 	else {
 	    Ymir::OutBuffer buf;
-	    buf.writef ("%::%", ISymbol::getRealName (), this-> getRename ().getStr ());
+	    buf.writef ("%::%", ISymbol::computeMangledName (), this-> getRename ().getStr ());
 	    return buf.str ();
 	}
     }

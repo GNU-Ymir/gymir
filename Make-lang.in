@@ -139,6 +139,7 @@ ymir_OBJS = \
 	ymir/generator_CharValue.o \
 	ymir/generator_Class.o \
 	ymir/generator_ClassCst.o \
+	ymir/generator_TypeInfoAccess.o \
 	ymir/generator_ClassProxy.o \
 	ymir/generator_ClassPtr.o \
 	ymir/generator_ClassRef.o \

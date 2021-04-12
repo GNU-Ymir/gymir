@@ -53,7 +53,7 @@ namespace semantic {
 	
 	std::string Range::typeName () const {
 	    Ymir::OutBuffer buf;
-	    buf.write ("r!(", this-> getInners () [0].to<Type> ().getTypeName (true), ")");
+	    buf.write ("r!(", this-> getInners () [0].to<Type> ().computeTypeName (true), ")");
 	    return buf.str ();
 	}	
 	

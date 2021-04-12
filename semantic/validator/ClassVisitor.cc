@@ -283,7 +283,7 @@ namespace semantic {
 		gen = generator::Class::initVtable (gen.to <generator::Class> (), vtable, protections, dtor, true);
 			
 		sym.to <semantic::Class> ().setGenerator (gen);
-		sym.to <semantic::Class> ().setTypeInfo (this-> _context.validateTypeInfo (gen.getLocation (), ClassRef::init (cls.getName (), ancestor, sym)));
+		sym.to <semantic::Class> ().setTypeInfo (this-> _context.validateTypeInfo (gen.getLocation (), ClassRef::init (cls.getName (), ancestor, sym), true));
 			
 		// Add methods is the list of methods that have been added by trait implementation
 		sym.to <semantic::Class> ().setAddMethods (addMethods); // We don't put them in the table of the symbol, because they are not declared in it

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ymir/utils/Ref.hh>
+#include <ymir/utils/Lazy.hh>
 #include <ymir/lexing/Word.hh>
 #include <ymir/errors/Error.hh>
 #include <ymir/errors/ListError.hh>
@@ -41,10 +42,15 @@ namespace semantic {
 	bool _isWeak = false;
 
 	bool _isTrusted = false;
+
+	Ymir::Lazy<std::string, ISymbol> _realName;
+	Ymir::Lazy<std::string, ISymbol> _mangledName;
 	
     private :
 		
 	friend Symbol;
+	
+	ISymbol (const ISymbol & other);
 	
     public :
 
@@ -211,17 +217,27 @@ namespace semantic {
 	/**
 	 * \brief change the referent of the symbol
 	 */
-	void setReferent (const Symbol &sym);
+	virtual void setReferent (const Symbol &sym);
+
+	/**
+	 * \return the space name of the symbol
+	 */
+	virtual std::string computeRealName () const;
 	
 	/**
 	 * \return the space name of the symbol
 	 */
-	virtual std::string getRealName () const;
+	const Ymir::Lazy<std::string, ISymbol> & getRealName () const;
 
+	/**
+	 * \brief Used for inner mangling only, for the moment, the only application is for template solution 
+	 */
+	virtual std::string computeMangledName () const;
+	
 	/** 
 	 * \brief Used for inner mangling only, for the moment, the only application is for template solution 
 	 */
-	virtual std::string getMangledName () const;
+	const Ymir::Lazy<std::string, ISymbol> & getMangledName () const;
 	
 	/**
 	 * \return is this symbol the same as other (no only address, or type)
@@ -237,6 +253,12 @@ namespace semantic {
 	/** Virtual but does not do anything */
 	virtual ~ISymbol ();
 
+    private :
+
+	std::string performComputeRealName () const;
+
+	std::string performComputeMangledName () const;
+	
     };
        
 

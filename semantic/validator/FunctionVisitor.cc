@@ -35,7 +35,7 @@ namespace semantic {
 	    this-> _context.setCurrentFuncType (retType); // used for the return statement
 	    
 	    bool needFinalReturn = false; // if true, the body is not a returner
-	    auto body = this-> validateBody (func.getName (), func.getRealName (), function.getBody (), throwers, retType, needFinalReturn, errors); 
+	    auto body = this-> validateBody (func.getName (), func.getRealName ().getValue (), function.getBody (), throwers, retType, needFinalReturn, errors); 
 	    
 	    try { // we enclose that in a try catch, because some vars may be unused
 		this-> _context.quitBlock (errors.size () == 0);
@@ -49,7 +49,7 @@ namespace semantic {
 	    }
 	    
 	    if (!body.isEmpty ()) { // the function has a body, then we must insert a generator
-		auto frame = Frame::init (function.getLocation (), func.getRealName (), params, retType, body, needFinalReturn);
+		auto frame = Frame::init (function.getLocation (), func.getRealName ().getValue (), params, retType, body, needFinalReturn);
 		auto ln = func.getExternalLanguage ();
 		if (ln == Keys::CLANG) 
 		frame.to <Frame> ().setManglingStyle (Frame::ManglingStyle::C);
@@ -57,7 +57,7 @@ namespace semantic {
 		frame.to <Frame> ().setManglingStyle (Frame::ManglingStyle::CXX);
 
 		frame.to <Frame> ().isWeak (func.isWeak ());
-		frame.to <Frame> ().setMangledName (func.getMangledName ());
+		frame.to <Frame> ().setMangledName (func.getMangledName ().getValue ());
 
 		this-> _context.insertNewGenerator (frame);
 	    }
@@ -262,13 +262,13 @@ namespace semantic {
 		    throw Error::ErrorList {errors};		
 		}
 
-		auto frame = FrameProto::init (function.getLocation (), func.getRealName (), retType, params, func.isVariadic (), func.isSafe (), throwers);
+		auto frame = FrameProto::init (function.getLocation (), func.getRealName ().getValue (), retType, params, func.isVariadic (), func.isSafe (), throwers);
 		auto ln = func.getExternalLanguage ();
 		auto style = Frame::ManglingStyle::Y;
 		if (ln == Keys::CLANG) style = Frame::ManglingStyle::C;
 		else if (ln == Keys::CPPLANG) style = Frame::ManglingStyle::CXX;
 	    
-		frame = FrameProto::init (frame.to <FrameProto> (), func.getMangledName (), style);
+		frame = FrameProto::init (frame.to <FrameProto> (), func.getMangledName ().getValue (), style);
 		sym.to <semantic::Function> ().setGenerator (frame);
 	    }
 	    return fSym.to <semantic::Function> ().getGenerator ();
@@ -327,8 +327,8 @@ namespace semantic {
 		    throw Error::ErrorList {errors};		
 		}
 	    
-		auto frame = ConstructorProto::init (func.getName (), func.getRealName (), sym, cl, params, throwers);	    
-		frame = ConstructorProto::init (frame.to <ConstructorProto> (), func.getMangledName ());
+		auto frame = ConstructorProto::init (func.getName (), func.getRealName ().getValue (), sym, cl, params, throwers);	    
+		frame = ConstructorProto::init (frame.to <ConstructorProto> (), func.getMangledName ().getValue ());
 		sym.to <Constructor> ().setGenerator (frame);
 	    }
 	    
@@ -377,11 +377,11 @@ namespace semantic {
 	    if (!function.getPrototype ().getParameters ()[0].to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT))
 	    classType = Type::init (classType.getLocation (), classType.to <Type> (), false, false);
 	    
-	    auto frame = MethodProto::init (function.getLocation (), func.getComments (), func.getRealName (), retType, params, false,
+	    auto frame = MethodProto::init (function.getLocation (), func.getComments (), func.getRealName ().getValue (), retType, params, false,
 					    classType,
 					    function.getPrototype ().getParameters ()[0].to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT), function.getBody ().isEmpty (), func.isFinal (), func.isSafe (), trait, throwers);
 	    
-	    return FrameProto::init (frame.to <FrameProto> (), func.getMangledName (), Frame::ManglingStyle::Y);	    
+	    return FrameProto::init (frame.to <FrameProto> (), func.getMangledName ().getValue (), Frame::ManglingStyle::Y);	    
 	}
 		
 	
@@ -614,8 +614,8 @@ namespace semantic {
 		throw Error::ErrorList {errors};
 	    }
 	    
-	    auto frame = Frame::init (constr.getLocation (), cs.getRealName (), params, classType, body, false);
-	    frame.to <Frame> ().setMangledName (cs.getMangledName ());
+	    auto frame = Frame::init (constr.getLocation (), cs.getRealName ().getValue (), params, classType, body, false);
+	    frame.to <Frame> ().setMangledName (cs.getMangledName ().getValue ());
 	    frame.to <Frame> ().isWeak (cs.isWeak ());
 	    this-> _context.insertNewGenerator (frame);
 	}
@@ -925,7 +925,7 @@ namespace semantic {
 	    } 
 	    
 	    bool needFinalReturn = false;
-	    Generator body = this-> validateBody (func.getName (), func.getRealName (), function.getBody (), throwers, retType, needFinalReturn, errors);
+	    Generator body = this-> validateBody (func.getName (), func.getRealName ().getValue (), function.getBody (), throwers, retType, needFinalReturn, errors);
 	    	    
 	    try {
 		if (errors.size () != 0) {
@@ -943,9 +943,9 @@ namespace semantic {
 	    if (errors.size () != 0)
 	    throw Error::ErrorList {errors};
 		
-	    auto frame = Frame::init (function.getLocation (), func.getRealName (), params, retType, body, needFinalReturn);
+	    auto frame = Frame::init (function.getLocation (), func.getRealName ().getValue (), params, retType, body, needFinalReturn);
 	    frame.to <Frame> ().isWeak (func.isWeak () || isWeak);
-	    frame.to <Frame> ().setMangledName (func.getMangledName ());
+	    frame.to <Frame> ().setMangledName (func.getMangledName ().getValue ());
 
 	    this-> _context.insertNewGenerator (frame);		
 	}
@@ -1008,7 +1008,7 @@ namespace semantic {
 	    } 
 	    
 	    bool needFinalReturn = false;
-	    Generator body = this-> validateBody (func.getName (), func.getRealName (), function.getBody (), throwers, retType, needFinalReturn, errors);
+	    Generator body = this-> validateBody (func.getName (), func.getRealName ().getValue (), function.getBody (), throwers, retType, needFinalReturn, errors);
 	    
 	    if (!ancDtorProto.isEmpty () && !ancDtorProto.is <NullValue> ()) {
 		auto self = this-> _context.validateValue (syntax::Var::init (lexing::Word::init (__params [0].getLocation (), Keys::SELF)));
@@ -1032,9 +1032,9 @@ namespace semantic {
 	    if (errors.size () != 0)
 	    throw Error::ErrorList {errors};
 		
-	    auto frame = Frame::init (function.getLocation (), func.getRealName (), params, retType, body, needFinalReturn);
+	    auto frame = Frame::init (function.getLocation (), func.getRealName ().getValue (), params, retType, body, needFinalReturn);
 	    frame.to <Frame> ().isWeak (func.isWeak ());
-	    frame.to <Frame> ().setMangledName (func.getMangledName ());
+	    frame.to <Frame> ().setMangledName (func.getMangledName ().getValue ());
 
 	    this-> _context.insertNewGenerator (frame);		
 

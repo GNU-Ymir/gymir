@@ -343,7 +343,7 @@ namespace semantic {
 		static int __tmpTemplate__ = 0;
 		__tmpTemplate__ += 1;
 		score = merge.score;
-		auto tmpl = sym.to <semantic::Template> ();
+		auto & tmpl = sym.to <semantic::Template> ();
 		auto sym2 = Template::init (loc, "", syntaxTempl, tmpl.getDeclaration (), tmpl.getTest (), tmpl.getParams (), true);
 		sym2.to <Template> ().setPreviousSpecialization (merge.mapping);
 		sym2.to <Template> ().setSpecNameOrder (merge.nameOrder);
@@ -354,7 +354,7 @@ namespace semantic {
 		// So it is worthless to do it in implicit (TemplatePreSolution)
 		score = merge.score;
 		finalValidation (sym.getReferent (), sym.to <Template> ().getPreviousParams (), merge, sym.to <semantic::Template> ().getTest ());
-		auto tmpls = sym.to <semantic::Template> ();
+		auto & tmpls = sym.to <semantic::Template> ();
 		auto sym2 = TemplatePreSolution::init (sym.getName (), sym.getComments (), tmpls.getParams (), tmpls.getDeclaration (), merge.mapping, merge.nameOrder, sym.getReferent ());
 		return sym2;
 	    }	    

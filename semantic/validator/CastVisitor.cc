@@ -71,8 +71,7 @@ namespace semantic {
 		    }
 		    
 		    if (value.to <Value> ().getType ().is <ClassPtr> ()) {
-			auto syntaxType = this-> _context.createClassTypeFromPath (expression.getLocation (), {CoreNames::get (CORE_MODULE), CoreNames::get (OBJECT_MODULE), CoreNames::get (OBJECT_TYPE)});
-			auto objectType = this-> _context.validateType (syntaxType);
+			auto objectType = this-> _context.getCache ().objectType.getValue ();
 			if (objectType.to <Type> ().isCompatible (type)) {
 			    auto inner = Type::init (type.to <Type> ().getInners ()[0].to <Type> (), value.to <Value> ().getType ().to <Type> ().getInners ()[0].to <Type> ().isMutable ());
 			    type = Type::init (ClassPtr::init (expression.getLocation (), inner).to <Type> (), value.to <Value> ().getType ().to <Type> ().isMutable ());

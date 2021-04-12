@@ -107,7 +107,7 @@ namespace lexing {
     std::string Word::toString () const {
 	if (this-> isEof ()) return ":\u001B[32meof\u001B[0m()";
 	
-	Ymir::OutBuffer buf (Colors::get (BOLD), this-> _value-> str, " --> ", this-> _value-> locFile, ":(", this-> _value-> line, ",", this-> _value-> column, ")", Colors::get (RESET));
+	Ymir::OutBuffer buf (Colors::BOLD, this-> _value-> str, " --> ", this-> _value-> locFile, ":(", this-> _value-> line, ",", this-> _value-> column, ")", Colors::RESET);
 	return buf.str ();
     }
 

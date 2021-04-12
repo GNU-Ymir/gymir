@@ -15,6 +15,10 @@ namespace semantic {
 	std::string _name;
 
 	std::shared_ptr<Table> _table;
+
+	Ymir::Lazy <Symbol, ModRef> _module;
+
+	Ymir::Lazy <Symbol, ModRef> _emptyModule;
 	
     private :
 
@@ -42,7 +46,6 @@ namespace semantic {
 	void getLocal (const std::string & name, std::vector <Symbol> & rets) const override;
 
 	void getLocalPublic (const std::string & name, std::vector <Symbol> & rets) const override;
-
 	
 	bool equals (const Symbol & other, bool parent = true) const override;
 
@@ -57,14 +60,22 @@ namespace semantic {
 	/**
 	 * \return the associated module if this is a leaf (ref to a real module), or this
 	 */
-	Symbol getModule () const;
+	const Ymir::Lazy<Symbol, ModRef> & getModule () const;
 	
 	/**
 	 * \return the space name of this symbol
 	 */
-	std::string getRealName () const override;
+	std::string computeRealName () const override;
 	
 	std::string formatTree (int padd) const override;
+
+	void setReferent (const Symbol &sym) override;
+
+    private:
+
+	Symbol findModule () const;
+	
+	Symbol emptyModule () const;
 	
     };
 

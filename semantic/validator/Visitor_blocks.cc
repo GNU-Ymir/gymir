@@ -127,8 +127,7 @@ namespace semantic {
 	    
 	    try {
 		auto loc = catcher.getLocation ();
-		auto syntaxType = createClassTypeFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (EXCEPTION_TYPE)}); // Throws are throwing exception type from core module
-		auto type = Type::init (validateType (syntaxType).to <Type> (), false, false);
+		auto type = Type::init (this-> _cache.exceptionType.getValue ().to <Type> (), false, false);
 
 		varDecl = generator::VarDecl::init (lexing::Word::init (loc, "#catch"), "#catch", type, Generator::empty (), false); // creation of a temp variable
 		this-> insertLocal ("#catch", varDecl); 

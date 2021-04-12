@@ -59,7 +59,7 @@ namespace semantic {
 	    return false;
     }
 
-    std::string Impl::getRealName () const {
+    std::string Impl::computeRealName () const {
 	return this-> getReferent ().getRealName ();
     }
     

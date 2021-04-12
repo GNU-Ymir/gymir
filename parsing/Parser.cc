@@ -71,7 +71,7 @@ namespace Ymir {
 	auto declarator = semantic::declarator::Visitor::init ();
 	auto module = declarator.visit (this-> _module);
 
-	auto validator = semantic::validator::Visitor::init ();	
+	auto validator = semantic::validator::Visitor::init ();
 	validator.validate (module);
 	validator.validateAllClasses ();
 	

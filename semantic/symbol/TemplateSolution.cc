@@ -112,7 +112,7 @@ namespace semantic {
 	return buf.str ();
     }
     
-    std::string TemplateSolution::getRealName () const {
+    std::string TemplateSolution::computeRealName () const {
 	Ymir::OutBuffer buf;
 	buf.writef ("%", this-> getName ().getStr ());
 	int i = 0;
@@ -150,7 +150,7 @@ namespace semantic {
     }
 
     
-    std::string TemplateSolution::getMangledName () const {
+    std::string TemplateSolution::computeMangledName () const {
 	Ymir::OutBuffer buf;
 	buf.write (this-> getName ().getStr ());
 	generator::Mangler mangler = generator::Mangler::init ();

@@ -117,14 +117,14 @@ namespace semantic {
 	return this-> _content.to <syntax::Function> ();
     }
 
-    std::string Function::getRealName () const {
+    std::string Function::computeRealName () const {
 	if (this-> getName () == Keys::MAIN) return this-> getName ().getStr ();
-	else return ISymbol::getRealName ();
+	else return ISymbol::computeRealName ();
     }
 
-    std::string Function::getMangledName () const {
+    std::string Function::computeMangledName () const {
 	if (this-> getName () == Keys::MAIN) return this-> getName ().getStr ();
-	else return ISymbol::getMangledName ();
+	else return ISymbol::computeMangledName ();
     }
     
     void Function::setExternalLanguage (const std::string & name) {

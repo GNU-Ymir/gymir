@@ -23,10 +23,8 @@ namespace semantic {
 	    auto inner = this-> validateValue (thr.getValue ());
 	    auto type = inner.to <Value> ().getType ();
 	    
-	    auto uniq = UniqValue::init (thr.getLocation (), type, inner);
-	    
-	    auto syntaxType = createClassTypeFromPath (thr.getLocation (), {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (EXCEPTION_TYPE)});
-	    auto ancType = validateType (syntaxType);
+	    auto uniq = UniqValue::init (thr.getLocation (), type, inner);	    
+	    auto ancType = this-> _cache.exceptionType.getValue ();
 
 	    verifyCompatibleType (thr.getLocation (), type.getLocation (), ancType, type);
 	    
@@ -618,9 +616,7 @@ namespace semantic {
 		verifyMemoryOwner (inner.getLocation (), innerType, inner, false);
 	    }
 	    
-	    auto syntaxType = createClassTypeFromPath (tr.getLocation (), {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (EXCEPTION_TYPE)});
-	    auto errType = Type::init (validateType (syntaxType).to <Type> (), false, false);
-	    
+	    auto errType = Type::init (this-> _cache.exceptionType.getValue ().to <Type> (), false, false);	    
 	    auto optionType = Option::init (tr.getLocation (), innerType, errType);
 	    
 	    optionType = Type::init (optionType.to <Type> (), true);		    

@@ -121,8 +121,7 @@ namespace semantic {
 
 		auto loc = un.getLocation ();
 		// It might seg fault
-		auto syntaxType = this-> _context.createClassTypeFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (SEG_FAULT_TYPE)});
-		auto segFaultType = Generator::init (un.getLocation (), this-> _context.validateType (syntaxType));
+		auto segFaultType = Generator::init (un.getLocation (), this-> _context.getCache ().segFault.getValue ());
 		
 		auto thrs = ret.getThrowers ();
 		thrs.push_back (segFaultType);

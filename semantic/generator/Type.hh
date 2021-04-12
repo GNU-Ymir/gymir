@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ymir/semantic/Generator.hh>
+#include <ymir/utils/Lazy.hh>
 
 namespace semantic {
 
@@ -51,6 +52,8 @@ namespace semantic {
 
 	    /** The proxy of the type, used for Enum  */
 	    Generator _proxy;
+
+	    Ymir::Lazy <std::string, Type> _typeName;
 	    
 	protected :
 
@@ -59,6 +62,8 @@ namespace semantic {
 	    Type ();
 
 	    Type (const lexing::Word & loc, const std::string & name);
+
+	    Type (const Type & other);
 	    
 	public : 
 
@@ -105,7 +110,12 @@ namespace semantic {
 	     * \param includeRef add the keyword ref if it is a ref ?
 	     * \return the typename of the type formatted
 	     */
-	    std::string getTypeName (bool isParentMutable = true, bool includeRef = true) const;
+	    std::string computeTypeName (bool isParentMutable = true, bool includeRef = true) const;
+
+	    /**
+	     * @return the typename of the type formatted
+	     */
+	    const std::string & getTypeName () const;
 	    
 	    /**
 	     * \return is this type a reference ?
@@ -231,6 +241,10 @@ namespace semantic {
 	     * Used in the init function
 	     */
 	    virtual Generator createMutable (bool is) const;
+
+	private :
+
+	    std::string performComputeTypeName () const;
 	   	    
 	};	
 

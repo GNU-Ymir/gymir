@@ -22,8 +22,19 @@ namespace semantic {
 	int Visitor::__TEMPLATE_NB_RECURS__ = 0;
 	bool Visitor::__LAST__ = true;
 	bool Visitor::__LAST_TEMPLATE__ = true;
+
+	VisitorCache::VisitorCache (Visitor & context) :
+	    typeInfo (&context, &Visitor::getTypeInfoType),
+	    typeIds (&context, &Visitor::getTypeInfoIds),
+	    outOfArray (&context, &Visitor::getOutOfArrayCall),
+	    disposeTrait (&context, &Visitor::getDisposeTrait),
+	    exceptionType (&context, &Visitor::getExceptionType),
+	    objectType (&context, &Visitor::getObjectType),
+	    segFault (&context, &Visitor::getSegFault)
+	{}
 	
-	Visitor::Visitor ()
+	Visitor::Visitor () :
+	    _cache (*this)
 	{
 	    enterForeign ();
 	}

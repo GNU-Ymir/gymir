@@ -52,11 +52,11 @@ namespace semantic {
 		if (this-> getInners ()[it].isEmpty ())
 		    buf.write ("any");
 		else
-		    buf.write (this-> getInners () [it].to <Type> ().getTypeName (false));
+		    buf.write (this-> getInners () [it].to <Type> ().computeTypeName (false));
 	    }
 	    buf.write (")-> ");
 	    if (this-> getInners ()[0].isEmpty ()) buf.write ("any");
-	    else buf.write (this-> getInners ()[0].to <Type> ().getTypeName (false));
+	    else buf.write (this-> getInners ()[0].to <Type> ().computeTypeName (false));
 	    return buf.str ();
 	}
 	

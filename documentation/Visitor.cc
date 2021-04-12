@@ -134,7 +134,7 @@ namespace documentation {
     }
 
     void Visitor::dumpStandard (const semantic::ISymbol & mod, std::map <std::string, JsonValue> & val) {
-	val ["name"] = JsonString::init (mod.getRealName ());
+	val ["name"] = JsonString::init (mod.getRealName ().getValue ());
 	val ["loc_file"] = JsonString::init (mod.getName ().getFilename ());
 	val ["loc_line"] = JsonString::init (mod.getName ().getLine ());
 	val ["loc_col"] = JsonString::init (mod.getName ().getColumn ());

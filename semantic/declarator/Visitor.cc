@@ -142,7 +142,7 @@ namespace semantic {
 		if (modules.size () == 1) {
 		    Symbol::registerModule (modules [0], ret);
 		} else if (modules.size () == 0) {
-		    auto path = Path {ret.to <Module> ().getRealName (), "::"};
+		    auto path = Path {ret.getRealName (), "::"};
 		    auto modules = path.getFiles ();	   		    
 		    Symbol::registerModule (modules [0], ret);
 		}

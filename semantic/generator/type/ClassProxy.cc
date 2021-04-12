@@ -44,7 +44,7 @@ namespace semantic {
 	
 	std::string ClassProxy::typeName () const {
 	    Ymir::OutBuffer buf;
-	    buf.writef ("&(%)::%", this-> _proxy.to <ClassRef> ().getTypeName (this-> isMutable ()), this-> _ref.to <ClassRef> ().getTypeName (false), ")");
+	    buf.writef ("&(%)::%", this-> _proxy.to <ClassRef> ().computeTypeName (this-> isMutable ()), this-> _ref.to <ClassRef> ().computeTypeName (false), ")");
 	    return buf.str ();
 	}
 		

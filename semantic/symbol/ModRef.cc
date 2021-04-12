@@ -5,7 +5,9 @@ namespace semantic {
     
     ModRef::ModRef (const lexing::Word & loc, const std::string & comments, const std::string & name, bool isWeak, bool isTrusted) :
 	ISymbol (lexing::Word::init (loc, name), comments, isWeak),
-	_name (name)
+	_name (name),
+	_module (this, &ModRef::findModule),
+	_emptyModule (this, &ModRef::emptyModule)
     {
 	if (isTrusted)
 	    this-> setTrusted ();
@@ -107,9 +109,7 @@ namespace semantic {
 	// This is a leaf, we have the right to access to the data of this module
 	
 	this-> _table-> get (name, rets);
-	auto real_name = this-> getRealName ();
-	auto mod = Symbol::getModuleByPath (real_name);
-	mod.getLocal (name, rets);
+	this-> _module.getValue ().getLocal (name, rets);
 	
 	Symbol::mergeEqSymbols (rets);
     }
@@ -117,22 +117,28 @@ namespace semantic {
     void ModRef::getLocalPublic (const std::string & name, std::vector <Symbol> & rets) const {
 	// This is a leaf, we have the right to access to the data of this module
 	this-> _table-> getPublic (name, rets);
-	auto real_name = this-> getRealName ();
-	auto  mod = Symbol::getModuleByPath (real_name);
-	mod.getLocalPublic (name, rets);
+	this-> _module.getValue ().getLocalPublic (name, rets);
 	
 	Symbol::mergeEqSymbols (rets);
     }
 
-    Symbol ModRef::getModule () const {
+    const Ymir::Lazy<Symbol, ModRef> & ModRef::getModule () const {
 	if (this-> _table-> getAll ().size () == 0) {
-	    auto real_name = this-> getRealName ();
-	    auto  mod = Symbol::getModuleByPath (real_name);
-	    return mod;	    
-	} else return Symbol::empty ();
+	    return this-> _module;
+	} else return this-> _emptyModule;
     }
-        
-    std::string ModRef::getRealName () const {
+
+    Symbol ModRef::findModule () const {
+	auto real_name = this-> getRealName ().getValue ();
+	auto  mod = Symbol::getModuleByPath (real_name);
+	return mod;	    
+    }
+
+    Symbol ModRef::emptyModule () const {
+	return Symbol::empty ();
+    }
+    
+    std::string ModRef::computeRealName () const {
 	if (this-> getReferent ().isEmpty ()) return this-> getModName ();
 	else if (!this-> getReferent ().is <ModRef> ()) return this-> getModName ();
 	else {
@@ -145,9 +151,14 @@ namespace semantic {
     
     std::string ModRef::formatTree (int i) const {
 	Ymir::OutBuffer buf;	
-	buf.writefln ("%*- %", i, "|\t", this-> getRealName ());
+	buf.writefln ("%*- %", i, "|\t", this-> getRealName ().getValue ());
 	for (auto inner : this-> _table-> getAll ())
 	    buf.write (inner.formatTree (i + 1));
 	return buf.str ();
+    }
+
+    void ModRef::setReferent (const Symbol & sym) {
+	ISymbol::setReferent (sym);
+	this-> _module.unvalidate ();
     }
 }

@@ -157,10 +157,8 @@ namespace semantic {
 	 * ========================================================
 	 */
 
-	Generator PragmaVisitor::validateFakeThrow (const syntax::Pragma & prg) {
-	    auto syntaxType = this-> _context.createClassTypeFromPath (prg.getLocation (), {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (EXCEPTION_TYPE)});
-	    auto ancType = this-> _context.validateType (syntaxType);
-	    
+	Generator PragmaVisitor::validateFakeThrow (const syntax::Pragma & prg) {	    
+	    auto ancType = this-> _context.getCache ().exceptionType.getValue ();
 	    std::vector <Generator> throwers;
 	    for (auto & it : prg.getContent ()) {
 		auto type = this-> _context.validateType (it);

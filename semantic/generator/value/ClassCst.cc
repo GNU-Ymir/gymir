@@ -11,7 +11,7 @@ namespace semantic {
 	    _types ({}),
 	    _params ({})
 	{
-	    this-> isLvalue (true);
+	    //this-> isLvalue (true);
 	}
 
 	ClassCst::ClassCst (const lexing::Word & loc, const Generator & type, const Generator & frame, const std::vector<Generator> & types, const std::vector <Generator> & params) :
@@ -21,7 +21,7 @@ namespace semantic {
 	    _types (types),
 	    _params (params)
 	{
-	    this-> isLvalue (true);
+	    //this-> isLvalue (false);
 	    auto lth = this-> _frame.getThrowers ();
 	    if (lth.size () != 0) {
 		for (auto &it : lth) it = Generator::init (loc, it);

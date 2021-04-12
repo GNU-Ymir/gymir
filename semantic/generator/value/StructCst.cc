@@ -10,7 +10,7 @@ namespace semantic {
 	    _types ({}),
 	    _params ({})
 	{
-	    this-> isLvalue (true);
+	    //this-> isLvalue (true);
 	}
 
 	StructCst::StructCst (const lexing::Word & loc, const Generator & type, const Generator & str, const std::vector<Generator> & types, const std::vector <Generator> & params) :

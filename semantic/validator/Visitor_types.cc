@@ -178,8 +178,7 @@ namespace semantic {
 
 	Generator Visitor::validateTypeTry (const syntax::Try & tr) {
 	    auto inner = validateType (tr.getContent (), true);
-	    auto syntaxType = createClassTypeFromPath (tr.getLocation (), {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (EXCEPTION_TYPE)});
-	    auto errType = Type::init (validateType (syntaxType).to <Type> (), false, false);
+	    auto errType = Type::init (this-> _cache.exceptionType.getValue ().to <Type> (), false, false);
 	    
 	    if (!inner.isEmpty ()) return Option::init (tr.getLocation (), inner, errType);
 	    return Generator::empty ();
@@ -293,17 +292,17 @@ namespace semantic {
 	    return gen;	    
 	}
 
-	Generator Visitor::validateTypeInfo (const lexing::Word & loc, const Generator & type_) {
+	Generator Visitor::validateTypeInfo (const lexing::Word & loc, const Generator & type_, bool force) {
 	    auto type = Type::init (type_.to <Type> (), false, false);
 	    if (type.is <ClassPtr> ())
 		type = type.to <ClassPtr> ().getInners ()[0];
+
+	    auto str = this-> _cache.typeInfo.getValue ();
+	    if (!force && type.is <ClassRef> () && !type.to <ClassRef> ().getRef ().to <semantic::Class> ().getTypeInfo ().isEmpty ()) {
+		return TypeInfoAccess::init (loc, str, type);
+	    }
 	    
-	    auto typeInfo = createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (TYPE_INFO_MODULE), CoreNames::get (TYPE_INFO)});
-		
-	    auto str = validateType (typeInfo);
-	    
-	    auto typeIDs = createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (TYPE_INFO_MODULE), CoreNames::get (TYPE_IDS)});
-	    auto en_m = validateValue (typeIDs);
+	    auto en_m = this-> _cache.typeIds.getValue ();
 	       
 	    std::vector <Generator> types = {
 		Integer::init (loc, 32, false),
@@ -318,7 +317,7 @@ namespace semantic {
 		    for (auto & it : type.to <Type> ().getInners ())
 			innerTypes.push_back (validateTypeInfo (loc, it));
 		}
-	    } else {		
+	    } else {
 		if (!type.to <ClassRef> ().getAncestor ().isEmpty ()) {
 		    innerTypes.push_back (validateTypeInfo (loc, type.to <ClassRef> ().getAncestor ()));
 		}
