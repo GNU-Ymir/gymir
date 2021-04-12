@@ -98,6 +98,7 @@ namespace semantic {
 		    std::vector <Tree> inner;
 		    for (auto & it : tu.getInners ()) inner.push_back (generateType (it));
 		    type = Tree::tupleType ({}, inner);
+	    
 		}
 		elof (TupleClosure, tu) {
 		    std::vector <Tree> inner;
@@ -105,24 +106,30 @@ namespace semantic {
 		    type = Tree::tupleType ({}, inner);
 		}	       	 
 		elof (StructRef, st) {
+		    static std::map <std::string, Tree> __dones__;
 		    static std::set <std::string> current;
-		    if (current.find (st.prettyString ()) == current.end ()) { // To prevent infinite loop for inner type validation
-			current.emplace (st.prettyString ());
-			auto gen = st.getRef ().to <semantic::Struct> ().getGenerator ();
-			std::vector <Tree> inner;
-			std::vector <std::string> fields;
-			for (auto & it : gen.to <generator::Struct> ().getFields ()) {
-			    inner.push_back (generateType (it.to <generator::VarDecl> ().getVarType ()));
-			    fields.push_back (it.to <generator::VarDecl> ().getName ());
-			}
+		    auto name = st.getRef ().getRealName ();
+		    if (current.find (name) == current.end ()) { // To prevent infinite loop for inner type validation
+			auto it = __dones__.find (name);
+			if (it == __dones__.end ()) {
+			    current.emplace (name);
+			    auto & gen = st.getRef ().to <semantic::Struct> ().getGenerator ();
+			    std::vector <Tree> inner;
+			    std::vector <std::string> fields;
+			    for (auto & it : gen.to <generator::Struct> ().getFields ()) {
+				inner.push_back (generateType (it.to <generator::VarDecl> ().getVarType ()));
+				fields.push_back (it.to <generator::VarDecl> ().getName ());
+			    }
 
-			if (inner.size () == 0) {
-			    inner.push_back (Tree::charType (8));
-			    fields.push_back ("_");
-			}
+			    if (inner.size () == 0) {
+				inner.push_back (Tree::charType (8));
+				fields.push_back ("_");
+			    }
 			    
-			type = Tree::tupleType (st.getRef ().getRealName (), fields, inner, st.getRef ().to <semantic::Struct> ().isUnion (), st.getRef ().to <semantic::Struct> ().isPacked ());
-			current.erase (st.prettyString ());
+			    type = Tree::tupleType (st.getRef ().getRealName (), fields, inner, st.getRef ().to <semantic::Struct> ().isUnion (), st.getRef ().to <semantic::Struct> ().isPacked ());
+			    current.erase (name);
+			    __dones__.emplace (name, type);
+			} else type = it-> second;
 		    } else return Tree::voidType ();
 		}	    			 
 		elof (ClassRef, cl) {
@@ -141,20 +148,26 @@ namespace semantic {
 		    type = Tree::pointerType (inner);
 		}
 		elof (Range, rg) {
-		    std::vector <Tree> inner;
-		    inner.push_back (generateType (rg.getInners ()[0]));
-		    inner.push_back (generateType (rg.getInners ()[0]));
-		    if (rg.getInners () [0].is <Float> ())
-		    inner.push_back (generateType (rg.getInners ()[0]));
-		    else if (rg.getInners ()[0].is <Integer> ()) {
-			inner.push_back (generateType (Integer::init (rg.getInners ()[0].getLocation (), rg.getInners () [0].to <Integer> ().getSize (), true)));
-		    } else if (rg.getInners ()[0].is <Char> ()) {
-			inner.push_back (generateType (Integer::init (rg.getInners ()[0].getLocation (), rg.getInners () [0].to <Char> ().getSize (), true)));
-		    } else
-		    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+		    static std::map <std::string, Tree> __dones__;
+		    auto name = rg.prettyString ();
+		    auto it = __dones__.find (name);
+		    if (it == __dones__.end ()) {
+			std::vector <Tree> inner;
+			inner.push_back (generateType (rg.getInners ()[0]));
+			inner.push_back (generateType (rg.getInners ()[0]));
+			if (rg.getInners () [0].is <Float> ())
+			inner.push_back (generateType (rg.getInners ()[0]));
+			else if (rg.getInners ()[0].is <Integer> ()) {
+			    inner.push_back (generateType (Integer::init (rg.getInners ()[0].getLocation (), rg.getInners () [0].to <Integer> ().getSize (), true)));
+			} else if (rg.getInners ()[0].is <Char> ()) {
+			    inner.push_back (generateType (Integer::init (rg.getInners ()[0].getLocation (), rg.getInners () [0].to <Char> ().getSize (), true)));
+			} else
+			Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 		    
-		    inner.push_back (generateType (Bool::init (rg.getLocation ())));
-		    type = Tree::tupleType ({Range::FST_NAME, Range::SCD_NAME, Range::STEP_NAME, Range::FULL_NAME}, inner);
+			inner.push_back (generateType (Bool::init (rg.getLocation ())));
+			type = Tree::tupleType ({Range::FST_NAME, Range::SCD_NAME, Range::STEP_NAME, Range::FULL_NAME}, inner);
+			__dones__.emplace (name, type);
+		    } else type = it-> second;
 		}
 		elof (FuncPtr, fn) {
 		    auto retType = generateType (fn.getReturnType ());
@@ -197,8 +210,7 @@ namespace semantic {
 		    auto boolType = Tree::boolType ();
 		    std::vector <std::string> names;
 		    names.push_back (Option::TYPE_FIELD);
-		    if (!o.getInners ()[0].is<Void> ())
-		    names.push_back (Option::VALUE_FIELD);
+		    if (!o.getInners ()[0].is<Void> ()) names.push_back (Option::VALUE_FIELD);
 		       
 		    names.push_back (Option::ERROR_FIELD);
 		       
@@ -217,32 +229,41 @@ namespace semantic {
 
 	    if (gen.to <Type> ().isRef ())
 		type = Tree::pointerType (type);
-	    
+
 	    return type;
 	}
 
-	Tree Visitor::generateClassType (const ClassRef & ref) {	    
+	Tree Visitor::generateClassType (const ClassRef & ref) {
+	    static std::map <std::string, Tree> __dones__;
 	    static std::set <std::string> current;
-	    if (current.find (ref.prettyString ()) == current.end ()) { // To prevent infinite loop in type validation
-		current.emplace (ref.prettyString ());
-		auto gen = ref.getRef ().to <semantic::Class> ().getGenerator ();
-		std::vector <Tree> inner;
-		std::vector <std::string> fields;
-		fields.push_back ("#_vtable");
-		fields.push_back ("#_monitor");
-		inner.push_back (Tree::pointerType (Tree::pointerType (Tree::voidType ()))); // vtable
-		inner.push_back (Tree::pointerType (Tree::pointerType (Tree::voidType ()))); // monitor
+	    auto name = ref.getRef ().getRealName ();
+	    if (current.find (name) == current.end ()) { // To prevent infinite loop in type validation
+		auto it = __dones__.find (name);
+		if (it == __dones__.end ()) {
+		    current.emplace (name);
+		    auto gen = ref.getRef ().to <semantic::Class> ().getGenerator ();
+		    std::vector <Tree> inner;
+		    std::vector <std::string> fields;
+		    // inner.reserve (gen.to <generator::Class> ().getFields ().size () + 2);
+		    // fields.reserve (gen.to <generator::Class> ().getFields ().size () + 2);
+		    
+		    fields.push_back ("#_vtable");
+		    fields.push_back ("#_monitor");
+		    inner.push_back (Tree::pointerType (Tree::pointerType (Tree::voidType ()))); // vtable
+		    inner.push_back (Tree::pointerType (Tree::pointerType (Tree::voidType ()))); // monitor
 		
-		for (auto & it : gen.to <generator::Class> ().getFields ()) {
-		    inner.push_back (generateType (it.to <generator::VarDecl> ().getVarType ()));
-		    fields.push_back (it.to <generator::VarDecl> ().getName ());
-		}
+		    for (auto & it : gen.to <generator::Class> ().getFields ()) {
+			inner.push_back (generateType (it.to <generator::VarDecl> ().getVarType ()));
+			fields.push_back (it.to <generator::VarDecl> ().getName ());
+		    }
 		
-		auto type = // Tree::pointerType (
-		    Tree::tupleType (fields, inner);
+		    auto type = // Tree::pointerType (
+			Tree::tupleType (fields, inner);
 		    //);
-		current.erase (ref.prettyString ());		
-		return type;
+		    current.erase (name);
+		    __dones__.emplace (name, type);
+		    return type;
+		} else return it-> second;
 	    } else return // Tree::pointerType (
 		       Tree::voidType ()//);
 		       ;
@@ -2156,25 +2177,37 @@ namespace semantic {
 	}
 	
 	generic::Tree Visitor::generateFrameProto (const FrameProto & proto) {
-	    std::vector <Tree> params;
-	    for (auto & it : proto.getParameters ())
-		params.push_back (generateType (it.to <ProtoVar> ().getType ()));
-
-
-	    auto type = generateType (proto.getReturnType ());
+	    static std::map <std::string, Tree> __dones__;
 	    auto name = Mangler::init ().mangleFrameProto (proto);
-	    return Tree::buildFrameProto (proto.getLocation (), type, name, params);
+	    auto it = __dones__.find (name);
+	    if (it == __dones__.end ()) {
+		std::vector <Tree> params;
+		for (auto & it : proto.getParameters ())
+		params.push_back (generateType (it.to <ProtoVar> ().getType ()));
+		
+		
+		auto type = generateType (proto.getReturnType ());
+		auto ret = Tree::buildFrameProto (proto.getLocation (), type, name, params);
+		__dones__.emplace (name, ret);
+		return ret;
+	    } else return it-> second;
 	}
 
 	generic::Tree Visitor::generateConstructorProto (const ConstructorProto & proto) {
-	    std::vector <Tree> params;
-	    params.push_back (generateType (proto.getReturnType ()));
-	    for (auto & it : proto.getParameters ()) 
+	    static std::map <std::string, Tree> __dones__;
+	    auto name = Mangler::init ().mangleConstructorProto (proto);
+	    auto it = __dones__.find (name);
+	    if (it == __dones__.end ()) {
+		std::vector <Tree> params;
+		params.push_back (generateType (proto.getReturnType ()));
+		for (auto & it : proto.getParameters ()) 
 		params.push_back (generateType (it.to <ProtoVar> ().getType ()));
 
-	    auto type = generateType (proto.getReturnType ());
-	    auto name = Mangler::init ().mangleConstructorProto (proto);
-	    return Tree::buildFrameProto (proto.getLocation (), type, name, params);
+		auto type = generateType (proto.getReturnType ());
+		auto ret = Tree::buildFrameProto (proto.getLocation (), type, name, params);
+		__dones__.emplace (name, ret);
+		return ret;
+	    } else return it-> second;
 	}
 
 	generic::Tree Visitor::generateTupleAccess (const TupleAccess & acc) {

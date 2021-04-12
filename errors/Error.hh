@@ -21,22 +21,25 @@ namespace Ymir {
        \brief replace all the % token with the first parameter (recursivly)
      */
     template <typename ... T> 
-    std::string format (std::string left, T... params) {
+    std::string format (const std::string & left, T... params) {
 	OutBuffer buf;
 	buf.writef (left.c_str (), params...);
 	return buf.str ();
     }
 
-    /** 
-       \brief format a string with simple system
-       \brief replace all the % token with the first parameter (recursivly)
-     */
-    template <typename ... T> 
-    std::string format (const char* left, T... params) {
-	OutBuffer buf;
-	buf.writef (left, params...);
-	return buf.str ();
-    }
+    // /** 
+    //    \brief format a string with simple system
+    //    \brief replace all the % token with the first parameter (recursivly)
+    //  */
+    // template <typename ... T> 
+    // std::string format (const char* left, T... params) {
+    // 	OutBuffer buf;
+    // 	buf.writef (left, params...);
+    // 	static int all = 0;
+    // 	all += clock () - t;
+    // 	println (((float) all) / CLOCKS_PER_SEC);
+    // 	return buf.str ();
+    // }
     
 
 

@@ -225,7 +225,7 @@ namespace semantic {
 	 * ================================================================================
 	 */
 
-	Generator FunctionVisitor::validateFunctionProto (const semantic::Symbol & fSym) {	    
+	Generator FunctionVisitor::validateFunctionProto (const semantic::Symbol & fSym) {
 	    if (fSym.to <semantic::Function> ().getGenerator ().isEmpty ()) {
 		auto & func = fSym.to <semantic::Function> ();
 		auto sym = fSym;
