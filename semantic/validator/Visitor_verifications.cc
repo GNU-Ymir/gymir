@@ -193,8 +193,9 @@ namespace semantic {
 		// Ok for implicit alias, but the mutability must be checked
 		match (gen) {
 		    of (Block, arr) {			
-			if (!arr.isLvalue ()) // Implicit alias of LBlock is not allowed
-			max_level = arr.getType ().to <Type> ().mutabilityLevel ();
+			if (!arr.isLvalue ()) {// Implicit alias of LBlock is not allowed
+			    max_level = arr.getType ().to <Type> ().mutabilityLevel ();
+			}
 		    }		    	       
 		    elof (Conditional,  arr) max_level = arr.getType ().to <Type> ().mutabilityLevel ();
 		    elof (ExitScope,    arr) max_level = arr.getType ().to <Type> ().mutabilityLevel ();
@@ -205,8 +206,9 @@ namespace semantic {
 	    }
 	    
 
+	    // int min_level = 1;
+	    // if (type.is <StructRef> ()) min_level = 0;
 	    max_level = std::max (1, max_level);
-	    if (type.is <StructRef> () || type.is <Tuple> ()) max_level = 0;
 	    
 	    // If the type is totally immutable, it's it not necessary to make an explicit alias 
 	    if (llevel > max_level) {

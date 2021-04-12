@@ -53,7 +53,7 @@ namespace semantic {
 		if (ref.to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().hasComplexField ()) {
 		    auto max = level;
 		    for (auto & it : ref.to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().getFields ()) {
-			auto mut = it.to <Value> ().getType ().to <Type> ().mutabilityLevel (level + 1);
+			auto mut = it.to <VarDecl> ().getVarType ().to <Type> ().mutabilityLevel (level);
 			if (mut > max) max = mut;
 		    }
 		    return max;

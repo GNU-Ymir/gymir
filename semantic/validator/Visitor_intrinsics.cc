@@ -84,10 +84,11 @@ namespace semantic {
 	    }
 	    
 	    auto type = content.to <Value> ().getType ();
-	    if (!type.to <Type> ().isMutable ())
-	    Ymir::Error::occur (content.getLocation (),
-				ExternalError::get (NOT_A_LVALUE)
-		);
+	    if (!type.to <Type> ().isMutable ()) {
+		Ymir::Error::occur (content.getLocation (),
+				    ExternalError::get (NOT_A_LVALUE)
+		    );
+	    }
 
 	    this-> verifyLockAlias (content);
 	    
