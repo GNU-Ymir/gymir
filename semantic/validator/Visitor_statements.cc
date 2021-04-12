@@ -609,10 +609,19 @@ namespace semantic {
 	    } catch (Error::ErrorList&) {}
 	    
 	    auto inner = this-> validateValue (tr.getContent ());
+	    auto innerType = inner.to <Value> ().getType ();
+	    try {		
+		verifyMemoryOwner (inner.getLocation (), innerType, inner, false);
+		innerType = Type::init (innerType.to <Type> (), innerType.to <Type> ().isMutable (), false);
+	    } catch (Error::ErrorList ATTRIBUTE_UNUSED lst) {
+		innerType = Type::init (innerType.to <Type> (), false);
+		verifyMemoryOwner (inner.getLocation (), innerType, inner, false);
+	    }
+	    
 	    auto syntaxType = createClassTypeFromPath (tr.getLocation (), {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (EXCEPTION_TYPE)});
 	    auto errType = Type::init (validateType (syntaxType).to <Type> (), false, false);
 	    
-	    auto optionType = Option::init (tr.getLocation (), inner.to <Value> ().getType (), errType);
+	    auto optionType = Option::init (tr.getLocation (), innerType, errType);
 	    
 	    optionType = Type::init (optionType.to <Type> (), true);		    
 	    auto throwsType = inner.getThrowers ();
