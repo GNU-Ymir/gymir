@@ -293,7 +293,7 @@ namespace semantic {
 	    return gen;	    
 	}
 
-		Generator Visitor::validateTypeInfo (const lexing::Word & loc, const Generator & type_) {
+	Generator Visitor::validateTypeInfo (const lexing::Word & loc, const Generator & type_) {
 	    auto type = Type::init (type_.to <Type> (), false, false);
 	    if (type.is <ClassPtr> ())
 		type = type.to <ClassPtr> ().getInners ()[0];
@@ -301,7 +301,7 @@ namespace semantic {
 	    auto typeInfo = createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (TYPE_INFO_MODULE), CoreNames::get (TYPE_INFO)});
 		
 	    auto str = validateType (typeInfo);
-
+	    
 	    auto typeIDs = createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (TYPE_INFO_MODULE), CoreNames::get (TYPE_IDS)});
 	    auto en_m = validateValue (typeIDs);
 	       

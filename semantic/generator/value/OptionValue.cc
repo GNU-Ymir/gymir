@@ -15,6 +15,7 @@ namespace semantic {
 	    _content (content),
 	    _success (success)
 	{
+	    this-> isLvalue (true);
 	    this-> setThrowers (this-> _content.getThrowers ());
 	}
 	

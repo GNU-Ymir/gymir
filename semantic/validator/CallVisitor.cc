@@ -382,7 +382,10 @@ namespace semantic {
 	    if (errors.size () != 0) return Generator::empty ();
 	    
 	    score = 0;
-	    return StructCst::init (location, StructRef::init (str.getLocation (), str.getRef ()), str.clone (), types, params);
+	    auto structType = StructRef::init (str.getLocation (), str.getRef ());
+	    structType = Type::init (structType.to <Type> (), true);
+	    
+	    return StructCst::init (location, structType, str.clone (), types, params);
 	}
 
 	Generator CallVisitor::validateUnionCst (const lexing::Word & location, const generator::Struct & str, const std::vector <Generator> & rights, int & score, std::list <Ymir::Error::ErrorMsg> & errors) {

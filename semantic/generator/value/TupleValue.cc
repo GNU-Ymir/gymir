@@ -14,7 +14,7 @@ namespace semantic {
 	    Value (loc, type),
 	    _content (content)
 	{
-	    this-> isLvalue (true);
+	    //this-> isLvalue (true);
 	    std::vector <Generator> thrs;
 	    for (auto & it : this-> _content) {
 		auto &ith = it.getThrowers ();

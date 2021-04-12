@@ -19,7 +19,7 @@ namespace semantic {
 	    _types (types),
 	    _params (params)
 	{
-	    this-> isLvalue (true);
+	    // this-> isLvalue (true);
 	    
 	    std::vector <Generator> thrs;
 	    for (auto & it : this-> _params) {

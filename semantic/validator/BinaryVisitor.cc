@@ -1016,11 +1016,13 @@ namespace semantic {
 		right = validateMathOperation (op, expression, left, right);
 	    }
 
-	    if (!left.to <Value> ().isLvalue () || (left.is <VarRef> () && left.to <VarRef> ().isSelf ())) // We cannot change the reference of the self paramvar even if it is mutable
-	    Ymir::Error::occur (left.getLocation (), ExternalError::get (NOT_A_LVALUE));
+	    if (!left.to <Value> ().isLvalue () || (left.is <VarRef> () && left.to <VarRef> ().isSelf ())) { // We cannot change the reference of the self paramvar even if it is mutable
+		Ymir::Error::occur (left.getLocation (), ExternalError::get (NOT_A_LVALUE));
+	    }
 
-	    if (!left.to <Value> ().getType ().to <Type> ().isMutable ())
-	    Ymir::Error::occur (left.getLocation (), ExternalError::get (IMMUTABLE_LVALUE), left.to <Value> ().getType ().to <Type> ().getTypeName ());
+	    if (!left.to <Value> ().getType ().to <Type> ().isMutable ()) {
+		Ymir::Error::occur (left.getLocation (), ExternalError::get (IMMUTABLE_LVALUE), left.to <Value> ().getType ().to <Type> ().getTypeName ());
+	    }
 
 	    this-> _context.verifyMemoryOwner (expression.getLocation (), left.to <Value> ().getType (), right, false);
 	    return Affect::init (expression.getLocation (), left.to <Value> ().getType (), left, right);

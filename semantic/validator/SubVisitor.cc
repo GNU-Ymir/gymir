@@ -598,10 +598,13 @@ namespace semantic {
 		    if (errors.size () != 0) {
 			this-> error (expression, t, expression.getRight (), errors);
 		    }
+
+		    auto strType = StructRef::init (expression.getLocation (), t.to<generator::Struct> ().getRef ());
+		    strType = Type::init (strType.to <Type> (), true);
 		    
 		    return StructCst::init (
 			expression.getLocation (),
-			StructRef::init (expression.getLocation (), t.to<generator::Struct> ().getRef ()),
+			strType,
 			t,
 			types,
 			params
