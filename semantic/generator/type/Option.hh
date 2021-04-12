@@ -34,6 +34,8 @@ namespace semantic {
 
 	    bool needExplicitAlias () const override;
 
+	    virtual int mutabilityLevel (int level) const override;
+	    
 	    bool containPointers () const override;
 
 	    std::string typeName () const override;

@@ -40,6 +40,12 @@ namespace semantic {
 	    return this-> getInners () [0].equals (array.getInners () [0]);
 	}
 
+	int Option::mutabilityLevel (int level) const {
+	    if (this-> isMutable ()) {
+		return this-> getInners () [0].to <Type> ().mutabilityLevel (level + 1);		
+	    } else return level;
+	}
+	
 	bool Option::needExplicitAlias () const {
 	    for (auto it : Ymir::r (0, 1)) {
 		if (this-> getInners () [it].to <Type> ().needExplicitAlias ()

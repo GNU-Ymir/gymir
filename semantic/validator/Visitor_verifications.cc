@@ -188,6 +188,7 @@ namespace semantic {
 		    s_of_u (ArrayAlloc) return;
 		    s_of_u (NullValue) return;
 		    s_of_u (TupleValue) return;
+		    s_of_u (OptionValue) return;
 		}
 	    }
 	    {

@@ -29,6 +29,8 @@ namespace semantic {
 		    s_of_u (ClassCst) return true;
 		    s_of_u (ArrayAlloc) return true;
 		    s_of_u (NullValue) return true;
+		    s_of_u (TupleValue) return true;
+		    s_of_u (OptionValue) return true;
 		}
 	    }
 	    

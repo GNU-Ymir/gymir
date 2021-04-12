@@ -613,17 +613,11 @@ namespace semantic {
 	    auto errType = Type::init (validateType (syntaxType).to <Type> (), false, false);
 	    
 	    auto optionType = Option::init (tr.getLocation (), inner.to <Value> ().getType (), errType);
-	    bool needAlias = false;
-	    if (inner.to <Value> ().getType ().to <Type> ().isMutable ()) {
-		optionType = Type::init (optionType.to <Type> (), true);
-		needAlias = true;
-	    }
-		    
+	    
+	    optionType = Type::init (optionType.to <Type> (), true);		    
 	    auto throwsType = inner.getThrowers ();
 	    inner = OptionValue::init (tr.getLocation (), optionType, inner, true);
-	    if (needAlias) {
-		inner = Aliaser::init (tr.getLocation (), optionType, inner);
-	    }
+	    
 	    if (throwsType.size () != 0) {
 		auto jmp_buf_type = validateType (syntax::Var::init (lexing::Word::init (tr.getLocation (), global::CoreNames::get (JMP_BUF_TYPE))));
 
@@ -635,8 +629,9 @@ namespace semantic {
 		auto outer = OptionValue::init (tr.getLocation (), optionType, vref, false);
 
 		auto ret = ExitScope::init (tr.getLocation (), optionType, jmp_buf_type, inner, {}, {}, varDecl, typeInfo, outer);		
-		if (needAlias)
-		ret = Aliaser::init (tr.getLocation (), optionType, ret);
+		if (optionType.to <Type> ().needExplicitAlias ()) {
+		    ret = Aliaser::init (tr.getLocation (), optionType, ret);
+		}
 		return ret;
 	    }
 	    
