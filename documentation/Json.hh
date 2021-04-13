@@ -22,6 +22,8 @@ namespace documentation {
 
 	    	    
 	    virtual std::string toString () const = 0;
+
+	    virtual ~IJsonValue (){}
 	    
 	};
 

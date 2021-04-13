@@ -70,4 +70,10 @@ namespace Ymir {
 	}
 	return buf.str ();
     }
+
+    struct str_slice {
+	const char * data;
+	ulong len;		
+    };
+    
 }

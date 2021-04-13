@@ -88,7 +88,7 @@ namespace semantic {
 	    }
 	}
 
-	TemplateVisitor::Mapper TemplateVisitor::inferTypeFromOfVar (const array_view <Expression> & rest, const syntax::OfVar & ofv) const {
+	TemplateVisitor::Mapper TemplateVisitor::inferTypeFromOfVar (const array_view <Expression> & rest, const syntax::OfVar & ofv) const {	    
 	    if (ofv.isOver ()) return Mapper (false, 0);
 	    match (ofv.getType ()) {
 		of_u (Var) {
@@ -678,41 +678,27 @@ namespace semantic {
 
 		score = merge.score;
 		finalValidation (ref.to <TemplateRef> ().getTemplateRef ().getReferent (), sym.to <Template> ().getPreviousParams (), merge, sym.to <semantic::Template> ().getTest ());
-		auto func = replaceAll (sym.to <semantic::Template> ().getDeclaration (), merge.mapping, ref.to <TemplateRef> ().getTemplateRef ().getReferent ());
-		
-		auto visit = declarator::Visitor::init ();
-		visit.setWeak ();
-		visit.pushReferent (ref.to <TemplateRef> ().getTemplateRef ().getReferent ());
-		
+
 		auto soluce = TemplateSolution::init (sym.getName (), sym.getComments (), sym.to <semantic::Template> ().getParams (), merge.mapping, merge.nameOrder, true);
-		
-		visit.pushReferent (soluce);
-		auto sym_func = visit.visit (func);
-		auto glob = visit.popReferent ();
-		
-		// Strange but not always the case, it depends on what is glob
-		glob.setReferent (visit.getReferent ());
-		
-		auto already = getTemplateSolution (visit.getReferent (), soluce);
+		auto already = getTemplateSolution (ref.to <TemplateRef> ().getTemplateRef ().getReferent (), soluce);
+		Symbol glob (Symbol::empty ());
 		
 		if (already.isEmpty ()) {
+		    auto func = replaceAll (sym.to <semantic::Template> ().getDeclaration (), merge.mapping, ref.to <TemplateRef> ().getTemplateRef ().getReferent ());
+		    auto visit = declarator::Visitor::init ();
+		    visit.setWeak ();
+		    visit.pushReferent (ref.to <TemplateRef> ().getTemplateRef ().getReferent ());				
+		    visit.pushReferent (soluce);
+		    visit.visit (func);
+		    glob = visit.popReferent ();
+		
+		    // Strange but not always the case, it depends on what is glob
+		    glob.setReferent (visit.getReferent ());
 		    visit.getReferent ().insertTemplate (glob);
 		} else glob = already;
 		
 		symbol = glob;
-		{ // In a block, because it declare a var named ref
-		    match (func) {
-			of (syntax::Function, f) {
-			    sym_func = symbol.getLocal (f.getLocation ().getStr ()) [0];
-			}
-			elof (syntax::Class, c) {
-			    sym_func = symbol.getLocal (c.getLocation ().getStr ()) [0];
-			}
-			elfo {
-			    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-			}
-		    }
-		} // And ref is already defined
+		auto sym_func = symbol.getLocal (sym.to <semantic::Template> ().getDeclaration ().getLocation ().getStr ()) [0];
 		
 		Generator proto (Generator::empty ());
 		this-> _context.pushReferent (sym_func.getReferent (),  "TemplateVisitor::validateFromImplicit");
@@ -2379,7 +2365,7 @@ namespace semantic {
 
 	Symbol TemplateVisitor::getTemplateSolution (const Symbol & ref, const Symbol & solution) const {
 	    for (auto & it : ref.getTemplates ()) {
-		if (it.equals (solution)) {
+		if (it.equals (solution, false)) {
 		    return it;
 		}
 	    }

@@ -41,42 +41,42 @@ namespace syntax {
 	lexing::Lexer _lex;
 
 	/** All the keys that cannot be indentifier */
-	std::vector <std::string> _forbiddenKeys;	
+	static std::vector <std::string> _forbiddenKeys;	
 
 	/** the binary operators sorted by priority (0 to 10) */
-	std::vector <std::vector <std::string> > _operators;
+	static std::vector <std::vector <std::string> > _operators;
 
 	/** the special binary operators (!of, !is ...) sorted by priority (0 to 10) */
-	std::vector <std::vector <std::string> > _specialOperators;
+	static std::vector <std::vector <std::string> > _specialOperators;
 
 	/** The unary operators that can be applied directly to operand */
-	std::vector <std::string> _operand_op;
+	static std::vector <std::string> _operand_op;
 
 	/** The suffix int */
-	std::vector <std::string> _fixedSuffixes;
+	static std::vector <std::string> _fixedSuffixes;
 
 	/** The suffix float */
-	std::vector <std::string> _floatSuffix;
+	static std::vector <std::string> _floatSuffix;
 
 	/** The suffix char */
-	std::vector <std::string> _charSuffix;
+	static std::vector <std::string> _charSuffix;
 
 	/** The suffix of string */
-	std::vector <std::string> _stringSuffix;
+	static std::vector <std::string> _stringSuffix;
 	
 	/** The list of instricts */
-	std::vector <std::string> _intrisics;
+	static std::vector <std::string> _intrisics;
 
 	/** The list of declarable things 
 	 * (for convinience, just adding something in this list won't result something usefull) 
 	*/
-	std::vector <std::string> _declarations;
+	static std::vector <std::string> _declarations;
 
 	/**
 	 * The list of declarable things inside a block
 	 * It is a subset of _declarations
 	 */
-	std::vector <std::string> _declarationsBlock;
+	static std::vector <std::string> _declarationsBlock;
 
 	/**
 	 * If false, line return char are considered in string literal

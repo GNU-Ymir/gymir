@@ -88,13 +88,14 @@ namespace semantic {
 	    for (auto it : Ymir::r (0, _nameOrder.size ())) {
 		if (_nameOrder [it] != ot._nameOrder [it]) return false;
 	    }
-	    
-	    auto & inner = this-> getAllLocal ();
-	    auto & aux_inner = ot.getAllLocal ();
-	    if (inner.size () != aux_inner.size ()) return false;
-	    for (auto it : Ymir::r (0, inner.size ())) {
-		if (!inner [it].equals (aux_inner [it], false)) return false;
-	    }
+
+	    // We can assume that this will be true, if a symbol is declared with the same template parameters, it will necessarily create the same sub symbols
+	    // auto & inner = this-> getAllLocal ();
+	    // auto & aux_inner = ot.getAllLocal ();
+	    // if (inner.size () != aux_inner.size ()) return false;
+	    // for (auto it : Ymir::r (0, inner.size ())) {
+	    // 	if (!inner [it].equals (aux_inner [it], false)) return false;
+	    // } 
 
 	    if (parent)
 		return this-> getReferent ().equals (other.getReferent ());

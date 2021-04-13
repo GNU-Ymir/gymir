@@ -4,7 +4,7 @@
 #include <ymir/semantic/symbol/Module.hh>
 #include <ymir/semantic/symbol/TemplateSolution.hh>
 #include <ymir/semantic/generator/Mangler.hh>
-#include <time.h>
+#include <ymir/utils/Benchmark.hh>
 
 namespace semantic {
     

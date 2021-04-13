@@ -15,6 +15,7 @@
 #include <ymir/global/State.hh>
 #include <ymir/global/Core.hh>
 #include <ymir/utils/string.hh>
+#include <ymir/utils/Benchmark.hh>
 
 using namespace Ymir;
 
@@ -67,13 +68,17 @@ namespace Ymir {
 	this-> _module = visitor.visitModGlobal ();
     }
 
-    void Parser::semanticTime () {
+    void Parser::semanticTime () {	
+	// STAMP(DECLARATOR);
 	auto declarator = semantic::declarator::Visitor::init ();
 	auto module = declarator.visit (this-> _module);
+	// ELAPSED(DECLARATOR);
 
+	// STAMP(VALIDATOR); 
 	auto validator = semantic::validator::Visitor::init ();
 	validator.validate (module);
 	validator.validateAllClasses ();
+	// ELAPSED(VALIDATOR);
 	
 	if (global::State::instance ().isDocDumpingActive ()) {
 	    auto doc_visit = documentation::Visitor::init (validator);
@@ -84,12 +89,14 @@ namespace Ymir {
 	    fclose (file);
 	}
 
+	// STAMP(GENERATOR);
 	auto generator = semantic::generator::Visitor::init ();	
 	for (auto & gen : validator.getGenerators ()) {
 	    generator.generate (gen);
 	}
 
 	generator.finalize ();
+	// ELAPSED(GENERATOR);	//
 	
 	semantic::Symbol::purge ();
 	semantic::declarator::Visitor::purge ();

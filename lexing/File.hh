@@ -34,7 +34,7 @@ namespace lexing {
 
 	virtual std::string readAll () = 0;
 
-	virtual std::string getFilename () const = 0;
+	virtual const std::string & getFilename () const = 0;
 	
 	virtual void close () = 0;
 
@@ -48,6 +48,7 @@ namespace lexing {
     private :
 
 	static File __empty__;
+	static std::string __empty_filename__;
 
 	/**
 	 * Same as empty
@@ -74,7 +75,7 @@ namespace lexing {
 
 	std::string readAll ();
 
-	std::string getFilename () const;
+	const std::string & getFilename () const;
 
 	void close ();
 
@@ -149,7 +150,7 @@ namespace lexing {
 
 	std::string readAll () override;
 
-	std::string getFilename () const override;
+	const std::string & getFilename () const override;
 
 	void close () override;
 
@@ -164,6 +165,8 @@ namespace lexing {
 
 	std::string _content;
 	unsigned long _cursor;
+	
+	static std::string __filename__;
 	
     private :
 
@@ -189,14 +192,13 @@ namespace lexing {
 
 	std::string readAll () override;
 
-	std::string getFilename () const override;
+	const std::string & getFilename () const override;
 
 	void close () override;
 
 	bool isClosed () const override;
     };
-    
-        
+          
 
 
 }

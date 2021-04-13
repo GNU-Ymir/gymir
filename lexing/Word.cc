@@ -23,7 +23,7 @@ namespace lexing {
 	file (file),
 	start (start)
     {}
-
+    
     Word::Word (IWord * elem) : RefProxy<IWord, Word> (elem)
     {}
 
@@ -36,13 +36,13 @@ namespace lexing {
 	return __empty__;
     }
 
-    Word Word::init (const std::string & str, const lexing::File & file, const std::string & filename, ulong line, ulong col, ulong seek) {
-	return Word {new (NO_GC) IWord (str, filename, line, col, seek, -1, false, file, 0)};
+    Word Word::init (const std::string & str, const lexing::File & file, ulong line, ulong col, ulong seek) {
+	return Word {new (NO_GC) IWord (str, "", line, col, seek, -1, false, file, 0)};
     }
 
 
-    Word Word::init (const std::string & str, const lexing::File & file, const std::string & filename, ulong line, ulong col, ulong seek, bool isFromString, ulong start) {
-	return Word {new (NO_GC) IWord (str, filename, line, col, seek, -1, isFromString, file, start)};
+    Word Word::init (const std::string & str, const lexing::File & file, ulong line, ulong col, ulong seek, bool isFromString, ulong start) {
+	return Word {new (NO_GC) IWord (str, "", line, col, seek, -1, isFromString, file, start)};
     }
     
     Word Word::init (const lexing::Word & other, const std::string & str) {
@@ -57,15 +57,15 @@ namespace lexing {
 	if (this-> isEof ()) {
 	    return BUILTINS_LOCATION;
 	} else {
-	    auto it = __filenames__.find (this-> _value-> locFile);
+	    auto it = __filenames__.find (this-> getFilename ());
 	    char * name = nullptr;
 	    if (it == __filenames__.end ()) {
-		char * aux = new char [this-> _value-> locFile.length () + 1];
+		char * aux = new char [this-> getFilename ().length () + 1];
 
-		for (auto it : Ymir::r (0, this-> _value-> locFile.length ()))
-		    aux [it] = (this-> _value-> locFile) [it];
-		aux [this-> _value-> locFile.length ()] = '\0';
-		__filenames__.emplace (this-> _value-> locFile, aux);
+		for (auto it : Ymir::r (0, this-> getFilename ().length ()))
+		    aux [it] = (this-> getFilename ()) [it];
+		aux [this-> getFilename ().length ()] = '\0';
+		__filenames__.emplace (this-> getFilename (), aux);
 		name = aux;
 	    } else name = it-> second;
 	    
@@ -107,7 +107,7 @@ namespace lexing {
     std::string Word::toString () const {
 	if (this-> isEof ()) return ":\u001B[32meof\u001B[0m()";
 	
-	Ymir::OutBuffer buf (Colors::BOLD, this-> _value-> str, " --> ", this-> _value-> locFile, ":(", this-> _value-> line, ",", this-> _value-> column, ")", Colors::RESET);
+	Ymir::OutBuffer buf (Colors::BOLD, this-> _value-> str, " --> ", this-> getFilename (), ":(", this-> _value-> line, ",", this-> _value-> column, ")", Colors::RESET);
 	return buf.str ();
     }
 
@@ -120,7 +120,8 @@ namespace lexing {
     }
     
     const std::string & Word::getFilename () const {	
-	return this-> _value-> locFile;
+	if (this-> isEof ()) return this-> _value-> locFile;
+	else return this-> _value-> file.getFilename ();
     }
 
     bool Word::isToken () const {	
@@ -130,7 +131,7 @@ namespace lexing {
 
     bool Word::isSame (const Word & other) const {
        	return this-> _value-> str == other._value-> str &&
-	    this-> _value-> locFile == other._value-> locFile &&
+	    this-> getFilename () == other.getFilename () &&
 	    this-> _value-> line == other._value-> line &&
 	    this-> _value-> column == other._value-> column;    
     }

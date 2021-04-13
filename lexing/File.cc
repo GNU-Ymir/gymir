@@ -4,6 +4,9 @@
 
 namespace lexing {
 
+    std::string StringFile::__filename__ = "(string file)";
+    std::string File::__empty_filename__ = "(null)";
+
     
     IFile::IFile () {}
 
@@ -101,8 +104,8 @@ namespace lexing {
 	}
     }    
 
-    std::string RealFile::getFilename () const {
-	return std::string (this-> _filename);
+    const std::string & RealFile::getFilename () const {
+	return this-> _filename;
     }
 
     void RealFile::close () {
@@ -195,8 +198,8 @@ namespace lexing {
 	return ret;
     }    
 
-    std::string StringFile::getFilename () const {
-	return "(string file)";
+    const std::string & StringFile::getFilename () const {
+	return StringFile::__filename__; 
     }    
 
     void StringFile::close () {}
@@ -263,9 +266,9 @@ namespace lexing {
 	}
     }
 
-    std::string File::getFilename () const {
+    const std::string & File::getFilename () const {
 	if (this-> _value == nullptr) {
-	    return "(null)";
+	    return File::__empty_filename__;
 	} else {
 	    return this-> _value-> getFilename ();
 	}

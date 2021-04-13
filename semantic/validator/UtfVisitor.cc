@@ -120,7 +120,6 @@ namespace semantic {
 		auto real_loc = lexing::Word::init (
 		    loc.getStr (),
 		    loc.getFile (),
-		    loc.getFilename (),
 		    loc.getLine (),		    
 		    loc.getColumn () + it,
 		    loc.getSeek () + it
@@ -170,7 +169,6 @@ namespace semantic {
 				    auto real_loc = lexing::Word::init (
 					loc.getStr (),
 					loc.getFile (),
-					loc.getFilename (),
 					loc.getLine () + line,		    
 					loc.getColumn () + col,
 					loc.getSeek ()
@@ -190,7 +188,6 @@ namespace semantic {
 			    auto real_loc = lexing::Word::init (
 				loc.getStr (),
 				loc.getFile (),
-				loc.getFilename (),
 				loc.getLine () + line,		    
 				loc.getColumn () + col,
 				loc.getSeek ()

@@ -4,6 +4,8 @@
 #include <gc/gc.h>
 #include <stdio.h>
 #include <execinfo.h>
+#include <ymir/utils/Benchmark.hh>
+
 
 #ifdef MEM_DEBUG
 std::map <void*, std::string> __allocs__;
@@ -40,14 +42,15 @@ std::string getStackTrace () {
 const no_garbage_collection_t NO_GC;
 
 void* operator new (size_t cbSize, const no_garbage_collection_t&) {
-    void *mem = ::operator new (cbSize);
-    memset(mem,0,cbSize);
+    char *mem = new char[cbSize];
+    // memset(mem,0,cbSize);
     
+    for (size_t i = 0; i < cbSize; i += 4096) mem[i] = 0;
+    mem[cbSize - 1] = 0;
 #ifdef MEM_DEBUG
     __allocs__.emplace (mem, getStackTrace ());
 #endif
-    
-    return mem;
+    return (void*) mem;
 }
 
 #ifdef MEM_DEBUG

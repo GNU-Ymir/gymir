@@ -54,6 +54,7 @@ namespace lexing {
 	 */
 	IWord (const std::string & str, const std::string & locFile, ulong line, ulong col, ulong seek, long len, bool isFromString, const lexing::File & file, ulong start);
 	
+	
 	friend Word;
 
 	friend bool operator == (const IWord & elem, const char * sec) {
@@ -94,12 +95,13 @@ namespace lexing {
 	/**
 	 * Create a new word
 	 */
-	static Word init (const std::string & str, const lexing::File & file, const std::string & filename, ulong line, ulong col, ulong seek);
+	static Word init (const std::string & str, const lexing::File & file, ulong line, ulong col, ulong seek);
 
 	/**
 	 * Create a new from string
 	 */
-	static Word init (const std::string & str, const lexing::File & file, const std::string & filename, ulong line, ulong col, ulong seek, bool isFromString, ulong start);
+	static Word init (const std::string & str, const lexing::File & file, ulong line, ulong col, ulong seek, bool isFromString, ulong start);
+	
 
 	/**
 	 * Create a copy of other with a different string content

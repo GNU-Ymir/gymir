@@ -5,6 +5,7 @@
 #include <set>
 #include <map>
 #include <string>
+#include <ymir/utils/Benchmark.hh>
 
 
 struct no_garbage_collection_t {};
@@ -23,3 +24,16 @@ void* operator new(size_t cbSize, const no_garbage_collection_t&);
 
 void control_memory_leakage ();
 
+
+
+namespace Ymir {
+
+    template <typename T>
+    class deleter {
+    public:
+	void operator() (const T * elem) {
+	    delete elem;
+	}
+    };    
+
+}

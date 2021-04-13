@@ -8,12 +8,34 @@
 #include <ymir/global/State.hh>
 #include <ymir/utils/string.hh>
 #include <algorithm>
-
-#include <time.h>       /* clock_t, clock, CLOCKS_PER_SEC */
+#include <ymir/utils/Benchmark.hh>
 
 using namespace Ymir;
 
 namespace syntax {
+
+
+    std::vector <std::string> Visitor::_forbiddenKeys;	
+    
+    std::vector <std::vector <std::string> > Visitor::_operators;
+
+    std::vector <std::vector <std::string> > Visitor::_specialOperators;
+    
+    std::vector <std::string> Visitor::_operand_op;
+
+    std::vector <std::string> Visitor::_fixedSuffixes;
+
+    std::vector <std::string> Visitor::_floatSuffix;
+
+    std::vector <std::string> Visitor::_charSuffix;
+
+    std::vector <std::string> Visitor::_stringSuffix;
+	
+    std::vector <std::string> Visitor::_intrisics;
+
+    std::vector <std::string> Visitor::_declarations;
+
+    std::vector <std::string> Visitor::_declarationsBlock;
 
     Visitor::Visitor () {}
 
@@ -35,95 +57,99 @@ namespace syntax {
 	Visitor visit {};
 	visit._lex = lexer;
 	visit._strRetIgnore = strRetIg;
-	visit._forbiddenKeys = {
-	    Keys::IMPORT, Keys::STRUCT, Keys::ASSERT, Keys::THROW_K, Keys::SCOPE,
-	    Keys::DEF, Keys::IF, Keys::RETURN, Keys::PRAGMA, 
-	    Keys::FOR,  Keys::WHILE, Keys::BREAK,
-	    Keys::MATCH, Keys::IN, Keys::ELSE, Keys::DELEGATE, 
-	    Keys::TRUE_, Keys::FALSE_, Keys::NULL_, Keys::CAST,
-	    Keys::FUNCTION, Keys::DELEGATE, Keys::LET, Keys::IS, Keys::EXTERN,
-	    Keys::PUBLIC, Keys::PRIVATE, Keys::TYPEOF, Keys::IMMUTABLE,
-	    Keys::MACRO, Keys::TRAIT, Keys::REF, Keys::CONST,
-	    Keys::MOD,  Keys::STRINGOF, Keys::CLASS, Keys::ALIAS, Keys::AKA,
-	    Keys::STATIC, Keys::CATCH, Keys::COPY, Keys::DCOPY, Keys::ATOMIC
-	};
+	static bool __init__ = false;
+	if (!__init__) {
+	    __init__ = true;
+	    visit._forbiddenKeys = {
+		Keys::IMPORT, Keys::STRUCT, Keys::ASSERT, Keys::THROW_K, Keys::SCOPE,
+		Keys::DEF, Keys::IF, Keys::RETURN, Keys::PRAGMA, 
+		Keys::FOR,  Keys::WHILE, Keys::BREAK,
+		Keys::MATCH, Keys::IN, Keys::ELSE, Keys::DELEGATE, 
+		Keys::TRUE_, Keys::FALSE_, Keys::NULL_, Keys::CAST,
+		Keys::FUNCTION, Keys::DELEGATE, Keys::LET, Keys::IS, Keys::EXTERN,
+		Keys::PUBLIC, Keys::PRIVATE, Keys::TYPEOF, Keys::IMMUTABLE,
+		Keys::MACRO, Keys::TRAIT, Keys::REF, Keys::CONST,
+		Keys::MOD,  Keys::STRINGOF, Keys::CLASS, Keys::ALIAS, Keys::AKA,
+		Keys::STATIC, Keys::CATCH, Keys::COPY, Keys::DCOPY, Keys::ATOMIC
+	    };
 	
-	visit._operators = {
-	    {
-		Token::EQUAL, Token::DIV_AFF, Token::MINUS_AFF,
-		Token::PLUS_AFF, Token::STAR_AFF,
-		Token::PERCENT_AFF, Token::TILDE_AFF,
-		Token::LEFTD_AFF, Token::RIGHTD_AFF
-	    },
-	    {Token::DPIPE},
-	    {Token::DAND},
-	    {Token::INF, Token::SUP, Token::INF_EQUAL,
-	     Token::SUP_EQUAL, Token::NOT_EQUAL, Token::DEQUAL, Keys::OF, Keys::IS, Keys::IN},
-	    {Token::TDOT, Token::DDOT},
-	    {Token::LEFTD, Token::RIGHTD},
-	    {Token::PIPE, Token::XOR, Token::AND},
-	    {Token::PLUS, Token::TILDE, Token::MINUS},
-	    {Token::STAR, Token::PERCENT, Token::DIV},
-	    {Token::DXOR},
-	};
+	    visit._operators = {
+		{
+		    Token::EQUAL, Token::DIV_AFF, Token::MINUS_AFF,
+		    Token::PLUS_AFF, Token::STAR_AFF,
+		    Token::PERCENT_AFF, Token::TILDE_AFF,
+		    Token::LEFTD_AFF, Token::RIGHTD_AFF
+		},
+		{Token::DPIPE},
+		{Token::DAND},
+		{Token::INF, Token::SUP, Token::INF_EQUAL,
+		 Token::SUP_EQUAL, Token::NOT_EQUAL, Token::DEQUAL, Keys::OF, Keys::IS, Keys::IN},
+		{Token::TDOT, Token::DDOT},
+		{Token::LEFTD, Token::RIGHTD},
+		{Token::PIPE, Token::XOR, Token::AND},
+		{Token::PLUS, Token::TILDE, Token::MINUS},
+		{Token::STAR, Token::PERCENT, Token::DIV},
+		{Token::DXOR},
+	    };
 
-	visit._specialOperators = {
-	    {},
-	    {}, 
-	    {},
-	    {Keys::OF, Keys::IS, Keys::IN},
-	    {},
-	    {},
-	    {},
-	    {},
-	    {}, 
-	    {},
-	};
+	    visit._specialOperators = {
+		{},
+		{}, 
+		{},
+		{Keys::OF, Keys::IS, Keys::IN},
+		{},
+		{},
+		{},
+		{},
+		{}, 
+		{},
+	    };
 
-	visit._declarations = {
-	    Keys::AKA, Keys::CLASS, Keys::ENUM,
-	    Keys::DEF, Keys::STATIC, Keys::IMPORT,
-	    Keys::MACRO, Keys::MOD, Keys::STRUCT,
-	    Keys::TRAIT, Keys::EXTERN
-	};
+	    visit._declarations = {
+		Keys::AKA, Keys::CLASS, Keys::ENUM,
+		Keys::DEF, Keys::STATIC, Keys::IMPORT,
+		Keys::MACRO, Keys::MOD, Keys::STRUCT,
+		Keys::TRAIT, Keys::EXTERN
+	    };
 	
-	visit._declarationsBlock = {
-	    Keys::CLASS, Keys::ENUM,  Keys::DEF,
-	    Keys::IMPORT, Keys::STRUCT, Keys::TRAIT,
-	};
+	    visit._declarationsBlock = {
+		Keys::CLASS, Keys::ENUM,  Keys::DEF,
+		Keys::IMPORT, Keys::STRUCT, Keys::TRAIT,
+	    };
 
-	visit._intrisics = {
-	    Keys::COPY, Keys::EXPAND, Keys::TYPEOF, Keys::SIZEOF, Keys::ALIAS, Keys::MOVE, Keys::DCOPY
-	};
+	    visit._intrisics = {
+		Keys::COPY, Keys::EXPAND, Keys::TYPEOF, Keys::SIZEOF, Keys::ALIAS, Keys::MOVE, Keys::DCOPY
+	    };
 	
-	visit._operand_op = {
-	    Token::MINUS, Token::AND, Token::STAR, Token::NOT
-	};
+	    visit._operand_op = {
+		Token::MINUS, Token::AND, Token::STAR, Token::NOT
+	    };
 	
-	visit._fixedSuffixes = {
-	    Keys::I8, Keys::U8, Keys::I16, Keys::U16, Keys::I32, Keys::U32, Keys::I64, Keys::U64, Keys::USIZE, Keys::ISIZE
-	};
+	    visit._fixedSuffixes = {
+		Keys::I8, Keys::U8, Keys::I16, Keys::U16, Keys::I32, Keys::U32, Keys::I64, Keys::U64, Keys::USIZE, Keys::ISIZE
+	    };
 
-	visit._floatSuffix = {
-	    Keys::FLOAT_S
-	};
+	    visit._floatSuffix = {
+		Keys::FLOAT_S
+	    };
 
-	visit._charSuffix = {
-	    Keys::C8, Keys::C32,
-	    Keys::UNDER + Keys::C8,
-	    Keys::UNDER + Keys::C32, 
-	};
+	    visit._charSuffix = {
+		Keys::C8, Keys::C32,
+		Keys::UNDER + Keys::C8,
+		Keys::UNDER + Keys::C32, 
+	    };
 
-	visit._stringSuffix = {
-	    Keys::S8, Keys::S32,
-	    Keys::UNDER + Keys::S8,
-	    Keys::UNDER + Keys::S32, 
-	};
-	
+	    visit._stringSuffix = {
+		Keys::S8, Keys::S32,
+		Keys::UNDER + Keys::S8,
+		Keys::UNDER + Keys::S32, 
+	    };
+	}
+
 	return visit;
     }
 
-    Declaration Visitor::visitModGlobal () {	
+    Declaration Visitor::visitModGlobal () {
 	std::vector <Declaration> decls;
 	lexing::Word space = lexing::Word::eof ();
 	lexing::Word token = lexing::Word::eof ();
@@ -160,7 +186,7 @@ namespace syntax {
 	if (space.isEof ())
 	    space = this-> _lex.fileLocus ();
 
-	auto ret = Module::init (space, comments, decls, true);  
+	auto ret = Module::init (space, comments, decls, true);
 	return ret;
     }
     
@@ -2004,7 +2030,6 @@ namespace syntax {
 	if (begin.getStr ().length () >= 4) {
 	    auto suffix = lexing::Word::init (begin.getStr ().substr (begin.getStr ().length () - 3),
 					      begin.getFile (),
-					      begin.getFilename (),
 					      begin.getLine (),
 					      begin.getColumn () + begin.getStr ().length () - 3,
 					      begin.getSeek () + begin.getStr ().length () - 3
@@ -2020,7 +2045,6 @@ namespace syntax {
 	if (begin.getStr ().length () >= 3) {
 	    auto suffix = lexing::Word::init (begin.getStr ().substr (begin.getStr ().length () - 2),
 					      begin.getFile (),
-					      begin.getFilename (),
 					      begin.getLine (),
 					      begin.getColumn () + begin.getStr ().length () - 2,
 					      begin.getSeek () + begin.getStr ().length () - 2
@@ -2087,7 +2111,6 @@ namespace syntax {
 	    if (after.getStr ().length () >= 2) {		
 		auto suffix = lexing::Word::init (after.getStr ().substr (after.getStr ().length () - 1),
 						  after.getFile (),
-						  after.getFilename (),
 						  after.getLine (),
 						  after.getColumn () + after.getStr ().length () - 1,
 						  after.getSeek () + after.getStr ().length () - 1

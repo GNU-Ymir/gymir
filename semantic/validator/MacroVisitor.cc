@@ -156,7 +156,7 @@ namespace semantic {
 		if (current != content.length ()) {
 		    ulong line = 0, col = 0, seek = 0;
 		    computeLine (line, col, seek, current, this-> _call);
-		    lexing::Word word = lexing::Word::init (content.substr (current, 1), this-> _call.getFile (), this-> _call.getFilename (), line, col, seek);
+		    lexing::Word word = lexing::Word::init (content.substr (current, 1), this-> _call.getFile (), line, col, seek);
 		    
 		    auto note = Ymir::Error::createNote (word);
 		    Ymir::Error::occurAndNote (
@@ -469,7 +469,7 @@ namespace semantic {
 		    ulong line = 0, col = 0, seek = 0;
 		    computeLine (line, col, seek, current, this-> _call);
 		    
-		    lexing::Word word = lexing::Word::init ("", this-> _call.getFile (), this-> _call.getFilename (), line, col, seek);
+		    lexing::Word word = lexing::Word::init ("", this-> _call.getFile (), line, col, seek);
 		    
 		    auto note = Ymir::Error::createNote (word); 
 		    Ymir::Error::occurAndNote (
@@ -530,7 +530,7 @@ namespace semantic {
 		ulong line = 0, col = 0, seek = 0;
 		computeLine (line, col, seek, n.getSeek () + current, this-> _call);
 		
-		lexing::Word word = lexing::Word::init (n.getStr (), this-> _call.getFile (), this-> _call.getFilename (), line, col, seek);
+		lexing::Word word = lexing::Word::init (n.getStr (), this-> _call.getFile (), line, col, seek);
 		
 		list.errors.back () = Ymir::Error::ErrorMsg (word, back_error.getMessage ());
 		list.errors.insert (list.errors.begin (), Ymir::Error::createNote (expr.getLocation (), ExternalError::get (IN_MACRO_EXPANSION)));		
@@ -581,7 +581,7 @@ namespace semantic {
 		if (current < content.length ()) wstr = content.substr (current);
 		ulong line = 0, col = 0, seek = 0;
 		computeLine (line, col, seek, current, this-> _call);
-		lexing::Word word = lexing::Word::init (wstr, this-> _call.getFile (), this-> _call.getFilename (), line, col, seek);
+		lexing::Word word = lexing::Word::init (wstr, this-> _call.getFile (), line, col, seek);
 		
 		auto note = Ymir::Error::createNote (word); 
 		Ymir::Error::occurAndNote (
@@ -598,7 +598,7 @@ namespace semantic {
 		    ulong line = 0, col = 0, seek = 0;
 		    computeLine (line, col, seek, current, this-> _call);
 		    
-		    lexing::Word word = lexing::Word::init (content.substr (current, len), this-> _call.getFile (), this-> _call.getFilename (), line, col, seek);
+		    lexing::Word word = lexing::Word::init (content.substr (current, len), this-> _call.getFile (), line, col, seek);
 		    
 		    auto note = Ymir::Error::createNote (word); 
 		    Ymir::Error::occurAndNote (

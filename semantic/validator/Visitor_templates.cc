@@ -56,21 +56,23 @@ namespace semantic {
 
 	semantic::Symbol Visitor::validateTemplatePreSolution (const semantic::Symbol & sol, const Generator & gen, bool validate, bool inModule) {
 	    auto tmplVisitor = TemplateVisitor::init (*this);
-	    auto & preSol = sol.to <semantic::TemplatePreSolution> ();	    
-	    auto final_syntax = tmplVisitor.replaceAll (preSol.getDeclaration (), preSol.getMapping (), preSol.getTemplateReferent ());
-		    
+	    auto & preSol = sol.to <semantic::TemplatePreSolution> ();	    		    
 	    auto visit = declarator::Visitor::init ();
 	    visit.setWeak ();
 	    visit.pushReferent (preSol.getTemplateReferent ());
-		    
+	    
 	    auto soluce = TemplateSolution::init (sol.getName (), sol.getComments (), preSol.getTemplateParams (), preSol.getMapping (), preSol.getNameOrder (), true);
-	    visit.pushReferent (soluce);
-	    visit.visit (final_syntax);
-	    auto glob = visit.popReferent ();
-	    glob.setReferent (visit.getReferent ());
-		    
+
+	    
+	    Symbol glob (Symbol::empty ());
 	    auto already = tmplVisitor.getTemplateSolution (visit.getReferent (), soluce);
 	    if (already.isEmpty ()) {
+		auto final_syntax = tmplVisitor.replaceAll (preSol.getDeclaration (), preSol.getMapping (), preSol.getTemplateReferent ());
+		visit.pushReferent (soluce);
+		visit.visit (final_syntax);
+		glob = visit.popReferent ();
+		glob.setReferent (visit.getReferent ());
+		
 		visit.getReferent ().insertTemplate (glob);
 	    } else glob = already;
 

@@ -10,6 +10,7 @@
 #include <ymir/errors/_.hh>
 #include <ymir/global/State.hh>
 #include <algorithm>
+#include <ymir/utils/Benchmark.hh>
 
 namespace lexing {
 
@@ -39,7 +40,7 @@ namespace lexing {
 	_tokenizer (Token::members ()),	
 	current (-1),
 	file (file),
-	_fileLocus (Word::init ("", file, filename, 0, 0, 0)),
+	_fileLocus (Word::init ("", file, 0, 0, 0)),
 	__eof__ (Word::eof (filename))
     {
 	
@@ -93,12 +94,15 @@ namespace lexing {
     Lexer& Lexer::next (Word &word) {
 	if (this-> current >= (long) (this-> reads.size ()) - 1) {
 	    return this-> get (word);
+	    return *this;
 	} else {
 	    do {
 		this-> current ++;
 		word = this-> reads [this-> current];
 	    } while (isSkip (word) && this-> current < (long) (this-> reads.size ()) - 1);
-	    if (isSkip (word)) return this-> get (word);	    
+	    if (isSkip (word)) {
+		this-> get (word);
+	    }
 	    return *this;
 	}
     }
@@ -297,19 +301,22 @@ namespace lexing {
     std::list <Word> Lexer::readLine () {
 	if (this-> file.isEof ()) return {};
 	auto where = this-> file.tell ();
-	auto line  = this-> file.readln ();
-	if (line == "") return {};	
-	auto lst = this-> _tokenizer.tokenize (line);
-	
+	auto line  = std::move (this-> file.readln ());
+	if (line == "") return {};
+
+	ulong start = 0;
 	std::list <Word> result;
-	for (auto & it : lst) {
-	    result.push_back (Word::init (it, this-> file, this-> filename, this-> line, this-> column, where, this-> isFromString, this-> start));
-	    where = where + it.length ();
+	while (start < line.length ()) {
+	    auto len = this-> _tokenizer.next (start, line);
+	    auto it = std::move (line.substr (start, len));
+	    result.push_back (Word::init (it, this-> file, this-> line, this-> column, where, this-> isFromString, this-> start));
+	    start += len;
+	    where = where + len;
 	    if (it  == "\n") {
 		this-> line ++;
 		this-> column = 1;
 	    } else {
-		this-> column += it.length ();
+		this-> column += len; 
 	    }	    
 	}
 	

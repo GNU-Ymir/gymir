@@ -5,6 +5,7 @@
 #include <ymir/syntax/visitor/Keys.hh>
 #include <ymir/semantic/validator/MacroVisitor.hh>
 #include <ymir/global/State.hh>
+#include <ymir/utils/Benchmark.hh>
 #include <dirent.h>
 #include <algorithm>
 
@@ -124,8 +125,7 @@ namespace semantic {
 		visit (it);
 	    }
 
-	    auto ret = popReferent ();
-	    
+	    auto ret = popReferent ();	    
 	    if (mod.isGlobal () && modules.size () > 1) {
 		auto glob = Symbol::getModule (modules [0]);
 		if (glob.isEmpty ()) {
@@ -136,8 +136,7 @@ namespace semantic {
 		createSubModules (mod.getLocation (), std::vector <std::string> (modules.begin () + 1, modules.end ()), ret);
 		
 		glob = popReferent ();
-		Symbol::registerModule (modules [0], glob);		
-		return ret;
+		Symbol::registerModule (modules [0], glob);
 	    } else if (mod.isGlobal ()) {
 		if (modules.size () == 1) {
 		    Symbol::registerModule (modules [0], ret);
@@ -147,14 +146,14 @@ namespace semantic {
 		    Symbol::registerModule (modules [0], ret);
 		}
 	    } else getReferent ().insert (ret);
-	    
+
 	    return ret;
 	}
 
 	void Visitor::createSubModules (const lexing::Word & loc, const std::vector <std::string> & names, semantic::Symbol last) {
 	    if (names.size () == 1) {
-		auto symbols = getReferent ().getLocal (names [0]);
-		for (auto sym : symbols) {
+		auto symbols = std::move (getReferent ().getLocal (names [0]));
+		for (auto & sym : symbols) {
 		    if (sym.is<Module> ()) {
 			for (auto &it : sym.to <Module> ().getAllLocal ()) {
 			    last.insert (it);
@@ -167,8 +166,8 @@ namespace semantic {
 
 		getReferent ().insertOrReplace (last);
 	    } else if (names.size () != 0) {
-		auto symbols = getReferent ().getLocal (names [0]);
-		for (auto sym : symbols) {
+		auto symbols = std::move (getReferent ().getLocal (names [0]));
+		for (auto & sym : symbols) {
 		    if (sym.is <Module> ()) {
 			pushReferent (sym);
 			std::vector<std::string> modules (names.begin () + 1, names.end ());
@@ -191,8 +190,8 @@ namespace semantic {
 	semantic::Symbol Visitor::visitFunction (const syntax::Function & func, bool isExtern, bool insert) {
 	    auto function = Function::init (func.getLocation (), func.getComments (), func, this-> _isWeak);
 	
-	    auto symbols = getReferent ().getLocal (func.getLocation ().getStr ());	    
-	    for (auto symbol : symbols) {
+	    auto symbols = std::move (getReferent ().getLocal (func.getLocation ().getStr ()));	    
+	    for (auto & symbol : symbols) {
 		if (!symbol.is <Function> () && !symbol.is <Module> () && !symbol.is <ModRef> () && func.getLocation () != Keys::SELF_TILDE && !symbol.is <Template> ()) {
 		    auto note = Ymir::Error::createNote (symbol.getName ());
 		    Ymir::Error::occurAndNote (func.getLocation (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), func.getLocation ().getStr ());
@@ -234,8 +233,8 @@ namespace semantic {
 	semantic::Symbol Visitor::visitStruct (const syntax::Struct & str, bool insert) {
 	    auto structure = Struct::init (str.getLocation (), str.getComments (), str.getDeclarations (), str.getDeclComments (), this-> _isWeak);
 	
-	    auto symbols = getReferent ().getLocal (str.getLocation ().getStr ());	
-	    for (auto symbol : symbols) {
+	    auto symbols = std::move (getReferent ().getLocal (str.getLocation ().getStr ()));	
+	    for (auto & symbol : symbols) {
 		auto note = Ymir::Error::createNote (symbol.getName ());
 		Ymir::Error::occurAndNote (str.getLocation (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), str.getLocation ().getStr ());		
 	    } 
@@ -260,7 +259,7 @@ namespace semantic {
 	semantic::Symbol Visitor::visitAka (const syntax::Aka & stal) {
 	    auto alias = Aka::init (stal.getLocation (), stal.getComments (), stal.getValue (), this-> _isWeak);
 
-	    auto symbols = getReferent ().getLocal (stal.getLocation ().getStr ());
+	    auto symbols = std::move (getReferent ().getLocal (stal.getLocation ().getStr ()));
 	    if (symbols.size () != 0) {
 		auto note = Ymir::Error::createNote (symbols [0].getName ());
 		Ymir::Error::occurAndNote (stal.getLocation (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), stal.getLocation ().getStr ());
@@ -342,7 +341,7 @@ namespace semantic {
 	}
 	
 	void Visitor::visitInnerClass (Symbol cls, const std::vector <syntax::Declaration> & decls, bool prv, bool prot, bool pub) {
-	    for (auto jt : decls) {
+	    for (auto & jt : decls) {
 		match (jt) {
 		    of (syntax::ExpressionWrapper, wrap) {
 			match (wrap.getContent ()) {
@@ -355,7 +354,7 @@ namespace semantic {
 				    cls.to <semantic::Class> ().setProtected (de.getLocation ().getStr ());
 				}
 			    } elof (syntax::Set, se) {
-				for (auto it : se.getContent ()) {
+				for (auto & it : se.getContent ()) {
 				    cls.to <semantic::Class> ().addField (it);
 				    cls.to <semantic::Class> ().setFieldComment (it.to <syntax::VarDecl> ().getLocation ().getStr (), wrap.getComments ());
 				    if (prv) {					
@@ -394,7 +393,7 @@ namespace semantic {
 			auto sym = visit (jt);
 			if (!sym.isEmpty () && pub)  sym.setPublic ();
 			if (!sym.isEmpty () && prot) sym.setProtected ();
-		    }
+		    }		    
 		}
 	    }
 	}
@@ -403,8 +402,8 @@ namespace semantic {
 	    auto & stcls = stdecl.to <syntax::Class> ();
 	    auto cls = Class::init (stcls.getLocation (), stcls.getComments (), stcls.getAncestor (), this-> _isWeak);
 	
-	    auto symbols = getReferent ().getLocal (stcls.getLocation ().getStr ());
-	    for (auto symbol : symbols) {
+	    auto symbols = std::move (getReferent ().getLocal (stcls.getLocation ().getStr ()));
+	    for (auto & symbol : symbols) {
 		auto note = Ymir::Error::createNote (symbol.getName ());
 		Ymir::Error::occurAndNote (stcls.getLocation (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), stcls.getLocation ().getStr ());		
 	    }
@@ -428,8 +427,8 @@ namespace semantic {
 	semantic::Symbol Visitor::visitTrait (const syntax::Trait & sttrait) {
 	    auto tr = Trait::init (sttrait.getLocation (), sttrait.getComments (), this-> _isWeak);
 
-	    auto symbols = getReferent ().getLocal (sttrait.getLocation ().getStr ());
-	    for (auto symbol : symbols) {
+	    auto symbols = std::move (getReferent ().getLocal (sttrait.getLocation ().getStr ()));
+	    for (auto & symbol : symbols) {
 	    	auto note = Ymir::Error::createNote (symbol.getName ());
 	    	Ymir::Error::occurAndNote (sttrait.getLocation (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), sttrait.getLocation ().getStr ());
 	    }
@@ -480,7 +479,7 @@ namespace semantic {
 	
 	semantic::Symbol Visitor::visitEnum (const syntax::Enum & stenm) {
 	    auto enm = Enum::init (stenm.getLocation (), stenm.getComments (), stenm.getValues (), stenm.getType (), stenm.getFieldComments (), this-> _isWeak);
-	    auto symbols = getReferent ().getLocal (stenm.getLocation ().getStr ());
+	    auto symbols = std::move (getReferent ().getLocal (stenm.getLocation ().getStr ()));
 	    if (symbols.size () != 0) {
 		auto note = Ymir::Error::createNote (symbols [0].getName ());
 		Ymir::Error::occurAndNote (stenm.getLocation (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), stenm.getLocation ().getStr ());
@@ -518,7 +517,7 @@ namespace semantic {
 	
 	semantic::Symbol Visitor::visitMacro (const syntax::Macro & macro) {
 	    auto smc = Macro::init (macro.getLocation (), macro.getComments ());
-	    auto symbols = getReferent ().getLocal (macro.getLocation ().getStr ());
+	    auto symbols = std::move (getReferent ().getLocal (macro.getLocation ().getStr ()));
 	    if (symbols.size () != 0) {
 		auto note = Ymir::Error::createNote (symbols [0].getName ());
 		Ymir::Error::occurAndNote (macro.getLocation (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), macro.getLocation ().getStr ());
@@ -545,7 +544,7 @@ namespace semantic {
 	    }
 	    
 	    auto ret = MacroRule::init (rule.getLocation (), rule.getComments (), syntax::MacroRule::init (rule));
-	    auto symbols = getReferent ().getLocal (rule.getLocation ().getStr ());
+	    auto symbols = std::move (getReferent ().getLocal (rule.getLocation ().getStr ()));
 	    for (auto & it : getReferent ().to <Macro> ().getAllInner ()) {
 		if (it.is <MacroRule> () && it.getName ().getStr () == rule.getLocation ().getStr ()) {
 		    auto note = Ymir::Error::createNote (it.getName ());
@@ -559,7 +558,7 @@ namespace semantic {
 	
 	semantic::Symbol Visitor::visitVarDecl (const syntax::VarDecl & stdecl, const std::string & comments) {
 	    auto decl = VarDecl::init (stdecl.getLocation (), comments, stdecl.getDecorators (), stdecl.getType (), stdecl.getValue (), this-> _isWeak);
-	    auto symbols = getReferent ().getLocal (stdecl.getLocation ().getStr ());
+	    auto symbols = std::move (getReferent ().getLocal (stdecl.getLocation ().getStr ()));
 	    if (symbols.size () != 0) {
 		auto note = Ymir::Error::createNote (symbols [0].getName ());
 		Ymir::Error::occurAndNote (stdecl.getLocation (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), stdecl.getLocation ().getStr ());
@@ -581,7 +580,7 @@ namespace semantic {
 		while (entry != NULL) {
 		    auto str = std::string (entry-> d_name);
 		    if (entry-> d_type == DT_DIR && str [0] != '.') {
-			auto ent = Ymir::Path::build (path, str).toString ();
+			auto ent = std::move (Ymir::Path::build (path, str).toString ());
 			auto entries = dirEntries (ent, Ymir::Path::build (init, str).toString ("::"));
 			for (auto & it :entries) res.emplace (it.first, it.second);
 		    } else if (str.length () >= 4 && str.substr (str.length () - 3, 3) == ".yr") {
@@ -596,30 +595,37 @@ namespace semantic {
 	}	
 	
 	void Visitor::importAllCoreFiles () {
-	    auto dir = State::instance ().getCorePath ();
-	    auto entries = dirEntries (dir, "core");
-	    for (auto & it : entries) {
-		if (__imported__.find (it.first) == __imported__.end ()) {
-		    auto file_path = it.first + ".yr";
+	    auto & dir = State::instance ().getCorePath ();
+	    static std::map <std::string, std::string> entries;
+	    if (entries.empty ()) {
+		entries = std::move (dirEntries (dir, "core"));
+		for (auto & it : entries) {
+		    if (__imported__.find (it.first) == __imported__.end ()) {
+			auto file_path = it.first + ".yr";
 			
-		    if (Ymir::file_exists (file_path)) {
-			// We add a fake module, to prevent infinite import loops
-			__imported__.emplace (it.first);
-			std::list <Ymir::Error::ErrorMsg> errors;
-			try {
-			    auto synt_module = syntax::Visitor::init (file_path).visitModGlobal ();
-			    declarator::Visitor::init ().visit (synt_module);
-			} catch (Error::ErrorList list) {
+			if (Ymir::file_exists (file_path)) {
+			    // We add a fake module, to prevent infinite import loops
+			    __imported__.emplace (it.first);
+			    std::list <Ymir::Error::ErrorMsg> errors;
+			    try {
+				auto synt_module = syntax::Visitor::init (file_path).visitModGlobal ();
+				declarator::Visitor::init ().visit (synt_module);			    
+			    } catch (Error::ErrorList list) {
 			    
-			    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-			} 
+				errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+			    } 
 			
-			if (errors.size () != 0) 
+			    if (errors.size () != 0) 
 			    throw Error::ErrorList {errors};
+			}
 		    }
-		}
 		
-		getReferent ().use (it.second, Symbol::getModuleByPath (it.second));		
+		    getReferent ().use (it.second, Symbol::getModuleByPath (it.second));		
+		}
+	    } else {
+		for (auto & it : entries) {
+		    getReferent ().use (it.second, Symbol::getModuleByPath (it.second));
+		}
 	    }
 	}
 

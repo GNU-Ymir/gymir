@@ -3,7 +3,7 @@
 
 #include <map>
 #include <memory>
-
+#include <ymir/utils/Memory.hh>
 
 /**
  * Implementation of a proxy design pattern
@@ -21,7 +21,7 @@ public:
     
     RefProxy<T, I> (std::shared_ptr<T> a) : _value (a) {}   
 
-    RefProxy<T, I> (T * a) : _value (a) {}
+    RefProxy<T, I> (T * a) : _value (a, Ymir::deleter<T> ()) {}
 
     RefProxy<T, I> (const RefProxy<T, I> & ot) : _value (ot._value) {}
 
