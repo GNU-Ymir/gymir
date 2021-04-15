@@ -278,13 +278,34 @@ namespace generic {
 	);
     }
 
-    Tree Tree::functionDecl (const lexing::Word & loc, const std::string & name, const Tree & type) {
+    Tree Tree::methodType (const Tree & retType, const std::vector <Tree> & params) {
+	println (params.size ());
+	if (params.size () == 0) Ymir::Error::halt ("", "");
+	std::vector <tree> tree_params (params.size () - 1);	
+	for (auto i : Ymir::r (1, params.size ())) {
+	    tree_params [i - 1] = params [i].getTree ();
+	}
+	
+	return Tree::init (UNKNOWN_LOCATION,
+			   build_method_type (
+			       params [0].getTree (),
+			       build_function_type_array (
+				   retType.getTree (),
+				   tree_params.size (),
+				   tree_params.data ()
+				   )
+			       )
+	    );
+    }
+
+    
+    Tree Tree::functionDecl (const lexing::Word & loc, const std::string & name, const Tree & ) {
 	return Tree::init (loc.getLocation (),
 			   build_decl (
 			       loc.getLocation (),
 			       FUNCTION_DECL,
 			       get_identifier (name.c_str ()),
-			       type.getTree ()
+			       NULL_TREE
 			   )
 	);			   
     }

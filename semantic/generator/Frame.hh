@@ -25,11 +25,16 @@ namespace semantic {
 
 	    bool _needFinalReturn;
 
+	    Generator _self;
+	    
 	    ManglingStyle _style = ManglingStyle::Y;
 
 	    bool _isWeak = false;
 
 	    std::string _mangleName;
+
+
+	    int _vtableIndex = -1;
 	    
 	private :
 
@@ -100,6 +105,14 @@ namespace semantic {
 	    const std::string & getMangledName () const;
 	    
 
+	    void setSelf (const Generator & self);
+
+	    void setVtableIndex (int index);
+
+	    const Generator & getSelf () const;
+
+	    int getVtableIndex () const;
+	    
 	    void isWeak (bool is);
 
 	    bool isWeak () const;

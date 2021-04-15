@@ -650,14 +650,16 @@ namespace semantic {
 	    
 	    auto allInners = cls.to <semantic::Class> ().getAllInner ();
 	    allInners.insert (allInners.end (), addMethods.begin (), addMethods.end ());
-	    
+
+	    int i = 0;
 	    for (auto & it : allInners) {
 		this-> _context.pushReferent (it, "validate::innerClass");
 		try {
 		    match (it) {
 			of (semantic::Function, func) {
 			    if (!func.getContent ().getBody ().isEmpty ()) {				
-				this-> _funcVisitor.validateMethod (func, clRef, cls.isWeak ()); // We need to pass weak here
+				this-> _funcVisitor.validateMethod (func, clRef, i, cls.isWeak ()); // We need to pass weak here
+				i += 1;
 				// The method could have been imported from a trait that is not weak
 			    }
 			}

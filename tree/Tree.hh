@@ -168,6 +168,14 @@ namespace generic {
 	static Tree functionType (const Tree & retType, const std::vector <Tree> & params);
 
 	/**
+	 * \brief Create a new method type
+	 * \param self the type of self
+	 * \param retType the type returned by the function 
+	 * \param params the parameter types of the function
+	 */
+	static Tree methodType (const Tree & retType, const std::vector <Tree> & params);
+	
+	/**
 	 * \brief Create a new function declaration 
 	 * \param location the location of the frame
 	 * \param name the name of the frame

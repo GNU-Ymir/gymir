@@ -88,15 +88,15 @@ namespace semantic {
 	    auto value = Generator::empty ();
 	    auto loc = var.getLocation ();
 	    if (!isRef)
-		value = value_;
+	    value = value_;
 	    else {
-		if (level < 2)
-		    Ymir::Error::occur (expression.getIter ().getLocation (),
-					ExternalError::get (DISCARD_CONST_LEVEL),
-					2, level
-		    );
+	    	if (level < 2)
+	    	    Ymir::Error::occur (expression.getIter ().getLocation (),
+	    				ExternalError::get (DISCARD_CONST_LEVEL),
+	    				2, level
+	    	    );
 		
-		value = Referencer::init (loc, type, value_);
+	    	value = Aliaser::init (loc, type, value_);
 	    }
 	    
 	    this-> _context.verifyMemoryOwner (loc, type, value, true);	    
@@ -129,21 +129,21 @@ namespace semantic {
 	    auto valType = value.to <Value> ().getType ();
 	    valType = Type::init (valType.to<Type> (), valType.to <Type> ().isMutable (), true);
 	    
-	    auto rRef = UniqValue::init (loc, valType, Referencer::init (loc, valType, value));
+	    auto rRef = UniqValue::init (loc, valType, value); //Referencer::init (loc, valType, value));
 	    
 	    if (!decl.getType ().isEmpty ()) {
 		type = this-> _context.validateType (decl.getType ());
 		this-> _context.verifyCompatibleType (decl.getLocation (), loc, type, Integer::init (loc, 0, false));
 	    } 
 
-	    auto var = generator::VarDecl::init (loc,
+	    auto var = generator::VarDecl::init (lexing::Word::init (loc, "iter"),
 						 decl.getName ().getStr (),
 						 type,
 						 zero,
 						 false
 	    );
 	    
-	    auto ref = VarRef::init (loc,
+	    auto ref = VarRef::init (lexing::Word::init (loc, "iter"),
 				     decl.getName ().getStr (),
 				     type, 
 				     var.getUniqId (),
@@ -164,16 +164,16 @@ namespace semantic {
 	    auto type = value.to <Value> ().getType ();
 	    type = Type::init (type.to<Type> (), type.to <Type> ().isMutable (), true);
 
-	    auto rRef = UniqValue::init (loc, type, Referencer::init (loc, type, value));
+	    auto rRef = UniqValue::init (loc, type, value);//Referencer::init (loc, type, value));
 	    
-	    auto var = generator::VarDecl::init (loc,
+	    auto var = generator::VarDecl::init (lexing::Word::init (loc, name),
 						 name,
 						 zero.to <Value> ().getType (),
 						 zero,
 						 false
 	    );
 
-	    auto ref = VarRef::init (loc,
+	    auto ref = VarRef::init (lexing::Word::init (loc, name),
 				     name,
 				     zero.to<Value> ().getType (),
 				     var.getUniqId (),
@@ -295,7 +295,7 @@ namespace semantic {
 	    auto loc = decl.getLocation ();
 	    auto type = range.to <Value> ().getType ();
 	    type = Type::init (type.to<Type> (), type.to <Type> ().isMutable (), true);
-	    auto rRef = UniqValue::init (loc, type, Referencer::init (loc, type, range));
+	    auto rRef = UniqValue::init (loc, type, range); //Referencer::init (loc, type, range));
 	    
 	    
 	    auto innerType = range.to <Value> ().getType ().to <Type> ().getInners ()[0];
@@ -644,16 +644,16 @@ namespace semantic {
 	    auto loc = decl.getLocation ();
 
 	    auto value = innerTuple;
-	    if (isRef) {
-		auto llevel = type.to <Type> ().mutabilityLevel ();
-		if (level < llevel)
-		    Ymir::Error::occur (expression.getIter ().getLocation (),
-					ExternalError::get (DISCARD_CONST_LEVEL),
-					llevel, level
-		    );
+	    // if (isRef) {
+	    // 	auto llevel = type.to <Type> ().mutabilityLevel ();
+	    // 	if (level < llevel)
+	    // 	    Ymir::Error::occur (expression.getIter ().getLocation (),
+	    // 				ExternalError::get (DISCARD_CONST_LEVEL),
+	    // 				llevel, level
+	    // 	    );
 		
-		value = Referencer::init (loc, type, innerTuple);	
-	    }
+	    // 	value = Referencer::init (loc, type, innerTuple);	
+	    // }
 	    
 	    auto var = generator::VarDecl::init (loc,
 						 decl.getName ().getStr (),
@@ -686,7 +686,7 @@ namespace semantic {
 	    type = Type::init (type.to<Type> (), type.to <Type> ().isMutable (), true);
 	    auto loc = expression.getLocation ();
 	    
-	    auto rRef = UniqValue::init (loc, type, Referencer::init (loc, type, value));
+	    auto rRef = UniqValue::init (loc, type, value); //Referencer::init (loc, type, value));
 
 	    std::vector <Generator> innerValues;
 	    for (auto  it : Ymir::r (0, value.to <Value> ().getType ().to <Type> ().getInners ().size ())) {
@@ -911,7 +911,6 @@ namespace semantic {
 		} else loop = Block::init (loc, loop_type, {val, loop});
 		i += 1;
 	    }
-	    println (loop);
 	    return loop;
 	}
 

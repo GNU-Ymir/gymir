@@ -369,7 +369,6 @@ namespace semantic {
 	    } 	    
 	    
 	    if (errors.size () != 0) throw Error::ErrorList {errors};
-	    
 	    return content;
 	}
 	

@@ -880,7 +880,7 @@ namespace semantic {
 	 */
 
 	
-	void FunctionVisitor::validateMethod (const semantic::Function & func, const Generator & classType_, bool isWeak) {
+	void FunctionVisitor::validateMethod (const semantic::Function & func, const Generator & classType_, int vtableIndex, bool isWeak) {
 	    auto function = func.getContent ();
 	    std::vector <Generator> params;
 	    Generator retType (Generator::empty ());
@@ -946,7 +946,9 @@ namespace semantic {
 	    auto frame = Frame::init (function.getLocation (), func.getRealName ().getValue (), params, retType, body, needFinalReturn);
 	    frame.to <Frame> ().isWeak (func.isWeak () || isWeak);
 	    frame.to <Frame> ().setMangledName (func.getMangledName ().getValue ());
-
+	    frame.to <Frame> ().setSelf (classType);
+	    frame.to <Frame> ().setVtableIndex (vtableIndex);
+	    
 	    this-> _context.insertNewGenerator (frame);		
 	}
 

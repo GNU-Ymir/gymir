@@ -7,7 +7,9 @@ namespace semantic {
 	    IGenerator (lexing::Word::eof (), ""),
 	    _params (),
 	    _type (Generator::empty ()),
-	    _content (Generator::empty ())
+	    _content (Generator::empty ()),
+	    _needFinalReturn (false),
+	    _self (Generator::empty ())
 	{}
 	
 	Frame::Frame (const lexing::Word & location, const std::string & name, const std::vector <Generator> & params, const Generator & type, const Generator & content, bool needFinalReturn) :
@@ -15,7 +17,8 @@ namespace semantic {
 	    _params (params),
 	    _type (type),
 	    _content (content),
-	    _needFinalReturn (needFinalReturn)
+	    _needFinalReturn (needFinalReturn),
+	    _self (Generator::empty ())
 	{}
 
 	Generator Frame::init (const lexing::Word & location, const std::string & name, const std::vector <Generator> & params, const Generator & type, const Generator & content, bool needFinalReturn) {
@@ -70,6 +73,22 @@ namespace semantic {
 
 	const std::string& Frame::getMangledName () const {
 	    return this-> _mangleName;
+	}
+
+	void Frame::setSelf (const Generator & gen) {
+	    this-> _self = gen;
+	}
+
+	const Generator & Frame::getSelf () const {
+	    return this-> _self;
+	}
+
+	void Frame::setVtableIndex (int index) {
+	    this-> _vtableIndex = index;
+	}
+
+	int Frame::getVtableIndex () const {
+	    return this-> _vtableIndex;
 	}
 	
     }

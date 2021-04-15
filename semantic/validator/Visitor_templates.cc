@@ -140,7 +140,7 @@ namespace semantic {
 		    }
 
 		    auto visitor = FunctionVisitor::init (*this);
-		    visitor.validateMethod (syms [0].to <semantic::Function> (), classType);
+		    visitor.validateMethod (syms [0].to <semantic::Function> (), classType, -1);
 		} catch (Error::ErrorList list) {
 		    list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", syms [0].getName (), syms[0].getRealName ()));
 		    list.errors.insert (list.errors.begin (), Ymir::Error::createNote (syms [0].getName (), ExternalError::get (IN_TEMPLATE_DEF)));

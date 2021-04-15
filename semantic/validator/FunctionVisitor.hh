@@ -226,7 +226,7 @@ namespace semantic {
 	     * Validate a metho of a class (complete validation)
 	     * Insert the validated frame inside the validated frame of the module (for generation)
 	     */
-	    void validateMethod (const semantic::Function & func, const generator::Generator & classType_, bool isWeak = false);
+	    void validateMethod (const semantic::Function & func, const generator::Generator & classType_, int vtableIndex, bool isWeak = false);
 
 
 	    
