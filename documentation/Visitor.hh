@@ -152,7 +152,7 @@ namespace documentation {
 	 * Dump the documentation of a method
 	 * \return the doc
 	 */
-	json::JsonValue dumpMethodProto (const semantic::generator::MethodProto & pt, const semantic::generator::Class::MethodProtection & prot);
+	json::JsonValue dumpMethodProto (const semantic::generator::MethodProto & pt, const semantic::generator::Class::MethodProtection & prot, bool isOver);
 
 	/**
 	 * Dump the documentation of a trait
@@ -194,7 +194,7 @@ namespace documentation {
 	 * Dump a type
 	 * \return the doc of the type
 	 */
-	json::JsonValue dumpType (const semantic::generator::Generator & type);
+	json::JsonValue dumpType (const semantic::generator::Generator & type, bool forceMut = false);
 
 	/**
 	 * Dump a type

@@ -213,7 +213,6 @@ namespace semantic {
 		if (index.isEmpty ()) 
 		    vars = createIndexVar (expression, value, "_iter");
 		else vars = createIndexVar (expression, value, index.to<syntax::VarDecl> ());
-		Generator valVar (Generator::empty ());
 		values.push_back (vars [0]);
 		values.push_back (vars [1]); // We push it here to add the validation before the loop
 
@@ -235,31 +234,12 @@ namespace semantic {
 		auto level = value.to <Value> ().getType ().to<Type> ().mutabilityLevel ();
 		    
 		innerValues.push_back (validateArrayByValueIterator (expression, array, val, indexVal, canBeRef ? level : 0));
-		auto content = this-> _context.validateValue (expression.getBlock (), false, false, false);
-		if (!content.to <Value> ().getType ().is <Void> ()) {
-		    loop_type = content.to <Value> ().getType ();
-		    valVar = generator::VarDecl::init (loc, "#_for", loop_type, Generator::empty (), true);
-		    auto refId = valVar.to <generator::VarDecl> ().getUniqId ();
-			
-		    this-> _context.verifyMemoryOwner (loc, loop_type, content, false, true);
-		    innerValues.push_back (Affect::init (
-			loc, loop_type, VarRef::init (loc, "#_for", loop_type, refId, false, Generator::empty ()),
-			content
-		    ));
-			
-		} else {
-		    innerValues.push_back (content);
-		}
-		    
+
+		innerValues.push_back (this-> validateLoopContent (expression));		    
 		innerValues.push_back (Affect::init (
 		    loc, iter.to<Value> ().getType (), iter, BinaryInt::init (loc, Binary::Operator::ADD, one.to<Value> ().getType (), iter, one)
 		));
-		    
-		if (!valVar.isEmpty ()) {
-		    innerValues.push_back (VarRef::init (loc, "#_for", loop_type, valVar.to <generator::VarDecl> ().getUniqId (), false, Generator::empty ()));
-		    values.push_back (valVar);
-		}
-		    
+		    		    
 		values.push_back (Loop::init (lexing::Word::init (expression.getLocation (), "#_for"), loop_type, test, Block::init (expression.getLocation (), loop_type, innerValues), false));
 	    } catch (Error::ErrorList list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
@@ -360,7 +340,6 @@ namespace semantic {
 		this-> _context.enterBlock ();
 		auto innerType = range.to <Value> ().getType ().to <Type> ().getInners ()[0];
 		auto vars = createIndexVarRange (expression, range, index.to <syntax::VarDecl> ());
-		Generator valVar (Generator::empty ());
 		value.push_back (vars [0]);
 		value.push_back (vars [1]); // We want the uniq value to be defined outside the loop
 		    
@@ -427,21 +406,7 @@ namespace semantic {
 					       isFull, rTest, lTest);
 
 		std::vector <Generator> innerValues;
-		auto content = this->_context.validateValue (expression.getBlock (), false, false, false);
-		if (!content.to <Value> ().getType ().is <Void> ()) {
-		    loop_type = content.to <Value> ().getType ();
-		    valVar = generator::VarDecl::init (loc, "#_for", loop_type, Generator::empty (), true);
-		    auto refId = valVar.to <generator::VarDecl> ().getUniqId ();
-			
-		    this-> _context.verifyMemoryOwner (loc, loop_type, content, false, true);
-		    innerValues.push_back (Affect::init (
-			loc, loop_type, VarRef::init (loc, "#_for", loop_type, refId, false, Generator::empty ()),
-			content
-		    ));
-			
-		} else {
-		    innerValues.push_back (content);
-		}
+		innerValues.push_back (this-> validateLoopContent (expression));		
 
 		if (innerType.is<Float> ()) {
 		    innerValues.push_back (Affect::init (
@@ -451,11 +416,6 @@ namespace semantic {
 		    innerValues.push_back (Affect::init (
 			loc, iter.to <Value> ().getType (), iter, BinaryInt::init (loc, Binary::Operator::ADD, step.to<Value> ().getType (), iter, step)
 		    ));			
-		}
-
-		if (!valVar.isEmpty ()) {
-		    innerValues.push_back (VarRef::init (loc, "#_for", loop_type, valVar.to <generator::VarDecl> ().getUniqId (), false, Generator::empty ()));
-		    value.push_back (valVar);
 		}
 		    
 		value.push_back (Loop::init (expression.getLocation (), loop_type, test, Block::init (expression.getLocation (), loop_type, innerValues), false));		    
@@ -516,7 +476,6 @@ namespace semantic {
 		    );
 	    }
 	    
-	    auto loopType = Generator::empty ();
 	    std::vector <Generator> innerValues;
 	    if (l.to <Value> ().getType ().to <Integer> ().isSigned ()) {
 		long l_i = l.to<Fixed> ().getUI ().u;
@@ -556,9 +515,8 @@ namespace semantic {
 			    this-> _context.insertLocal (decl.getName ().getStr (), var);
 			    innerValues.push_back (var);			
 			}
-			auto bl = this-> _context.validateValue (expression.getBlock ());
-			loopType = bl.to <Value> ().getType ();
-			innerValues.push_back (bl);
+
+			innerValues.push_back (this-> validateLoopContent (expression));
 		    } catch (Error::ErrorList list) {			
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    }
@@ -615,9 +573,8 @@ namespace semantic {
 			    this-> _context.insertLocal (decl.getName ().getStr (), var);
 			    innerValues.push_back (var);			
 			}
-			auto bl = this-> _context.validateValue (expression.getBlock ());
-			loopType = bl.to <Value> ().getType ();
-			innerValues.push_back (bl);
+
+			innerValues.push_back (this-> validateLoopContent (expression));
 		    } catch (Error::ErrorList list) {			
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    }
@@ -646,8 +603,8 @@ namespace semantic {
 	    if (errors.size () != 0) {
 		throw Error::ErrorList {errors};
 	    }
-	    if (loopType.isEmpty ())
-		loopType = Void::init (expression.getLocation ());
+
+	    auto loopType = Void::init (expression.getLocation ());
 	    
 	    auto test = BoolValue::init (loc, Bool::init (loc), false);
 	    auto bl = Block::init (expression.getLocation (), loopType, innerValues);
@@ -731,7 +688,6 @@ namespace semantic {
 	    
 	    auto rRef = UniqValue::init (loc, type, Referencer::init (loc, type, value));
 
-	    auto loopType = Generator::empty ();
 	    std::vector <Generator> innerValues;
 	    for (auto  it : Ymir::r (0, value.to <Value> ().getType ().to <Type> ().getInners ().size ())) {
 		auto currentType =  value.to <Value> ().getType ().to <Type> ().getInners () [it];
@@ -746,10 +702,7 @@ namespace semantic {
 			
 		    auto vars = createIndexVarTuple (expression, innerTuple, decl, canBeRef ? level : 0);
 		    innerValues.push_back (vars [0]);
-		    auto bl = this-> _context.validateValue (expression.getBlock ());
-		    if (it == (int) type.to <Type> ().getInners ().size () - 1)
-			loopType = bl.to <Value> ().getType ();
-		    innerValues.push_back (bl);			
+		    innerValues.push_back (this-> validateLoopContent (expression));			
 		} catch (Error::ErrorList list) {
 			
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
@@ -779,8 +732,8 @@ namespace semantic {
 	    if (errors.size () != 0) {
 		throw Error::ErrorList {errors};
 	    }
-	    if (loopType.isEmpty ())
-		loopType = Void::init (expression.getLocation ());
+
+	    auto loopType = Void::init (expression.getLocation ());
 	    auto test = BoolValue::init (loc, Bool::init (loc), false);
 	    auto bl = Block::init (expression.getLocation (), loopType, innerValues);
 	    
@@ -837,77 +790,42 @@ namespace semantic {
 	    
 	    return var;
 	}
-		
+
+	/***
+	 * let i = begin ();
+	 * { 
+	 *    let e = end ();
+	 *    {
+	 *        while (i != e) {
+	 *            let i_0, i_1, ... i_n = i.get!{0}, i.get!{1} ... i.get!{n}
+	 *            {
+	 *                 inner_values
+	 *            }
+	 *            i:.next ();
+	 *        }
+	 *   } exit { // cte if e impl Disposable
+	 *      e.dispose ();
+	 *   }
+	 * } exit { // cte if i impl Disposable
+	 *    i.dispose ();
+	 * }
+	 *
+	 */
 	generator::Generator ForVisitor::validateClass (const syntax::For & expr, const generator::Generator & value) {
 	    std::list <Error::ErrorMsg> errors;
-	    std::vector <Generator> values;
+	    Generator loop = Generator::empty ();
+	    std::vector <Generator> preLoopVarDecls;
+	    
 	    auto loc = expr.getLocation ();
 	    
 	    Generator loop_type (Void::init (loc));
-	    Generator iterType (Generator::empty ());
 	    syntax::Expression syntIterVal (syntax::Expression::empty ());
 	    
 	    this-> _context.enterBlock ();
 
 	    try {
-		Generator valVar (Generator::empty ());
-		auto cRef = UniqValue::init (expr.getLocation (), value.to <Value> ().getType (), value);
-
-		auto syntCRef = TemplateSyntaxWrapper::init (loc, cRef);
-		auto syntBegin = syntax::Intrinsics::init (lexing::Word::init (loc, Keys::ALIAS),
-							 syntax::MultOperator::init (lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
-										     syntax::Binary::init (lexing::Word::init (loc, Token::DOT),
-													   syntCRef,
-													   syntax::Var::init (lexing::Word::init (loc, CoreNames::get (BEGIN_OP_OVERRIDE))),
-													   syntax::Expression::empty ()
-											 ),
-										     {}, false));
-
-		auto syntEnd = syntax::MultOperator::init (lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
-							   syntax::Binary::init (lexing::Word::init (loc, Token::DOT),
-										 syntCRef,
-										 syntax::Var::init (lexing::Word::init (loc, CoreNames::get (END_OP_OVERRIDE))),
-										 syntax::Expression::empty ()
-							       ),
-							   {}, false);
-		Generator begin (Generator::empty ());
-		Generator end (Generator::empty ());
-		
-		try {
-		    begin = this-> _context.validateValue (syntBegin);
-		} catch (Error::ErrorList list) {
-		    auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), syntBegin.prettyString ());
-		    list.errors.back ().addNote (note);
-		    throw list;
-		}
-
-		try {
-		    end = this-> _context.validateValue (syntEnd);
-		} catch (Error::ErrorList list) {
-		    auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), syntEnd.prettyString ());
-		    list.errors.back ().addNote (note);
-		    throw list;
-		}
-
-		iterType = begin.to <Value> ().getType ().to <Type> ().toDeeplyMutable ();		
-		this-> _context.verifyMemoryOwner (loc, iterType, begin, false);
-		
-		
-		syntBegin = TemplateSyntaxWrapper::init (loc, begin);
-		syntEnd = TemplateSyntaxWrapper::init (loc, end);
-
-		auto iterVal = generator::VarDecl::init (loc, "#_iter", iterType, begin, true);
-		auto iterRef = Aliaser::init (
-		    loc,
-		    begin.to<Value> ().getType (),
-		    VarRef::init (loc, "#_iter", iterType, iterVal.getUniqId (), true, Generator::empty ()));
-
-		auto endVal = generator::VarDecl::init (loc, "#_end", end.to <Value> ().getType (), end, false);
-		auto endRef = VarRef::init (loc, "#_end", end.to<Value> ().getType (), endVal.getUniqId (), false, Generator::empty ());
-		
-		values.push_back (iterVal);		
-		values.push_back (endVal);
-		
+		Generator iterRef (Generator::empty ()), endRef (Generator::empty ());
+		preLoopVarDecls = this-> validateClassPreLoop (expr, value, iterRef, endRef);
 		syntIterVal = TemplateSyntaxWrapper::init (expr.getLocation (), iterRef);
 		auto syntEndVal  = TemplateSyntaxWrapper::init (expr.getLocation (), endRef);
 		
@@ -939,30 +857,13 @@ namespace semantic {
 		    );
 
 		auto right = this-> _context.validateValue (call);
-
-		auto content = this->_context.validateValue (expr.getBlock (), false, false, false);
-		if (!content.to <Value> ().getType ().is <Void> ()) {
-		    loop_type = content.to <Value> ().getType ();
-		    valVar = generator::VarDecl::init (loc, "#_for", loop_type, Generator::empty (), true);
-		    auto refId = valVar.to <generator::VarDecl> ().getUniqId ();
-			
-		    this-> _context.verifyMemoryOwner (loc, loop_type, content, false, true);
-		    innerValues.push_back (Affect::init (
-			loc, loop_type, VarRef::init (loc, "#_for", loop_type, refId, false, Generator::empty ()),
-			content
-		    ));
-			
-		} else {
-		    innerValues.push_back (content);
-		}
+		auto content = this-> validateLoopContent (expr);
 		
+		innerValues.push_back (content);		
 		innerValues.push_back (right);
 		
-		if (!valVar.isEmpty ()) {
-		    innerValues.push_back (VarRef::init (loc, "#_for", loop_type, valVar.to <generator::VarDecl> ().getUniqId (), false, Generator::empty ()));
-		    values.push_back (valVar);
-		}
-		values.push_back (Loop::init (lexing::Word::init (loc, "#_for"), loop_type, test, Block::init (loc, loop_type, innerValues), false));		
+		loop = Loop::init (lexing::Word::init (loc, "#_for"), loop_type, test, Block::init (loc, loop_type, innerValues), false);
+
 	    } catch (Error::ErrorList list) {
 		errors = list.errors;
 		// We discard local to avoid useless error message when quitting the block
@@ -978,27 +879,123 @@ namespace semantic {
 	    if (errors.size () != 0)
 		throw Error::ErrorList {errors};
 
-	    auto ret = Block::init (lexing::Word::init (expr.getLocation (), "#_for_block"), loop_type, values);
-
 	    auto impl = this-> _context.getCache ().disposeTrait.getValue ();
-	    auto doesImpl = this-> _context.verifyClassImpl (loc, iterType, impl, false);
-	    if (doesImpl) {
-		auto call = syntax::MultOperator::init (
-		    lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
-		    syntax::Binary::init (lexing::Word::init (loc, Token::DOT),
-					  syntIterVal,
-					  syntax::Var::init (lexing::Word::init (loc, global::CoreNames::get (DISPOSE_OP_OVERRIDE))),
-					  syntax::Expression::empty ()),
-		    {}, false
-		    );
-		auto exit = this-> _context.validateValue (call);
-		auto jmp_buf_type = this-> _context.validateType (syntax::Var::init (lexing::Word::init (loc, global::CoreNames::get (JMP_BUF_TYPE))));
-		ret = ExitScope::init (loc, ret.to <Value> ().getType (), jmp_buf_type, ret, {exit}, {}, Generator::empty (), Generator::empty (), Generator::empty ());
+	    int i = 0;
+	    for (auto & val : preLoopVarDecls) {
+		auto doesImpl = this-> _context.verifyClassImpl (loc, val.to <generator::VarDecl> ().getVarType (), impl, false);
+		if (doesImpl) {
+		    try { // this can fail for mutability reasons
+			auto valType = val.to<generator::VarDecl> ().getVarType ();
+			auto valRef = Aliaser::init (
+			    loc,
+			    valType,
+			    VarRef::init (loc, i == 0 ? "#_end" : "#_iter", valType, val.getUniqId (), false, Generator::empty ()));
+			
+			auto syntVal  = TemplateSyntaxWrapper::init (expr.getLocation (), valRef);
+			auto call = syntax::MultOperator::init (
+			    lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
+			    syntax::Binary::init (lexing::Word::init (loc, Token::DOT),
+						  syntVal,
+						  syntax::Var::init (lexing::Word::init (loc, global::CoreNames::get (DISPOSE_OP_OVERRIDE))),
+						  syntax::Expression::empty ()),
+			    {}, false
+			    );
+			auto exit = this-> _context.validateValue (call);
+			auto jmp_buf_type = this-> _context.validateType (syntax::Var::init (lexing::Word::init (loc, global::CoreNames::get (JMP_BUF_TYPE))));
+		    
+			loop = ExitScope::init (loc, loop.to <Value> ().getType (), jmp_buf_type, loop, {exit}, {}, Generator::empty (), Generator::empty (), Generator::empty ());
+			loop = Block::init (loc, loop.to <Value> ().getType (), {val, loop});
+		    } catch (Error::ErrorList&){
+			loop = Block::init (loc, loop_type, {val, loop});;
+		    }
+		} else loop = Block::init (loc, loop_type, {val, loop});
+		i += 1;
 	    }
-	    
-	    return ret;
+	    println (loop);
+	    return loop;
 	}
+
+
+
+	std::vector <Generator> ForVisitor::validateClassPreLoop (const syntax::For & expr, const generator::Generator & value, generator::Generator & iterRef, generator::Generator & endRef) {
+	    auto loc = expr.getLocation ();
+	    std::vector <Generator> preLoopVarDecls;
+	    auto cRef = UniqValue::init (expr.getLocation (), value.to <Value> ().getType (), value);
+
+	    auto syntCRef = TemplateSyntaxWrapper::init (loc, cRef);
+	    auto syntBegin = syntax::Intrinsics::init (lexing::Word::init (loc, Keys::ALIAS),
+						       syntax::MultOperator::init (lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
+										   syntax::Binary::init (lexing::Word::init (loc, Token::DOT),
+													 syntCRef,
+													 syntax::Var::init (lexing::Word::init (loc, CoreNames::get (BEGIN_OP_OVERRIDE))),
+													 syntax::Expression::empty ()
+										       ),
+										   {}, false));
+
+	    auto syntEnd = syntax::MultOperator::init (lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
+						       syntax::Binary::init (lexing::Word::init (loc, Token::DOT),
+									     syntCRef,
+									     syntax::Var::init (lexing::Word::init (loc, CoreNames::get (END_OP_OVERRIDE))),
+									     syntax::Expression::empty ()
+							   ),
+						       {}, false);
+	    Generator begin (Generator::empty ());
+	    Generator end (Generator::empty ());
+		
+	    try {
+		begin = this-> _context.validateValue (syntBegin);
+	    } catch (Error::ErrorList list) {
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), syntBegin.prettyString ());
+		list.errors.back ().addNote (note);
+		throw list;
+	    }
+
+	    try {
+		end = this-> _context.validateValue (syntEnd);
+	    } catch (Error::ErrorList list) {
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), syntEnd.prettyString ());
+		list.errors.back ().addNote (note);
+		throw list;
+	    }
+
+	    auto iterType = begin.to <Value> ().getType ().to <Type> ().toDeeplyMutable ();		
+	    this-> _context.verifyMemoryOwner (loc, iterType, begin, false);
+				
+	    syntBegin = TemplateSyntaxWrapper::init (loc, begin);
+	    syntEnd = TemplateSyntaxWrapper::init (loc, end);
+
+	    auto iterVal = generator::VarDecl::init (loc, "#_iter", iterType, begin, true);
+	    iterRef = Aliaser::init (
+		loc,
+		iterType,
+		VarRef::init (loc, "#_iter", iterType, iterVal.getUniqId (), true, Generator::empty ()));
+	    
+	    auto endVal = generator::VarDecl::init (loc, "#_end", end.to <Value> ().getType (), end, false);
+	    endRef = VarRef::init (loc, "#_end", end.to<Value> ().getType (), endVal.getUniqId (), false, Generator::empty ());
+
+	    preLoopVarDecls.push_back (endVal);
+	    preLoopVarDecls.push_back (iterVal);		
 	
+	    return preLoopVarDecls;	    
+	}
+
+	Generator ForVisitor::validateLoopContent (const syntax::For & loop) {
+	    Generator content (Generator::empty ());
+	    this-> _context.enterLoop ();
+	    auto voidType = Void::init (loop.getLocation ());
+	    this-> _context.setCurrentLoopType (voidType);
+	    try {
+		content = this->_context.validateValue (loop.getBlock (), false, false, false);
+	    } catch (Error::ErrorList list) {
+		this-> _context.quitLoop ();
+		throw list;
+	    }
+		
+	    this-> _context.quitLoop ();
+	    this-> _context.verifyCompatibleType (content.getLocation (), loop.getLocation (), content.to <Value> ().getType (), voidType);
+	    return content;
+	}
+
 	
 	void ForVisitor::error (const syntax::For &, const generator::Generator & value, bool isCte) {
 	    if (isCte) {

@@ -50,6 +50,8 @@ namespace semantic {
 	    const std::vector <char> & getValue () const;
 	    
 	    std::string prettyString () const override;
+
+	    std::string prettyString (bool all) const;
 	    
 	};	
 	

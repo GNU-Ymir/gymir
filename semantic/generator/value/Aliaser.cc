@@ -35,7 +35,7 @@ namespace semantic {
 	}
 
 	std::string Aliaser::prettyString () const {
-	    return Ymir::format ("alias %", this-> _who.prettyString ());
+	    return this-> _who.prettyString ();
 	}
 	
     }

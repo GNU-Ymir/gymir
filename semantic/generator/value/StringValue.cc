@@ -6,6 +6,12 @@ namespace semantic {
 
     namespace generator {
 
+	std::string shorten (const std::string & str, ulong max = 100) {
+	    if (str.length () < max) return str;
+	    else {
+		return str.substr (0, max/2 - 3) + "[...]" + str.substr (str.length () - max/2 + 2);
+	    }
+	}	
 	StringValue::StringValue () :
 	    Value ()
 	{}
@@ -40,22 +46,22 @@ namespace semantic {
 	}
 
 	std::string StringValue::prettyString () const {
-	    if (this-> _value.size () < 100) { // Yes, that is absolutely arbitrary
-		std::string res;
-		std::vector <char> list;
-		if (this-> getType ().to <Type> ().getInners ()[0].to <Char> ().getSize () == 32)
-		    list = validator::UtfVisitor::utf32_to_utf8 (this-> _value); // and ugly
-		else list = this-> _value;
+	    Ymir::OutBuffer res;
+	    std::vector <char> list;
+	    if (this-> getType ().to <Type> ().getInners ()[0].to <Char> ().getSize () == 32)
+	    list = validator::UtfVisitor::utf32_to_utf8 (this-> _value); // and ugly
+	    else list = this-> _value;
 		
-		for (auto & x : list) {
-		    if (x != '\0')
-			res += x;
-		}
+	    for (auto & x : list) {
+		if (x != '\0') {
+		    res.write (x);
+		}			 
+	    }
 		
-		return res;
-	    } 
-	    return Ymir::format ("_");
+	    return shorten (res.str ());
 	}
+
+
 	
     }
     

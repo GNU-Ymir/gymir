@@ -205,6 +205,11 @@ namespace semantic {
 	     * Proxy function for generator
 	     */
 	    const std::vector <Generator> & getThrowers () const;
+
+	    /**
+	     * @returns: the typeid of the inner value of the generator
+	     */
+	    std::string getTypeId () const;
 	    
 	    /**
 	     * \brief Cast the content pointer into the type (if possible)
@@ -212,8 +217,10 @@ namespace semantic {
 	     */
 	    template <typename T>
 	    T& to ()  {
-		if (dynamic_cast <T*> (this-> _value.get ()) == nullptr)
+		if (dynamic_cast <T*> (this-> _value.get ()) == nullptr) {
+		    println (this-> getTypeId (), " => ", typeid (T).name ());
 		    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
+		}
 		return *((T*) this-> _value.get ());	    
 	    }
 
@@ -223,8 +230,10 @@ namespace semantic {
 	     */
 	    template <typename T>
 	    const T& to () const  {
-		if (dynamic_cast <T*> (this-> _value.get ()) == nullptr)
+		if (dynamic_cast <T*> (this-> _value.get ()) == nullptr) {
+		    println (this-> getTypeId (), " => ", typeid (T).name ());
 		    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
+		}
 		return *((const T*) this-> _value.get ());	    
 	    }
 

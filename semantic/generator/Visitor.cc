@@ -1057,7 +1057,8 @@ namespace semantic {
 	    auto rvalue =  right.getValue ();
 	    
 	    auto value = Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), aff.getLocation (), lvalue, rvalue);
-	    auto ret = Tree::compound (aff.getLocation (), value, list.toTree ());
+	    list.append (value.getList ());
+	    auto ret = Tree::compound (aff.getLocation (), value.getValue (), list.toTree ());
 	    return ret;
 	}
 

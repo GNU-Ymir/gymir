@@ -1,5 +1,6 @@
 #include <ymir/documentation/String.hh>
 #include <ymir/utils/OutBuffer.hh>
+#include <algorithm>
 
 namespace documentation {
 
@@ -25,14 +26,28 @@ namespace documentation {
 
 	std::string JsonString::toString () const {
 	    Ymir::OutBuffer buf;
+	    static std::vector <char> escape = {'a', 'b', 'f', 'n', 'r', 't', 'v', '\\', '\'', '\"', '"', '?'};
 	    buf.write ("\"");
 	    bool escaped = false;
 	    for (auto & it : this-> _content) {
-		if (it == '\"' && !escaped) buf.write ("\\\"");
-		else buf.write (it);
-		if (it == '\\') escaped = true;
-		else escaped = false;
+		if (escaped) {
+		    auto pos = std::find (escape.begin (), escape.end (), it) - escape.begin ();
+		    if (pos >= (int) escape.size ()) {
+			buf.write ("\\\\");
+		    } else {
+			buf.write ("\\");
+		    }
+		    
+		    if (it != '\0') buf.write (it);
+		    escaped = false;
+		} else {
+		    if (it == '\"') buf.write ("\\\"");
+		    else if (it == '\\') escaped = true;
+		    else if (it != '\0') buf.write (it);
+		}
+		
 	    }
+	    if (escaped) buf.write ("\\\\");
 	    buf.write ("\"");
 	    return buf.str ();
 	}

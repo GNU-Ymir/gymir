@@ -116,9 +116,13 @@ namespace semantic {
 	     */
 	    generator::Generator validateClass (const syntax::For & expression, const generator::Generator & value);
 
+	    std::vector <generator::Generator> validateClassPreLoop (const syntax::For & expression, const generator::Generator & value, generator::Generator & iterRef, generator::Generator & endRef);
+	    
 
 	    generator::Generator validateIndexVarClass (const syntax::For&, const generator::Generator & iterator, const syntax::VarDecl & decl, int i);
-	    
+
+
+	    generator::Generator validateLoopContent (const syntax::For & for_);
 	    
 	    /**
 	     * Throw an undefined op error

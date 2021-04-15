@@ -147,6 +147,12 @@ namespace semantic {
 		return this-> _value-> getThrowers ();
 	    else return __nothrowers__;
 	}
+
+	std::string Generator::getTypeId () const {
+	    if (this-> _value != nullptr) {
+		return typeid (*this-> _value).name ();
+	    } else return "";
+	}
 	
     }
 }

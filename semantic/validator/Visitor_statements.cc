@@ -334,6 +334,8 @@ namespace semantic {
 
 	    std::list <Ymir::Error::ErrorMsg> errors;
 	    enterLoop ();
+	    auto voidType = Void::init (_wh.getLocation ());
+	    if (!test.isEmpty ()) this-> setCurrentLoopType (voidType); // we cannot garantee that we will enter the loop	    
 	    Generator content (Generator::empty ());
 	    try {
 		content = validateValue (_wh.getContent (), false, false, false);
@@ -344,28 +346,18 @@ namespace semantic {
 	    auto breakType = quitLoop ();
 	    if (errors.size () != 0)
 	    throw Error::ErrorList {errors};
-	    
-	    Generator type (Generator::empty ());
-	    if (!test.isEmpty ()) {
-		type = content.to <Value> ().getType ();
 
-		if (!breakType.isEmpty () && !content.to <Value> ().isBreaker () && !type.equals (breakType)) {
-		    type = this-> inferTypeBranching (content.getLocation (), breakType.getLocation (), content.to <Value> ().getType (), breakType);
-		} else if (content.to <Value> ().isBreaker ()) {
-		    type = breakType;
-		}
-	    } else {
-		if (breakType.isEmpty ()) type = Void::init (_wh.getLocation ());
-		else type = breakType;
+	    this-> verifyCompatibleType (content.getLocation (), _wh.getLocation (), content.to <Value> ().getType (), Void::init (_wh.getLocation ()));
+	    if (test.isEmpty ()) {
+		if (!breakType.isEmpty ()) voidType = breakType;
 	    }
 
-	    return Loop::init (_wh.getLocation (), type, test, content, _wh.isDo ());	    
+	    return Loop::init (_wh.getLocation (), voidType, test, content, _wh.isDo ());	    
 	}	
 
 	Generator Visitor::validateForExpression (const syntax::For & _for, bool isCte) {
 	    auto forVisitor = ForVisitor::init (*this);
 	    Generator content (Generator::empty ());
-	    enterLoop ();
 	    std::list <Ymir::Error::ErrorMsg> errors;
 	    try {
 		if (isCte)
@@ -376,16 +368,9 @@ namespace semantic {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 	    
 	    
-	    auto breakType = quitLoop ();
-	    if (errors.size () != 0)
-	    throw Error::ErrorList {errors};
+	    if (errors.size () != 0) throw Error::ErrorList {errors};
 	    
-	    auto type = content.to <Value> ().getType ();
-	    if (!breakType.isEmpty () && !content.to <Value> ().isBreaker () && !type.equals (breakType)) {
-		type = this-> inferTypeBranching (content.getLocation (), breakType.getLocation (), content.to <Value> ().getType (), breakType);			    
-	    }
-	    
-	    return Value::init (content.to <Value> (), type);
+	    return content;
 	}
 	
 	Generator Visitor::validateBreak (const syntax::Break & _break) {

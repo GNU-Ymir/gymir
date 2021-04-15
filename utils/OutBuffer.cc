@@ -15,10 +15,10 @@ namespace Ymir {
 	    resize (len + cslen);
 	}
 
-	for (uint i = len, j = 0 ; j < cslen ; i++, j++) {
-	    this-> current [i] = cs [j]; 
+	uint i, j;
+	for (i = len, j = 0 ; j < cslen ; i++, j++) {
+	    this-> current [i] = cs [j];
 	}
-	
 	this-> len += cslen;
     }
     
@@ -109,9 +109,9 @@ namespace Ymir {
 	if (this-> capacity <= this-> len + 1) {
 	    resize (this-> len + 1);
 	}
-
+	
 	this-> current [this-> len] = c;
-	this-> len += 1;
+	this-> len += 1;	
     }      
     
     void OutBuffer::write_ (const lexing::Word & word) {

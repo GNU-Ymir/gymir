@@ -270,18 +270,19 @@ namespace documentation {
 	    param ["name"] = JsonString::init (it.to <generator::ProtoVar> ().getLocation ().getStr ());
 	    param ["type"] = dumpType (it.to <generator::Value> ().getType ());
 	    param ["mut"] = JsonString::init (it.to <generator::ProtoVar> ().isMutable ()? "true" : "false");
-
+	    param ["ref"] = JsonString::init (it.to <generator::Value> ().getType ().to <Type> ().isRef () ? "true" : "false");
+	    
 	    if (!it.to <generator::ProtoVar> ().getValue ().isEmpty ())
 		param ["value"] = JsonString::init (it.to<generator::ProtoVar> ().getValue ().prettyString ());
 	    params.push_back (JsonDict::init (param));
 	}
 	val ["params"] = JsonArray::init (params);
-	val ["ret_type"] = JsonString::init (proto.to <generator::FrameProto> ().getReturnType ().prettyString ());
+	val ["ret_type"] = dumpType (proto.to <generator::FrameProto> ().getReturnType ());
 	
 	
 	std::vector <JsonValue> throwers;
 	for (auto & it : proto.getThrowers ()) {
-	    throwers.push_back (JsonString::init (it.prettyString ()));
+	    throwers.push_back (dumpType (it));
 	}
 	
 	val ["throwers"] = JsonArray::init (throwers);	
@@ -305,6 +306,7 @@ namespace documentation {
 	    std::map <std::string, JsonValue> param;
 	    param ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getLocation ().getStr ());
 	    param ["type"] = dumpType (it.to <syntax::VarDecl> ().getType ());
+	    param ["ref"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::REF) ? "true" : "false");
 	    param ["mut"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT)? "true" : "false");
 	    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ())
 		param ["value"] = JsonString::init (it.to <syntax::VarDecl> ().getValue ().prettyString ());
@@ -316,7 +318,7 @@ namespace documentation {
 
 	std::vector <JsonValue> throwers;
 	for (auto & it : decl.getThrowers ()) {
-	    throwers.push_back (JsonString::init (it.prettyString ()));
+	    throwers.push_back (dumpType (it));
 	}
 	
 	val ["throwers"] = JsonArray::init (throwers);	
@@ -385,7 +387,7 @@ namespace documentation {
 	for (auto & it : gen.to<generator::Struct> ().getFields ()) {
 	    std::map <std::string, JsonValue> field;
 	    field ["name"] = JsonString::init (it.to <generator::VarDecl> ().getName ());
-	    field ["type"] = JsonString::init (it.to <generator::VarDecl> ().getVarType ().prettyString ());
+	    field ["type"] = dumpType (it.to <generator::VarDecl> ().getVarType ());
 	    field ["mut"] = JsonString::init (it.to <generator::VarDecl> ().isMutable () ? "true" : "false");
 	    field ["doc"] = JsonString::init (field_coms [i]);
 	    
@@ -494,17 +496,17 @@ namespace documentation {
 	
 	auto ancestor = gen.to <generator::Class> ().getClassRef ().to <generator::ClassRef> ().getAncestor ();
 	if (!ancestor.isEmpty ()) {
-	    val ["ancestor"] = JsonString::init (ancestor.prettyString ());
+	    val ["ancestor"] = dumpType (ancestor);
 	}
 
 	if (cl.isAbs ()) val ["abstract"] = JsonString::init ("true");
 	if (cl.isFinal ()) val ["final"] = JsonString::init ("true");	
 	
 	std::vector <JsonValue> fields;
-	for (auto & it : gen.to <semantic::generator::Class> ().getFields ()) {
+	for (auto & it : gen.to <semantic::generator::Class> ().getLocalFields ()) {
 	    std::map <std::string, JsonValue> field;
 	    field ["name"] = JsonString::init (it.to <generator::VarDecl> ().getName ());
-	    field ["type"] = JsonString::init (it.to <generator::VarDecl> ().getVarType ().prettyString ());
+	    field ["type"] = dumpType (it.to <generator::VarDecl> ().getVarType ());
 	    field ["mut"] = JsonString::init (it.to <generator::VarDecl> ().isMutable () ? "true" : "false");
 	    field ["doc"] = JsonString::init (cl.getFieldComments (it.to <generator::VarDecl> ().getName ()));
 	    
@@ -553,6 +555,7 @@ namespace documentation {
 		    std::map <std::string, JsonValue> param;
 		    param ["name"] = JsonString::init (it.to <generator::ProtoVar> ().getLocation ().getStr ());
 		    param ["type"] = dumpType (it.to <generator::Value> ().getType ());
+		    param ["ref"] = JsonString::init (it.to <generator::ProtoVar> ().getType ().to<Type> ().isRef ()? "true" : "false");
 		    param ["mut"] = JsonString::init (it.to <generator::ProtoVar> ().isMutable ()? "true" : "false");
 		    if (!it.to <generator::ProtoVar> ().getValue ().isEmpty ())
 			param ["value"] = JsonString::init (it.to<generator::ProtoVar> ().getValue ().prettyString ());
@@ -566,21 +569,34 @@ namespace documentation {
 		def ["type"] = JsonString::init ("impl");
 		this-> dumpStandard (it.to <semantic::Impl> (), def);
 		def ["trait"] = JsonString::init (this-> _context.validateType (it.to <semantic::Impl> ().getTrait ()).prettyString ());
+		std::vector <JsonValue> implMethods;
+		for (auto & jt : it.to <semantic::Impl> ().getAllInner ()) {
+		    if (jt.is <semantic::Function> ()) {
+			auto prot = semantic::generator::Class::MethodProtection::PRV;
+			if (jt.isPublic ()) prot = semantic::generator::Class::MethodProtection::PUB;
+			if (jt.isProtected ()) prot = semantic::generator::Class::MethodProtection::PROT;
+
+			auto proto = semantic::validator::FunctionVisitor::init (this-> _context).validateMethodProto (jt.to <semantic::Function> (), cl.getGenerator ().to<generator::Class> ().getClassRef (), Generator::empty (), false);
+			auto m = this-> dumpMethodProto (proto.to <generator::MethodProto> (), prot, jt.to <semantic::Function> ().isOver ());
+			if (!m.isEmpty ()) implMethods.push_back (m);	
+		    }
+		}
+		
+		def ["childs"] = JsonArray::init (implMethods);		
 		impls.push_back (JsonDict::init (def));
+	    } else if (it.is <semantic::Function> ()) {
+		auto prot = semantic::generator::Class::MethodProtection::PRV;
+		if (it.isPublic ()) prot = semantic::generator::Class::MethodProtection::PUB;
+		if (it.isProtected ()) prot = semantic::generator::Class::MethodProtection::PROT;
+
+		auto proto = semantic::validator::FunctionVisitor::init (this-> _context).validateMethodProto (it.to <semantic::Function> (), cl.getGenerator ().to<generator::Class> ().getClassRef (), Generator::empty (), false);
+		auto m = this-> dumpMethodProto (proto.to <generator::MethodProto> (), prot, it.to <semantic::Function> ().isOver ());
+		if (!m.isEmpty ()) methods.push_back (m);	
 	    }
 	}	
 
 	val ["cstrs"] = JsonArray::init (cstrs);
 	val ["impls"] = JsonArray::init (impls);
-
-	int i = 0;
-	for (auto & it : gen.to <semantic::generator::Class> ().getVtable ()) {
-	    auto m = this-> dumpMethodProto (it.to <generator::MethodProto> (), gen.to <semantic::generator::Class> ().getProtectionVtable ()[i]);
-	    if (!m.isEmpty ())
-		methods.push_back (m);
-	    i += 1;
-	}
-
 	val ["methods"] = JsonArray::init (methods);
 	return JsonDict::init (val);
     }
@@ -708,9 +724,10 @@ namespace documentation {
     }
 
 
-    JsonValue Visitor::dumpMethodProto (const generator::MethodProto & proto, const semantic::generator::Class::MethodProtection & prot) {
+    JsonValue Visitor::dumpMethodProto (const generator::MethodProto & proto, const semantic::generator::Class::MethodProtection & prot, bool isOver) {
 	std::map <std::string, JsonValue> val;
 	val ["type"] = JsonString::init ("method");
+	val ["over"] = JsonString::init (isOver ? "true" : "false");
 	val ["name"] = JsonString::init (proto.getLocation ().getStr ());
 	val ["loc_file"] = JsonString::init (proto.getLocation ().getFilename ());
 	val ["loc_line"] = JsonString::init (proto.getLocation ().getLine ());
@@ -722,6 +739,7 @@ namespace documentation {
 	    std::map <std::string, JsonValue> param;
 	    param ["name"] = JsonString::init (it.to <generator::ProtoVar> ().getLocation ().getStr ());
 	    param ["type"] = dumpType (it.to <generator::Value> ().getType ());
+	    param ["ref"] = JsonString::init (it.to <generator::ProtoVar> ().getType ().to<Type> ().isRef () ? "true" : "false");
 	    param ["mut"] = JsonString::init (it.to <generator::ProtoVar> ().isMutable ()? "true" : "false");
 	    
 	    if (!it.to <generator::ProtoVar> ().getValue ().isEmpty ())
@@ -729,7 +747,7 @@ namespace documentation {
 	    params.push_back (JsonDict::init (param));
 	}
 	val ["params"] = JsonArray::init (params);
-	val ["ret_type"] = JsonString::init (proto.getReturnType ().prettyString ());
+	val ["ret_type"] = dumpType (proto.getReturnType ());
 	
 	std::vector<JsonValue> attrs;
 	if (proto.isEmptyFrame ()) attrs.push_back (JsonString::init ("virtual"));
@@ -761,6 +779,7 @@ namespace documentation {
 	    std::map <std::string, JsonValue> param;
 	    param ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getLocation ().getStr ());
 	    param ["type"] = dumpType (it.to <syntax::VarDecl> ().getType ());
+	    param ["ref"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::REF)? "true" : "false");
 	    param ["mut"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT)? "true" : "false");
 	    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ())
 		param ["value"] = JsonString::init (it.to <syntax::VarDecl> ().getValue ().prettyString ());
@@ -771,7 +790,7 @@ namespace documentation {
 
 	std::vector <JsonValue> throwers;
 	for (auto & it : decl.getThrowers ()) {
-	    throwers.push_back (JsonString::init (it.prettyString ()));
+	    throwers.push_back (dumpType (it));
 	}
 
 	val ["throwers"] = JsonArray::init (throwers);	
@@ -788,7 +807,6 @@ namespace documentation {
 	    auto ch = this-> dumpUnvalidated (it);
 	    if (!ch.isEmpty ())
 		childs.push_back (ch);	    
-	    childs.push_back (ch);
 	}
 	
 	val ["childs"] = JsonArray::init (childs);
@@ -950,31 +968,34 @@ namespace documentation {
 	return JsonDict::init (val);
     }
 
-    JsonValue Visitor::dumpType (const generator::Generator & type) {
+    JsonValue Visitor::dumpType (const generator::Generator & type, bool forceMut) {	
 	std::map <std::string, JsonValue> val;
 	if (type.is <generator::Type> ()) {
-	    val ["mut"] = JsonString::init (type.to <generator::Type> ().isMutable () ? "true" : "false");
+	    if (!type.to <Type> ().getProxy ().isEmpty ()) {
+		return dumpType (type.to <Type> ().getProxy (), type.to <generator::Type> ().isMutable ());
+	    }
+	    val ["mut"] = JsonString::init (forceMut || type.to <generator::Type> ().isMutable () ? "true" : "false");	    
 	} else val ["mut"] = JsonString::init ("false");
 	match (type) {
 	    of (Integer, i) {
 		val ["type"] = JsonString::init ("int");
-		val ["name"] = JsonString::init (i.prettyString ());
+		val ["name"] = JsonString::init (i.computeTypeName (false));
 	    }
 	    elof (Void, v) {
 		val ["type"] = JsonString::init ("void");
-		val ["name"] = JsonString::init (v.prettyString ());
+		val ["name"] = JsonString::init (v.computeTypeName (false));
 	    }
 	    elof (Bool, b) {
 		val ["type"] = JsonString::init ("bool");
-		val ["name"] = JsonString::init (b.prettyString ());
+		val ["name"] = JsonString::init (b.computeTypeName (false));
 	    }
 	    elof (Float, f) {
 		val ["type"] = JsonString::init ("float");
-		val ["name"] = JsonString::init (f.prettyString ());
+		val ["name"] = JsonString::init (f.computeTypeName (false));
 	    }
 	    elof (Char, c) {
 		val ["type"] = JsonString::init ("char");
-		val ["name"] = JsonString::init (c.prettyString ());
+		val ["name"] = JsonString::init (c.computeTypeName (false));
 	    }
 	    elof (Array, ar) {
 		val ["type"] = JsonString::init ("array");
@@ -995,15 +1016,15 @@ namespace documentation {
 	    }
 	    elof (StructRef, r) {
 		val ["type"] = JsonString::init ("struct");
-		val ["name"] = JsonString::init (r.prettyString ());
+		val ["name"] = JsonString::init (r.computeTypeName (false));
 	    }
 	    elof (EnumRef, e) {
 		val ["type"] = JsonString::init ("enum");
-		val ["name"] = JsonString::init (e.prettyString ());
+		val ["name"] = JsonString::init (e.computeTypeName (false));
 	    }
 	    elof (ClassRef, c) {
 		val ["type"] = JsonString::init ("class");
-		val ["name"] = JsonString::init (c.prettyString ());
+		val ["name"] = JsonString::init (c.computeTypeName (false));
 	    }
 	    elof (Pointer, p) {
 		val ["type"] = JsonString::init ("pointer");
@@ -1055,7 +1076,7 @@ namespace documentation {
 		}
 	    }
 	    elof (Option, o) {
-		val ["type"] = JsonString::init ("type");
+		val ["type"] = JsonString::init ("option");
 		val ["childs"] = JsonArray::init ({dumpType (o.getInners ()[0])});
 	    } elfo {
 		val ["type"] = JsonString::init ("unknown");
