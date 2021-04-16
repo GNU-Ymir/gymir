@@ -361,9 +361,9 @@ namespace documentation {
     JsonValue Visitor::dumpAka (const semantic::Aka & al) {
 	std::map <std::string, JsonValue> val;
 	auto gen = al.getGenerator ();
-	val ["type"] = JsonString::init ("alias");
+	val ["type"] = JsonString::init ("aka");
 	this-> dumpStandard (al, val);
-
+	
 	val ["value"] = JsonString::init (gen.prettyString ());
 	return JsonDict::init (val);
     }

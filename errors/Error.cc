@@ -41,21 +41,22 @@ namespace Ymir {
 	}
 	
     
-	std::string getLine (int line, lexing::File file, int start) {
+	std::string getLine (int line, int seek, lexing::File file, int start) {
 	    if (file.isClosed ()) {
 		auto aux = file.clone (); // We can't modify the file
 		std::string cline;
-		for (auto it = start ; it < line ; it ++) {		    
+		aux.seek (seek);
+		//for (auto it = start ; it < line ; it ++) {		    
 		    cline = aux.readln ();
-		}
+		    //}
 		return cline;
 	    } else {
 		auto cursor = file.tell ();
-		file.seek (0);
+		file.seek (seek);
 		std::string cline;
-		for (auto it = start ; it < line ; it ++) {		    
+		//for (auto it = start ; it < line ; it ++) {		    
 		    cline = file.readln ();
-		}		
+		    //}		
 		file.seek (cursor);
 		return cline;
 	    }
@@ -124,7 +125,7 @@ namespace Ymir {
 	
 	
 	void addLine (OutBuffer & buf, const Word & word) {
-	    std::string line = getLine (word.getLine (), word.getFile (), word.getStart ());
+	    std::string line = getLine (word.getLine (), word.getSeek (), word.getFile (), word.getStart ());
 
 	    if (line.length () > 0) {
 		auto wordLength = word.length ();
@@ -203,7 +204,7 @@ namespace Ymir {
 	}
 	
 	void addTwoLines (OutBuffer & buf, const Word & word, const Word & end) {
-	    std::string line = getLine (word.getLine (), word.getFile (), word.getStart ());
+	    std::string line = getLine (word.getLine (), word.getSeek (), word.getFile (), word.getStart ());
 	    
 	    if (line.length () > 0) {
 		auto leftLine = center (format ("%", word.getLine ()), 3, ' ');
@@ -256,7 +257,7 @@ namespace Ymir {
 		return;
 	    }
 	    
-	    std::string line = getLine (word.getLine (), word.getFile (), word.getStart ());
+	    std::string line = getLine (word.getLine (), word.getSeek (), word.getFile (), word.getStart ());
 	    
 	    if (line.length () > 0) {
 		auto leftLine = center (format ("%", word.getLine ()), 3, ' ');

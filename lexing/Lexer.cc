@@ -301,6 +301,7 @@ namespace lexing {
     std::list <Word> Lexer::readLine () {
 	if (this-> file.isEof ()) return {};
 	auto where = this-> file.tell ();
+	auto line_start = where;
 	auto line  = std::move (this-> file.readln ());
 	if (line == "") return {};
 
@@ -309,7 +310,7 @@ namespace lexing {
 	while (start < line.length ()) {
 	    auto len = this-> _tokenizer.next (start, line);
 	    auto it = std::move (line.substr (start, len));
-	    result.push_back (Word::init (it, this-> file, this-> line, this-> column, where, this-> isFromString, this-> start));
+	    result.push_back (Word::init (it, this-> file, this-> line, this-> column, line_start, this-> isFromString, this-> start));
 	    start += len;
 	    where = where + len;
 	    if (it  == "\n") {
