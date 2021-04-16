@@ -90,7 +90,7 @@ namespace semantic {
 	     * Declare the remaining symbol into GCC memory
 	     * (global declaration needs to be dones at the end ?)
 	     */
-	    void finalize ();	    
+	    void finalize (const std::string & moduleName);	    
 	    
 	    /**
 	     * \brief Generate gimple tree from a generator
@@ -107,7 +107,7 @@ namespace semantic {
 	    /**
 	     * \brief Init the frame, that will initialize all the global var before calling the main
 	     */
-	    void generateGlobalInitFrame ();
+	    void generateGlobalInitFrame (const std::string & moduleName);
 	    
 	    /**
 	     * \brief Generate the call of the _Ymain function from the runtime of Ymir

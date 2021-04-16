@@ -84,7 +84,7 @@ namespace semantic {
 		    std::list <Ymir::Error::ErrorMsg> errors;
 		    pushReferent (sym, "validate::vdecl");
 		    try {
-			validateVarDecl (sym);
+			validateVarDecl (sym, true);
 		    } catch (Error::ErrorList list) {
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    }

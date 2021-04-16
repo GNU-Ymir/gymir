@@ -18,6 +18,7 @@
 #include <ymir/parsing/Parser.hh>
 #include <ymir/global/State.hh>
 #include <ymir/global/Core.hh>
+#include <ymir/utils/Path.hh>
 
 /* Language-dependent contents of a type.  */
  

@@ -80,6 +80,10 @@ namespace global {
 	}
     }
 
+    void State::setOutputDir (const std::string & output) {
+	this-> _ouputDir = output;
+    }
+    
     const std::string & State::getCorePath () const {
 	return this-> _corePath;
     }
@@ -95,5 +99,9 @@ namespace global {
     bool State::isDocDumpingActive () const {
 	return this-> _isDumpDoc;
     }	
+
+    const std::string & State::getOutputDir () const {
+	return this-> _ouputDir;
+    }
     
 }

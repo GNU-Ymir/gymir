@@ -137,7 +137,7 @@ namespace semantic {
 			    }
 			}
 			elof (semantic::VarDecl, decl) {
-			    validateVarDecl (sym);
+			    validateVarDecl (sym, false);
 			    auto gen = decl.getGenerator ().to <GlobalVar> ();
 			    Generator value (Generator::empty ());
 			    if (!gen.isMutable ())

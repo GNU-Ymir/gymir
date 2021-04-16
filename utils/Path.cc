@@ -102,6 +102,7 @@ namespace Ymir {
 	    buf.write (it);
 	    i += 1;
 	}
+	if (this-> _files.size () == 0) buf.write ("./");
 	return buf.str ();
     }
 

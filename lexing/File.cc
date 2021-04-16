@@ -74,8 +74,8 @@ namespace lexing {
 
 		std::string ret = std::string (buf);
 		all += ret;
-		// String is null terminated, so the line return is at -2, not -1
-		if (ret [ret.size () - 2] != '\n') {
+		
+		if (ret [ret.size () - 1] == '\n') {
 		    return all;
 		}
 	    }

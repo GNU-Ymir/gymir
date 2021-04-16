@@ -10,19 +10,20 @@ namespace semantic {
 	    _value (Generator::empty ())
 	{}
 
-	GlobalVar::GlobalVar (const lexing::Word & location, const std::string & name, const std::string & externalLanguage, bool isMutable, const Generator & type, const Generator & value) :
+	GlobalVar::GlobalVar (const lexing::Word & location, const std::string & name, const std::string & externalLanguage, bool isMutable, const Generator & type, const Generator & value, bool isExtern) :
 	    IGenerator (location, name),	   
 	    _type (type),
 	    _value (value),
 	    _isMutable (isMutable),
-	    _externalLanguage (externalLanguage)
+	    _externalLanguage (externalLanguage),
+	    _isExtern (isExtern)
 	{
 	    this-> _varRefId = VarDecl::__lastId__;
 	    VarDecl::__lastId__ += 1;
 	}
 
-	Generator GlobalVar::init (const lexing::Word & location, const std::string & name, const std::string & externalLanguage, bool isMutable, const Generator & type, const Generator & value) {
-	    return Generator {new (NO_GC) GlobalVar (location, name, externalLanguage, isMutable, type, value)};
+	Generator GlobalVar::init (const lexing::Word & location, const std::string & name, const std::string & externalLanguage, bool isMutable, const Generator & type, const Generator & value, bool isExtern) {
+	    return Generator {new (NO_GC) GlobalVar (location, name, externalLanguage, isMutable, type, value, isExtern)};
 	}
 
 	Generator GlobalVar::clone () const {
@@ -50,7 +51,7 @@ namespace semantic {
 	}
 
 	bool GlobalVar::isExternal () const {
-	    return this-> _externalLanguage != "";
+	    return this-> _isExtern; 
 	}
 
 	bool GlobalVar::equals (const Generator & other) const {

@@ -27,7 +27,9 @@ namespace global {
 	std::string _prefixPath;
 
 	std::string _executable;
-		
+
+	std::string _ouputDir = "./";
+	
 	bool _isDebug = false;
 
 	bool _isVerbose = false;
@@ -135,6 +137,11 @@ namespace global {
 	void setExecutable (const std::string & executable);
 
 	/**
+	 * Change the output directory (used for documentation dumping)
+	 */
+	void setOutputDir (const std::string & dir);
+	
+	/**
 	 * \return the prefix path
 	 */
 	const std::string & getPrefix () const;
@@ -149,6 +156,11 @@ namespace global {
 	 */
 	const std::set <std::string> & getIncludeDirs () const ;
 
+	/**
+	 * @return the output directory
+	 */
+	const std::string & getOutputDir () const;
+	
 
     };
    

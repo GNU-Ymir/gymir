@@ -41,12 +41,26 @@ namespace semantic {
 	}
 
 
-	void Visitor::validateVarDecl (const semantic::Symbol & sym) { // this global var decls are close to vardecl value, but insert a generator 
-	    if (sym.to <semantic::VarDecl> ().getGenerator ().isEmpty ()) {
+	void Visitor::validateVarDecl (const semantic::Symbol & sym, bool inModule) { // this global var decls are close to vardecl value, but insert a generator
+
+	    static std::list <std::pair <lexing::Word, std::string> > __names__;
+	    if (__names__.size () != 0 && !sym.to <semantic::VarDecl> ().isExtern ()) { // we are in the validation of the value of another global var
+		auto note = Ymir::Error::createNote (sym.getName ());
+		Ymir::Error::occurAndNote (__names__.back ().first, note, ExternalError::get (GLOBAL_VAR_DEPENDENCY), __names__.back ().second, sym.getRealName ());
+	    }
+	    
+	    if (sym.to <semantic::VarDecl> ().getGenerator ().isEmpty () || inModule) {
 		auto & var = sym.to <semantic::VarDecl> ();
-		auto elemSym = sym; // c++ cheating on mutability
-		
+		auto elemSym = sym; // c++ cheating on mutability				
 		Generator type (Generator::empty ()), value (Generator::empty ());
+
+		if (var.getType ().isEmpty () && var.getValue ().isEmpty ()) {
+		    if (var.isExtern ()) Error::occur (var.getName (), ExternalError::get (EXTERNAL_VAR_DECL_WITHOUT_TYPE), var.getRealName ().getValue ());
+		    else Error::occur (var.getName (), ExternalError::get (GLOBAL_VAR_DECL_WITHOUT_VALUE), var.getRealName ().getValue ());
+		} else if (!var.getValue ().isEmpty () && var.isExtern ()) {
+		    auto note = Ymir::Error::createNote (var.getValue ().getLocation ());
+		    Ymir::Error::occurAndNote (var.getName (), note, ExternalError::get (EXTERNAL_VAR_WITH_VALUE), var.getRealName ().getValue ());
+		}
 	    
 		if (!var.getType ().isEmpty ()) { // validate the type of the expression, if specified in the source code
 		    try {
@@ -57,15 +71,16 @@ namespace semantic {
 		}
 
 		// validate the value, if specified in the source code
-		if (!var.getValue ().isEmpty ()) { // The value can't be of type void, 
-		    value = this-> validateValueNonVoid (var.getValue ());		
-		}
-
-		// if no value, then the variable cannot be validated, it must have a default value
-		// In ymir, we wan't to ensure that everything is initialised
-		if (var.getValue ().isEmpty () && !var.isExtern ()) { 
-		    Error::occur (var.getName (), ExternalError::get (VAR_DECL_WITHOUT_VALUE));
-		} 
+		if (!var.getValue ().isEmpty () && (inModule || type.isEmpty ())) { // The value can't be of type void,
+		    __names__.push_back (std::pair <lexing::Word, std::string> (var.getName (), var.getRealName ().getValue ()));
+		    try {
+			value = this-> validateValueNonVoid (var.getValue ());
+		    } catch (Ymir::Error::ErrorList list) {
+			__names__.pop_back ();
+			throw list;
+		    }
+		    __names__.pop_back ();
+		}		
 		
 		if (type.isEmpty ()) { // If the type is empty, then we have at least a value, and we take the type of the value
 		    type = Type::init (value.to <Value> ().getType ().to<Type> (), false, false);
@@ -75,20 +90,19 @@ namespace semantic {
 		type = this-> applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut, false);
 		if (!isMutable) type = Type::init (type.to <Type> (), false);
 
-		if (!value.isEmpty ()) {
-		    if (var.isExtern ()) {// can't have a value on external, there are just reference 
-			Ymir::Error::occur (value.getLocation (), ExternalError::get (EXTERNAL_VAR_WITH_VALUE), var.getRealName ().getValue ());
-		    }
-		    
+		if (!value.isEmpty ()) {		    
 		    if (!type.is <LambdaType> ()) {// if the var has a real type (not a lambda type), we have to check the mutability 
 			this-> verifyMemoryOwner (var.getName (), type, value, true);
 		    }
 		}
 		
-		auto glbVar = GlobalVar::init (var.getName (), var.getRealName ().getValue (), var.getExternalLanguage (), isMutable, type, value);		
+		auto glbVar = GlobalVar::init (var.getName (), var.getRealName ().getValue (), var.getExternalLanguage (), isMutable, type, value, !inModule || var.isExtern ());
 		elemSym.to<semantic::VarDecl> ().setGenerator (glbVar);	 // we store the variable inside the global, to avoid revalidation	
-		
-		insertNewGenerator (glbVar);	// we insert the generator, to generate something in the generation phase	
+
+		// if (inModule) { // we need to insert the var for the declarator to be defined in the generation phase
+		// it will be tagged external if not from module anyway
+		insertNewGenerator (glbVar);	// we insert the generator, to generate something in the generation phase
+		// }
 	    }
 	}
 

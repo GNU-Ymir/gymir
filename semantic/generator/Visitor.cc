@@ -36,9 +36,9 @@ namespace semantic {
 	    return Visitor ();
 	}
 
-	void Visitor::finalize () {
+	void Visitor::finalize (const std::string & moduleName) {
 	    if (this-> _globalInitialiser.size () != 0) {
-		generateGlobalInitFrame ();
+		generateGlobalInitFrame (moduleName);
 	    }
 	    
 	    int len = vec_safe_length (globalDeclarations);
@@ -317,15 +317,15 @@ namespace semantic {
 	    auto name = Mangler::init ().mangleGlobalVar (var);
 	    
 	    Tree decl = Tree::varDecl (var.getLocation (), name, type);
-	    if (!var.getValue ().isEmpty ()) {
-		enterBlock (var.getLocation ().toString ());
-		auto value = castTo (var.getType (), var.getValue ());
-		if (stackVarDeclChain.back ().begin ().current.isEmpty ()) {
-		    decl.setDeclInitial (value);
-		} else {
-		    this-> _globalInitialiser.emplace (var.getUniqId (), std::pair<generator::Generator, generator::Generator> (var.getType (), var.getValue ()));
-		    }
-		quitBlock (var.getLocation (), Tree::empty (), var.getLocation ().toString ());		
+	    if (!var.getValue ().isEmpty () && !var.isExternal ()) {
+		// enterBlock (var.getLocation ().toString ());
+		// //auto value = castTo (var.getType (), var.getValue ());
+		// // if (stackVarDeclChain.back ().begin ().current.isEmpty ()) {
+		// //     decl.setDeclInitial (value);
+		// // } else {
+		this-> _globalInitialiser.emplace (var.getUniqId (), std::pair<generator::Generator, generator::Generator> (var.getType (), var.getValue ()));
+		//}
+		// quitBlock (var.getLocation (), Tree::empty (), var.getLocation ().toString ());		
 	    } 
  
 	    decl.isStatic (true);
@@ -580,12 +580,12 @@ namespace semantic {
 	    quitFrame ();	    	    
 	}
 
-	void Visitor::generateGlobalInitFrame () {
+	void Visitor::generateGlobalInitFrame (const std::string & moduleName) {
 	    Tree ret = Tree::voidType ();
 	    std::vector <Tree> args;
 
 	    Tree fnType = Tree::functionType (ret, args);
-	    Tree fn_decl = Tree::functionDecl (lexing::Word::eof (), "_GLOBAL_", fnType);
+	    Tree fn_decl = Tree::functionDecl (lexing::Word::eof (), "__GLOBAL__" + Mangler::init ().manglePath (moduleName), fnType);
 	    TREE_TYPE (fn_decl.getTree ()) = fnType.getTree ();
 	    
 	    setCurrentContext (fn_decl);

@@ -167,7 +167,7 @@ namespace semantic {
 	    /**
 	     * Validate a global var declaration
 	     */
-	    void validateVarDecl (const semantic::Symbol & sym);
+	    void validateVarDecl (const semantic::Symbol & sym, bool inModule);
 	    	  
 	    /**
 	     * Validate an aka declaration (historically called an alias, TODO, change that)

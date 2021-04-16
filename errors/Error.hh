@@ -175,6 +175,12 @@ namespace Ymir {
 	    auto msg = format ("%(r) : " + content, "Error", args...);
 	    return ErrorMsg (loc, end, msg);
 	}
+	
+	template <typename ... TArgs>
+	ErrorMsg makeOccurOneLine (const std::string &content, TArgs ... args) {
+	    auto msg = format ("%(r) : " + content, "Error", args...);
+	    return ErrorMsg (msg);
+	}
 
 	template <typename ... TArgs>
 	ErrorMsg makeOccurAndNote (const lexing::Word & loc, const ErrorMsg & note, const std::string &content, TArgs ... args) {

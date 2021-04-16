@@ -208,7 +208,7 @@ namespace semantic {
 		
 		
 		auto name = Ymir::format ("__atom%", atom.getLocation ().getLine ());
-		auto glbVar = GlobalVar::init (lexing::Word::init (atom.getLocation (), name), name, "", false, type, initValue);
+		auto glbVar = GlobalVar::init (lexing::Word::init (atom.getLocation (), name), name, "", false, type, initValue, false);
 		auto vRef = VarRef::init (lexing::Word::init (atom.getLocation (), name), name, type, glbVar.getUniqId (), false, Generator::empty ());
 		
 		insertNewGenerator (glbVar);

@@ -22,6 +22,8 @@ namespace semantic {
 	    uint _varRefId;
 
 	    std::string _externalLanguage;
+
+	    bool _isExtern;
 	    
 	private :
 
@@ -29,7 +31,7 @@ namespace semantic {
 	    
 	    GlobalVar ();
 
-	    GlobalVar (const lexing::Word & location, const std::string & name, const std::string & externalLanguage, bool isMutable, const Generator & type, const Generator & value);
+	    GlobalVar (const lexing::Word & location, const std::string & name, const std::string & externalLanguage, bool isMutable, const Generator & type, const Generator & value, bool isExtern);
 
 	public :
 
@@ -41,7 +43,7 @@ namespace semantic {
 	     * \param type the type of the var
 	     * \param value the initial value of the var (could be empty ())
 	     */
-	    static Generator init (const lexing::Word & locatio, const std::string & name, const std::string & externalLanguage, bool isMutable, const Generator & type, const Generator & value);
+	    static Generator init (const lexing::Word & locatio, const std::string & name, const std::string & externalLanguage, bool isMutable, const Generator & type, const Generator & value, bool isExtern);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern

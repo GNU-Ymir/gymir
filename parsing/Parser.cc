@@ -84,9 +84,14 @@ namespace Ymir {
 	    auto doc_visit = documentation::Visitor::init (validator);
 	    auto res = doc_visit.dump (module).toString ();
 	    auto name = Ymir::replace (module.getRealName () + ".doc.json", ':', '_');
-	    auto file = fopen (name.c_str (), "w");
-	    fwrite (res.c_str (), sizeof (char), res.length (), file);
-	    fclose (file);
+	    auto path = Path::build (global::State::instance ().getOutputDir (), name).toString ();
+	    auto file = fopen (path.c_str (), "w");
+	    if (file != NULL) {
+		fwrite (res.c_str (), sizeof (char), res.length (), file);
+		fclose (file);
+	    } else {
+		(Error::ErrorList {{Error::makeOccurOneLine (ExternalError::get (DOC_FILE_ERROR), path)}}).print ();
+	    }
 	}
 
 	// STAMP(GENERATOR);
@@ -95,7 +100,7 @@ namespace Ymir {
 	    generator.generate (gen);
 	}
 
-	generator.finalize ();
+	generator.finalize (module.getRealName ());
 	// ELAPSED(GENERATOR);	//
 	
 	semantic::Symbol::purge ();

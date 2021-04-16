@@ -165,9 +165,11 @@ namespace documentation {
 	    
 	    std::vector <JsonValue> childs;
 	    for (auto & it : mod.getAllLocal ()) {
-		auto ch = this-> dump (it);
-		if (!ch.isEmpty ())
+		if (!it.is <semantic::Module> () || !it.to <semantic::Module> ().isGlobal ()) {		
+		    auto ch = this-> dump (it);
+		    if (!ch.isEmpty ())
 		    childs.push_back (ch);
+		}
 	    }
 
 	    val ["childs"] = JsonArray::init (childs);
