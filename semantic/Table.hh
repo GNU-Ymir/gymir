@@ -112,6 +112,9 @@ namespace semantic {
 	 */
 	const std::vector <Symbol> & getAll () const;
 
+	
+	void prune ();
+	
 
     private :
 

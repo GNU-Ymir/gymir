@@ -19,6 +19,7 @@ namespace semantic {
 	const std::string PragmaVisitor::COMPILE = "compile";
 	const std::string PragmaVisitor::MANGLE = "mangle";
 	const std::string PragmaVisitor::OPERATOR = "operator";
+	const std::string PragmaVisitor::MESSAGE = "msg";
 	
 	const std::string PragmaVisitor::FIELD_NAMES = "field_names";
 	const std::string PragmaVisitor::FIELD_OFFSETS = "field_offsets";
@@ -48,6 +49,8 @@ namespace semantic {
 	    auto ret = Generator::empty ();
 	    if (prg.getLocation ().getStr () == PragmaVisitor::COMPILE) {
 		ret = this-> validateCompile (prg);	       		
+	    } else  if (prg.getLocation ().getStr () == PragmaVisitor::MESSAGE) {
+		ret = this-> validateMessage (prg);
 	    } else if (prg.getLocation ().getStr () == PragmaVisitor::MANGLE) {
 		ret = this-> validateMangle (prg);		
 	    } else if (prg.getLocation ().getStr () == PragmaVisitor::OPERATOR) {
@@ -104,6 +107,35 @@ namespace semantic {
 	    
 	}
 
+	/**
+	 * ========================================================
+	 *                       MSG
+	 * ========================================================
+	 */
+	
+	Generator PragmaVisitor::validateMessage (const syntax::Pragma & prg) {
+	    for (auto & it : prg.getContent ()) {
+		auto msgVal = this-> _context.retreiveValue (this-> _context.validateValue (it));
+		std::vector <char> text;
+		if (msgVal.is <StringValue> ()) {
+		    text = msgVal.to <StringValue> ().getValue ();
+		} else if (msgVal.is <Aliaser> () && msgVal.to <Aliaser> ().getWho ().is <StringValue> ()) {
+		    text = msgVal.to <Aliaser> ().getWho ().to <StringValue> ().getValue ();
+		}
+		
+		if (text.size () != 0) {
+		    Ymir::OutBuffer buf;
+		    if (msgVal.to <Value> ().getType ().to <Type> ().getInners ()[0].to <Char> ().getSize () == 32) {
+			text = UtfVisitor::utf32_to_utf8 (text);
+		    }
+		    for (int i = 0 ; i < (int) text.size () - 1; i++) buf.write (text [i]);
+		    println (buf.str ());
+		} else {
+		    println (msgVal.prettyString ());
+		}		
+	    }
+	    return None::init (prg.getLocation ());
+	}
 	
 	/**
 	 * ========================================================

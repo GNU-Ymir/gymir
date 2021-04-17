@@ -62,6 +62,8 @@ namespace semantic {
 
 	std::string computeMangledName () const override;
 
+	void pruneTable ();
+
 	const std::vector<syntax::Expression> & getTempls () const;
 
 	const std::map <std::string, syntax::Expression> & getParams () const;

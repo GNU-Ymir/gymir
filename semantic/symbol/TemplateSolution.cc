@@ -190,6 +190,10 @@ namespace semantic {
 	}
     }
 
+    void TemplateSolution::pruneTable () {
+	this-> _table-> prune ();
+    }
+
     const std::vector <syntax::Expression> & TemplateSolution::getTempls () const {
 	return this-> _templs;
     }

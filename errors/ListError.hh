@@ -210,6 +210,7 @@ namespace Ymir {
 			 VAR_DECL_WITH_NOTHING,
 			 VOID_VALUE,
 			 VOID_VAR,
+			 VOID_VAR_VALUE,
 			 WRONG_IMPLEMENT,
 			 WRONG_MODULE_NAME,
     );

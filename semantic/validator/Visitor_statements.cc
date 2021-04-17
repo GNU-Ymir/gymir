@@ -575,7 +575,11 @@ namespace semantic {
 	    }
 
 	    if (type.is<NoneType> () || type.is<Void> ()) {
-		Ymir::Error::occur (var.getLocation (), ExternalError::get (VOID_VAR));
+		if (!value.isEmpty ()) {
+		    Ymir::Error::occur (var.getLocation (), ExternalError::get (VOID_VAR_VALUE), value.prettyString ());
+		} else {
+		    Ymir::Error::occur (var.getLocation (), ExternalError::get (VOID_VAR));
+		}
 	    }
 	    
 	    

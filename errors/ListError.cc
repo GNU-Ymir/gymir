@@ -191,6 +191,7 @@ namespace Ymir {
 			    VAR_DECL_WITH_NOTHING           = "var declaration must at least have a type or a value",
 			    VOID_VALUE                      = "value cannot be void",
 			    VOID_VAR			    = "cannot declare a var of type void",
+			    VOID_VAR_VALUE			    = "cannot declare a var of type void from value %(y)",
 			    WRONG_IMPLEMENT                 = "the method %(y) was declared by trait %(y), not %(y)",
 			    WRONG_MODULE_NAME		    = "the module named %(y) must be placed in a file named %(y)",
     );    

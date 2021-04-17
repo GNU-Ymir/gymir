@@ -303,6 +303,8 @@ namespace semantic {
 
 	    static std::string prettyName (const generator::Generator & gen);
 
+	    static std::string prettyTypeName (const generator::Generator & gen);
+
 	    static lexing::Word realLocation (const generator::Generator & gen);
 	    
 	};

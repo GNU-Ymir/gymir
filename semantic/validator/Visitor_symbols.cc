@@ -114,19 +114,20 @@ namespace semantic {
 
 		Generator elem (Generator::empty ());
 		try {
-		    elem = validateValue (aka.getValue (), true);
+		    elem = validateValue (aka.getValue (), true);		    
 		} catch (Error::ErrorList list) {
 		    elem = Generator::empty ();
 		} 
 		
-		if (elem.isEmpty ())
-		elem = validateType (aka.getValue (), true);
+		if (elem.isEmpty ()) {
+		    elem = validateType (aka.getValue (), true);
+		}
 		
 		if (elem.is <Value> ()) {
 		    auto type = Type::init (elem.to <Value> ().getType ().to <Type> (), false, false);
 		    elem = Value::init (elem.to <Value> (), type);
 		}
-		
+
 		elemSym.to <semantic::Aka> ().setGenerator (elem);
 	    }
 

@@ -152,8 +152,9 @@ namespace semantic {
 		}		
 	    }
 
-	    if (canBeInClosure)
-	    return this-> getInClosure (name);
+	    if (canBeInClosure) {
+		return this-> getInClosure (name);
+	    }
 	    
 	    return Generator::__empty__;
 	}

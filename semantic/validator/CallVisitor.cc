@@ -1034,7 +1034,7 @@ namespace semantic {
 	void CallVisitor::error (const lexing::Word & location, const Generator & left, const std::vector <Generator> & rights, const std::list <Ymir::Error::ErrorMsg> & errors) {
 	    std::list <std::string> names;
 	    for (auto & it : rights)
-	    names.push_back (it.to <Value> ().getType ().to <Type> ().getTypeName ());
+	    names.push_back (prettyTypeName (it));
 
 	    std::string leftName;
 	    if (left.isEmpty ()) leftName = (NoneType::init (location)).prettyString ();
@@ -1066,8 +1066,9 @@ namespace semantic {
 
 	void CallVisitor::error (const lexing::Word & location, const lexing::Word & end, const Generator & left, const std::vector <Generator> & rights, const std::list <Ymir::Error::ErrorMsg> & errors) {
 	    std::list <std::string> names;
-	    for (auto & it : rights)
-	    names.push_back (it.to <Value> ().getType ().to <Type> ().getTypeName ());
+	    for (auto & it : rights) {
+		names.push_back (prettyTypeName (it));
+	    }
 
 	    std::string leftName;
 	    if (left.isEmpty ()) leftName = (NoneType::init (location)).prettyString ();
@@ -1119,6 +1120,30 @@ namespace semantic {
 		fo;
 	    }
 	    return gen.getLocation().getStr ();
+	}
+
+	std::string CallVisitor::prettyTypeName (const Generator & gen) {
+	    if (gen.to <Value> ().getType ().is<NoneType> ()) {
+		match (gen) {
+		    of (DelegateValue, dg) {
+			return dg.getType ().to <Type> ().getInners ()[0].prettyString ();
+		    }
+		    elof (Call, cl) {
+			return prettyName (cl.getFrame ());
+		    }
+		    elof (FrameProto, p) return p.prettyString ();
+		    elof (ConstructorProto, c) return c.prettyString ();
+		    elof (generator::Struct, str) return str.getName ();
+		    elof (MultSym,    sym)   return sym.prettyString ();
+		    elof (ModuleAccess, acc) return acc.prettyString ();
+		    elof (TemplateRef, cl) return cl.prettyString ();
+		    elof (TemplateClassCst, cl) return cl.prettyString ();
+		    elof (ClassCst, cs) return prettyName (cs.getFrame ());
+		    elof (Value,      val)  return val.getType ().to <Type> ().getTypeName ();
+		    fo;
+		}
+	    }
+	    return gen.to <Value> ().getType ().prettyString ();
 	}
 
 	lexing::Word CallVisitor::realLocation (const Generator & gen) {

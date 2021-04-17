@@ -94,7 +94,8 @@ namespace semantic {
 		if (Visitor::__TEMPLATE_NB_RECURS__ >= VisitConstante::LIMIT_TEMPLATE_RECUR) {
 		    Ymir::Error::occur (sol.getName (), ExternalError::get (TEMPLATE_RECURSION), Visitor::__TEMPLATE_NB_RECURS__);
 		}
-		const std::vector <Symbol> & syms = sol.to <TemplateSolution> ().getAllLocal ();
+		
+		std::vector <Symbol> syms = sol.to <TemplateSolution> ().getAllLocal ();		
 		bool dovalidate = true;
 		if (!inModule) {
 		    auto visitor = TemplateVisitor::init (*this);
@@ -102,9 +103,15 @@ namespace semantic {
 		    if (mapper.succeed) dovalidate = false;
 		}
 
+		auto symSol = sol;
+		symSol.to<TemplateSolution> ().pruneTable (); // we remove all the symbols in the table to avoid referencing to them when validating
+		
 		if (dovalidate) {
 		    for (auto & it : syms) {
 			validate (it, true);
+		    }
+		    for (auto & it : syms) {
+			symSol.insert (it); // we reinsert them because we need them
 		    }
 		}
 	    } catch (Error::ErrorList lst) {
@@ -265,7 +272,6 @@ namespace semantic {
 
 	Generator Visitor::validateTemplateCall (const syntax::TemplateCall & tcl) {
 	    auto value = this-> validateValue (tcl.getContent (), false, true);
-
 	    std::list <Ymir::Error::ErrorMsg> errors;
 	    std::vector <Generator> params;
 	    for (auto & it : tcl.getParameters ()) {
@@ -413,7 +419,7 @@ namespace semantic {
 			if (aux.size () == 1) {
 			    ret = aux [0];
 			} else ret = MultSym::init (value.getLocation (), aux);
-		    		    
+
 			if (!ret.isEmpty ())
 			return ret;
 		    }

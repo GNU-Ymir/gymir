@@ -115,7 +115,7 @@ namespace semantic {
 		    ExternalError::get (COMPILE_TIME_UNKNOWN)
 		    );	
 	    }
-	    
+
 	    Ymir::Error::occur (
 		gen.getLocation (),
 		ExternalError::get (COMPILE_TIME_UNKNOWN)
@@ -151,19 +151,28 @@ namespace semantic {
 	    
 	    if (left.is <StringValue> () && right.is<StringValue> ()) {
 		auto res = left.to <StringValue> ().getValue ();
-		if (slc.getType ().to <Type> ().getInners () [0].to <Char> ().getSize () == 1) {
+		for (int i = 0 ; i < slc.getType ().to <Type> ().getInners () [0].to <Char> ().getSize () / 8; i++) {
 		    res.pop_back ();
-		} else {
-		    for (int i = 0 ; i < 4; i++) res.pop_back ();
 		}
 		
-		auto len = right.to <StringValue> ().getLen () + right.to <StringValue> ().getLen ();
 		res.insert (res.end (), right.to <StringValue> ().getValue ().begin (), right.to <StringValue> ().getValue ().end ());
+
+
+		auto inner = slc.getType ().to <Type> ().getInners ()[0];
+		uint size = inner.to <Char> ().getSize ();
+		auto len = res.size () / (size / 8);
+
+		auto type = Array::init (slc.getLocation (), inner, len);
+		type = Type::init (type.to <Type> (), true);
+
+		auto sliceType = Slice::init (slc.getLocation (), inner);
+		sliceType = Type::init (sliceType.to <Type> (), true);		
+		
 		return Aliaser::init (
 		    slc.getLocation (),
-		    slc.getType (),
-		    StringValue::init (slc.getLocation (), slc.getType (), res, len)
-		    );
+		    sliceType,
+		    StringValue::init (slc.getLocation (), type, res, len)
+		    );	       
 	    }
 	    
 	    Ymir::Error::occur (

@@ -219,6 +219,8 @@ namespace semantic {
 	Generator Visitor::retreiveValue (const Generator & gen) {
 	    auto compile_time = CompileTime::init (*this);
 	    return compile_time.execute (gen);
+	    // println (gen, " => ", ret);
+	    // return ret;
 	}
 
 	

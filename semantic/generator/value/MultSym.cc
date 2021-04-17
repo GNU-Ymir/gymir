@@ -23,6 +23,7 @@ namespace semantic {
 		    Ymir::Error::halt ("", "");
 		}
 	    }
+	    if (this-> _gens.size () == 0) Ymir::Error::halt ("", "");
 	}	
 	
 	Generator MultSym::init (const lexing::Word & loc, const std::vector <Generator> & gens) {

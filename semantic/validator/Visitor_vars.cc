@@ -31,7 +31,7 @@ namespace semantic {
 		    }
 		    Error::occurAndNote (var.getLocation (), notes, ExternalError::get (UNDEF_VAR), var.getName ().getStr ());
 		}
-		
+
 		auto ret = validateMultSym (var.getLocation (), sym);
 		if (ret.is <MultSym> () && ret.to <MultSym> ().getGenerators ().size () == 0) {
 		    Error::occur (var.getLocation (), ExternalError::get (UNDEF_VAR), var.getName ().getStr ());
@@ -159,8 +159,9 @@ namespace semantic {
 		} 		
 
 		popReferent ("validateMultSym");
-		if (errors.size () != 0)
-		throw Error::ErrorList {errors};
+		if (errors.size () != 0) {
+		    throw Error::ErrorList {errors};
+		}
 		
 		if (!succ) {
 		    println (sym.formatTree ());
@@ -169,7 +170,13 @@ namespace semantic {
 	    }
 	    
 	    if (gens.size () == 1) return gens [0];
-	    else return MultSym::init (loc, gens);
+	    else {
+		if (gens.size () == 0) {
+		    println ("ici ?", " ", multSym.size ());
+		    for (auto & it : multSym) println (it.getRealName (), " ", it.getName ());
+		}
+		return MultSym::init (loc, gens);
+	    }
 	}
 
 	Generator Visitor::validateMultSymType (const lexing::Word & loc, const std::vector <Symbol> & multSym) {

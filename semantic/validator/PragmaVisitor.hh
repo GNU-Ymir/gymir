@@ -17,6 +17,7 @@ namespace semantic {
 	    static const std::string COMPILE;
 	    static const std::string MANGLE;
 	    static const std::string OPERATOR;
+	    static const std::string MESSAGE;
 	    
 	    static const std::string FIELD_NAMES;
 	    static const std::string FIELD_OFFSETS;
@@ -55,6 +56,8 @@ namespace semantic {
 	    generator::Generator validate (const syntax::Pragma & expression);
 	    
 	    generator::Generator validateCompile (const syntax::Pragma & prg);
+	    
+	    generator::Generator validateMessage (const syntax::Pragma & prg);
 
 	    generator::Generator validateTrusted (const syntax::Pragma & prg);
 

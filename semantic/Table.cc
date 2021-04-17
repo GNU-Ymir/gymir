@@ -88,6 +88,13 @@ namespace semantic {
 	return this-> _all;
     }
 
+    void Table::prune () {
+	this-> _all.clear ();
+	this-> _syms.clear ();
+	this-> _public_syms.clear ();
+	this-> _templates.clear ();
+    }
+    
     void Table::recomputeAll () {
 	this-> _all.clear ();
 	for (auto & it : this-> _syms) {
