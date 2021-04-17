@@ -48,9 +48,9 @@ namespace semantic {
 	std::string StringValue::prettyString () const {
 	    Ymir::OutBuffer res;
 	    std::vector <char> list;
-	    if (this-> getType ().to <Type> ().getInners ()[0].to <Char> ().getSize () == 32)
-	    list = validator::UtfVisitor::utf32_to_utf8 (this-> _value); // and ugly
-	    else list = this-> _value;
+	    if (this-> getType ().to <Type> ().getInners ()[0].to <Char> ().getSize () == 32) {
+		list = validator::UtfVisitor::utf32_to_utf8 (this-> _value); // and ugly
+	    } else list = this-> _value;
 		
 	    for (auto & x : list) {
 		if (x != '\0') {

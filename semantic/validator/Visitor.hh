@@ -955,7 +955,11 @@ namespace semantic {
 	     */
 	    bool isUseless (const generator::Generator & gen);
 
-
+	    /**
+	     * @returns: a stringvalue if the the generator can be transformed in a string literal, empty otherwise
+	     */
+	    generator::Generator isStringLiteral (const generator::Generator & gen);
+	    
 	    /**
 	     * ================================================================================
 	     * ================================================================================

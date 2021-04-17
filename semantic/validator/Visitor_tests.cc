@@ -84,6 +84,20 @@ namespace semantic {
 		return false;
 	    }
 	}
+
+
+	Generator Visitor::isStringLiteral (const Generator & value) {	    
+	    if (!value.to <Value> ().getType ().is <Slice> () ||
+		!value.to <Value> ().getType ().to <Slice> ().getInners ()[0].is <Char> ()) return Generator::empty ();
+	    try {
+		auto val = retreiveValue (value);
+		if (val.is <Aliaser> () && val.to <Aliaser> ().getWho ().is<StringValue> ()) {
+		    return val.to <Aliaser> ().getWho ();
+		}
+	    } catch (Error::ErrorList list) {}
+	    return Generator::empty ();
+	}
+	
 	bool Visitor::isUseless (const Generator & value) {
 	    match (value) {
 		s_of_u (Affect)  return false;

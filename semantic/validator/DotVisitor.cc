@@ -137,7 +137,7 @@ namespace semantic {
 
 	    if (name == Slice::LEN_NAME) {
 		return StructAccess::init (expression.getLocation (),
-					   Integer::init (expression.getLocation (), 64, false),
+					   Integer::init (expression.getLocation (), 0, false),
 					   left, name);
 	    }
 

@@ -124,7 +124,7 @@ namespace generic {
     }
 
     Tree Tree::sliceType (const Tree & inner) {
-	auto len = Tree::intType (64, false);
+	auto len = Tree::intType (0, false);
 	auto data = Tree::pointerType (inner);
 
 	return Tree::tupleType ({"len", "ptr"}, {len, data});

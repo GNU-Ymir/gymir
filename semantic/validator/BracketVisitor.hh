@@ -59,6 +59,14 @@ namespace semantic {
 	    generator::Generator validateArray (const syntax::MultOperator & expression, const generator::Generator & left, const std::vector <generator::Generator> & rights);
 
 	    /**
+	     * \brief Validate the operation done on a string literal
+	     * \param expression the expression produce by the syntax analyses
+	     * \param left the left operand returned by semantic validation
+	     * \param rights the operands at the right of the expression
+	     */
+	    generator::Generator validateStringLiteral (const syntax::MultOperator & expression, const generator::Generator & left, const std::vector <generator::Generator> & rights);
+	    
+	    /**
 	     * \brief Validate the operation done on a slice
 	     * \param expression the expression produce by the syntax analyses
 	     * \param left the left operand returned by semantic validation

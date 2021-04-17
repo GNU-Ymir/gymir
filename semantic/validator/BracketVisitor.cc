@@ -105,7 +105,76 @@ namespace semantic {
 	    return Generator::empty ();
 	}	
 
+	Generator BracketVisitor::validateStringLiteral (const syntax::MultOperator & expression, const Generator & left, const std::vector <Generator> & right) {
+	    auto loc = expression.getLocation ();
+
+	    ulong len = left.to <StringValue> ().getLen ();
+	    auto innerType = left.to <Value> ().getType ().to <Type> ().getInners () [0];
+	    if (right.size () == 1 && right [0].to <Value> ().getType ().is <Integer> ()) {		
+		bool realFailure = false;
+		try { // If we can know at compile time, there is no reason to add a OUT_OF_ARRAY_EXCEPTION
+		    auto x = this-> _context.retreiveValue (right [0]);
+		    if (x.is <Fixed> () && x.to <Fixed> ().getUI ().u < len) {
+			uint size = innerType.to <Char> ().getSize ();
+			uint value = *((uint*) (left.to<StringValue> ().getValue ().data () + (x.to <Fixed> ().getUI ().u * (size / 8))));
+			return CharValue::init (loc, innerType, value);
+		    } else {
+			realFailure = true;
+			Ymir::Error::occur (right[0].getLocation (), ExternalError::get (OVERFLOW_ARRAY), x.to<Fixed> ().getUI ().u, len);
+		    }
+		} catch (Error::ErrorList list) {
+		    if (realFailure) throw list;
+		}
+		return Generator::empty ();
+	    } else if (right.size () == 1 && right [0].to <Value> ().getType ().is <Range> () && right [0].to <Value> ().getType ().to <Range> ().getInners () [0].is <Integer> ()) {		
+		bool realFailure = false;
+		try { // If we can know at compile time, there is no reason to add a OUT_OF_ARRAY_EXCEPTION
+		    auto x = this-> _context.retreiveValue (right [0]);
+		    if (x.is <RangeValue> () && x.to<RangeValue> ().getLeft ().is <Fixed> ()) {
+			auto & rng = x.to <RangeValue> ();
+			if (rng.getLeft ().to <Fixed> ().getUI ().u < rng.getRight ().to <Fixed> ().getUI ().u && rng.getRight ().to <Fixed> ().getUI ().u <= len) {
+			    uint size = innerType.to <Char> ().getSize ();
+			    std::vector <char> value (left.to<StringValue> ().getValue ().begin () + (rng.getLeft ().to <Fixed> ().getUI ().u * (size / 8)),
+						     left.to<StringValue> ().getValue ().begin () + (rng.getRight ().to <Fixed> ().getUI ().u * (size / 8))
+				);
+			    for (uint i = 0 ; i < size / 8; i++) {
+				value.push_back ('\0');
+			    }
+			    
+			    auto nlen = value.size () / (size / 8);
+			    auto type = Array::init (loc, innerType, nlen);
+			    type = Type::init (type.to <Type> (), true);
+			    
+			    auto slcType = Slice::init (loc, innerType);
+			    slcType = Type::init (slcType.to <Type> (), true);
+			    
+			    return Aliaser::init (
+				loc, slcType,
+				StringValue::init (loc, type, value, nlen)
+				);
+			} else { 
+			    realFailure = true;
+			    Ymir::Error::occur (right[0].getLocation (), ExternalError::get (OVERFLOW_ARRAY), rng.prettyString (), len);
+			}
+		    }
+		} catch (Error::ErrorList list) {
+		    if (realFailure) throw list;
+		}
+		
+		return Generator::empty ();
+
+	    }
+	    
+	    return Generator::empty ();
+	}
+	
 	Generator BracketVisitor::validateSlice (const syntax::MultOperator & expression, const Generator & left, const std::vector<Generator> & right) {
+	    auto strLit = this-> _context.isStringLiteral (left);
+	    if (!strLit.isEmpty ()) {
+		auto ret = validateStringLiteral (expression, strLit, right);
+		if (!ret.isEmpty ()) return ret;
+	    } 	    
+	    
 	    if (right.size () == 1 && right [0].to <Value> ().getType ().is <Integer> ()) {
 		auto loc = expression.getLocation ();
 		auto innerType = left.to <Value> ().getType ().to <Slice> ().getInners () [0];
