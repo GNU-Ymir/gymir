@@ -103,15 +103,9 @@ namespace semantic {
 		    if (mapper.succeed) dovalidate = false;
 		}
 
-		auto symSol = sol;
-		symSol.to<TemplateSolution> ().pruneTable (); // we remove all the symbols in the table to avoid referencing to them when validating
-		
 		if (dovalidate) {
 		    for (auto & it : syms) {
 			validate (it, true);
-		    }
-		    for (auto & it : syms) {
-			symSol.insert (it); // we reinsert them because we need them
 		    }
 		}
 	    } catch (Error::ErrorList lst) {

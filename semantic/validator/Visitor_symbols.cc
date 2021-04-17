@@ -108,10 +108,11 @@ namespace semantic {
 
 
 	generator::Generator Visitor::validateAka (const semantic::Symbol & sym) { 
-	    if (sym.to <semantic::Aka> ().getGenerator ().isEmpty ()) { // We don't want to validate multiple times the same symbol
+	    if (sym.to <semantic::Aka> ().getGenerator ().isEmpty ()) { // We don't want to validate multiple times the same symbol		
 		auto & aka = sym.to <semantic::Aka> (); 
 		auto elemSym = sym; // cheating on c++ mutability
-
+		elemSym.to <semantic::Aka> ().setGenerator (None::init (sym.getName ()));
+		
 		Generator elem (Generator::empty ());
 		try {
 		    elem = validateValue (aka.getValue (), true);		    
