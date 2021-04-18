@@ -81,7 +81,7 @@ namespace semantic {
 	    } else if (prg.getLocation ().getStr () == PragmaVisitor::HAS_FIELD) {
 		ret = this-> validateHasField (prg);
 	    } else {
-		Ymir::Error::occur (prg.getLocation (), ExternalError::get (UNKOWN_PRAGMA), prg.getLocation ().getStr ());
+		Ymir::Error::occur (prg.getLocation (), ExternalError::UNKNOWN_PRAGMA, prg.getLocation ().getStr ());
 	    }
 	    
 	    return ret;
@@ -148,7 +148,7 @@ namespace semantic {
 
 	Generator PragmaVisitor::validateTrusted (const syntax::Pragma & prg) {
 	    if (prg.getContent ().size () != 1) {
-		Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+		Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 	    }
 	    
 	    if (this-> _context.isInTrusted ()) {
@@ -160,7 +160,7 @@ namespace semantic {
 		ex.setThrowers ({});
 		return ex;
 	    } else {
-		Ymir::Error::occur (prg.getLocation (), ExternalError::get (UNTRUSTED_CONTEXT));
+		Ymir::Error::occur (prg.getLocation (), ExternalError::UNTRUSTED_CONTEXT);
 	    }
 	    
 	    return Generator::empty ();
@@ -174,13 +174,13 @@ namespace semantic {
 
 	Generator PragmaVisitor::validatePanic (const syntax::Pragma & prg) {
 	    if (prg.getContent ().size () != 0) {
-		Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+		Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 	    }
 	    
 	    if (this-> _context.isInTrusted ()) {		
 		return Value::initBrRet (Panic::init (prg.getLocation ()).to <Value> (), true, true, prg.getLocation (), prg.getLocation ());
 	    } else {
-		Ymir::Error::occur (prg.getLocation (), ExternalError::get (UNTRUSTED_CONTEXT));
+		Ymir::Error::occur (prg.getLocation (), ExternalError::UNTRUSTED_CONTEXT);
 	    }
 	    
 	    return Generator::empty ();
@@ -214,7 +214,7 @@ namespace semantic {
 	
 	Generator PragmaVisitor::validateMangle (const syntax::Pragma & prg) {
 	    if (prg.getContent ().size () != 1) {
-		Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+		Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 	    }
 		
 	    std::string res;
@@ -233,7 +233,7 @@ namespace semantic {
 		    auto val = this-> _context.validateType (prg.getContent ()[0], true);
 		    res = mangler.mangle (val);
 		} catch (Error::ErrorList list) {
-		    Ymir::Error::occurAndNote (prg.getLocation (), list.errors, ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+		    Ymir::Error::occurAndNote (prg.getLocation (), list.errors, ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 		}
 	    }
 
@@ -255,18 +255,18 @@ namespace semantic {
 
 	Generator PragmaVisitor::validateOperator (const syntax::Pragma & prg) {
 	    if (prg.getContent ().size () != 2 && prg.getContent ().size () != 3) {		    
-		Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+		Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 	    }
 		
 	    auto op = prg.getContent ()[0];
 	    if (!op.is <syntax::String> ())
-		Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+		Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 
 	    syntax::Expression syntOp (syntax::Expression::empty ());
 		
 	    if (prg.getContent ().size () == 2) {
 		if (UnaryVisitor::toOperator (op.to<syntax::String> ().getSequence ()) == generator::Unary::Operator::LAST_OP) {
-		    Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+		    Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 		}
 		auto type = this-> _context.validateType (prg.getContent () [1]);
 		auto value = FakeValue::init (prg.getLocation (), type);
@@ -275,7 +275,7 @@ namespace semantic {
 	    } else if (prg.getContent ().size () == 3) {
 		bool af = false;
 		if (BinaryVisitor::toOperator (op.to<syntax::String> ().getSequence (), af) == generator::Binary::Operator::LAST_OP) {
-		    Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+		    Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 		}
 		auto left = this-> _context.validateType (prg.getContent () [1]);
 		auto right = this-> _context.validateType (prg.getContent () [2]);
@@ -303,7 +303,7 @@ namespace semantic {
 	
 	Generator PragmaVisitor::validateFieldNames (const syntax::Pragma & prg) {
 	    if (prg.getContent ().size () != 1) {		    
-		Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+		Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 	    }
 
 	    auto type = this-> _context.validateType (prg.getContent ()[0]);
@@ -321,7 +321,7 @@ namespace semantic {
 		}		
 	    }
 	    
-	    Ymir::Error::occur (prg.getLocation (), ExternalError::get (TYPE_NO_FIELD), type.prettyString ());
+	    Ymir::Error::occur (prg.getLocation (), ExternalError::TYPE_NO_FIELD, type.prettyString ());
 	    return Generator::empty ();
 	}
 
@@ -397,7 +397,7 @@ namespace semantic {
 
 	Generator PragmaVisitor::validateFieldOffsets (const syntax::Pragma & prg) {
 	    if (prg.getContent ().size () != 1) {		    
-		Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+		Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 	    }
 
 	    auto type = this-> _context.validateType (prg.getContent ()[0]);
@@ -406,7 +406,7 @@ namespace semantic {
 		s_of (generator::StructRef, sref) return validateStructFieldOffsets (prg, sref.getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> ());
 	    }
 
-	    Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+	    Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 	    return Generator::empty ();	    
 	}
 
@@ -439,7 +439,7 @@ namespace semantic {
 
 	Generator PragmaVisitor::validateLocalFieldOffsets (const syntax::Pragma & prg) {
 	    if (prg.getContent ().size () != 1) {		    
-		Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+		Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 	    }
 
 	    auto type = this-> _context.validateType (prg.getContent ()[0]);
@@ -449,7 +449,7 @@ namespace semantic {
 		s_of_u (generator::ClassRef) return validateClassLocalFieldOffsets (prg, type);
 	    }
 
-	    Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+	    Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 	    return Generator::empty ();	    
 	}
 	
@@ -484,7 +484,7 @@ namespace semantic {
 		return ArrayValue::init (expression.getLocation (), arrType, params);
 	    }
 	    
-	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (LOCAL_FIELD_OFFSET_OUT_CLASS));
+	    Ymir::Error::occur (expression.getLocation (), ExternalError::LOCAL_FIELD_OFFSET_OUT_CLASS);
 	    return Generator::empty ();
 	}
        
@@ -496,7 +496,7 @@ namespace semantic {
 
 	Generator PragmaVisitor::validateTupleOf (const syntax::Pragma & prg) {
 	    if (prg.getContent ().size () != 1) {		    
-		Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+		Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 	    }
 
 	    auto value = this-> _context.validateValue (prg.getContent ()[0]);
@@ -507,7 +507,7 @@ namespace semantic {
 		s_of_u (Array) return validateArrayTupleOf (prg, value);
 	    }
 
-	    Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+	    Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 	    return Generator::empty ();
 	}
 	
@@ -588,7 +588,7 @@ namespace semantic {
 	
 	Generator PragmaVisitor::validateLocalTupleOf (const syntax::Pragma & prg) {
 	    if (prg.getContent ().size () != 1) {		    
-		Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+		Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 	    }
 
 	    auto value = this-> _context.validateValue (prg.getContent ()[0]);
@@ -597,7 +597,7 @@ namespace semantic {
 		s_of_u (ClassRef) return validateClassLocalTupleOf (prg, value);
 	    }
 
-	    Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+	    Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 	    return Generator::empty ();
 	}
 
@@ -632,7 +632,7 @@ namespace semantic {
 		return TupleValue::init (expression.getLocation (), tuple, params);
 	    }
 	    
-	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (LOCAL_TUPLEOF_OUT_CLASS));
+	    Ymir::Error::occur (expression.getLocation (), ExternalError::LOCAL_TUPLEOF_OUT_CLASS);
 	    return Generator::empty ();
 	}
 
@@ -644,7 +644,7 @@ namespace semantic {
 
 	Generator PragmaVisitor::validateHasDefault (const syntax::Pragma & prg) {
 	    if (prg.getContent ().size () != 1 && prg.getContent ().size () != 2) {		    
-		Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+		Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 	    }
 
 	    if (prg.getContent ().size () == 1) {
@@ -662,7 +662,7 @@ namespace semantic {
 		}
 	    }
 
-	    Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+	    Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 	    return Generator::empty ();
 	}
 
@@ -688,7 +688,7 @@ namespace semantic {
 	    if (!name.is <StringValue> ()) {
 		auto inner = Char::init (str.getLocation (), 32);
 		auto sliceType = Slice::init (str.getLocation (), inner);
-		Ymir::Error::occur (expression.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+		Ymir::Error::occur (expression.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 				    name_.to <Value> ().getType ().to <Type> ().getTypeName (),
 				    sliceType.prettyString ()
 		    );
@@ -722,7 +722,7 @@ namespace semantic {
 	    Ymir::Error::occurAndNote (
 		name_.getLocation (),
 		note,
-		ExternalError::get (UNDEFINED_FIELD_FOR),
+		ExternalError::UNDEFINED_FIELD_FOR,
 		str_name,
 		str.prettyString ()
 		);
@@ -738,7 +738,7 @@ namespace semantic {
 
 	Generator PragmaVisitor::validateDefaultValue (const syntax::Pragma & prg) {
 	    if (prg.getContent ().size () != 2) {
-		Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+		Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 	    }
 	    
 	    auto type = this-> _context.validateType (prg.getContent ()[0]);
@@ -748,7 +748,7 @@ namespace semantic {
 		s_of (generator::StructRef, sref) return validateStructDefaultValue (prg, sref.getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> (), name);
 	    }
 
-	    Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+	    Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 	    return Generator::empty ();	    
 	}
 
@@ -758,7 +758,7 @@ namespace semantic {
 	    if (!name.is <StringValue> ()) {
 		auto inner = Char::init (str.getLocation (), 32);
 		auto sliceType = Slice::init (str.getLocation (), inner);
-		Ymir::Error::occur (prg.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+		Ymir::Error::occur (prg.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 				    name_.to <Value> ().getType ().to <Type> ().getTypeName (),
 				    sliceType.prettyString ()
 		    );
@@ -780,7 +780,7 @@ namespace semantic {
 		if (field.to <generator::VarDecl> ().getName () == str_name) {
 		    if (field.to <generator::VarDecl> ().getVarValue ().isEmpty ()) {
 			auto note = Ymir::Error::createNote (prg.getLocation ());
-			Ymir::Error::occurAndNote (name_.getLocation (), note, ExternalError::get (FIELD_NO_DEFAULT), name_.prettyString (), str.prettyString ());
+			Ymir::Error::occurAndNote (name_.getLocation (), note, ExternalError::FIELD_NO_DEFAULT, name_.prettyString (), str.prettyString ());
 		    } else {
 			return field.to <generator::VarDecl> ().getVarValue ();
 		    }
@@ -792,7 +792,7 @@ namespace semantic {
 	    Ymir::Error::occurAndNote (
 		name_.getLocation (),
 		note,
-		ExternalError::get (UNDEFINED_FIELD_FOR),
+		ExternalError::UNDEFINED_FIELD_FOR,
 		str_name,
 		str.prettyString ()
 	    );
@@ -808,7 +808,7 @@ namespace semantic {
 
 	Generator PragmaVisitor::validateFieldType (const syntax::Pragma & prg) {
 	    if (prg.getContent ().size () != 2) {
-		Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+		Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 	    }
 	    
 	    auto type = this-> _context.validateType (prg.getContent ()[0]);
@@ -818,7 +818,7 @@ namespace semantic {
 		s_of (generator::StructRef, sref) return validateStructFieldType (prg, sref.getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> (), name);
 	    }
 
-	    Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+	    Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 	    return Generator::empty ();	    
 	}
 
@@ -828,7 +828,7 @@ namespace semantic {
 	    if (!name.is <StringValue> ()) {
 		auto inner = Char::init (str.getLocation (), 32);
 		auto sliceType = Slice::init (str.getLocation (), inner);
-		Ymir::Error::occur (prg.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+		Ymir::Error::occur (prg.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 				    name_.to <Value> ().getType ().to <Type> ().getTypeName (),
 				    sliceType.prettyString ()
 		    );
@@ -857,7 +857,7 @@ namespace semantic {
 	    Ymir::Error::occurAndNote (
 		name_.getLocation (),
 		note,
-		ExternalError::get (UNDEFINED_FIELD_FOR),
+		ExternalError::UNDEFINED_FIELD_FOR,
 		str_name,
 		str.prettyString ()
 	    );
@@ -873,7 +873,7 @@ namespace semantic {
 
 	Generator PragmaVisitor::validateHasField (const syntax::Pragma & prg) {
 	    if (prg.getContent ().size () != 2) {
-		Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+		Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 	    }
 	    
 	    auto type = this-> _context.validateType (prg.getContent ()[0]);
@@ -883,7 +883,7 @@ namespace semantic {
 		s_of (generator::StructRef, sref) return validateStructHasField (prg, sref.getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> (), name);
 	    }
 
-	    Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+	    Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 	    return Generator::empty ();	    
 	}
 
@@ -893,7 +893,7 @@ namespace semantic {
 	    if (!name.is <StringValue> ()) {
 		auto inner = Char::init (str.getLocation (), 32);
 		auto sliceType = Slice::init (str.getLocation (), inner);
-		Ymir::Error::occur (prg.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+		Ymir::Error::occur (prg.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 				    name_.to <Value> ().getType ().to <Type> ().getTypeName (),
 				    sliceType.prettyString ()
 		    );

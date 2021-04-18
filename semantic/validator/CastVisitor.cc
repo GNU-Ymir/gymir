@@ -96,7 +96,7 @@ namespace semantic {
 	void CastVisitor::error (const syntax::Cast & expression, const Generator & type, const Generator & value) {
 	    Ymir::Error::occur (
 		expression.getLocation (),
-		ExternalError::get (UNDEFINED_CAST_OP),
+		ExternalError::UNDEFINED_CAST_OP,
 		value.to <Value> ().getType ().to <Type> ().getTypeName (),
 		type.to <Type> ().getTypeName ()
 	    );

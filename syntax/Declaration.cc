@@ -36,21 +36,21 @@ namespace syntax {
 
     const lexing::Word & Declaration::getLocation () const {
 	if (this-> _value == nullptr) {
-	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));	    
+	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);	    
 	}
 	return this-> _value-> getLocation ();
     }
 
     const std::string & Declaration::getComments () const {
 	if (this-> _value == nullptr) {
-	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	}
 	return this-> _value-> getComments ();
     }
 
     void Declaration::setComments (const std::string & comments) {
 	if (this-> _value == nullptr) {
-	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	}
 	this-> _value-> setComments (comments);
     }

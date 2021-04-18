@@ -56,7 +56,7 @@ namespace semantic {
 		return val.to <generator::Class> ().getClassRef ();
 	    }
 	    
-	    Ymir::Error::occur (type.getLocation (), ExternalError::get (USE_AS_TYPE));
+	    Ymir::Error::occur (type.getLocation (), ExternalError::USE_AS_TYPE);
 	    return Generator::empty ();	  
 	}
 	
@@ -103,8 +103,8 @@ namespace semantic {
 
 	    
 	    if (val.is <ClassRef> () || val.is <generator::Class> ()) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (FORGET_TOKEN), Token::AND);
-		Ymir::Error::occurAndNote (type.getLocation (), note, ExternalError::get (USE_AS_TYPE));
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::FORGET_TOKEN, Token::AND);
+		Ymir::Error::occurAndNote (type.getLocation (), note, ExternalError::USE_AS_TYPE);
 	    }
 		
 	    if (val.is<Type> ()) return val;
@@ -112,7 +112,7 @@ namespace semantic {
 	    return StructRef::init (type.getLocation (), val.to <generator::Struct> ().getRef ());
 	    
 	    // if (val.is <StructCst> ()) return val.to <StructCst> ().getStr ();, Why?
-	    Ymir::Error::occur (type.getLocation (), ExternalError::get (USE_AS_TYPE));
+	    Ymir::Error::occur (type.getLocation (), ExternalError::USE_AS_TYPE);
 	    return Generator::empty ();	    	   
 	}
 
@@ -143,14 +143,14 @@ namespace semantic {
 		    syms = getGlobalPrivate (var.getName ().getStr ());
 		    std::list <Ymir::Error::ErrorMsg> notes;
 		    for (auto it : Ymir::r (0, syms.size ())) {
-			notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), syms [it].getName (), syms [it].getRealName ()));
+			notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::PRIVATE_IN_THIS_CONTEXT, syms [it].getName (), syms [it].getRealName ()));
 		    }
 		    
-		    Error::occurAndNote (var.getName (), notes, ExternalError::get (UNDEF_TYPE), var.getName ().getStr ());
+		    Error::occurAndNote (var.getName (), notes, ExternalError::UNDEF_TYPE, var.getName ().getStr ());
 		}
 	    }
 
-	    Error::occur (var.getName (), ExternalError::get (UNDEF_TYPE), var.getName ().getStr ());
+	    Error::occur (var.getName (), ExternalError::UNDEF_TYPE, var.getName ().getStr ());
 	    return Generator::empty ();
 	}
 
@@ -198,7 +198,7 @@ namespace semantic {
 		case syntax::Decorator::CONST : {
 		    if (!gotConstOrMut.isEof ()) {
 			auto note = Ymir::Error::createNote (gotConstOrMut);
-			Ymir::Error::occurAndNote (expr.getDecorator (syntax::Decorator::CONST).getLocation (), note, ExternalError::get (CONFLICT_DECORATOR));
+			Ymir::Error::occurAndNote (expr.getDecorator (syntax::Decorator::CONST).getLocation (), note, ExternalError::CONFLICT_DECORATOR);
 		    }
 		    gotConstOrMut = expr.getDecorator (syntax::Decorator::CONST).getLocation ();
 		    type = Type::init (type.to<Type> (), false); break;
@@ -206,7 +206,7 @@ namespace semantic {
 		case syntax::Decorator::MUT : {
 		    if (!gotConstOrMut.isEof ()) {
 			auto note = Ymir::Error::createNote (gotConstOrMut);
-			Ymir::Error::occur (expr.getDecorator (syntax::Decorator::MUT).getLocation (), ExternalError::get (CONFLICT_DECORATOR));
+			Ymir::Error::occur (expr.getDecorator (syntax::Decorator::MUT).getLocation (), ExternalError::CONFLICT_DECORATOR);
 		    }
 		    gotConstOrMut = expr.getDecorator (syntax::Decorator::MUT).getLocation ();
 		    type = Type::init (type.to<Type> (), true); break;
@@ -214,14 +214,14 @@ namespace semantic {
 		case syntax::Decorator::DMUT : {
 		    if (!gotConstOrMut.isEof ()) {
 			auto note = Ymir::Error::createNote (gotConstOrMut);
-			Ymir::Error::occur (expr.getDecorator (syntax::Decorator::DMUT).getLocation (), ExternalError::get (CONFLICT_DECORATOR));		    
+			Ymir::Error::occur (expr.getDecorator (syntax::Decorator::DMUT).getLocation (), ExternalError::CONFLICT_DECORATOR);		    
 		    }
 		    gotConstOrMut = expr.getDecorator (syntax::Decorator::DMUT).getLocation ();
 		    type = type.to<Type> ().toDeeplyMutable (); break;
 		}
 		default :
 		    Ymir::Error::occur (deco.getLocation (),
-					ExternalError::get (DECO_OUT_OF_CONTEXT),
+					ExternalError::DECO_OUT_OF_CONTEXT,
 					deco.getLocation ().getStr ()
 			);		
 		}
@@ -232,14 +232,14 @@ namespace semantic {
 
 	Generator Visitor::validateTypeArrayAlloc (const syntax::ArrayAlloc & alloc) {
 	    if (alloc.isDynamic ())
-	    Ymir::Error::occur (alloc.getLocation (), ExternalError::get (USE_AS_TYPE));
+	    Ymir::Error::occur (alloc.getLocation (), ExternalError::USE_AS_TYPE);
 
 	    auto type = validateType (alloc.getLeft (), true);
 	    auto size = validateValue (alloc.getSize ());
 
 	    Generator value = retreiveValue (size);
 	    if (!value.is <Fixed> () || (value.to<Fixed> ().getType ().to <Integer> ().isSigned () && value.to <Fixed> ().getUI ().i < 0)) {
-		Ymir::Error::occur (alloc.getSize ().getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+		Ymir::Error::occur (alloc.getSize ().getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 				    value.to <Value> ().getType ().to <Type> ().getTypeName (),
 				    (Integer::init (lexing::Word::eof (), 64, false)).to<Type> ().getTypeName ()
 		    );
@@ -250,7 +250,7 @@ namespace semantic {
 
 	Generator Visitor::validateTypeSlice (const syntax::List & list) {
 	    if (list.getParameters ().size () != 1)
-	    Ymir::Error::occur (list.getLocation (), ExternalError::get (USE_AS_TYPE));
+	    Ymir::Error::occur (list.getLocation (), ExternalError::USE_AS_TYPE);
 
 	    auto type = validateType (list.getParameters () [0], true);
 	    return Slice::init (list.getLocation (), type);	    

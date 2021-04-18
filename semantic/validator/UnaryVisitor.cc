@@ -43,9 +43,9 @@ namespace semantic {
 			    type = Type::init (type.to<Type> (), true);
 			    return Addresser::init (expression.getLocation (), type, operand);
 			} else {
-			    auto note = Ymir::Error::createNote (expression.getLocation (), ExternalError::get (OF), operand.prettyString ());
+			    auto note = Ymir::Error::createNote (expression.getLocation (), ExternalError::OF, operand.prettyString ());
 			    Ymir::Error::occurAndNote (operand.getLocation (), note,
-						       ExternalError::get (NOT_A_LVALUE)
+						       ExternalError::NOT_A_LVALUE
 			    );
 			}
 		    }
@@ -157,7 +157,7 @@ namespace semantic {
 	    try {
 		return this-> _context.validateValue (call);
 	    } catch (Error::ErrorList list) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), call.prettyString ());
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::VALIDATING, call.prettyString ());
 		list.errors.back ().addNote (note);
 		throw list;
 	    }
@@ -168,8 +168,8 @@ namespace semantic {
 	    if (proto.getThrowers ().size () != 0) {
 		std::list <Ymir::Error::ErrorMsg> notes;
 		for (auto &it : proto.getThrowers ())
-		    notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (THROWS), it.prettyString ()));
-		Ymir::Error::occurAndNote (un.getLocation (), notes, ExternalError::get (ADDR_MIGHT_THROW), proto.prettyString ());
+		    notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::THROWS, it.prettyString ()));
+		Ymir::Error::occurAndNote (un.getLocation (), notes, ExternalError::ADDR_MIGHT_THROW, proto.prettyString ());
 	    }
 	    return Addresser::init (un.getLocation (), FunctionVisitor::init (this-> _context).validateFunctionType (proto), proto);
 	}
@@ -183,15 +183,15 @@ namespace semantic {
 	    for (auto & del : gen.to <MultSym> ().getGenerators ()) {
 		try {
 		    if (!del.is <DelegateValue> ()) {
-			auto note = Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), del.to <Value> ().getType ().getLocation (), del.prettyString ());
+			auto note = Ymir::Error::createNoteOneLine (ExternalError::CANDIDATE_ARE, del.to <Value> ().getType ().getLocation (), del.prettyString ());
 			throw Error::ErrorList {{note}};
 		    }
 	    	     
 		    if (del.getThrowers ().size () != 0) {
 			std::list <Ymir::Error::ErrorMsg> notes;
 			for (auto &it : del.getThrowers ())
-			    notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (THROWS), it.prettyString ()));
-			Ymir::Error::occurAndNote (un.getLocation (), notes, ExternalError::get (ADDR_MIGHT_THROW), del.prettyString ());	
+			    notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::THROWS, it.prettyString ()));
+			Ymir::Error::occurAndNote (un.getLocation (), notes, ExternalError::ADDR_MIGHT_THROW, del.prettyString ());	
 		    }
 	    
 		    auto funcPtr = del.to <DelegateValue> ().getFuncPtr ();
@@ -208,7 +208,7 @@ namespace semantic {
 			    this-> _context.verifyImplicitAlias (un.getLocation (), type, del.to <DelegateValue> ().getClosure ());
 			    this-> _context.verifyMemoryOwner (un.getLocation (), type, del.to <DelegateValue> ().getClosure (), true);
 			} catch (Error::ErrorList list) {
-			    auto note = Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), del.to <Value> ().getType ().getLocation (), proto.prettyString ());
+			    auto note = Ymir::Error::createNoteOneLine (ExternalError::CANDIDATE_ARE, del.to <Value> ().getType ().getLocation (), proto.prettyString ());
 
 			    for (auto & i : list.errors)
 				note.addNote (i);
@@ -239,11 +239,11 @@ namespace semantic {
 	    else {
 		std::list <Error::ErrorMsg> notes;
 		for (auto & it : elements-> second)
-		    notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), CallVisitor::realLocation (it), CallVisitor::prettyName (it)));
+		    notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::CANDIDATE_ARE, CallVisitor::realLocation (it), CallVisitor::prettyName (it)));
 		
 		Ymir::Error::occurAndNote (un.getLocation (),
 					   notes,
-					   ExternalError::get (SPECIALISATION_WORK_WITH_BOTH_PURE),
+					   ExternalError::SPECIALISATION_WORK_WITH_BOTH_PURE,
 					   gen.prettyString ());
 	    }
 	    
@@ -261,7 +261,7 @@ namespace semantic {
 	    }
 	    
 	    Ymir::Error::occur (un.getLocation (),
-				ExternalError::get (UNDEFINED_UN_OP),
+				ExternalError::UNDEFINED_UN_OP,
 				un.getLocation ().getStr (), 
 				leftName
 	    );
@@ -279,7 +279,7 @@ namespace semantic {
 	    
 	    Ymir::Error::occurAndNote (un.getLocation (),
 				       errors,
-				       ExternalError::get (UNDEFINED_UN_OP),
+				       ExternalError::UNDEFINED_UN_OP,
 				       un.getLocation ().getStr (), 
 				       leftName
 	    );

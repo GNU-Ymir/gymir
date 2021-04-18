@@ -41,7 +41,7 @@ namespace syntax {
 
     const lexing::Word & Expression::getLocation () const {
         if (this-> _value == nullptr)
-	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
         return this-> _value-> getLocation ();
     }    
     

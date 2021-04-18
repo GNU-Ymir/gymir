@@ -162,7 +162,7 @@ namespace semantic {
 		    Ymir::Error::occurAndNote (
 			rule.getLocation (),
 			note,
-			ExternalError::get (MACRO_REST),
+			ExternalError::MACRO_REST,
 			some (content, current)
 		    );
 			
@@ -435,13 +435,13 @@ namespace semantic {
 		    elfo {
 			Ymir::Error::occur (
 			    expr.getLocation (),
-			    ExternalError::get (INVALID_MACRO_RULE),
+			    ExternalError::INVALID_MACRO_RULE,
 			    rules.prettyString ()
 			);
 		    }
 		}
 	    } catch (Error::ErrorList list) {		
-		list.errors.insert (list.errors.begin (), Ymir::Error::createNote (expr.getLocation (), ExternalError::get (IN_MACRO_EXPANSION)));		    		
+		list.errors.insert (list.errors.begin (), Ymir::Error::createNote (expr.getLocation (), ExternalError::IN_MACRO_EXPANSION));		    		
 		errors = std::move (list.errors);
 	    }
 	    
@@ -475,7 +475,7 @@ namespace semantic {
 		    Ymir::Error::occurAndNote (
 			expr.getLocation (),
 			note, 
-			ExternalError::get (INCOMPATIBLE_TOKENS),
+			ExternalError::INCOMPATIBLE_TOKENS,
 			MacroVisitor::__ANY__,
 			""
 			);
@@ -509,7 +509,7 @@ namespace semantic {
 		    auto m = Token::members ();
 		    auto ignore = lex.next ();
 		    if (std::find(m.begin (), m.end (), ignore.getStr ()) != m.end ())
-			Ymir::Error::occur (ignore, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), ignore.getStr ());
+			Ymir::Error::occur (ignore, ExternalError::SYNTAX_ERROR_AT_SIMPLE, ignore.getStr ());
 		} else {
 		    Ymir::Error::halt ("%(r) Unknwon known rule %(y)", "Critical", name);
 		}
@@ -533,7 +533,7 @@ namespace semantic {
 		lexing::Word word = lexing::Word::init (n.getStr (), this-> _call.getFile (), line, col, seek);
 		
 		list.errors.back () = Ymir::Error::ErrorMsg (word, back_error.getMessage ());
-		list.errors.insert (list.errors.begin (), Ymir::Error::createNote (expr.getLocation (), ExternalError::get (IN_MACRO_EXPANSION)));		
+		list.errors.insert (list.errors.begin (), Ymir::Error::createNote (expr.getLocation (), ExternalError::IN_MACRO_EXPANSION));		
 		errors = std::move (list.errors);
 	    }
 	    
@@ -587,7 +587,7 @@ namespace semantic {
 		Ymir::Error::occurAndNote (
 		    mult.getLocation (),
 		    note, 
-		    ExternalError::get (INCOMPATIBLE_TOKENS),
+		    ExternalError::INCOMPATIBLE_TOKENS,
 		    str,
 		    wstr
 		);
@@ -604,7 +604,7 @@ namespace semantic {
 		    Ymir::Error::occurAndNote (
 			mult.getLocation (),
 			note,
-			ExternalError::get (INCOMPATIBLE_TOKENS),
+			ExternalError::INCOMPATIBLE_TOKENS,
 			str,
 			content.substr (current, len)
 		    );  
@@ -698,7 +698,7 @@ namespace semantic {
 		auto result = visit.visitExpression ();
 		return result;
 	    } catch (Error::ErrorList list) {		
-		list.errors.insert (list.errors.begin (), Ymir::Error::createNote (loc, ExternalError::get (IN_MACRO_EXPANSION)));
+		list.errors.insert (list.errors.begin (), Ymir::Error::createNote (loc, ExternalError::IN_MACRO_EXPANSION));
 		
 		throw Error::ErrorList {list.errors};
 	    }
@@ -832,7 +832,7 @@ namespace semantic {
 				
 			    Ymir::Error::occur (
 				var.getLocation (),
-				ExternalError::get (UNDEF_MACRO_EVAL),
+				ExternalError::UNDEF_MACRO_EVAL,
 				var.getName ().getStr ()
 				);
 			}
@@ -856,7 +856,7 @@ namespace semantic {
 
 				    Ymir::Error::occur (
 					bin.getRight ().getLocation (),
-					ExternalError::get (UNDEFINED_SUB_PART_FOR),
+					ExternalError::UNDEFINED_SUB_PART_FOR,
 					right,
 					bin.getLeft ().prettyString ()
 					);
@@ -870,7 +870,7 @@ namespace semantic {
 			    } else {
 				Ymir::Error::occur (
 				    eval.getLocation (),
-				    ExternalError::get (UNDEFINED_SUB_PART_FOR),
+				    ExternalError::UNDEFINED_SUB_PART_FOR,
 				    right					,
 				    bin.getLeft ().prettyString ()
 				    );				    
@@ -882,14 +882,14 @@ namespace semantic {
 			    auto left = validateMacroEval (content, loc, op.getLeft (), mapper);				
 			    auto value = this-> _context.retreiveValue (this-> _context.validateValue (op.getRights () [0]));
 			    if (!value.is<Fixed> () || (value.to<Fixed> ().getType ().to <Integer> ().isSigned () && value.to <Fixed> ().getUI ().i < 0)) {
-				Ymir::Error::occur (op.getRights () [0].getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+				Ymir::Error::occur (op.getRights () [0].getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 						    value.to <Value> ().getType ().to <Type> ().getTypeName (),
 						    (Integer::init (lexing::Word::eof (), 64, false)).to<Type> ().getTypeName ()
 				    );				    
 			    }
 			    auto size = value.to <Fixed> ().getUI ().u;
 			    if (size >= left.size ()) {
-				Ymir::Error::occur (value.getLocation (), ExternalError::get (OVERFLOW_ARITY), size, left.size ());
+				Ymir::Error::occur (value.getLocation (), ExternalError::OVERFLOW_ARITY, size, left.size ());
 			    }
 			    return {left [size]};
 			} else {
@@ -907,7 +907,7 @@ namespace semantic {
 	    Ymir::Error::occurAndNote (
 		eval.getLocation (),
 		errors,
-		ExternalError::get (UNDEF_MACRO_EVAL),
+		ExternalError::UNDEF_MACRO_EVAL,
 		eval.prettyString ()
 	    );
 
@@ -933,7 +933,7 @@ namespace semantic {
 		location,
 		end,
 		errors, 
-		ExternalError::get (UNDEFINED_MACRO_OP),
+		ExternalError::UNDEFINED_MACRO_OP,
 		leftName
 		);
 	    	   

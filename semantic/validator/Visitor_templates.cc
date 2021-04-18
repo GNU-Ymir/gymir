@@ -92,7 +92,7 @@ namespace semantic {
 	    std::list <Error::ErrorMsg> errors;
 	    try {
 		if (Visitor::__TEMPLATE_NB_RECURS__ >= VisitConstante::LIMIT_TEMPLATE_RECUR) {
-		    Ymir::Error::occur (sol.getName (), ExternalError::get (TEMPLATE_RECURSION), Visitor::__TEMPLATE_NB_RECURS__);
+		    Ymir::Error::occur (sol.getName (), ExternalError::TEMPLATE_RECURSION, Visitor::__TEMPLATE_NB_RECURS__);
 		}
 		
 		std::vector <Symbol> syms = sol.to <TemplateSolution> ().getAllLocal ();		
@@ -126,7 +126,7 @@ namespace semantic {
 	    if (insertTemplateSolution (sol, errors)) { // If it is the first time the solution is presented
 		if (errors.size () != 0) {
 		    // if (!global::State::instance ().isVerboseActive ()) {
-		    // 	Ymir::Error::occur (sol.getName (), ExternalError::get (INCOMPLETE_TEMPLATE), sol.to <TemplateSolution> ().getSolutionName ());
+		    // 	Ymir::Error::occur (sol.getName (), ExternalError::INCOMPLETE_TEMPLATE, sol.to <TemplateSolution> ().getSolutionName ());
 		    // }
 			    
 		    throw Error::ErrorList {errors};
@@ -137,14 +137,14 @@ namespace semantic {
 		try {
 		    Visitor::__TEMPLATE_NB_RECURS__ += 1;
 		    if (Visitor::__TEMPLATE_NB_RECURS__ >= VisitConstante::LIMIT_TEMPLATE_RECUR) {
-			Ymir::Error::occur (sol.getName (), ExternalError::get (TEMPLATE_RECURSION), Visitor::__TEMPLATE_NB_RECURS__);
+			Ymir::Error::occur (sol.getName (), ExternalError::TEMPLATE_RECURSION, Visitor::__TEMPLATE_NB_RECURS__);
 		    }
 
 		    auto visitor = FunctionVisitor::init (*this);
 		    visitor.validateMethod (syms [0].to <semantic::Function> (), classType, -1);
 		} catch (Error::ErrorList list) {
 		    list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", syms [0].getName (), syms[0].getRealName ()));
-		    list.errors.insert (list.errors.begin (), Ymir::Error::createNote (syms [0].getName (), ExternalError::get (IN_TEMPLATE_DEF)));
+		    list.errors.insert (list.errors.begin (), Ymir::Error::createNote (syms [0].getName (), ExternalError::IN_TEMPLATE_DEF));
 		    
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    removeTemplateSolution (sol); // If there is an error, we don't want to store the solution anymore
@@ -160,7 +160,7 @@ namespace semantic {
 	    }
 	    
 	    if (syms [0].to <semantic::Function> ().isOver ()) {
-		Ymir::Error::occur (syms [0].getName (), ExternalError::get (NOT_OVERRIDE), syms [0].getName ().getStr ());
+		Ymir::Error::occur (syms [0].getName (), ExternalError::NOT_OVERRIDE, syms [0].getName ().getStr ());
 	    }
 
 	    pushReferent (syms [0], "validateTemplateSolutionMethod");
@@ -285,7 +285,7 @@ namespace semantic {
 			auto rvalue = retreiveValue (val);
 			params.push_back (rvalue);
 		    } catch (Error::ErrorList list) {
-			auto note = Ymir::Error::createNoteOneLine (ExternalError::get (TEMPLATE_VALUE_TRY));
+			auto note = Ymir::Error::createNoteOneLine (ExternalError::TEMPLATE_VALUE_TRY);
 			for (auto & it : list.errors)
 			note.addNote (it);
 			
@@ -324,7 +324,7 @@ namespace semantic {
 				loc_elem [local_score].push_back (elem);
 			    }
 			} catch (Error::ErrorList list) {
-			    auto note = Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), elem.getLocation (), elem.prettyString ());
+			    auto note = Ymir::Error::createNoteOneLine (ExternalError::CANDIDATE_ARE, elem.getLocation (), elem.prettyString ());
 			    for (auto & it : list.errors) {
 				note.addNote (it);
 			    }
@@ -337,7 +337,7 @@ namespace semantic {
 				all_score = local_score;
 				final_sym = local_sym;
 			    } else if (local_sym.isEmpty ()) {
-				errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), elem.getLocation (), elem.prettyString ()));
+				errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::CANDIDATE_ARE, elem.getLocation (), elem.prettyString ()));
 			    }
 			}
 		    }
@@ -383,7 +383,7 @@ namespace semantic {
 			    }
 			} catch (Error::ErrorList list) {
 			    list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", element_on_scores [it].getName (), element_on_scores [it].getRealName ()));
-			    list.errors.insert (list.errors.begin (), Ymir::Error::createNote (tcl.getLocation (), ExternalError::get (IN_TEMPLATE_DEF)));
+			    list.errors.insert (list.errors.begin (), Ymir::Error::createNote (tcl.getLocation (), ExternalError::IN_TEMPLATE_DEF));
 			    std::vector<std::string> names;
 			    for (auto & it : params) {
 				names.push_back (it.prettyString ());
@@ -393,7 +393,7 @@ namespace semantic {
 			    list.errors = {Ymir::Error::makeOccurAndNote (
 				    tcl.getLocation (),
 				    list.errors,
-				    ExternalError::get (UNDEFINED_TEMPLATE_OP),
+				    ExternalError::UNDEFINED_TEMPLATE_OP,
 				    leftName,
 				    names
 				    )};
@@ -431,7 +431,7 @@ namespace semantic {
 	    auto err = Ymir::Error::makeOccurAndNote (
 		tcl.getLocation (),
 		errors,
-		ExternalError::get (UNDEFINED_TEMPLATE_OP),
+		ExternalError::UNDEFINED_TEMPLATE_OP,
 		leftName,
 		names
 		);

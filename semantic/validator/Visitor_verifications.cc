@@ -28,24 +28,24 @@ namespace semantic {
 	    verifyImplicitAlias (loc, type, gen);
 
 	    // if (gen.is<Aliaser> () && llevel <= 1 && !inMatch && !gen.to <Aliaser> ().getWho ().is<StringValue>()) // special case for string literal
-	    // 	Ymir::Error::warn (gen.getLocation (), ExternalError::get (ALIAS_NO_EFFECT));
+	    // 	Ymir::Error::warn (gen.getLocation (), ExternalError::ALIAS_NO_EFFECT);
 	    
 	    // Verify Implicit referencing
 	    if ((!construct || !type.to <Type> ().isRef ()) && gen.is<Referencer> ()) {
 		if (!inMatch)
-		Ymir::Error::warn (gen.getLocation (), ExternalError::get (REF_NO_EFFECT));
+		Ymir::Error::warn (gen.getLocation (), ExternalError::REF_NO_EFFECT);
 	    } else {
 		if (type.to <Type> ().isRef () && construct) {
 		    verifySameType (type, gen.to <Value> ().getType ());
 		    
 		    if (!gen.is<Referencer> ()) {
 			if (gen.to<Value> ().isLvalue () || gen.is <Aliaser> ()) {
-			    Ymir::Error::occur (gen.getLocation (), ExternalError::get (IMPLICIT_REFERENCE),
+			    Ymir::Error::occur (gen.getLocation (), ExternalError::IMPLICIT_REFERENCE,
 						gen.to<Value> ().getType ().to <Type> ().getTypeName ()
 				);
 			} else {
 			    auto note = Ymir::Error::createNote (loc);
-			    Ymir::Error::occurAndNote (gen.getLocation (), note, ExternalError::get (NOT_A_LVALUE));
+			    Ymir::Error::occurAndNote (gen.getLocation (), note, ExternalError::NOT_A_LVALUE);
 			}
 		    }
 		}
@@ -54,7 +54,7 @@ namespace semantic {
 	    if (type.is<LambdaType> ()) {
 		if (!construct || !gen.is<LambdaProto> ()) {
 		    auto note = Ymir::Error::createNote (loc);
-		    Ymir::Error::occurAndNote (gen.getLocation (), note, ExternalError::get (USE_AS_VALUE));
+		    Ymir::Error::occurAndNote (gen.getLocation (), note, ExternalError::USE_AS_VALUE);
 		} else {
 		    verifyMutabilityLevel (loc, gen.getLocation (), type, gen.to <Value> ().getType (), construct);
 		}
@@ -63,7 +63,7 @@ namespace semantic {
 		auto rlevel = gen.to <Value> ().getType ().to <Type> ().mutabilityLevel ();
 		if (llevel > std::max (1, rlevel) && !gen.is <NullValue> ()) {
 		    auto note = Ymir::Error::createNote (gen.getLocation ());
-		    Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
+		    Ymir::Error::occurAndNote (loc, note, ExternalError::DISCARD_CONST_LEVEL,
 					       llevel, std::max (1, rlevel)
 			);
 		}		
@@ -74,7 +74,7 @@ namespace semantic {
 
 	    // TODO Verify locality
 	    // if (!type.to<Type> ().isLocal () && gen.to <Value> ().getType ().to <Type> ().isLocal ()) {
-	    // 	Ymir::Error::occur (loc, ExternalError::get (DISCARD_LOCALITY));				    
+	    // 	Ymir::Error::occur (loc, ExternalError::DISCARD_LOCALITY);				    
 	    // }
 	}
 
@@ -91,7 +91,7 @@ namespace semantic {
 		    } catch (Error::ErrorList list) {
 			auto note = Ymir::Error::createNote (rloc);
 			for (auto &it : list.errors) note.addNote (it);
-			Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST));
+			Ymir::Error::occurAndNote (loc, note, ExternalError::DISCARD_CONST);
 		    }
 		}
 	    } else if (rightType.is <Range> () || leftType.is<Array> ()) {
@@ -104,7 +104,7 @@ namespace semantic {
 		    
 		if (llevel > std::max (1, rlevel)) { // left operand can be mutable, but it can't modify inner right operand values
 		    auto note = Ymir::Error::createNote (rloc);
-		    Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
+		    Ymir::Error::occurAndNote (loc, note, ExternalError::DISCARD_CONST_LEVEL,
 					       llevel, std::max (1, rlevel)
 			);
 		}		
@@ -112,7 +112,7 @@ namespace semantic {
 		auto rlevel = rightType.to <Type> ().mutabilityLevel ();
 		if (llevel > std::max (1, rlevel)) { // left operand can be mutable, but it can't modify inner right operand values
 		    auto note = Ymir::Error::createNote (rloc);
-		    Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
+		    Ymir::Error::occurAndNote (loc, note, ExternalError::DISCARD_CONST_LEVEL,
 					       llevel, std::max (1, rlevel)
 			);
 		}		
@@ -120,7 +120,7 @@ namespace semantic {
 		auto rlevel = rightType.to <Type> ().mutabilityLevel ();
 		if (llevel > std::max (1, rlevel)) {
 		    auto note = Ymir::Error::createNote (rloc);
-		    Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
+		    Ymir::Error::occurAndNote (loc, note, ExternalError::DISCARD_CONST_LEVEL,
 					       llevel, std::max (1, rlevel)
 			);
 		}		
@@ -128,7 +128,7 @@ namespace semantic {
 		auto rlevel = rightType.to <Type> ().mutabilityLevel ();
 		if (llevel > std::max (1, rlevel)) {
 		    auto note = Ymir::Error::createNote (rloc);
-		    Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
+		    Ymir::Error::occurAndNote (loc, note, ExternalError::DISCARD_CONST_LEVEL,
 					       llevel, std::max (1, rlevel)
 			);
 		}		
@@ -138,13 +138,13 @@ namespace semantic {
 
 		if (llevel > std::max (1, rlevel)) { // left operand can be mutable, but it can't modify inner right operand values
 		    auto note = Ymir::Error::createNote (rloc);
-		    Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
+		    Ymir::Error::occurAndNote (loc, note, ExternalError::DISCARD_CONST_LEVEL,
 					       llevel, std::max (1, rlevel)
 			);
 		}		
 	    } else if (leftType.is<LambdaType> ()) {
 		if (leftType.to <Type> ().isMutable ())
-		Ymir::Error::occur (rloc, ExternalError::get (DISCARD_CONST_LEVEL),
+		Ymir::Error::occur (rloc, ExternalError::DISCARD_CONST_LEVEL,
 				    1, 0
 		    );	 
 	    } else {		
@@ -159,12 +159,12 @@ namespace semantic {
 		    
 		    if ((leftType.to <Type> ().isRef () && construct && llevel > std::max (0, rlevel))) { // If it is the construction of a ref
 			auto note = Ymir::Error::createNote (rloc);
-			Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
+			Ymir::Error::occurAndNote (loc, note, ExternalError::DISCARD_CONST_LEVEL,
 						   llevel, std::max (0, rlevel)
 			    );		
 		    } else if (llevel > std::max (1, rlevel)) {
 			auto note = Ymir::Error::createNote (rloc);
-			Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
+			Ymir::Error::occurAndNote (loc, note, ExternalError::DISCARD_CONST_LEVEL,
 						   llevel, std::max (1, rlevel)
 			    );
 		    }
@@ -215,16 +215,16 @@ namespace semantic {
 	    // If the type is totally immutable, it's it not necessary to make an explicit alias 
 	    if (llevel > max_level) {
 		std::list <Ymir::Error::ErrorMsg> notes;
-		notes.push_back (Ymir::Error::createNote (gen.getLocation (), ExternalError::get (IMPLICIT_ALIAS),
+		notes.push_back (Ymir::Error::createNote (gen.getLocation (), ExternalError::IMPLICIT_ALIAS,
 							  gen.to <Value> ().getType ().to <Type> ().getTypeName ()));
 
 		if (type.is <StructRef> ()) {
 		    auto & varDecl = type.to <StructRef> ().getExplicitAliasTypeLoc ();
-		    notes.push_back (Ymir::Error::createNote (varDecl.getLocation (), ExternalError::get (IMPLICIT_ALIAS),
+		    notes.push_back (Ymir::Error::createNote (varDecl.getLocation (), ExternalError::IMPLICIT_ALIAS,
 							      varDecl.to <generator::VarDecl> ().getVarType ().prettyString ()));
 		}
 		
-		Ymir::Error::occurAndNote (loc, notes, ExternalError::get (DISCARD_CONST_LEVEL),
+		Ymir::Error::occurAndNote (loc, notes, ExternalError::DISCARD_CONST_LEVEL,
 					   llevel, max_level
 		    );
 	    }
@@ -234,29 +234,29 @@ namespace semantic {
 	    if (type.is <LambdaType> ()) {
 		if (!loc.isSame (type.getLocation ())) {
 		    auto note = Ymir::Error::createNote (loc);
-		    Ymir::Error::occurAndNote (type.getLocation (), note, ExternalError::get (INCOMPLETE_TYPE), type.prettyString ());
+		    Ymir::Error::occurAndNote (type.getLocation (), note, ExternalError::INCOMPLETE_TYPE, type.prettyString ());
 		} else
-		Ymir::Error::occur (type.getLocation (), ExternalError::get (INCOMPLETE_TYPE), type.prettyString ());		
+		Ymir::Error::occur (type.getLocation (), ExternalError::INCOMPLETE_TYPE, type.prettyString ());		
 	    }
 	}
 
-	void Visitor::verifyMutabilityRefParam (const lexing::Word & loc, const Generator & type, Ymir::ExternalErrorValue error) {
+	void Visitor::verifyMutabilityRefParam (const lexing::Word & loc, const Generator & type, const char* error) {
 	    // Exception slice can be mutable even if it is not a reference, that is the only exception
 	    if (type.to<Type> ().isMutable () && !type.to<Type> ().isRef () && !type.to <Type> ().needExplicitAlias ()) {
-		Ymir::Error::occur (loc, ExternalError::get (error));
+		Ymir::Error::occur (loc, error);
 	    }	    
 	}
 
 	void Visitor::verifySameType (const Generator & left, const Generator & right) {	    
 	    if (!left.equals (right)) {
 		if (left.getLocation ().getLine () == right.getLocation ().getLine () && left.getLocation ().getColumn () == right.getLocation ().getColumn ()) 
-		Ymir::Error::occur (left.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+		Ymir::Error::occur (left.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 				    left.to<Type> ().getTypeName (),
 				    right.to <Type> ().getTypeName ()
 		    );
 		else {
 		    auto note = Ymir::Error::createNote (right.getLocation ());
-		    Ymir::Error::occurAndNote (left.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
+		    Ymir::Error::occurAndNote (left.getLocation (), note, ExternalError::INCOMPATIBLE_TYPES,
 					       left.to<Type> ().getTypeName (),
 					       right.to <Type> ().getTypeName ()
 			);
@@ -267,13 +267,13 @@ namespace semantic {
 	void Visitor::verifyCompleteSameType (const Generator & left, const Generator & right) {	    
 	    if (!left.to <Type> ().completeEquals (right)) {		
 		if (left.getLocation ().getLine () == right.getLocation ().getLine () && left.getLocation ().getColumn () == right.getLocation ().getColumn ()) 
-		Ymir::Error::occur (left.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+		Ymir::Error::occur (left.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 				    left.to<Type> ().getTypeName (),
 				    right.to <Type> ().getTypeName ()
 		    );
 		else {
 		    auto note = Ymir::Error::createNote (right.getLocation ());
-		    Ymir::Error::occurAndNote (left.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
+		    Ymir::Error::occurAndNote (left.getLocation (), note, ExternalError::INCOMPATIBLE_TYPES,
 					       left.to<Type> ().getTypeName (),
 					       right.to <Type> ().getTypeName ()
 			);
@@ -289,7 +289,7 @@ namespace semantic {
 	
 	bool Visitor::verifyClassImpl (const lexing::Word & loc, const Generator & cl, const Generator & trait, bool thr) {
 	    if (!trait.is <TraitRef> ()) {
-		Ymir::Error::occur (trait.getLocation (), ExternalError::get (IMPL_NO_TRAIT), trait.prettyString ());
+		Ymir::Error::occur (trait.getLocation (), ExternalError::IMPL_NO_TRAIT, trait.prettyString ());
 	    }
 
 	    auto sym = cl.to <ClassPtr> ().getInners ()[0].to <ClassRef> ().getRef ();
@@ -330,7 +330,7 @@ namespace semantic {
 	    
 	    if (thr) {
 		auto note = Ymir::Error::createNote (loc);
-		Ymir::Error::occurAndNote (cl.getLocation (), note, ExternalError::get (NOT_IMPL_TRAIT), cl.prettyString (), trait.prettyString ());
+		Ymir::Error::occurAndNote (cl.getLocation (), note, ExternalError::NOT_IMPL_TRAIT, cl.prettyString (), trait.prettyString ());
 	    }
 	    
 	    return false;
@@ -369,13 +369,13 @@ namespace semantic {
 
 	    if (error) {
 		if (loc.getLine () == rightLoc.getLine ()) 
-		Ymir::Error::occur (loc, ExternalError::get (INCOMPATIBLE_TYPES),
+		Ymir::Error::occur (loc, ExternalError::INCOMPATIBLE_TYPES,
 				    leftName, 
 				    right.to <Type> ().getTypeName ()
 		    );
 		else {
 		    auto note = Ymir::Error::createNote (rightLoc);
-		    Ymir::Error::occurAndNote (loc, note, ExternalError::get (INCOMPATIBLE_TYPES),
+		    Ymir::Error::occurAndNote (loc, note, ExternalError::INCOMPATIBLE_TYPES,
 					       leftName,
 					       right.to <Type> ().getTypeName ()
 			);
@@ -389,21 +389,21 @@ namespace semantic {
 	    auto gen = getLocal (name.getStr ());	    
 	    if (!gen.isEmpty ()) {		
 		auto note = Ymir::Error::createNote (gen.getLocation ());		
-		Error::occurAndNote (name, note, ExternalError::get (SHADOWING_DECL), name.getStr ());
+		Error::occurAndNote (name, note, ExternalError::SHADOWING_DECL, name.getStr ());
 	    }	    
 	}
 
 	void Visitor::verifyNotIsType (const lexing::Word & name) {
 	    if (std::find (Integer::NAMES.begin (), Integer::NAMES.end (), name.getStr ()) != Integer::NAMES.end ()) {
-		Error::occur  (name, ExternalError::get (IS_TYPE), name.getStr ());
+		Error::occur  (name, ExternalError::IS_TYPE, name.getStr ());
 	    } else if (name.getStr () == Void::NAME) {
-		Error::occur  (name, ExternalError::get (IS_TYPE), name.getStr ());
+		Error::occur  (name, ExternalError::IS_TYPE, name.getStr ());
 	    } else if (name.getStr () == Bool::NAME) {
-		Error::occur  (name, ExternalError::get (IS_TYPE), name.getStr ());
+		Error::occur  (name, ExternalError::IS_TYPE, name.getStr ());
 	    } else if (std::find (Float::NAMES.begin (), Float::NAMES.end (), name.getStr ()) != Float::NAMES.end ()) {
-		Error::occur  (name, ExternalError::get (IS_TYPE), name.getStr ());
+		Error::occur  (name, ExternalError::IS_TYPE, name.getStr ());
 	    } else if (std::find (Char::NAMES.begin (), Char::NAMES.end (), name.getStr ()) != Char::NAMES.end ()) {
-		Error::occur  (name, ExternalError::get (IS_TYPE), name.getStr ());
+		Error::occur  (name, ExternalError::IS_TYPE, name.getStr ());
 	    }
 	}
 
@@ -419,7 +419,7 @@ namespace semantic {
 		for (auto & it : this-> _lockedAlias) {		    
 		    if (it.equals (gen)) {
 			auto note = Ymir::Error::createNote (this-> _lockedAliasLoc [i]);
-			Ymir::Error::occurAndNote (gen_.getLocation (), note, ExternalError::get (LOCKED_CONTEXT), gen.to <Value> ().getType ().prettyString ());
+			Ymir::Error::occurAndNote (gen_.getLocation (), note, ExternalError::LOCKED_CONTEXT, gen.to <Value> ().getType ().prettyString ());
 		    }
 		    i += 1;
 		}		

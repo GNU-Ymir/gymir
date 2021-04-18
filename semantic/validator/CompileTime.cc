@@ -112,13 +112,13 @@ namespace semantic {
 		Ymir::Error::occurAndNote (
 		    gen.getLocation (),
 		    list.errors, 
-		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		    ExternalError::COMPILE_TIME_UNKNOWN
 		    );	
 	    }
 
 	    Ymir::Error::occur (
 		gen.getLocation (),
-		ExternalError::get (COMPILE_TIME_UNKNOWN)
+		ExternalError::COMPILE_TIME_UNKNOWN
 		);	
 
 	    return gen;
@@ -138,7 +138,7 @@ namespace semantic {
 	generator::Generator CompileTime::executeAffect (const generator::Affect & gen) {
 	    Ymir::Error::occur (
 		gen.getLocation (),
-		ExternalError::get (AFFECT_COMPILE_TIME)
+		ExternalError::AFFECT_COMPILE_TIME
 	    );
 	    return Generator::empty ();
 	}
@@ -177,7 +177,7 @@ namespace semantic {
 	    
 	    Ymir::Error::occur (
 		slc.getLocation (),
-		ExternalError::get (COMPILE_TIME_UNKNOWN)
+		ExternalError::COMPILE_TIME_UNKNOWN
 		); 	    
 	    return Generator::empty ();
 	}
@@ -188,12 +188,12 @@ namespace semantic {
 	    if (!index.is <Fixed> ())
 		Ymir::Error::occur (
 		    index.getLocation (),
-		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		    ExternalError::COMPILE_TIME_UNKNOWN
 		); 
 	    if (!array.is <ArrayValue> ())
 		Ymir::Error::occur (
 		    array.getLocation (),
-		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		    ExternalError::COMPILE_TIME_UNKNOWN
 		); 
 	    
 	    return array.to<ArrayValue> ().getContent ()[index.to<Fixed> ().getUI ().u];
@@ -279,13 +279,13 @@ namespace semantic {
 	    if (!leftEx.is<Fixed> ())
 		Ymir::Error::occur (
 		    leftEx.getLocation (),
-		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		    ExternalError::COMPILE_TIME_UNKNOWN
 		);
 	    
 	    if (!rightEx.is<Fixed> ())
 		Ymir::Error::occur (
 		    rightEx.getLocation (),
-		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		    ExternalError::COMPILE_TIME_UNKNOWN
 		);
 	    
 	    auto left = leftEx.to<Fixed> ().getUI ();
@@ -308,9 +308,9 @@ namespace semantic {
 		    result.u = applyBinInt<ulong> (binInt.getOperator (), left.u, right.u);
 		
 		if (isSigned && (result.i > maxI || result.i < minI))
-		    Ymir::Error::occur (binInt.getLocation (), ExternalError::get (OVERFLOW), type, result.i);
+		    Ymir::Error::occur (binInt.getLocation (), ExternalError::OVERFLOW, type, result.i);
 		else if (!isSigned && (result.u > maxU || result.u < minU))
-		    Ymir::Error::occur (binInt.getLocation (), ExternalError::get (OVERFLOW), type, result.u);
+		    Ymir::Error::occur (binInt.getLocation (), ExternalError::OVERFLOW, type, result.u);
 		
 		return Fixed::init (binInt.getLocation (), binInt.getType (), result);
 	    } else {
@@ -341,7 +341,7 @@ namespace semantic {
 	    if (!elemEx.is<Fixed> ())
 		Ymir::Error::occur (
 		    elemEx.getLocation (),
-		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		    ExternalError::COMPILE_TIME_UNKNOWN
 		);
 	    
 	    auto elem = elemEx.to <Fixed> ().getUI ();
@@ -363,15 +363,15 @@ namespace semantic {
 
 				
 		if (isSigned && (result.i > maxI || result.i < minI))
-		    Ymir::Error::occur (unaInt.getLocation (), ExternalError::get (OVERFLOW), type, result.i);
+		    Ymir::Error::occur (unaInt.getLocation (), ExternalError::OVERFLOW, type, result.i);
 		else if (!isSigned && (result.u > maxU || result.u < minU))
-		    Ymir::Error::occur (unaInt.getLocation (), ExternalError::get (OVERFLOW), type, result.u);
+		    Ymir::Error::occur (unaInt.getLocation (), ExternalError::OVERFLOW, type, result.u);
 
 		return Fixed::init (unaInt.getLocation (), unaInt.getType (), result);
 	    } else {
 		Ymir::Error::occur (
 		    unaInt.getLocation (),
-		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		    ExternalError::COMPILE_TIME_UNKNOWN
 		);
 		return Generator::empty ();
 	    }
@@ -398,7 +398,7 @@ namespace semantic {
 	    } else {
 		Ymir::Error::occur (
 		    unaBool.getLocation (),
-		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		    ExternalError::COMPILE_TIME_UNKNOWN
 		);
 		return Generator::empty ();
 	    }
@@ -438,12 +438,12 @@ namespace semantic {
 	    if (!leftEx.is<FloatValue> ())
 		Ymir::Error::occur (
 		    leftEx.getLocation (),
-		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		    ExternalError::COMPILE_TIME_UNKNOWN
 		);
 	    if (!rightEx.is<FloatValue> ())
 		Ymir::Error::occur (
 		    rightEx.getLocation (),
-		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		    ExternalError::COMPILE_TIME_UNKNOWN
 		);
 
 	    
@@ -476,7 +476,7 @@ namespace semantic {
 	    if (!leftEx.is <BoolValue> ())
 		Ymir::Error::occur (
 		    leftEx.getLocation (),
-		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		    ExternalError::COMPILE_TIME_UNKNOWN
 		);
 
 	    if (binBool.getOperator () == Binary::Operator::AND && !leftEx.to <BoolValue> ().getValue ()) {
@@ -487,7 +487,7 @@ namespace semantic {
 	    if (!rightEx.is<BoolValue> ())
 		Ymir::Error::occur (
 		    leftEx.getLocation (),
-		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		    ExternalError::COMPILE_TIME_UNKNOWN
 		);
 	    
 	    auto res = applyBinBool (binBool.getOperator (), leftEx.to <BoolValue> ().getValue (), rightEx.to <BoolValue> ().getValue ());
@@ -499,7 +499,7 @@ namespace semantic {
 	    if (test.isEmpty () || !test.is <BoolValue> ())
 		Ymir::Error::occur (
 		    conditional.getTest ().getLocation (),
-		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		    ExternalError::COMPILE_TIME_UNKNOWN
 		);
 
 	    auto isTrue = test.to <BoolValue> ().getValue ();
@@ -510,7 +510,7 @@ namespace semantic {
 
 	    Ymir::Error::occur (
 		conditional.getLocation (),
-		ExternalError::get (COMPILE_TIME_UNKNOWN)
+		ExternalError::COMPILE_TIME_UNKNOWN
 	    );
 	    return Generator::empty ();
 	}
@@ -518,7 +518,7 @@ namespace semantic {
 	generator::Generator CompileTime::executeSet (const generator::Set & set) {
 	    Ymir::Error::occur (
 		set.getLocation (),
-		ExternalError::get (COMPILE_TIME_UNKNOWN)
+		ExternalError::COMPILE_TIME_UNKNOWN
 	    );
 	    return Generator::empty ();
 	}
@@ -527,7 +527,7 @@ namespace semantic {
 	    if (block.getType ().is <Void> ()) {
 		Ymir::Error::occur (
 		    block.getLocation (),
-		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		    ExternalError::COMPILE_TIME_UNKNOWN
 		);
 		return Generator::empty ();
 	    }
@@ -537,7 +537,7 @@ namespace semantic {
 	generator::Generator CompileTime::executeVarDecl (const generator::VarDecl & decl) {
 	    Ymir::Error::occur (
 		decl.getLocation (),
-		ExternalError::get (COMPILE_TIME_UNKNOWN)
+		ExternalError::COMPILE_TIME_UNKNOWN
 	    );
 	    return Generator::empty ();
 	}
@@ -546,7 +546,7 @@ namespace semantic {
 	    if (ref.getValue ().isEmpty ()) {
 		Ymir::Error::occur (
 		    ref.getLocation (),
-		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		    ExternalError::COMPILE_TIME_UNKNOWN
 		);
 		return Generator::empty ();
 	    } else return this-> execute (ref.getValue ());
@@ -556,7 +556,7 @@ namespace semantic {
 	    if (call.getParameters ().size () != 0 || !call.getFrame ().is <FrameProto> ()) {
 		Ymir::Error::occur (
 		    call.getLocation (),
-		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		    ExternalError::COMPILE_TIME_UNKNOWN
 		);
 		return Generator::empty ();
 	    } else {
@@ -574,7 +574,7 @@ namespace semantic {
 	    if (!frame.isEmpty ()) {
 		nb_recurse += 1;
 		if (nb_recurse >= CompileConstante::LIMIT_RECURSE_CALL) {
-		    Ymir::Error::occur (fr.getLocation (), ExternalError::get (CALL_RECURSION));
+		    Ymir::Error::occur (fr.getLocation (), ExternalError::CALL_RECURSION);
 		}
 		auto ret = this-> execute (frame.to<Frame> ().getContent ());
 		this-> _knownValues.push_back (std::pair <Generator, Generator> (fr.clone (), ret));
@@ -583,7 +583,7 @@ namespace semantic {
 	    } else {
 		Ymir::Error::occur (
 		    fr.getLocation (),
-		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		    ExternalError::COMPILE_TIME_UNKNOWN
 		);
 		return Generator::empty ();
 	    }
@@ -608,7 +608,7 @@ namespace semantic {
 	    if (gen.to <LambdaProto> ().isRefClosure () || gen.to<LambdaProto> ().isMoveClosure ()) {
 		Ymir::Error::occur (
 		    gen.getLocation (),
-		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		    ExternalError::COMPILE_TIME_UNKNOWN
 		);
 		return Generator::empty ();
 	    }
@@ -619,7 +619,7 @@ namespace semantic {
 	    if (!gen.to <TemplateRef> ().getTemplateRef ().to <semantic::Template> ().getDeclaration ().is <syntax::Function> ()) {
 		Ymir::Error::occur (
 		    gen.getLocation (),
-		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		    ExternalError::COMPILE_TIME_UNKNOWN
 		);
 		return Generator::empty ();
 	    }
@@ -641,7 +641,7 @@ namespace semantic {
 	    if (mult.size () == 0)
 		Ymir::Error::occur (
 		    gen.getLocation (),
-		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		    ExternalError::COMPILE_TIME_UNKNOWN
 		);
 
 	    return MultSym::init (gen.getLocation (), mult);

@@ -64,7 +64,7 @@ namespace semantic {
 			return ArrayAccess::init (expression.getLocation (), innerType, left, right [0]);
 		    } else {
 			realFailure = true;
-			Ymir::Error::occur (right[0].getLocation (), ExternalError::get (OVERFLOW_ARRAY), x.to<Fixed> ().getUI ().u, left.to <Value> ().getType ().to <Array> ().getSize ());
+			Ymir::Error::occur (right[0].getLocation (), ExternalError::OVERFLOW_ARRAY, x.to<Fixed> ().getUI ().u, left.to <Value> ().getType ().to <Array> ().getSize ());
 		    }
 		} catch (Error::ErrorList list) {
 		    if (realFailure) throw list;
@@ -120,7 +120,7 @@ namespace semantic {
 			return CharValue::init (loc, innerType, value);
 		    } else {
 			realFailure = true;
-			Ymir::Error::occur (right[0].getLocation (), ExternalError::get (OVERFLOW_ARRAY), x.to<Fixed> ().getUI ().u, len);
+			Ymir::Error::occur (right[0].getLocation (), ExternalError::OVERFLOW_ARRAY, x.to<Fixed> ().getUI ().u, len);
 		    }
 		} catch (Error::ErrorList list) {
 		    if (realFailure) throw list;
@@ -154,7 +154,7 @@ namespace semantic {
 				);
 			} else { 
 			    realFailure = true;
-			    Ymir::Error::occur (right[0].getLocation (), ExternalError::get (OVERFLOW_ARRAY), rng.prettyString (), len);
+			    Ymir::Error::occur (right[0].getLocation (), ExternalError::OVERFLOW_ARRAY, rng.prettyString (), len);
 			}
 		    }
 		} catch (Error::ErrorList list) {
@@ -393,7 +393,7 @@ namespace semantic {
 	    Ymir::Error::occur (
 		expression.getLocation (),
 		expression.getEnd (),
-		ExternalError::get (UNDEFINED_BRACKETS_OP),
+		ExternalError::UNDEFINED_BRACKETS_OP,
 		left.to <Value> ().getType ().to <Type> ().getTypeName (),
 		names
 	    );	    

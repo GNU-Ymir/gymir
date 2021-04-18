@@ -850,7 +850,7 @@ namespace semantic {
 	     * @param type the type of the var
 	     * @param error the error to throw, (in case of error)
 	     */
-	    void verifyMutabilityRefParam (const lexing::Word & loc, const generator::Generator & type, Ymir::ExternalErrorValue error);
+	    void verifyMutabilityRefParam (const lexing::Word & loc, const generator::Generator & type, const char* error);
 
 	    /**
 	     * Throw an exception if left.equals (right) is false

@@ -93,9 +93,9 @@ namespace semantic {
 	    
 	    if (!isMandatory && (!type.is<Void> () || expression.isFinal ())) {
 		if (!type.is<Void> ()) {
-		    Ymir::Error::occur (expression.getLocation (), ExternalError::get (MATCH_NO_DEFAULT), type.prettyString ());
+		    Ymir::Error::occur (expression.getLocation (), ExternalError::MATCH_NO_DEFAULT, type.prettyString ());
 		} else {
-		    Ymir::Error::occur (expression.getLocation (), ExternalError::get (MATCH_FINAL_NO_DEFAULT));
+		    Ymir::Error::occur (expression.getLocation (), ExternalError::MATCH_FINAL_NO_DEFAULT);
 		}
 	    }
 	    
@@ -198,7 +198,7 @@ namespace semantic {
 				
 	    } catch (Error::ErrorList list) {
 		errors = list.errors;
-		errors.back ().addNote (Ymir::Error::createNote (var.getLocation (), ExternalError::get (IN_MATCH_DEF)));
+		errors.back ().addNote (Ymir::Error::createNote (var.getLocation (), ExternalError::IN_MATCH_DEF));
 	    } 
 
 	    if (errors.size () != 0)
@@ -284,8 +284,8 @@ namespace semantic {
 		return validateMatchCallOption (value, call, isMandatory);
 	    }
 	    
-	    auto note = Ymir::Error::createNote (call.getLocation (), ExternalError::get (IN_MATCH_DEF));		
-	    Ymir::Error::occurAndNote (value.getLocation (), note, ExternalError::get (MATCH_CALL), value.to <Value> ().getType ().prettyString ());
+	    auto note = Ymir::Error::createNote (call.getLocation (), ExternalError::IN_MATCH_DEF);		
+	    Ymir::Error::occurAndNote (value.getLocation (), note, ExternalError::MATCH_CALL, value.to <Value> ().getType ().prettyString ());
 	    return Generator::empty ();
 	}
 
@@ -321,7 +321,7 @@ namespace semantic {
 		}
 	    } catch (Error::ErrorList list) {		
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		errors.back ().addNote (Ymir::Error::createNote (value.getLocation (), ExternalError::get (IN_MATCH_DEF)));
+		errors.back ().addNote (Ymir::Error::createNote (value.getLocation (), ExternalError::IN_MATCH_DEF));
 	    } 
 
 	    if (errors.size () != 0) {
@@ -336,7 +336,7 @@ namespace semantic {
 	    globTest = Set::init (call.getLocation (), Bool::init (call.getLocation ()), {castedValue, globTest});
 	    for (auto & it : call.getRights ()) {		
 		if (!it.is <NamedExpression> ())
-		    Ymir::Error::occur (it.getLocation (), ExternalError::get (MATCH_PATTERN_CLASS));
+		    Ymir::Error::occur (it.getLocation (), ExternalError::MATCH_PATTERN_CLASS);
 		auto name = it.to <NamedExpression> ().getLocation ().getStr ();
 		auto loc = it.getLocation ();
 		auto bin = syntax::Binary::init (lexing::Word::init (loc, Token::DOT),
@@ -370,7 +370,7 @@ namespace semantic {
 		}
 	    } catch (Error::ErrorList list) {	       
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		errors.back ().addNote (Ymir::Error::createNote (call.getLocation (), ExternalError::get (IN_MATCH_DEF)));
+		errors.back ().addNote (Ymir::Error::createNote (call.getLocation (), ExternalError::IN_MATCH_DEF));
 	    } 
 	    
 	    if (errors.size () != 0)
@@ -392,7 +392,7 @@ namespace semantic {
 		for (auto & it : rights)
 		    names.push_back (it.prettyString ());
 		
-		Ymir::Error::occur (call.getLocation (), call.getEnd (), ExternalError::get (UNUSED_MATCH_CALL_OP), names);				    
+		Ymir::Error::occur (call.getLocation (), call.getEnd (), ExternalError::UNUSED_MATCH_CALL_OP, names);				    
 	    }		
 
 	    Generator globTest (Generator::empty ());
@@ -450,15 +450,15 @@ namespace semantic {
 			    );
 			isSucc = false;
 		    } else {
-			Ymir::Error::occur (loc, ExternalError::get (UNKNOWN_OPTION_NAME), name);
+			Ymir::Error::occur (loc, ExternalError::UNKNOWN_OPTION_NAME, name);
 		    } 
 		    globTest = this-> _context.validateValue (synthGlobTest);		
 		} else {
-		    Ymir::Error::occur (loc, ExternalError::get (UNKNOWN_OPTION_NAME), call.getLeft ().prettyString ());
+		    Ymir::Error::occur (loc, ExternalError::UNKNOWN_OPTION_NAME, call.getLeft ().prettyString ());
 		}
 	    } catch (Error::ErrorList list) {	       
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		errors.back ().addNote (Ymir::Error::createNote (call.getLocation (), ExternalError::get (IN_MATCH_DEF)));
+		errors.back ().addNote (Ymir::Error::createNote (call.getLocation (), ExternalError::IN_MATCH_DEF));
 	    } 
 	    
 	    if (errors.size () != 0)
@@ -471,7 +471,7 @@ namespace semantic {
 		for (auto it : Ymir::r (1, rights.size ())) {
 		    names.push_back (rights[it].prettyString ());
 		}
-		Ymir::Error::occur (call.getLocation (), call.getEnd (), ExternalError::get (UNUSED_MATCH_CALL_OP), names);	
+		Ymir::Error::occur (call.getLocation (), call.getEnd (), ExternalError::UNUSED_MATCH_CALL_OP, names);	
 	    }
 	    
 	    if (rights.size () == 0) return globTest;
@@ -485,7 +485,7 @@ namespace semantic {
 		if (isSucc) {
 		    auto innerType = value.to <Value> ().getType ().to <Type> ().getInners ()[0];
 		    if (name.getStr () != Option::VALUE_FIELD || innerType.is <Void> ()) {
-			Ymir::Error::occur (rights[0].getLocation (), ExternalError::get (UNDEFINED_FIELD_FOR), name.getStr (), Ymir::format ("% (%)", Keys::OK_, innerType.prettyString ()));		    
+			Ymir::Error::occur (rights[0].getLocation (), ExternalError::UNDEFINED_FIELD_FOR, name.getStr (), Ymir::format ("% (%)", Keys::OK_, innerType.prettyString ()));		    
 		    }
 		    leftVal = StructAccess::init (call.getLocation (), innerType, value, Option::VALUE_FIELD);
 		    if (value.is <Referencer> ()) {
@@ -496,7 +496,7 @@ namespace semantic {
 		} else {
 		    auto innerType = value.to <Value> ().getType ().to <Type> ().getInners ()[1];		    
 		    if (name.getStr () != Option::ERROR_FIELD) {
-			Ymir::Error::occur (rights[0].getLocation (), ExternalError::get (UNDEFINED_FIELD_FOR), name.getStr (), Ymir::format ("% (%)", Keys::ERR_, innerType.prettyString ()));		    
+			Ymir::Error::occur (rights[0].getLocation (), ExternalError::UNDEFINED_FIELD_FOR, name.getStr (), Ymir::format ("% (%)", Keys::ERR_, innerType.prettyString ()));		    
 		    }
 		    leftVal = StructAccess::init (call.getLocation (), innerType, value, Option::ERROR_FIELD);
 		}
@@ -504,7 +504,7 @@ namespace semantic {
 		if (isSucc) {
 		    auto innerType = value.to <Value> ().getType ().to <Type> ().getInners ()[0];
 		    if (innerType.is <Void> ()) {
-			Ymir::Error::occur (rights[0].getLocation (), ExternalError::get (UNDEFINED_FIELD_FOR), Option::VALUE_FIELD, Ymir::format ("% (%)", Keys::OK_, innerType.prettyString ()));		    
+			Ymir::Error::occur (rights[0].getLocation (), ExternalError::UNDEFINED_FIELD_FOR, Option::VALUE_FIELD, Ymir::format ("% (%)", Keys::OK_, innerType.prettyString ()));		    
 		    }
 		    
 		    leftVal = StructAccess::init (call.getLocation (), innerType, value, Option::VALUE_FIELD);
@@ -633,7 +633,7 @@ namespace semantic {
 		    if (!once) { // If this catch has inserted nothing
 			for (auto & jt : founds) {
 			    auto note = Ymir::Error::createNote (jt.first);
-			    errors.push_back (Error::makeOccurAndNote (matchers [it].getLocation (), note, ExternalError::get (MULTIPLE_CATCH), jt.second.prettyString ()));
+			    errors.push_back (Error::makeOccurAndNote (matchers [it].getLocation (), note, ExternalError::MULTIPLE_CATCH, jt.second.prettyString ()));
 			}
 		    }
 		} catch (Error::ErrorList list) {			
@@ -696,7 +696,7 @@ namespace semantic {
 		    
 		    if (!found) {
 			auto note = Ymir::Error::createNote (expression.getLocation ());
-			errors.push_back (Error::makeOccurAndNote (it.getLocation (), note, ExternalError::get (NOT_CATCH), it.prettyString ()));
+			errors.push_back (Error::makeOccurAndNote (it.getLocation (), note, ExternalError::NOT_CATCH, it.prettyString ()));
 			usedTypes.push_back ({it.getLocation (), it}); // to not display the error multiple times
 		    }
 		}
@@ -823,12 +823,12 @@ namespace semantic {
 			}
 		    }
 		    
-		    if (!found) Ymir::Error::occur (var.getLocation (), ExternalError::get (USELESS_CATCH), varType.prettyString ());;		    
+		    if (!found) Ymir::Error::occur (var.getLocation (), ExternalError::USELESS_CATCH, varType.prettyString ());;		    
 		}
 		
 	    } catch (Error::ErrorList list) {
 		errors = list.errors;
-		errors.back ().addNote (Error::createNote (var.getLocation (), ExternalError::get (IN_MATCH_DEF)));
+		errors.back ().addNote (Error::createNote (var.getLocation (), ExternalError::IN_MATCH_DEF));
 	    } 
 
 	    if (errors.size () != 0)
@@ -868,7 +868,7 @@ namespace semantic {
 		}
 	    } catch (Error::ErrorList list) {		
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		errors.back ().addNote (Ymir::Error::createNote (call.getLocation (), ExternalError::get (IN_MATCH_DEF)));
+		errors.back ().addNote (Ymir::Error::createNote (call.getLocation (), ExternalError::IN_MATCH_DEF));
 	    } 
 	    
 	    if (errors.size () != 0) {
@@ -882,7 +882,7 @@ namespace semantic {
 	    
 	    for (auto & it : call.getRights ()) {		
 		if (!it.is <NamedExpression> ())
-		    Ymir::Error::occur (it.getLocation (), ExternalError::get (MATCH_PATTERN_CLASS));
+		    Ymir::Error::occur (it.getLocation (), ExternalError::MATCH_PATTERN_CLASS);
 		auto name = it.to <NamedExpression> ().getLocation ().getStr ();
 		auto loc = it.getLocation ();
 		auto bin = syntax::Binary::init (lexing::Word::init (loc, Token::DOT),
@@ -930,7 +930,7 @@ namespace semantic {
 		    }
 		}
 		    
-		if (!found) Ymir::Error::occur (call.getLocation (), ExternalError::get (USELESS_CATCH), type.prettyString ());;		    
+		if (!found) Ymir::Error::occur (call.getLocation (), ExternalError::USELESS_CATCH, type.prettyString ());;		    
 	    }
 	    
 	    return globTest;

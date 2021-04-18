@@ -100,7 +100,7 @@ namespace semantic {
 	    }
  	    
 	    if (!left.is<MultSym> () && checked) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), realLocation (left), prettyName (left));
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::CANDIDATE_ARE, realLocation (left), prettyName (left));
 		for (auto & it : errors) {
 		    note.addNote (it);
 		}
@@ -168,7 +168,7 @@ namespace semantic {
 		    
 		} else {
 		    if (it.is <TemplateRef> ()) { // If the validation was on a template, the note about candidate was not added
-			auto note = Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), it.to <TemplateRef> ().getTemplateRef ().getName (), it.prettyString ());
+			auto note = Ymir::Error::createNoteOneLine (ExternalError::CANDIDATE_ARE, it.to <TemplateRef> ().getTemplateRef ().getName (), it.prettyString ());
 			for (auto & it : local_errors) {
 			    note.addNote (it);
 			}
@@ -197,11 +197,11 @@ namespace semantic {
 		    std::list <Ymir::Error::ErrorMsg> notes;
 		    for (auto & it : element_on_scores-> second) {
 			auto gen = this-> _context.validateMultSym (sym.getLocation (), {it});
-			notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), realLocation (gen), prettyName (gen)));
+			notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::CANDIDATE_ARE, realLocation (gen), prettyName (gen)));
 		    }
 		    Ymir::Error::occurAndNote (location,
 					       notes,
-					       ExternalError::get (SPECIALISATION_WORK_WITH_BOTH),
+					       ExternalError::SPECIALISATION_WORK_WITH_BOTH,
 					       leftName,
 					       names);
 
@@ -231,11 +231,11 @@ namespace semantic {
 			
 		    std::list <Ymir::Error::ErrorMsg> notes;
 		    for (auto & it : element_on_scores-> second) {
-			notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), realLocation (it), prettyName (it)));
+			notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::CANDIDATE_ARE, realLocation (it), prettyName (it)));
 		    }
 		    Ymir::Error::occurAndNote (location,
 					       notes,
-					       ExternalError::get (SPECIALISATION_WORK_WITH_BOTH),
+					       ExternalError::SPECIALISATION_WORK_WITH_BOTH,
 					       leftName,
 					       names);
 
@@ -245,14 +245,14 @@ namespace semantic {
 	}
 
 	std::list <Ymir::Error::ErrorMsg> CallVisitor::computeLastErrorList (const lexing::Word & location, Error::ErrorList & list, const Generator & proto_gen, const Generator & used_gen) {
-	    auto note = Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), used_gen.to <TemplateRef> ().getTemplateRef ().getName (), used_gen.prettyString ());
+	    auto note = Ymir::Error::createNoteOneLine (ExternalError::CANDIDATE_ARE, used_gen.to <TemplateRef> ().getTemplateRef ().getName (), used_gen.prettyString ());
 	    for (auto & it : list.errors) {
 		note.addNote (it);
 	    }
 	    
 	    list.errors = {note};
 	    list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", proto_gen.getLocation (), proto_gen.prettyString ()));
-	    list.errors.insert (list.errors.begin (), Ymir::Error::createNote (location, ExternalError::get (IN_TEMPLATE_DEF)));
+	    list.errors.insert (list.errors.begin (), Ymir::Error::createNote (location, ExternalError::IN_TEMPLATE_DEF));
 
 	    return list.errors;
 	}
@@ -394,7 +394,7 @@ namespace semantic {
 	    std::vector <Generator> types;
 	    try {
 		if (rights.size () != 1) {
-		    Ymir::Error::occur (location, ExternalError::get (UNION_CST_MULT));
+		    Ymir::Error::occur (location, ExternalError::UNION_CST_MULT);
 		}
 
 		if (rights [0].is <NamedGenerator> ()) { // If it is a named gen, we get the field with the same name
@@ -526,7 +526,7 @@ namespace semantic {
 		    this-> _context.validateTemplateSymbol (sym, ref);
 		} catch (Error::ErrorList list) {
 		    list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", proto_gen.getLocation (), proto_gen.prettyString ()));
-		    list.errors.insert (list.errors.begin (), Ymir::Error::createNote (location, ExternalError::get (IN_TEMPLATE_DEF)));
+		    list.errors.insert (list.errors.begin (), Ymir::Error::createNote (location, ExternalError::IN_TEMPLATE_DEF));
 		    errors = std::move (list.errors);
 		    gen = Generator::empty ();
 		}
@@ -786,7 +786,7 @@ namespace semantic {
 			} catch (Error::ErrorList  list) {
 			    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 			    errors.push_back (
-				Ymir::Error::createNoteOneLine (ExternalError::get (PARAMETER_NAME), proto [it].to <Value> ().getLocation (), frame.prettyString ())
+				Ymir::Error::createNoteOneLine (ExternalError::PARAMETER_NAME, proto [it].to <Value> ().getLocation (), frame.prettyString ())
 				);
 			    return {};
 			}
@@ -803,7 +803,7 @@ namespace semantic {
 		    
 			} catch (Error::ErrorList  list) {
 			    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-			    errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (PARAMETER_NAME), proto [it].getLocation (), frame.prettyString ()));
+			    errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::PARAMETER_NAME, proto [it].getLocation (), frame.prettyString ()));
 			    return {};
 			}
 		    }
@@ -1006,7 +1006,7 @@ namespace semantic {
 		    params.push_back (left);
 		} catch (Error::ErrorList list) {
 		    std::list <Ymir::Error::ErrorMsg> copyErrors = std::move (errors);
-		    copyErrors.back ().addNote (Ymir::Error::createNoteOneLine (ExternalError::get (UFC_REWRITING)));
+		    copyErrors.back ().addNote (Ymir::Error::createNoteOneLine (ExternalError::UFC_REWRITING));
 		    for (auto & it : list.errors) {
 			copyErrors.back ().addNote (it);
 		    }
@@ -1054,7 +1054,7 @@ namespace semantic {
 	    auto err = Ymir::Error::makeOccurAndNote (
 		location,
 		errors,
-		ExternalError::get (UNDEFINED_CALL_OP),
+		ExternalError::UNDEFINED_CALL_OP,
 		leftName,
 		names
 		);
@@ -1090,7 +1090,7 @@ namespace semantic {
 		location,
 		end,
 		errors,
-		ExternalError::get (UNDEFINED_CALL_OP),
+		ExternalError::UNDEFINED_CALL_OP,
 		leftName,
 		names
 		);

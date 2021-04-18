@@ -102,7 +102,7 @@ namespace semantic {
 		for (auto & sym : this-> _symbols.back ().back ()) {
 		    if (sym.first != Keys::SELF) { // SELF is like "_", we don't need it to be used
 			if (this-> _usedSyms.back ().back ().find (sym.first) == this-> _usedSyms.back ().back ().end ()) {
-			    errors.push_back (Error::makeWarn (sym.second.getLocation (), ExternalError::get (NEVER_USED), sym.second.getName ()));
+			    errors.push_back (Error::makeWarn (sym.second.getLocation (), ExternalError::NEVER_USED, sym.second.getName ()));
 			}
 		    }
 		}

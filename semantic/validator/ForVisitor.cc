@@ -83,7 +83,7 @@ namespace semantic {
 	    
 	    bool isMutable = false, isRef = false, dmut = false;	    
 	    type = this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut);
-	    this-> _context.verifyMutabilityRefParam (var.getLocation (), type, MUTABLE_CONST_ITER);
+	    this-> _context.verifyMutabilityRefParam (var.getLocation (), type, ExternalError::MUTABLE_CONST_ITER);
 	    
 	    auto value = Generator::empty ();
 	    auto loc = var.getLocation ();
@@ -92,7 +92,7 @@ namespace semantic {
 	    else {
 	    	if (level < 2)
 	    	    Ymir::Error::occur (expression.getIter ().getLocation (),
-	    				ExternalError::get (DISCARD_CONST_LEVEL),
+	    				ExternalError::DISCARD_CONST_LEVEL,
 	    				2, level
 	    	    );
 		
@@ -117,7 +117,7 @@ namespace semantic {
 	    if (decl.getDecorators ().size () != 0) {
 		auto deco = decl.getDecorators ()[0];
 		Ymir::Error::occur (deco.getLocation (),
-				    ExternalError::get (DECO_OUT_OF_CONTEXT),
+				    ExternalError::DECO_OUT_OF_CONTEXT,
 				    deco.getLocation ().getStr ()
 		);
 	    }
@@ -189,7 +189,7 @@ namespace semantic {
 	    if (vars.size () > 2) {
 		Ymir::Error::occur (
 		    value.getLocation (),
-		    ExternalError::get (NOT_ITERABLE_WITH),
+		    ExternalError::NOT_ITERABLE_WITH,
 		    value.to <Value> ().getType ().to <Type> ().getTypeName (),
 		    vars.size ()
 		);
@@ -266,7 +266,7 @@ namespace semantic {
 	    if (vars.size () != 1) {
 		Ymir::Error::occur (
 		    value.getLocation (),
-		    ExternalError::get (NOT_ITERABLE_WITH),
+		    ExternalError::NOT_ITERABLE_WITH,
 		    value.to <Value> ().getType ().to <Type> ().getTypeName (),
 		    vars.size ()
 		);
@@ -287,7 +287,7 @@ namespace semantic {
 	    if (decl.getDecorators ().size () != 0) {
 		auto deco = decl.getDecorators ()[0];
 		Ymir::Error::occur (deco.getLocation (),
-				    ExternalError::get (DECO_OUT_OF_CONTEXT),
+				    ExternalError::DECO_OUT_OF_CONTEXT,
 				    deco.getLocation ().getStr ()
 		);
 	    }
@@ -471,7 +471,7 @@ namespace semantic {
 	    if (decl.getDecorators ().size () != 0) {
 		auto deco = decl.getDecorators ()[0];
 		Ymir::Error::occur (deco.getLocation (),
-				    ExternalError::get (DECO_OUT_OF_CONTEXT),
+				    ExternalError::DECO_OUT_OF_CONTEXT,
 				    deco.getLocation ().getStr ()
 		    );
 	    }
@@ -616,7 +616,7 @@ namespace semantic {
 	    if (vars.size () > 1) {
 		Ymir::Error::occur (
 		    tuple.getLocation (),
-		    ExternalError::get (NOT_ITERABLE_WITH),
+		    ExternalError::NOT_ITERABLE_WITH,
 		    tuple.to <Value> ().getType ().to <Type> ().getTypeName (),
 		    vars.size ()
 		);
@@ -638,7 +638,7 @@ namespace semantic {
 	    
 	    bool isMutable = false, isRef = false, dmut = false;	    
 	    type = this-> _context.applyDecoratorOnVarDeclType (decl.getDecorators (), type, isRef, isMutable, dmut);
-	    this-> _context.verifyMutabilityRefParam (decl.getLocation (), type, MUTABLE_CONST_ITER);		
+	    this-> _context.verifyMutabilityRefParam (decl.getLocation (), type, ExternalError::MUTABLE_CONST_ITER);		
 	    //this-> _context.verifyMemoryOwner (decl.getLocation (), type, innerTuple, true);
 	    
 	    auto loc = decl.getLocation ();
@@ -648,7 +648,7 @@ namespace semantic {
 	    // 	auto llevel = type.to <Type> ().mutabilityLevel ();
 	    // 	if (level < llevel)
 	    // 	    Ymir::Error::occur (expression.getIter ().getLocation (),
-	    // 				ExternalError::get (DISCARD_CONST_LEVEL),
+	    // 				ExternalError::DISCARD_CONST_LEVEL,
 	    // 				llevel, level
 	    // 	    );
 		
@@ -765,7 +765,7 @@ namespace semantic {
 	    if (decl.getDecorators ().size () != 0) {
 		auto deco = decl.getDecorators ()[0];
 		Ymir::Error::occur (deco.getLocation (),
-				    ExternalError::get (DECO_OUT_OF_CONTEXT),
+				    ExternalError::DECO_OUT_OF_CONTEXT,
 				    deco.getLocation ().getStr ()
 		    );
 	    }
@@ -944,7 +944,7 @@ namespace semantic {
 	    try {
 		begin = this-> _context.validateValue (syntBegin);
 	    } catch (Error::ErrorList list) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), syntBegin.prettyString ());
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::VALIDATING, syntBegin.prettyString ());
 		list.errors.back ().addNote (note);
 		throw list;
 	    }
@@ -952,7 +952,7 @@ namespace semantic {
 	    try {
 		end = this-> _context.validateValue (syntEnd);
 	    } catch (Error::ErrorList list) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), syntEnd.prettyString ());
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::VALIDATING, syntEnd.prettyString ());
 		list.errors.back ().addNote (note);
 		throw list;
 	    }
@@ -1000,13 +1000,13 @@ namespace semantic {
 	    if (isCte) {
 		Ymir::Error::occur (
 		    value.getLocation (),
-		    ExternalError::get (NOT_CTE_ITERABLE),
+		    ExternalError::NOT_CTE_ITERABLE,
 		    value.to <Value> ().getType ().to <Type> ().getTypeName ()
 		    );
 	    } else {
 		Ymir::Error::occur (
 		    value.getLocation (),
-		    ExternalError::get (NOT_ITERABLE),
+		    ExternalError::NOT_ITERABLE,
 		    value.to <Value> ().getType ().to <Type> ().getTypeName ()
 		    );
 	    }

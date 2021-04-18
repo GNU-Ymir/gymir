@@ -96,13 +96,13 @@ namespace semantic {
 
 	const std::string & Generator::getName () const {
 	    if (this-> _value == nullptr)
-		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+		Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	    return this-> _value-> getName ();
 	}
 
 	const lexing::Word & Generator::getLocation () const {
 	    if (this-> _value == nullptr)
-		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+		Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	    return this-> _value-> getLocation ();
 	}	
 	
@@ -126,19 +126,19 @@ namespace semantic {
 
 	uint Generator::getUniqId () const {
 	    if (this-> _value == nullptr)
-		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+		Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	    return this-> _value-> getUniqId ();	    
 	}
        
 	void Generator::setUniqId (uint id) {
 	    if (this-> _value == nullptr)
-		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+		Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	    return this-> _value-> setUniqId (id);	    
 	}
 
 	void Generator::setThrowers (const std::vector <Generator> & locs) {
 	    if (this-> _value == nullptr)
-		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+		Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	    return this-> _value-> setThrowers (locs);
 	}
 

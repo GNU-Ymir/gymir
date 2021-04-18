@@ -40,7 +40,7 @@ namespace generic {
 
 	void append (Tree t) {
 	    if (t.isEmpty ()) 
-		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+		Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	    
 	    if (first.isEmpty ()) {
 		first = last = t;

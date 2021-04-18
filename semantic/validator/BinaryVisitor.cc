@@ -112,7 +112,7 @@ namespace semantic {
 			throw Error::ErrorList {errors};
 		    }
 
-		    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
+		    Ymir::Error::occur (expression.getLocation (), ExternalError::UNDEFINED_BIN_OP,
 					expression.getLocation ().getStr (),
 					left.to <Value> ().getType ().to <Type> ().getTypeName (),
 					right.to <Value> ().getType ().to <Type> ().getTypeName ()
@@ -140,7 +140,7 @@ namespace semantic {
 	    }
 
 
-	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
+	    Ymir::Error::occur (expression.getLocation (), ExternalError::UNDEFINED_BIN_OP,
 				expression.getLocation ().getStr (),
 				left.to <Value> ().getType ().to <Type> ().getTypeName (),
 				right.to <Value> ().getType ().to <Type> ().getTypeName ()
@@ -166,7 +166,7 @@ namespace semantic {
 		    );
 	    }
 	    
-	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
+	    Ymir::Error::occur (expression.getLocation (), ExternalError::UNDEFINED_BIN_OP,
 				expression.getLocation ().getStr (),
 				left.to <Value> ().getType ().to <Type> ().getTypeName (),
 				right.to <Value> ().getType ().to <Type> ().getTypeName ()
@@ -195,7 +195,7 @@ namespace semantic {
 		}
 	    }
 	    	    
-	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
+	    Ymir::Error::occur (expression.getLocation (), ExternalError::UNDEFINED_BIN_OP,
 				expression.getLocation ().getStr (),
 				left.to <Value> ().getType ().to <Type> ().getTypeName (),
 				right.to <Value> ().getType ().to <Type> ().getTypeName ()
@@ -224,7 +224,7 @@ namespace semantic {
 	    }
 	    
 	    
-	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
+	    Ymir::Error::occur (expression.getLocation (), ExternalError::UNDEFINED_BIN_OP,
 				expression.getLocation ().getStr (),
 				left.to <Value> ().getType ().to <Type> ().getTypeName (),
 				right.to <Value> ().getType ().to <Type> ().getTypeName ()
@@ -319,7 +319,7 @@ namespace semantic {
 	    try {
 		return this-> _context.validateValue (call);
 	    }  catch (Error::ErrorList list) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::VALIDATING, templ.prettyString ());
 		list.errors.back ().addNote (note);
 		throw list;
 	    }
@@ -349,7 +349,7 @@ namespace semantic {
 	    try {
 		return this-> _context.validateValue (call);
 	    } catch (Error::ErrorList list) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::VALIDATING, templ.prettyString ());
 		list.errors.back ().addNote (note);
 		throw list;
 	    }
@@ -377,7 +377,7 @@ namespace semantic {
 	    try {
 		return this-> _context.validateValue (call);
 	    }  catch (Error::ErrorList list) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::VALIDATING, templ.prettyString ());
 		list.errors.back ().addNote (note);
 		throw list;
 	    }
@@ -402,7 +402,7 @@ namespace semantic {
 	    try {
 		return this-> _context.validateValue (call);
 	    } catch (Error::ErrorList list) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::VALIDATING, templ.prettyString ());
 		list.errors.back ().addNote (note);
 		throw list;
 	    }
@@ -472,7 +472,7 @@ namespace semantic {
 			throw Error::ErrorList {errors};
 		    }
 		    
-		    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
+		    Ymir::Error::occur (expression.getLocation (), ExternalError::UNDEFINED_BIN_OP,
 					expression.getLocation ().getStr (),
 					left.to <Value> ().getType ().to <Type> ().getTypeName (),
 					right.to <Value> ().getType ().to <Type> ().getTypeName ()
@@ -502,7 +502,7 @@ namespace semantic {
 		}
 	    }
 
-	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
+	    Ymir::Error::occur (expression.getLocation (), ExternalError::UNDEFINED_BIN_OP,
 				expression.getLocation ().getStr (),
 				left.to <Value> ().getType ().to <Type> ().getTypeName (),
 				right.to <Value> ().getType ().to <Type> ().getTypeName ()
@@ -526,7 +526,7 @@ namespace semantic {
 		    );
 	    }
 
-	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
+	    Ymir::Error::occur (expression.getLocation (), ExternalError::UNDEFINED_BIN_OP,
 				expression.getLocation ().getStr (),
 				left.to <Value> ().getType ().to <Type> ().getTypeName (),
 				right.to <Value> ().getType ().to <Type> ().getTypeName ()
@@ -550,7 +550,7 @@ namespace semantic {
 		    );
 	    }
 
-	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
+	    Ymir::Error::occur (expression.getLocation (), ExternalError::UNDEFINED_BIN_OP,
 				expression.getLocation ().getStr (),
 				left.to <Value> ().getType ().to <Type> ().getTypeName (),
 				right.to <Value> ().getType ().to <Type> ().getTypeName ()
@@ -573,7 +573,7 @@ namespace semantic {
 		    );
 	    }
 
-	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
+	    Ymir::Error::occur (expression.getLocation (), ExternalError::UNDEFINED_BIN_OP,
 				expression.getLocation ().getStr (),
 				left.to <Value> ().getType ().to <Type> ().getTypeName (),
 				right.to <Value> ().getType ().to <Type> ().getTypeName ()
@@ -686,7 +686,7 @@ namespace semantic {
 	    try {
 		cl = this-> _context.validateValue (call);
 	    } catch (Error::ErrorList list) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::VALIDATING, templ.prettyString ());
 		list.errors.back ().addNote (note);
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    }
@@ -750,7 +750,7 @@ namespace semantic {
 	    try {
 		cl = this-> _context.validateValue (call);
 	    } catch (Error::ErrorList list) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::VALIDATING, templ.prettyString ());
 		list.errors.back ().addNote (note);
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    }
@@ -789,7 +789,7 @@ namespace semantic {
 	    try {
 		return this-> _context.validateValue (call);
 	    } catch (Error::ErrorList list) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::VALIDATING, templ.prettyString ());
 		list.errors.back ().addNote (note);
 		throw list;
 	    }
@@ -814,7 +814,7 @@ namespace semantic {
 	    try {
 		return this-> _context.validateValue (call);
 	    } catch (Error::ErrorList list) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::VALIDATING, templ.prettyString ());
 		list.errors.back ().addNote (note);
 		throw list;
 	    }
@@ -855,7 +855,7 @@ namespace semantic {
 	    try {
 		cl = this-> _context.validateValue (call);
 	    } catch (Error::ErrorList list) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::VALIDATING, templ.prettyString ());
 		list.errors.back ().addNote (note);
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    }
@@ -913,7 +913,7 @@ namespace semantic {
 	    try {
 		cl = this-> _context.validateValue (call);
 	    } catch (Error::ErrorList list) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::VALIDATING, templ.prettyString ());
 		list.errors.back ().addNote (note);
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    }
@@ -958,7 +958,7 @@ namespace semantic {
 	    try {
 		return this-> _context.validateValue (call);
 	    } catch (Error::ErrorList list) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::VALIDATING, templ.prettyString ());
 		list.errors.back ().addNote (note);
 		throw list;
 	    }
@@ -989,7 +989,7 @@ namespace semantic {
 	    try {
 		return this-> _context.validateValue (call);
 	    } catch (Error::ErrorList list) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::VALIDATING, templ.prettyString ());
 		list.errors.back ().addNote (note);
 		throw list;
 	    }
@@ -1017,11 +1017,11 @@ namespace semantic {
 	    }
 
 	    if (!left.to <Value> ().isLvalue () || (left.is <VarRef> () && left.to <VarRef> ().isSelf ())) { // We cannot change the reference of the self paramvar even if it is mutable
-		Ymir::Error::occur (left.getLocation (), ExternalError::get (NOT_A_LVALUE));
+		Ymir::Error::occur (left.getLocation (), ExternalError::NOT_A_LVALUE);
 	    }
 
 	    if (!left.to <Value> ().getType ().to <Type> ().isMutable ()) {
-		Ymir::Error::occur (left.getLocation (), ExternalError::get (IMMUTABLE_LVALUE), left.to <Value> ().getType ().to <Type> ().getTypeName ());
+		Ymir::Error::occur (left.getLocation (), ExternalError::IMMUTABLE_LVALUE, left.to <Value> ().getType ().to <Type> ().getTypeName ());
 	    }
 
 	    this-> _context.verifyMemoryOwner (expression.getLocation (), left.to <Value> ().getType (), right, false);
@@ -1064,7 +1064,7 @@ namespace semantic {
 	    try {
 		return this-> _context.validateValue (call);
 	    } catch (Error::ErrorList list) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), bin.prettyString ());
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::VALIDATING, bin.prettyString ());
 		list.errors.back ().addNote (note);
 		throw list;
 	    }
@@ -1110,7 +1110,7 @@ namespace semantic {
 	    try {
 		return this-> _context.validateValue (call);
 	    } catch (Error::ErrorList list) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::VALIDATING, templ.prettyString ());
 		list.errors.back ().addNote (note);
 		throw list;
 	    }
@@ -1234,7 +1234,7 @@ namespace semantic {
 		}
 	    }
 
-	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
+	    Ymir::Error::occur (expression.getLocation (), ExternalError::UNDEFINED_BIN_OP,
 				expression.getLocation ().getStr (),
 				left.to <Value> ().getType ().to <Type> ().getTypeName (),
 				right.to <Value> ().getType ().to <Type> ().getTypeName ()
@@ -1269,7 +1269,7 @@ namespace semantic {
 					left, right);
 	    }
 
-	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
+	    Ymir::Error::occur (expression.getLocation (), ExternalError::UNDEFINED_BIN_OP,
 				expression.getLocation ().getStr (),
 				left.to <Value> ().getType ().to <Type> ().getTypeName (),
 				right.to <Value> ().getType ().to <Type> ().getTypeName ()
@@ -1288,7 +1288,7 @@ namespace semantic {
 	    auto right = this-> _context.validateValue (expression.getRight ());
 	    if (!right.to <Value> ().getType ().is<ClassPtr> ()) {
 		auto left = this-> _context.validateValue (leftExp);
-		Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
+		Ymir::Error::occur (expression.getLocation (), ExternalError::UNDEFINED_BIN_OP,
 				    expression.getLocation ().getStr (),
 				    left.to <Value> ().getType ().to <Type> ().getTypeName (),
 				    right.to <Value> ().getType ().to <Type> ().getTypeName ()
@@ -1315,7 +1315,7 @@ namespace semantic {
 	    try {
 		return this-> _context.validateValue (call);
 	    } catch (Error::ErrorList list) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::VALIDATING, templ.prettyString ());
 		list.errors.back ().addNote (note);
 		throw list;
 	    }

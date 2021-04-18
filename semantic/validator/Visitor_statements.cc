@@ -48,7 +48,7 @@ namespace semantic {
 	Generator Visitor::validateAssert (const syntax::Assert & assert) {
 	    auto test = validateValue (assert.getTest ());
 	    if (!test.to <Value> ().getType ().is <Bool> ()) {
-		Ymir::Error::occur (test.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+		Ymir::Error::occur (test.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 				    test.to <Value> ().getType ().to <Type> ().getTypeName (),
 				    Bool::NAME
 		    );
@@ -81,7 +81,7 @@ namespace semantic {
 	Generator Visitor::validateCteAssert (const syntax::Assert & assert) {
 	    auto test = validateValue (assert.getTest ());
 	    if (!test.to <Value> ().getType ().is <Bool> ()) {
-		Ymir::Error::occur (test.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+		Ymir::Error::occur (test.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 				    test.to <Value> ().getType ().to <Type> ().getTypeName (),
 				    Bool::NAME
 		    );
@@ -111,7 +111,7 @@ namespace semantic {
 			msg = assert.getMsg ().prettyString ();
 		    }
 		}
-		Ymir::Error::occur (assert.getLocation (), ExternalError::get (ASSERT_FAILED), msg);
+		Ymir::Error::occur (assert.getLocation (), ExternalError::ASSERT_FAILED, msg);
 	    }
 	    
 	    return None::init (assert.getLocation ());
@@ -146,7 +146,7 @@ namespace semantic {
 		    auto impl = validateType (trait);
 		    
 		    if (!vdecl.getVarType ().is <ClassPtr> ()) {
-			Ymir::Error::occur (vdecl.getLocation (), ExternalError::get (NOT_IMPL_TRAIT), vdecl.getVarType ().prettyString (), impl.prettyString ());	
+			Ymir::Error::occur (vdecl.getLocation (), ExternalError::NOT_IMPL_TRAIT, vdecl.getVarType ().prettyString (), impl.prettyString ());	
 		    } else {
 			verifyClassImpl (vdecl.getLocation (), vdecl.getVarType (), impl);
 		    }
@@ -230,7 +230,7 @@ namespace semantic {
 	    } else {
 		auto value = this-> validateValue (atom.getWho ());
 		if (!value.to <Value> ().getType ().is <ClassPtr> ()) {
-		    Ymir::Error::occur (atom.getLocation (), ExternalError::get (MONITOR_NON_CLASS), value.to <Value> ().getType ().prettyString ());
+		    Ymir::Error::occur (atom.getLocation (), ExternalError::MONITOR_NON_CLASS, value.to <Value> ().getType ().prettyString ());
 		}
 
 		auto inner = this-> validateValue (atom.getContent ());
@@ -263,7 +263,7 @@ namespace semantic {
 		test = validateValue (_if.getTest ());
 		
 		if (!test.to<Value> ().getType ().is <Bool> ()) {
-		    Ymir::Error::occur (test.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+		    Ymir::Error::occur (test.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 					test.to <Value> ().getType ().to <Type> ().getTypeName (),
 					Bool::NAME
 			);
@@ -285,7 +285,7 @@ namespace semantic {
 		    try {
 			type = this-> inferTypeBranching (content.getLocation (), _else.getLocation (), type, _else.to<Value> ().getType ());
 		    } catch (Error::ErrorList list) {
-			Ymir::Error::occurAndNote (_if.getLocation (), list.errors, ExternalError::get (BRANCHING_VALUE));
+			Ymir::Error::occurAndNote (_if.getLocation (), list.errors, ExternalError::BRANCHING_VALUE);
 		    }
 		}
 
@@ -306,7 +306,7 @@ namespace semantic {
 		auto test = validateValue (_if.getTest ());
 		auto value = retreiveValue (test);
 		if (!value.is<BoolValue> ()) {
-		    Ymir::Error::occur (test.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+		    Ymir::Error::occur (test.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 					test.to <Value> ().getType ().to <Type> ().getTypeName (),
 					Bool::NAME
 			);
@@ -325,7 +325,7 @@ namespace semantic {
 	    if (!_wh.getTest ().isEmpty ()) {
 		test = validateValue (_wh.getTest ());
 		if (!test.to <Value> ().getType ().is <Bool> ()) {
-		    Ymir::Error::occur (test.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+		    Ymir::Error::occur (test.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 					test.to <Value> ().getType ().to <Type> ().getTypeName (),
 					Bool::NAME
 			);
@@ -374,7 +374,7 @@ namespace semantic {
 	
 	Generator Visitor::validateBreak (const syntax::Break & _break) {
 	    if (!this-> isInLoop ())
-	    Ymir::Error::occur (_break.getLocation (), ExternalError::get (BREAK_NO_LOOP));
+	    Ymir::Error::occur (_break.getLocation (), ExternalError::BREAK_NO_LOOP);
 				    
 	    Generator value = Generator::empty ();
 	    Generator type = Generator::empty ();
@@ -396,7 +396,7 @@ namespace semantic {
 		    setCurrentLoopType (anc);
 		} else {		
 		    auto note = Ymir::Error::createNote (loop_type.getLocation ());
-		    Ymir::Error::occurAndNote (value.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
+		    Ymir::Error::occurAndNote (value.getLocation (), note, ExternalError::INCOMPATIBLE_TYPES,
 					       type.to <Type> ().getTypeName (),
 					       loop_type.to <Type> ().getTypeName ()
 			);
@@ -461,7 +461,7 @@ namespace semantic {
 	    
 	    // 	if (!fn_type.equals (type)) {
 	    // 	auto note = Ymir::Error::createNote (fn_type.getLocation ());
-	    // 	Ymir::Error::occurAndNote (value.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
+	    // 	Ymir::Error::occurAndNote (value.getLocation (), note, ExternalError::INCOMPATIBLE_TYPES,
 	    // 				   type.to <Type> ().getTypeName (),
 	    // 				   fn_type.to <Type> ().getTypeName ()
 	    // 	);				    
@@ -480,7 +480,7 @@ namespace semantic {
 		    if ((decl.isVariadic () && lst.getParameters ().size () < decl.getParameters ().size ())
 			|| (!decl.isVariadic () && lst.getParameters ().size () != decl.getParameters ().size ())) {
 			Ymir::Error::occur (decl.getLocation (),
-					    ExternalError::get (MISMATCH_ARITY),
+					    ExternalError::MISMATCH_ARITY,
 					    decl.getParameters ().size (),
 					    lst.getParameters ().size ());			    
 		    }
@@ -521,7 +521,7 @@ namespace semantic {
 		elfo {
 		    if (decl.getParameters ().size () != 1) {
 			Ymir::Error::occur (decl.getLocation (),
-					    ExternalError::get (OVERFLOW_ARITY),
+					    ExternalError::OVERFLOW_ARITY,
 					    decl.getParameters ().size (),
 					    1);
 		    }
@@ -546,7 +546,7 @@ namespace semantic {
 	    }
 
 	    if (var.getValue ().isEmpty () && var.getType ().isEmpty ()) {
-		Error::occur (var.getLocation (), ExternalError::get (VAR_DECL_WITH_NOTHING));
+		Error::occur (var.getLocation (), ExternalError::VAR_DECL_WITH_NOTHING);
 	    }
 
 	    Generator type (Generator::empty ());
@@ -562,7 +562,7 @@ namespace semantic {
 
 	    
 	    if (var.getValue ().isEmpty () && needInitValue) {
-		Error::occur (var.getLocation (), ExternalError::get (VAR_DECL_WITHOUT_VALUE));
+		Error::occur (var.getLocation (), ExternalError::VAR_DECL_WITHOUT_VALUE);
 	    } 
 		    
 	    bool isMutable = false, isRef = false, dmut = false;
@@ -576,9 +576,9 @@ namespace semantic {
 
 	    if (type.is<NoneType> () || type.is<Void> ()) {
 		if (!value.isEmpty ()) {
-		    Ymir::Error::occur (var.getLocation (), ExternalError::get (VOID_VAR_VALUE), value.prettyString ());
+		    Ymir::Error::occur (var.getLocation (), ExternalError::VOID_VAR_VALUE, value.prettyString ());
 		} else {
-		    Ymir::Error::occur (var.getLocation (), ExternalError::get (VOID_VAR));
+		    Ymir::Error::occur (var.getLocation (), ExternalError::VOID_VAR);
 		}
 	    }
 	    

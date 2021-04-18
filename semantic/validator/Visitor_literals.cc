@@ -50,7 +50,7 @@ namespace semantic {
 	    	} 		  
 	    }
 	    
-	    Ymir::Error::occur (dl.getLocation (), ExternalError::get (DOLLAR_OUSIDE_CONTEXT));
+	    Ymir::Error::occur (dl.getLocation (), ExternalError::DOLLAR_OUSIDE_CONTEXT);
 	    return Generator::empty ();
 	}
 
@@ -82,7 +82,7 @@ namespace semantic {
 		    }
 		    
 		    if (overflow || (value > getMaxU (type) && getMaxU (type) != 0))
-		    Error::occur (loc, ExternalError::get (OVERFLOW), type.getTypeName (), val);
+		    Error::occur (loc, ExternalError::OVERFLOW, type.getTypeName (), val);
 		    
 		    return value;
 		}
@@ -106,7 +106,7 @@ namespace semantic {
 		    }
 		    
 		    if (overflow || (value > getMaxS (type) && getMaxS (type) != 0))
-		    Error::occur (loc, ExternalError::get (OVERFLOW), type.getTypeName (), val);
+		    Error::occur (loc, ExternalError::OVERFLOW, type.getTypeName (), val);
 		    
 		    return value;
 		}
@@ -280,7 +280,7 @@ namespace semantic {
 		if (val.is <List> ()) {
 		    for (auto & g_it : val.to<List> ().getParameters ()) {
 			if (g_it.to <Value> ().getType ().is<NoneType> () || g_it.to <Value> ().getType ().is <Void> ()) {
-			    Ymir::Error::occur (g_it.getLocation (), ExternalError::get (VOID_VALUE));
+			    Ymir::Error::occur (g_it.getLocation (), ExternalError::VOID_VALUE);
 			}
 			
 			params.push_back (g_it);
@@ -296,7 +296,7 @@ namespace semantic {
 		    }
 		} else {
 		    if (val.to <Value> ().getType ().is<NoneType> () || val.to <Value> ().getType ().is <Void> ()) {
-			Ymir::Error::occur (val.getLocation (), ExternalError::get (VOID_VALUE));
+			Ymir::Error::occur (val.getLocation (), ExternalError::VOID_VALUE);
 		    }
 		    params.push_back (val);
 		    auto type = params.back ().to <Value> ().getType ();
@@ -354,7 +354,7 @@ namespace semantic {
 		
 		auto len = retreiveValue (validateValueNonVoid (alloc.getSize ()));
 		if (!len.is <Fixed> () || (len.to<Fixed> ().getType ().to <Integer> ().isSigned () && len.to <Fixed> ().getUI ().i < 0)) {
-		    Ymir::Error::occur (alloc.getSize ().getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+		    Ymir::Error::occur (alloc.getSize ().getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 					value.to <Value> ().getType ().to <Type> ().getTypeName (),
 					(Integer::init (lexing::Word::eof (), 64, false)).to<Type> ().getTypeName ()
 			);
@@ -405,9 +405,9 @@ namespace semantic {
 			if (!type.isEmpty ()) {
 			    type = applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut);
 			    
-			    verifyMutabilityRefParam (var.getLocation (), type, MUTABLE_CONST_PARAM);
+			    verifyMutabilityRefParam (var.getLocation (), type, ExternalError::MUTABLE_CONST_PARAM);
 			    if (type.is <NoneType> () || type.is<Void> ()) {
-				Ymir::Error::occur (var.getLocation (), ExternalError::get (VOID_VAR));
+				Ymir::Error::occur (var.getLocation (), ExternalError::VOID_VAR);
 			    }
 			}
 		
@@ -470,7 +470,7 @@ namespace semantic {
 		    for (auto it : Ymir::r (0, proto.getParameters ().size ())) {
 			auto var = proto.getParameters ()[it].to <ProtoVar> ();
 			if (it >= (long) types.size () || types [it].isEmpty ()) {
-			    Ymir::Error::occur (var.getLocation (), ExternalError::get (UNKNOWN_LAMBDA_TYPE), var.prettyString ());
+			    Ymir::Error::occur (var.getLocation (), ExternalError::UNKNOWN_LAMBDA_TYPE, var.prettyString ());
 			} else {
 			    bool isMutable = types [it].to <Type> ().isMutable ();
 			    if (!var.getType ().isEmpty ()) {
@@ -530,7 +530,7 @@ namespace semantic {
 		    for (auto &it : body.getThrowers ()) {
 			notes.push_back (Ymir::Error::createNote (it.getLocation (), it.prettyString ()));		
 		    }
-		    errors.push_back (Error::makeOccurAndNote (proto.getLocation (), notes, ExternalError::get (THROWS_IN_LAMBDA)));
+		    errors.push_back (Error::makeOccurAndNote (proto.getLocation (), notes, ExternalError::THROWS_IN_LAMBDA));
 		}
 	    }
 	    

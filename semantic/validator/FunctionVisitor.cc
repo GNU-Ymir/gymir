@@ -110,7 +110,7 @@ namespace semantic {
 	void FunctionVisitor::verifyMainPrototype (const lexing::Word & loc, const syntax::Function::Prototype & proto,  const std::vector <Generator> & params, const generator::Generator & retType, std::list <Ymir::Error::ErrorMsg> & errors) {
 	    if (params.size () > 1) {
 		errors.push_back (Ymir::Error::makeOccur (params [1].getLocation (),
-							  ExternalError::get (MAIN_FUNCTION_ONE_ARG)));		    
+							  ExternalError::MAIN_FUNCTION_ONE_ARG));		    
 	    } else if (params.size () == 1) {
 		auto argtype =  Slice::init (loc,
 					     Slice::init (
@@ -157,14 +157,14 @@ namespace semantic {
 	    }
 
 	    if (var.getType ().isEmpty () && no_value && !var.getValue ().isEmpty ()) {
-		Ymir::Error::occur (var.getLocation (), ExternalError::get (FORWARD_REFERENCE_VAR));
+		Ymir::Error::occur (var.getLocation (), ExternalError::FORWARD_REFERENCE_VAR);
 	    }
 				
 	    bool isRef = false;
 	    bool dmut = false;
 	    type = this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut);
 		    
-	    this-> _context.verifyMutabilityRefParam (var.getLocation (), type, MUTABLE_CONST_PARAM);
+	    this-> _context.verifyMutabilityRefParam (var.getLocation (), type, ExternalError::MUTABLE_CONST_PARAM);
 		
 	    if (!value.isEmpty ()) {		    
 		this-> _context.verifyMemoryOwner (value.getLocation (), type, value, true);
@@ -182,7 +182,7 @@ namespace semantic {
 		}
 		
 		if (retType.to <Type> ().isRef ()) {
-		    Ymir::Error::occur (retType.getLocation (), ExternalError::get (REF_RETURN_TYPE), retType.prettyString ());
+		    Ymir::Error::occur (retType.getLocation (), ExternalError::REF_RETURN_TYPE, retType.prettyString ());
 		}
 		return retType;
 	    } else return Void::init (loc);
@@ -397,9 +397,9 @@ namespace semantic {
 		    this-> validateParamDecl (param.getLocation (), var, false, type, value, isMutable);
 
 		    if (type.is <NoneType> () || type.is<Void> ()) {
-			Ymir::Error::occur (var.getLocation (), ExternalError::get (VOID_VAR));
+			Ymir::Error::occur (var.getLocation (), ExternalError::VOID_VAR);
 		    } else if (type.is <generator::LambdaType> ()) {
-			Ymir::Error::occur (type.getLocation (), ExternalError::get (INCOMPLETE_TYPE), type.prettyString ());
+			Ymir::Error::occur (type.getLocation (), ExternalError::INCOMPLETE_TYPE, type.prettyString ());
 		    }
 		
 		    addedParams.push_back (ParamVar::init (var.getName (), type, isMutable, false));
@@ -430,11 +430,11 @@ namespace semantic {
 		    this-> validateParamDecl (param.getLocation (), var, no_value, type, value, isMutable);
 		    
 		    if (type.is <NoneType> () || type.is<Void> ()) {
-			Ymir::Error::occur (var.getLocation (), ExternalError::get (VOID_VAR));
+			Ymir::Error::occur (var.getLocation (), ExternalError::VOID_VAR);
 		    }
 		    
 		    if (type.is <generator::LambdaType> ()) {
-			Ymir::Error::occur (type.getLocation (), ExternalError::get (INCOMPLETE_TYPE), type.prettyString ());
+			Ymir::Error::occur (type.getLocation (), ExternalError::INCOMPLETE_TYPE, type.prettyString ());
 		    }
 
 		    int nb_consumed = 1;
@@ -483,7 +483,7 @@ namespace semantic {
 		}
 		if (!found) {
 		    auto note = Ymir::Error::createNote (it.getLocation ());
-		    auto err = Error::makeOccurAndNote (loc, note, ExternalError::get (THROWS_NOT_DECLARED), funcName, it.prettyString ());
+		    auto err = Error::makeOccurAndNote (loc, note, ExternalError::THROWS_NOT_DECLARED, funcName, it.prettyString ());
 		    err.setWindable (true);
 		    msg_types.push_back (err);
 		    types.push_back (it);
@@ -494,7 +494,7 @@ namespace semantic {
 		    
 	    for (auto & it : unused) {
 		auto note = Ymir::Error::createNote (it.getLocation ());
-		errors.push_back (Error::makeOccurAndNote (loc, note, ExternalError::get (THROWS_NOT_USED), funcName, it.prettyString ()));
+		errors.push_back (Error::makeOccurAndNote (loc, note, ExternalError::THROWS_NOT_USED, funcName, it.prettyString ()));
 	    }
 	}
 	
@@ -628,11 +628,11 @@ namespace semantic {
 	    std::list <Ymir::Error::ErrorMsg> errors;
 	    
 	    if (!cs.getContent ().getExplicitSuperCall ().isEof () && ancestor.isEmpty ())		
-	    Ymir::Error::occur (cs.getContent ().getExplicitSuperCall (), ExternalError::get (NO_SUPER_FOR_CLASS), classR.prettyString ());
+	    Ymir::Error::occur (cs.getContent ().getExplicitSuperCall (), ExternalError::NO_SUPER_FOR_CLASS, classR.prettyString ());
 	    
 	    if (!cs.getContent ().getExplicitSelfCall ().isEof ()) {
 		if (cs.getContent ().getFieldConstruction ().size () != 0)
-		Ymir::Error::occur (cs.getContent ().getFieldConstruction ()[0].first, ExternalError::get (MULTIPLE_FIELD_INIT), cs.getContent ().getFieldConstruction ()[0].first.getStr ());
+		Ymir::Error::occur (cs.getContent ().getFieldConstruction ()[0].first, ExternalError::MULTIPLE_FIELD_INIT, cs.getContent ().getFieldConstruction ()[0].first.getStr ());
 		
 		auto loc = cs.getContent ().getExplicitSelfCall ();
 
@@ -643,7 +643,7 @@ namespace semantic {
 		    Ymir::Error::occurAndNote (
 			loc,
 			list.errors, 
-			ExternalError::get (UNDEFINED_SUB_PART_FOR),
+			ExternalError::UNDEFINED_SUB_PART_FOR,
 			ClassRef::INIT_NAME,
 			classR.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().prettyString ()
 			);
@@ -657,7 +657,7 @@ namespace semantic {
 		} else {
 		    Ymir::Error::occur (
 			loc,
-			ExternalError::get (UNDEFINED_SUB_PART_FOR),
+			ExternalError::UNDEFINED_SUB_PART_FOR,
 			ClassRef::INIT_NAME,
 			classR.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().prettyString ()
 			);
@@ -673,7 +673,7 @@ namespace semantic {
 			Ymir::Error::occurAndNote (
 			    loc,
 			    list.errors,
-			    ExternalError::get (UNDEFINED_SUB_PART_FOR),
+			    ExternalError::UNDEFINED_SUB_PART_FOR,
 			    ClassRef::INIT_NAME,
 			    ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().prettyString ()
 			    );
@@ -688,7 +688,7 @@ namespace semantic {
 		    } else {
 			Ymir::Error::occur (
 			    loc,
-			    ExternalError::get (UNDEFINED_SUB_PART_FOR),
+			    ExternalError::UNDEFINED_SUB_PART_FOR,
 			    ClassRef::INIT_NAME,
 			    ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().prettyString ()
 			    );
@@ -704,7 +704,7 @@ namespace semantic {
 							syntax::Var::init (name), syntax::Expression::empty ());
 		    try {		
 			if (validated.find (name.getStr ()) != validated.end ()) {
-			    Ymir::Error::occur (name, ExternalError::get (MULTIPLE_FIELD_INIT), name.getStr ());
+			    Ymir::Error::occur (name, ExternalError::MULTIPLE_FIELD_INIT, name.getStr ());
 			}
 		    
 			auto left = this-> _context.validateValue (access);
@@ -724,7 +724,7 @@ namespace semantic {
 		    if (validated.find (it.to <syntax::VarDecl> ().getName ().getStr ()) == validated.end ()) {
 			if (it.to <syntax::VarDecl> ().getValue ().isEmpty ()) {
 			    auto note = Ymir::Error::createNote (cs.getName ());
-			    Error::occurAndNote (it.to <syntax::VarDecl> ().getLocation (), note, ExternalError::get (UNINIT_FIELD), it.to <syntax::VarDecl> ().getName ().getStr ());
+			    Error::occurAndNote (it.to <syntax::VarDecl> ().getLocation (), note, ExternalError::UNINIT_FIELD, it.to <syntax::VarDecl> ().getName ().getStr ());
 			} else {
 			    auto name = it.to <syntax::VarDecl> ().getName ();
 			    auto access = syntax::Binary::init (lexing::Word::init (name, Token::DOT),
@@ -774,7 +774,7 @@ namespace semantic {
 		    for (auto z : Ymir::r (0, locs.size ())) {
 			notes.push_back (Ymir::Error::createNote (locs [z], gen_protos [z].prettyString ()));
 		    }
-		    Ymir::Error::occurAndNote (call.getLocation (), notes, ExternalError::get (INFINITE_CONSTRUCTION_LOOP));
+		    Ymir::Error::occurAndNote (call.getLocation (), notes, ExternalError::INFINITE_CONSTRUCTION_LOOP);
 		}
 	    }
 
@@ -904,7 +904,7 @@ namespace semantic {
 		    if (it.getValue () == syntax::Decorator::MUT) isMutable = true;
 		    else {
 			Ymir::Error::occur (it.getLocation (),
-					    ExternalError::get (DECO_OUT_OF_CONTEXT),
+					    ExternalError::DECO_OUT_OF_CONTEXT,
 					    it.getLocation ().getStr ()
 			    );				
 		    }
@@ -990,7 +990,7 @@ namespace semantic {
 		    if (it.getValue () == syntax::Decorator::MUT) isMutable = true;
 		    else {
 			Ymir::Error::occur (it.getLocation (),
-					    ExternalError::get (DECO_OUT_OF_CONTEXT),
+					    ExternalError::DECO_OUT_OF_CONTEXT,
 					    it.getLocation ().getStr ()
 			    );				
 		    }

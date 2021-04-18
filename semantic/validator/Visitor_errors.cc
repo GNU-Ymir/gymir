@@ -26,7 +26,7 @@ namespace semantic {
 	    }
 
 	    if (loc.getLine () == rightLoc.getLine ()) { // If the two locations are on the same line, we throw a single line error
-		Ymir::Error::occurAndNote (loc, rightLoc, notes, ExternalError::get (INCOMPATIBLE_TYPES),
+		Ymir::Error::occurAndNote (loc, rightLoc, notes, ExternalError::INCOMPATIBLE_TYPES,
 					   leftName, 
 					   right.to <Type> ().getTypeName ()
 		    );
@@ -34,7 +34,7 @@ namespace semantic {
 		std::list <Error::ErrorMsg> auxNotes = {Ymir::Error::createNote (rightLoc)};
 		auxNotes.insert (auxNotes.end (), notes.begin (), notes.end ()); // If they are on two different lines, we add a note
 		
-		Ymir::Error::occurAndNote (loc, auxNotes, ExternalError::get (INCOMPATIBLE_TYPES),
+		Ymir::Error::occurAndNote (loc, auxNotes, ExternalError::INCOMPATIBLE_TYPES,
 					   leftName,
 					   right.to <Type> ().getTypeName ()
 		    );

@@ -35,7 +35,7 @@ namespace semantic {
 	    
 	    if (intr.isMove ()) {
 		Ymir::Error::occur (intr.getLocation (),
-				    ExternalError::get (MOVE_ONLY_CLOSURE));				    
+				    ExternalError::MOVE_ONLY_CLOSURE);				    
 	    }
 	    
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
@@ -63,7 +63,7 @@ namespace semantic {
 	    } else {
 		Ymir::Error::occur (
 		    intr.getLocation (),
-		    ExternalError::get (NO_COPY_EXIST),
+		    ExternalError::NO_COPY_EXIST,
 		    content.to<Value> ().getType ().to <Type> ().getTypeName ()
 		    );
 		
@@ -86,7 +86,7 @@ namespace semantic {
 	    auto type = content.to <Value> ().getType ();
 	    if (!type.to <Type> ().isMutable ()) {
 		Ymir::Error::occur (content.getLocation (),
-				    ExternalError::get (NOT_A_LVALUE)
+				    ExternalError::NOT_A_LVALUE
 		    );
 	    }
 

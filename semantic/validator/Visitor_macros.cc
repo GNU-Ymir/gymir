@@ -28,7 +28,7 @@ namespace semantic {
 	    try {
 		Visitor::__TEMPLATE_NB_RECURS__ += 1;
 		if (Visitor::__TEMPLATE_NB_RECURS__ >= VisitConstante::LIMIT_TEMPLATE_RECUR) {
-		    Ymir::Error::occur (sol.getName (), ExternalError::get (TEMPLATE_RECURSION), Visitor::__TEMPLATE_NB_RECURS__);
+		    Ymir::Error::occur (sol.getName (), ExternalError::TEMPLATE_RECURSION, Visitor::__TEMPLATE_NB_RECURS__);
 		}
 
 		gen = this-> validateValue (content);
@@ -36,10 +36,10 @@ namespace semantic {
 		static std::list <Error::ErrorMsg> __last_error__;			
 		if (Visitor::__TEMPLATE_NB_RECURS__ == 2 && !global::State::instance ().isVerboseActive ()) {
 		    // list.errors.push_back (format ("     : %(B)", "..."));
-		    // list.errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CALL)));
+		    // list.errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::OTHER_CALL));
 		} else if (Visitor::__TEMPLATE_NB_RECURS__ <  2 || global::State::instance ().isVerboseActive () || Visitor::__LAST_TEMPLATE__) {
 		    list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", content.getLocation (), content.prettyString ()));
-		    list.errors.insert (list.errors.begin (), Ymir::Error::createNote (content.getLocation (), ExternalError::get (IN_TEMPLATE_DEF)));
+		    list.errors.insert (list.errors.begin (), Ymir::Error::createNote (content.getLocation (), ExternalError::IN_TEMPLATE_DEF));
 		    Visitor::__LAST_TEMPLATE__ = true;
 		    __last_error__ = {};
 		} else if (Visitor::__LAST_TEMPLATE__) {			    

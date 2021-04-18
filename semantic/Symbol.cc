@@ -43,23 +43,23 @@ namespace semantic {
     }
         
     void ISymbol::insert (const Symbol &) {
-	Ymir::Error::halt (Ymir::ExternalError::get (Ymir::INSERT_NO_TABLE));
+	Ymir::Error::halt (Ymir::ExternalError::INSERT_NO_TABLE);
     }
 
     void ISymbol::insertOrReplace (const Symbol &) {
-	Ymir::Error::halt (Ymir::ExternalError::get (Ymir::INSERT_NO_TABLE));
+	Ymir::Error::halt (Ymir::ExternalError::INSERT_NO_TABLE);
     }
 
     void ISymbol::insertTemplate (const Symbol &) {
-	Ymir::Error::halt (Ymir::ExternalError::get (Ymir::INSERT_NO_TABLE));
+	Ymir::Error::halt (Ymir::ExternalError::INSERT_NO_TABLE);
     }
 
     void ISymbol::getTemplates (std::vector<Symbol> &) const {
-	Ymir::Error::halt (Ymir::ExternalError::get (Ymir::INSERT_NO_TABLE));
+	Ymir::Error::halt (Ymir::ExternalError::INSERT_NO_TABLE);
     }
 
     // void ISymbol::replace (const Symbol &) {
-    // 	Ymir::Error::halt (Ymir::ExternalError::get (Ymir::INSERT_NO_TABLE));
+    // 	Ymir::Error::halt (Ymir::ExternalError::INSERT_NO_TABLE);
     // }
 
     void ISymbol::use (const std::string & name, const Symbol & sym) {
@@ -206,13 +206,13 @@ namespace semantic {
 
     const lexing::Word & Symbol::getName () const {	
 	if (this-> _value == nullptr)
-	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	return this-> _value-> getName ();
     }
 
     const std::string & Symbol::getComments () const {
 	if (this-> _value == nullptr)
-	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	return this-> _value-> getComments ();
     }
     
@@ -229,7 +229,7 @@ namespace semantic {
 	if (this-> _value != nullptr) {
 	    this-> _value-> insertOrReplace (sym);
 	} else {
-	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	}
     }
 
@@ -245,7 +245,7 @@ namespace semantic {
     
     void Symbol::getTemplates (std::vector <Symbol> & ret) const {
 	if (this-> _value == nullptr) {
-	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	}
 	
 	this-> _value-> getTemplates (ret);
@@ -270,7 +270,7 @@ namespace semantic {
 	    this-> _value-> use (name, sym);
 	else {
 	    // We cannot use a symbol outside of any scope
-	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	}
     }    
 
@@ -279,7 +279,7 @@ namespace semantic {
 	    this-> _value-> unuse (name);
 	else {
 	    // We cannot use a symbol outside of any scope
-	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	}
     }
 
@@ -288,7 +288,7 @@ namespace semantic {
 	    this-> _value-> setPublic ();
 	else {
 	    // We cannot use a symbol outside of any scope
-	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	}
     }
 
@@ -297,7 +297,7 @@ namespace semantic {
 	    return this-> _value-> isPublic ();
 	else {
 	    // We cannot use a symbol outside of any scope
-	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	    return false;
 	}
     }
@@ -307,7 +307,7 @@ namespace semantic {
 	    this-> _value-> setWeak ();
 	else {
 	    // We cannot use a symbol outside of any scope
-	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	}
     }
 
@@ -316,7 +316,7 @@ namespace semantic {
 	    return this-> _value-> isWeak ();
 	else {
 	    // We cannot use a symbol outside of any scope
-	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	    return false;
 	}
     }
@@ -326,7 +326,7 @@ namespace semantic {
 	    this-> _value-> setTrusted ();
 	else {
 	    // We cannot use a symbol outside of any scope
-	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	}
     }
 
@@ -335,7 +335,7 @@ namespace semantic {
 	    return this-> _value-> isTrusted ();
 	else {
 	    // We cannot use a symbol outside of any scope
-	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	    return false;
 	}
     }
@@ -346,7 +346,7 @@ namespace semantic {
 	    this-> _value-> setProtected ();
 	else {
 	    // We cannot use a symbol outside of any scope
-	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	}
     }
 
@@ -355,7 +355,7 @@ namespace semantic {
 	    return this-> _value-> isProtected ();
 	else {
 	    // We cannot use a symbol outside of any scope
-	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	    return false;
 	}
     }
@@ -484,7 +484,7 @@ namespace semantic {
 	    return this-> _value-> getUsedSymbols ();
 	else {
 	    // We cannot use a symbol outside of any scope
-	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	    return Symbol::__empty__.getUsedSymbols (); // ....
 	    // We don't get there anyway
 	}

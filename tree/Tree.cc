@@ -821,7 +821,7 @@ namespace generic {
 
     bool Tree::isScalar () const {
 	if (this-> _t == NULL_TREE)
-	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	
 	return getTreeCode () != RECORD_TYPE &&
 	    getTreeCode () != ARRAY_TYPE && getTreeCode () != UNION_TYPE;	    
@@ -852,13 +852,13 @@ namespace generic {
     
     Tree Tree::getType () const {
 	if (this-> _t == NULL_TREE)
-	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	return Tree::init (this-> _loc, TREE_TYPE (this-> _t));
     }
 
     uint Tree::getSize () const {
 	if (this-> _t == NULL_TREE)
-	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	return TREE_INT_CST_LOW (TYPE_SIZE_UNIT (this-> _t));
     }    
     
@@ -915,13 +915,13 @@ namespace generic {
     
     Tree Tree::getOperand (int i) const {
 	if (this-> _t == NULL_TREE)
-	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	return Tree::init (this-> _loc, TREE_OPERAND (this-> _t, i));
     }
 
     Tree Tree::getList () const {
 	if (this-> _t == NULL_TREE)
-	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	if (this-> getTreeCode () == COMPOUND_EXPR) {
 	    return this-> getOperand (0);
 	} else return Tree::empty ();
@@ -929,7 +929,7 @@ namespace generic {
 
     Tree Tree::getValue () const {
 	if (this-> _t == NULL_TREE)
-	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	if (this-> getTreeCode () == COMPOUND_EXPR) {
 	    return this-> getOperand (1);
 	} else 
@@ -938,7 +938,7 @@ namespace generic {
 
     Tree Tree::toDirect () const {
 	if (this-> _t == NULL_TREE)
-	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	if (this-> getType ().isPointerType ()) {
 	    return this-> buildPointerUnref (0);
 	} else
@@ -981,7 +981,7 @@ namespace generic {
     
     Tree Tree::getField (const std::string & name) const {
 	if (this-> _t == NULL_TREE)
-	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	tree type = this-> _t;
 	if (this-> getTreeCode () != RECORD_TYPE && this-> getTreeCode () != UNION_TYPE) type = TREE_TYPE (this-> _t);
 	

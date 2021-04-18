@@ -29,7 +29,7 @@ namespace semantic {
 			isRef = true;
 		    } else {
 			Ymir::Error::occur (deco.getLocation (),
-					    ExternalError::get (DECO_OUT_OF_CONTEXT),
+					    ExternalError::DECO_OUT_OF_CONTEXT,
 					    deco.getLocation ().getStr ()
 			    );
 		    }
@@ -39,7 +39,7 @@ namespace semantic {
 			isMutable = true;
 		    } else {
 			Ymir::Error::occur (deco.getLocation (),
-					    ExternalError::get (DECO_OUT_OF_CONTEXT),
+					    ExternalError::DECO_OUT_OF_CONTEXT,
 					    deco.getLocation ().getStr ()
 			    );
 		    }
@@ -49,14 +49,14 @@ namespace semantic {
 			dmut = true;
 		    } else {
 			Ymir::Error::occur (deco.getLocation (),
-					    ExternalError::get (DECO_OUT_OF_CONTEXT),
+					    ExternalError::DECO_OUT_OF_CONTEXT,
 					    deco.getLocation ().getStr ()
 			    );
 		    }
 		} break;
 		default :
 		    Ymir::Error::occur (deco.getLocation (),
-					ExternalError::get (DECO_OUT_OF_CONTEXT),
+					ExternalError::DECO_OUT_OF_CONTEXT,
 					deco.getLocation ().getStr ()
 		    );
 		}
@@ -120,7 +120,7 @@ namespace semantic {
 			    syms.push_back (gen);
 			} else {
 			    errors.push_back (
-				Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), gen.getName (), FunctionVisitor::init (*this).validateConstructorProto (gen).prettyString ())					    
+				Ymir::Error::createNoteOneLine (ExternalError::PRIVATE_IN_THIS_CONTEXT, gen.getName (), FunctionVisitor::init (*this).validateConstructorProto (gen).prettyString ())					    
 				);
 			}
 		    } fo;
@@ -172,7 +172,7 @@ namespace semantic {
 			syms.push_back (gen);
 			else {
 			    errors.push_back (
-				Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), gen.getName (), gen.getName ().getStr ())					    
+				Ymir::Error::createNoteOneLine (ExternalError::PRIVATE_IN_THIS_CONTEXT, gen.getName (), gen.getName ().getStr ())					    
 				);
 			}
 		    } fo;
@@ -201,7 +201,7 @@ namespace semantic {
 				syms.push_back (gen);
 			    } else {
 				errors.push_back (
-				    Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), gen.getName (), gen.getName ().getStr ())
+				    Ymir::Error::createNoteOneLine (ExternalError::PRIVATE_IN_THIS_CONTEXT, gen.getName (), gen.getName ().getStr ())
 				    );
 			    }
 			}
@@ -328,7 +328,7 @@ namespace semantic {
 		}
 		return ret;
 	    } else {
-		Error::occurAndNote (lexing::Word::eof (), ExternalError::get (UNDEF_VAR), func.prettyString ());
+		Error::occur (lexing::Word::eof (), ExternalError::UNDEF_VAR, func.prettyString ());
 		return Generator::empty ();
 	    }
 	}

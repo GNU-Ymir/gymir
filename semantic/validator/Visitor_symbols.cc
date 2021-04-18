@@ -46,7 +46,7 @@ namespace semantic {
 	    static std::list <std::pair <lexing::Word, std::string> > __names__;
 	    if (__names__.size () != 0 && !sym.to <semantic::VarDecl> ().isExtern ()) { // we are in the validation of the value of another global var
 		auto note = Ymir::Error::createNote (sym.getName ());
-		Ymir::Error::occurAndNote (__names__.back ().first, note, ExternalError::get (GLOBAL_VAR_DEPENDENCY), __names__.back ().second, sym.getRealName ());
+		Ymir::Error::occurAndNote (__names__.back ().first, note, ExternalError::GLOBAL_VAR_DEPENDENCY, __names__.back ().second, sym.getRealName ());
 	    }
 	    
 	    if (sym.to <semantic::VarDecl> ().getGenerator ().isEmpty () || inModule) {
@@ -55,11 +55,11 @@ namespace semantic {
 		Generator type (Generator::empty ()), value (Generator::empty ());
 
 		if (var.getType ().isEmpty () && var.getValue ().isEmpty ()) {
-		    if (var.isExtern ()) Error::occur (var.getName (), ExternalError::get (EXTERNAL_VAR_DECL_WITHOUT_TYPE), var.getRealName ().getValue ());
-		    else Error::occur (var.getName (), ExternalError::get (GLOBAL_VAR_DECL_WITHOUT_VALUE), var.getRealName ().getValue ());
+		    if (var.isExtern ()) Error::occur (var.getName (), ExternalError::EXTERNAL_VAR_DECL_WITHOUT_TYPE, var.getRealName ().getValue ());
+		    else Error::occur (var.getName (), ExternalError::GLOBAL_VAR_DECL_WITHOUT_VALUE, var.getRealName ().getValue ());
 		} else if (!var.getValue ().isEmpty () && var.isExtern ()) {
 		    auto note = Ymir::Error::createNote (var.getValue ().getLocation ());
-		    Ymir::Error::occurAndNote (var.getName (), note, ExternalError::get (EXTERNAL_VAR_WITH_VALUE), var.getRealName ().getValue ());
+		    Ymir::Error::occurAndNote (var.getName (), note, ExternalError::EXTERNAL_VAR_WITH_VALUE, var.getRealName ().getValue ());
 		}
 	    
 		if (!var.getType ().isEmpty ()) { // validate the type of the expression, if specified in the source code
@@ -144,11 +144,11 @@ namespace semantic {
 	    std::list <Error::ErrorMsg> errors;
 	    for (auto & it : tr.to <semantic::Trait> ().getAllInner ()) {
 		if (it.is <semantic::Template> ()) {
-		    errors.push_back (Ymir::Error::makeOccur (it.getName (), ExternalError::get (TEMPLATE_IN_TRAIT)));
+		    errors.push_back (Ymir::Error::makeOccur (it.getName (), ExternalError::TEMPLATE_IN_TRAIT));
 		} else if (it.is <semantic::VarDecl> ()) {
-		    errors.push_back (Ymir::Error::makeOccur (it.getName (), ExternalError::get (VAR_DECL_IN_TRAIT)));
+		    errors.push_back (Ymir::Error::makeOccur (it.getName (), ExternalError::VAR_DECL_IN_TRAIT));
 		} else if (it.to <semantic::Function> ().isOver ())
-		errors.push_back (Ymir::Error::makeOccur (it.getName (), ExternalError::get (NOT_OVERRIDE), it.getName ().getStr ()));
+		errors.push_back (Ymir::Error::makeOccur (it.getName (), ExternalError::NOT_OVERRIDE, it.getName ().getStr ()));
 	    }
 
 	    if (tr.to <semantic::Trait> ().getAssertions ().size () != 0) {
@@ -199,7 +199,7 @@ namespace semantic {
 		    
 		    std::vector <std::string> fields;
 		    if (sym.to<semantic::Enum> ().getFields ().size () == 0) {
-			Ymir::Error::occur (sym.getName (), ExternalError::get (ENUM_EMPTY));
+			Ymir::Error::occur (sym.getName (), ExternalError::ENUM_EMPTY);
 		    }
 		    
 		    for (auto & it : sym.to <semantic::Enum> ().getFields ()) {
@@ -207,7 +207,7 @@ namespace semantic {
 			    match (it) {
 				of (syntax::VarDecl, decl) {
 				    if (decl.getValue ().isEmpty ()) {
-					Ymir::Error::occur (decl.getName (), ExternalError::get (EN_NO_VALUE), decl.getName ().getStr ());
+					Ymir::Error::occur (decl.getName (), ExternalError::EN_NO_VALUE, decl.getName ().getStr ());
 				    }
 				} fo;
 			    }
@@ -264,7 +264,7 @@ namespace semantic {
 		
 		return type;
 	    } else {
-		Ymir::Error::occur (en.getName (), ExternalError::get (INCOMPLETE_TYPE_CLASS), en.getRealName ());
+		Ymir::Error::occur (en.getName (), ExternalError::INCOMPLETE_TYPE_CLASS, en.getRealName ());
 		return Generator::empty ();
 	    }
 	}

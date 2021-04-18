@@ -66,25 +66,25 @@ namespace semantic {
 	    auto index = CompileTime::init (this-> _context).execute (right);
 
 	    if (!index.to <Value> ().getType ().is<Integer> ()) {
-		auto note = Ymir::Error::createNote (index.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+		auto note = Ymir::Error::createNote (index.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 						     index.to <Value> ().getType ().to <Type> ().getTypeName (),
 						     Integer::init (index.getLocation (), 64, false). to <Type> ().getTypeName ()
 		    );
 		
-		Ymir::Error::occurAndNote (expression.getLocation (), note, ExternalError::get (UNDEFINED_BIN_OP), expression.getLocation ().getStr (),
+		Ymir::Error::occurAndNote (expression.getLocation (), note, ExternalError::UNDEFINED_BIN_OP, expression.getLocation ().getStr (),
 					   left.to <Value> ().getType ().prettyString (), index.to <Value> ().getType ().prettyString ());		
 	    }
 	    
 	    if (!index.is <Fixed> ()) {
 		auto note = Ymir::Error::createNote (expression.getLocation ());
-		Ymir::Error::occurAndNote (index.getLocation (), note, ExternalError::get (COMPILE_TIME_UNKNOWN));
+		Ymir::Error::occurAndNote (index.getLocation (), note, ExternalError::COMPILE_TIME_UNKNOWN);
 	    }
 	    
 	    auto index_val = index.to <Fixed> ().getUI ().u;
 	    auto & tu_inners = left.to <Value> ().getType ().to <Tuple> ().getInners ();
 	    if (index_val >= tu_inners.size ()) {
 		auto note = Ymir::Error::createNote (expression.getLocation ());
-		Ymir::Error::occurAndNote (index.getLocation (), note, ExternalError::get (OVERFLOW_ARITY), index_val, tu_inners.size ());
+		Ymir::Error::occurAndNote (index.getLocation (), note, ExternalError::OVERFLOW_ARITY, index_val, tu_inners.size ());
 	    }
 	    auto type = tu_inners [index_val];
 	    if (
@@ -199,7 +199,7 @@ namespace semantic {
 			type = cl.to <generator::Class> ().getFieldType (name);		    
 			if (!type.isEmpty ()) {
 			    errors.push_back (
-				Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), type.getLocation (), name)
+				Ymir::Error::createNoteOneLine (ExternalError::PRIVATE_IN_THIS_CONTEXT, type.getLocation (), name)
 			    );
 			    break;
 			}
@@ -210,7 +210,7 @@ namespace semantic {
 			auto type = cl.to <generator::Class> ().getFieldType (name);
 			if (!type.isEmpty ()) {
 			    errors.push_back (
-				Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), type.getLocation (), name)
+				Ymir::Error::createNoteOneLine (ExternalError::PRIVATE_IN_THIS_CONTEXT, type.getLocation (), name)
 			    );
 			    break;
 			}			
@@ -300,7 +300,7 @@ namespace semantic {
 			    }
 			} else {
 			    errors.push_back (
-				Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), vtable [i].getLocation (), vtable[i].prettyString ())
+				Ymir::Error::createNoteOneLine (ExternalError::PRIVATE_IN_THIS_CONTEXT, vtable [i].getLocation (), vtable[i].prettyString ())
 				);
 			}
 		    }
@@ -342,7 +342,7 @@ namespace semantic {
 					);					
 				} else {
 				    errors.push_back (
-					Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), it.getName (), tl.prettyString ())
+					Ymir::Error::createNoteOneLine (ExternalError::PRIVATE_IN_THIS_CONTEXT, it.getName (), tl.prettyString ())
 					);			    
 				}
 			    }			    
@@ -413,7 +413,7 @@ namespace semantic {
 		expression.getLocation (),
 		expression.getRight ().getLocation (),
 		errors,
-		ExternalError::get (UNDEFINED_FIELD_FOR),
+		ExternalError::UNDEFINED_FIELD_FOR,
 		right,
 		leftName
 	    );

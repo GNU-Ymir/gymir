@@ -27,14 +27,14 @@ namespace semantic {
 		    sym = getGlobalPrivate (var.getName ().getStr ());
 		    std::list <Ymir::Error::ErrorMsg> notes;
 		    for (auto it : Ymir::r (0, sym.size ())) {
-			notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), sym[it].getName (), sym [it].getRealName ()));
+			notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::PRIVATE_IN_THIS_CONTEXT, sym[it].getName (), sym [it].getRealName ()));
 		    }
-		    Error::occurAndNote (var.getLocation (), notes, ExternalError::get (UNDEF_VAR), var.getName ().getStr ());
+		    Error::occurAndNote (var.getLocation (), notes, ExternalError::UNDEF_VAR, var.getName ().getStr ());
 		}
 
 		auto ret = validateMultSym (var.getLocation (), sym);
 		if (ret.is <MultSym> () && ret.to <MultSym> ().getGenerators ().size () == 0) {
-		    Error::occur (var.getLocation (), ExternalError::get (UNDEF_VAR), var.getName ().getStr ());
+		    Error::occur (var.getLocation (), ExternalError::UNDEF_VAR, var.getName ().getStr ());
 		} else return ret;		
 	    }
 	    	    
@@ -201,13 +201,13 @@ namespace semantic {
 			    locGen = TraitRef::init (lexing::Word::init (loc, tr.getName ().getStr ()), multSym [it]);
 			}			
 			elof_u (semantic::Template) {
-			    Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
+			    Ymir::Error::occur (loc, ExternalError::USE_AS_TYPE);
 			}							     
 			elof_u (semantic::Module) {
-			    Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
+			    Ymir::Error::occur (loc, ExternalError::USE_AS_TYPE);
 			}
 			elof_u (semantic::ModRef) {
-			    Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
+			    Ymir::Error::occur (loc, ExternalError::USE_AS_TYPE);
 			}
 			elof_u (semantic::Aka) {
 			    locGen = validateAka (multSym [it]);
@@ -228,12 +228,12 @@ namespace semantic {
 		
 		if (!gen.isEmpty () && !locGen.isEmpty ()) {
 		    std::list <Ymir::Error::ErrorMsg> notes;
-		    notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), gen.getLocation (), gen.prettyString ()));
-		    notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), locGen.getLocation (), locGen.prettyString ()));
+		    notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::CANDIDATE_ARE, gen.getLocation (), gen.prettyString ()));
+		    notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::CANDIDATE_ARE, locGen.getLocation (), locGen.prettyString ()));
 			
 		    Ymir::Error::occurAndNote (loc,
 					       notes,
-					       ExternalError::get (SPECIALISATION_WORK_TYPE_BOTH));
+					       ExternalError::SPECIALISATION_WORK_TYPE_BOTH);
 		}
 		
 		if (!locGen.isEmpty ())
@@ -257,22 +257,22 @@ namespace semantic {
 	    if (dec_expr.hasDecorator (syntax::Decorator::MUT)) {
 		if (!inner.to<Value> ().getType ().to<Type> ().isMutable ()) 
 		    Ymir::Error::occur (dec_expr.getDecorator (syntax::Decorator::MUT).getLocation (),
-					ExternalError::get (DISCARD_CONST)
+					ExternalError::DISCARD_CONST
 		    );
 		else
 		    Ymir::Error::warn (dec_expr.getDecorator (syntax::Decorator::MUT).getLocation (),
-				       ExternalError::get (USELESS_DECORATOR)
+				       ExternalError::USELESS_DECORATOR
 			);
 	    } 
 
 	    if (dec_expr.hasDecorator (syntax::Decorator::DMUT)) {
 		if (!inner.to<Value> ().getType ().to<Type> ().isMutable ()) 
 		    Ymir::Error::occur (dec_expr.getDecorator (syntax::Decorator::DMUT).getLocation (),
-					ExternalError::get (DISCARD_CONST)
+					ExternalError::DISCARD_CONST
 		    );
 		else
 		    Ymir::Error::warn (dec_expr.getDecorator (syntax::Decorator::DMUT).getLocation (),
-				       ExternalError::get (USELESS_DECORATOR)
+				       ExternalError::USELESS_DECORATOR
 		    );
 	    } 
 	    
@@ -280,14 +280,14 @@ namespace semantic {
 		if (inner.to <Value> ().isLvalue ()) {
 		    if (inner.is <VarRef> () && inner.to<VarRef> ().isSelf ()) {
 			Ymir::Error::occur (inner.getLocation (),
-					    ExternalError::get (REF_SELF)
+					    ExternalError::REF_SELF
 			);
 		    }
 		    
 		    this-> verifyLockAlias (inner);
 		    
 		    // if (!inner.to <Value> ().getType ().to <Type> ().isMutable ()) {
-		    // 	Ymir::Error::occur (inner.getLocation (), ExternalError::get (IMMUTABLE_LVALUE));
+		    // 	Ymir::Error::occur (inner.getLocation (), ExternalError::IMMUTABLE_LVALUE);
 		    // } // We allow this, since we want to pass element by const reference to function, or variable
 		    // The mutability will verify if we are allowed to do a reference of the element
 
@@ -298,7 +298,7 @@ namespace semantic {
 		    } 
 		} else {
 		    Ymir::Error::occur (inner.getLocation (),
-					ExternalError::get (NOT_A_LVALUE)
+					ExternalError::NOT_A_LVALUE
 		    );
 		}
 	    }

@@ -318,7 +318,7 @@ namespace semantic {
 		    buf.write (values [it].prettyString ());
 		}
 		
-		Ymir::Error::occur (values [consumed].getLocation (), ExternalError::get (TEMPLATE_REST),
+		Ymir::Error::occur (values [consumed].getLocation (), ExternalError::TEMPLATE_REST,
 				    buf.str ());
 		return Symbol::empty ();
 	    } else {
@@ -373,7 +373,7 @@ namespace semantic {
 			return mapper;
 		    } else {
 			auto note = Ymir::Error::createNote (param.getLocation ());
-			Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::get (USE_AS_TYPE));
+			Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::USE_AS_TYPE);
 		    }
 		}
 		elof (OfVar, var) {
@@ -382,7 +382,7 @@ namespace semantic {
 			return validateTypeFromExplicitOfVar (syntaxTempl, var, values [0]);
 		    } else {
 			auto note = Ymir::Error::createNote (param.getLocation ());
-			Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::get (USE_AS_TYPE));
+			Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::USE_AS_TYPE);
 		    }
 		}
 		elof (ImplVar, var) {
@@ -391,10 +391,10 @@ namespace semantic {
 			return validateTypeFromExplicitImplVar (syntaxTempl, var, values [0]);
 		    } else if (values [0].is <Type> ()) {
 			auto note = Ymir::Error::createNote (param.getLocation ());
-			Ymir::Error::occurAndNote (var.getLocation (), note, ExternalError::get (NOT_A_CLASS), values [0].prettyString ());
+			Ymir::Error::occurAndNote (var.getLocation (), note, ExternalError::NOT_A_CLASS, values [0].prettyString ());
 		    } else {
 			auto note = Ymir::Error::createNote (param.getLocation ());
-			Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::get (USE_AS_TYPE));
+			Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::USE_AS_TYPE);
 		    }
 		}
 		elof (StructVar, var) {
@@ -407,11 +407,11 @@ namespace semantic {
 			    return mapper;
 			} else {
 			    auto note = Ymir::Error::createNote (param.getLocation ());
-			    Ymir::Error::occurAndNote (var.getLocation (), note, ExternalError::get (NOT_A_STRUCT), values [0].prettyString ());
+			    Ymir::Error::occurAndNote (var.getLocation (), note, ExternalError::NOT_A_STRUCT, values [0].prettyString ());
 			}
 		    } else {
 			auto note = Ymir::Error::createNote (param.getLocation ());
-			Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::get (USE_AS_TYPE));
+			Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::USE_AS_TYPE);
 		    }
 		}
 		elof (ClassVar, var) {
@@ -424,9 +424,9 @@ namespace semantic {
 			    return mapper;
 			} else if (!values [0].isEmpty ()) {
 			    auto note = Ymir::Error::createNote (param.getLocation ());
-			    Ymir::Error::occurAndNote (var.getLocation (), note, ExternalError::get (NOT_A_CLASS), values [0].prettyString ());
+			    Ymir::Error::occurAndNote (var.getLocation (), note, ExternalError::NOT_A_CLASS, values [0].prettyString ());
 			} else {
-			    Ymir::Error::occur (var.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+			    Ymir::Error::occur (var.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 						var.prettyString (),
 						NoneType::init (var.getLocation ()).prettyString ());
 			}
@@ -434,7 +434,7 @@ namespace semantic {
 			return Mapper (false, 0);
 		    } else {
 			auto note = Ymir::Error::createNote (param.getLocation ());
-			Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::get (USE_AS_TYPE));
+			Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::USE_AS_TYPE);
 		    }
 		}
 		elof (AliasVar, var) {
@@ -447,11 +447,11 @@ namespace semantic {
 			    return mapper;
 			} else {
 			    auto note = Ymir::Error::createNote (param.getLocation ());
-			    Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::get (NOT_AN_ALIAS), values [0].prettyString ());
+			    Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::NOT_AN_ALIAS, values [0].prettyString ());
 			}
 		    } else {
 			auto note = Ymir::Error::createNote (param.getLocation ());
-			Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::get (USE_AS_TYPE));
+			Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::USE_AS_TYPE);
 		    }
 		}
 		elof (syntax::VarDecl, decl) {
@@ -468,7 +468,7 @@ namespace semantic {
 				Ymir::Error::occurAndNote (
 				    value.getLocation (),
 				    note,
-				    ExternalError::get (INCOMPATIBLE_VALUES)
+				    ExternalError::INCOMPATIBLE_VALUES
 				    );
 			    }
 			    mapper.succeed = true;
@@ -498,7 +498,7 @@ namespace semantic {
 			return mapper;
 		    } else {
 			auto note = Ymir::Error::createNote (param.getLocation ());
-			Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::get (USE_AS_VALUE));
+			Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::USE_AS_VALUE);
 		    }
 		}
 		elof (syntax::VariadicVar, var) {
@@ -506,7 +506,7 @@ namespace semantic {
 		    for (auto & x : values) {
 			if (x.is <Value> ()) {
 			    auto note = Ymir::Error::createNote (param.getLocation ());
-			    Ymir::Error::occurAndNote (x.getLocation (), note, ExternalError::get (USE_AS_VALUE));
+			    Ymir::Error::occurAndNote (x.getLocation (), note, ExternalError::USE_AS_VALUE);
 			}
 		    }
 			
@@ -522,7 +522,7 @@ namespace semantic {
 		}
 		elof (syntax::DecoratedExpression, dc) {
 		    Ymir::Error::occur (dc.getDecorators ()[0].getLocation (),
-					ExternalError::get (DECO_OUT_OF_CONTEXT),
+					ExternalError::DECO_OUT_OF_CONTEXT,
 					dc.prettyDecorators ()
 			);
 		} fo;
@@ -540,7 +540,7 @@ namespace semantic {
 		Ymir::Error::occurAndNote (
 		    value.getLocation (),
 		    note,
-		    ExternalError::get (INCOMPATIBLE_VALUES)
+		    ExternalError::INCOMPATIBLE_VALUES
 		    );
 	    }
 
@@ -669,7 +669,7 @@ namespace semantic {
 		    for (auto it : syntaxTempl) {
 			errors.push_back (Ymir::Error::makeOccur (
 					      it.getLocation (),
-					      ExternalError::get (UNRESOLVED_TEMPLATE)
+					      ExternalError::UNRESOLVED_TEMPLATE
 					      ));
 		    }
 		    errors.push_back (this-> partialResolutionNote (ref.getLocation (), merge));
@@ -784,7 +784,7 @@ namespace semantic {
 			    return mapper;
 			}
 		    } else {
-			Ymir::Error::occur (un.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+			Ymir::Error::occur (un.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 					    un.prettyString (),
 					    type.to<Type> ().getTypeName ());
 		    }
@@ -808,7 +808,7 @@ namespace semantic {
 			    return mapper;
 			}
 		    } else {
-			Ymir::Error::occur (tr.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+			Ymir::Error::occur (tr.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 					    tr.prettyString (),
 					    type.to<Type> ().getTypeName ());
 		    }
@@ -839,7 +839,7 @@ namespace semantic {
 			}
 
 			if (current_consumed < (int) types.size ()) {
-			    Ymir::Error::occur (lst.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+			    Ymir::Error::occur (lst.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 						lst.prettyString (),
 						type.to<Type> ().getTypeName ());
 
@@ -851,7 +851,7 @@ namespace semantic {
 		    } else if (type.is <Void> ()) {
 			return Mapper (true, 0);
 		    } else {
-			Ymir::Error::occur (leftT.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+			Ymir::Error::occur (leftT.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 					    lst.prettyString (),
 					    type.to<Type> ().getTypeName ());
 		    }
@@ -927,7 +927,7 @@ namespace semantic {
 			}
 			    
 			if (current_consumed < (int) types.size ()) {
-			    Ymir::Error::occur (fPtr.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+			    Ymir::Error::occur (fPtr.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 						fPtr.prettyString (),
 						type.to<Type> ().getTypeName ());
 
@@ -946,7 +946,7 @@ namespace semantic {
 			Mapper mapper (true, 0);
 			return mapper;
 		    } else {
-			Ymir::Error::occur (fPtr.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+			Ymir::Error::occur (fPtr.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 					    fPtr.prettyString (),
 					    type.to<Type> ().getTypeName ());
 			    
@@ -1051,7 +1051,7 @@ namespace semantic {
 			return mapper;
 		    } else if (!types [0].is<Type> ()) {
 			auto note = Ymir::Error::createNote (var.getLocation ());
-			Ymir::Error::occurAndNote (types [0].getLocation (), note, ExternalError::get (USE_AS_TYPE), types [0].prettyString ());
+			Ymir::Error::occurAndNote (types [0].getLocation (), note, ExternalError::USE_AS_TYPE, types [0].prettyString ());
 		    } else {
 			Mapper mapper (true, Scores::SCORE_VAR);
 			mapper.mapping.emplace (var.getName ().getStr (), createSyntaxType (var.getName (), types [0]));
@@ -1067,7 +1067,7 @@ namespace semantic {
 		elof (ImplVar, var) {
 		    if (!types [0].is <ClassPtr> () && !types [0].is <ClassRef> ()) {
 			auto note = Ymir::Error::createNote (types [0].getLocation ());
-			Ymir::Error::occurAndNote (var.getLocation (), note, ExternalError::get (NOT_A_CLASS), types [0].prettyString ());
+			Ymir::Error::occurAndNote (var.getLocation (), note, ExternalError::NOT_A_CLASS, types [0].prettyString ());
 		    }
 
 		    consumed += 1;
@@ -1082,10 +1082,10 @@ namespace semantic {
 			return mapper;
 		    } else if (!types [0].isEmpty ()) {
 			auto note = Ymir::Error::createNote (types [0].getLocation ());
-			Ymir::Error::occurAndNote (var.getLocation (), note, ExternalError::get (NOT_A_STRUCT),
+			Ymir::Error::occurAndNote (var.getLocation (), note, ExternalError::NOT_A_STRUCT,
 						   types [0].to<Type> ().getTypeName ());
 		    } else
-		    Ymir::Error::occur (var.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+		    Ymir::Error::occur (var.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 					var.prettyString (),
 					NoneType::init (var.getLocation ()).to <Type> ().getTypeName ());
 		    return Mapper (false, 0);
@@ -1099,10 +1099,10 @@ namespace semantic {
 			return mapper;
 		    } else if (!types [0].isEmpty ()) {
 			auto note = Ymir::Error::createNote (types [0].getLocation ());
-			Ymir::Error::occurAndNote (var.getLocation (), note, ExternalError::get (NOT_A_CLASS),
+			Ymir::Error::occurAndNote (var.getLocation (), note, ExternalError::NOT_A_CLASS,
 						   types [0].to<Type> ().getTypeName ());
 		    } else
-		    Ymir::Error::occur (var.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+		    Ymir::Error::occur (var.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 					var.prettyString (),
 					NoneType::init (var.getLocation ()).to <Type> ().getTypeName ());
 		    return Mapper (false, 0);
@@ -1115,10 +1115,10 @@ namespace semantic {
 			consumed += 1;
 			return mapper;
 		    } else if (!types [0].isEmpty ()) {
-			Ymir::Error::occur (var.getLocation (), ExternalError::get (NOT_AN_ALIAS),
+			Ymir::Error::occur (var.getLocation (), ExternalError::NOT_AN_ALIAS,
 					    types [0].to<Type> ().getTypeName ());
 		    } else
-		    Ymir::Error::occur (var.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+		    Ymir::Error::occur (var.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 					var.prettyString (),
 					NoneType::init (var.getLocation ()).to <Type> ().getTypeName ());
 		    return Mapper (false, 0);
@@ -1138,7 +1138,7 @@ namespace semantic {
 			    if (it.isEmpty ()) add = false;
 			    else if (!it.is<Type> ()) {
 				auto note = Ymir::Error::createNote (var.getLocation ());
-				Ymir::Error::occurAndNote (types [0].getLocation (), note, ExternalError::get (USE_AS_TYPE), types [0].prettyString ());
+				Ymir::Error::occurAndNote (types [0].getLocation (), note, ExternalError::USE_AS_TYPE, types [0].prettyString ());
 			    }
 			}
 			if (add) {
@@ -1151,7 +1151,7 @@ namespace semantic {
 		}
 		elof (DecoratedExpression, dc) {
 		    Ymir::Error::occur (dc.getDecorators ()[0].getLocation (),
-					ExternalError::get (DECO_OUT_OF_CONTEXT),
+					ExternalError::DECO_OUT_OF_CONTEXT,
 					dc.prettyDecorators ()
 			);
 		} fo;
@@ -1178,7 +1178,7 @@ namespace semantic {
 			    auto realType = this-> replaceAll (ofv.getType (), mapper.mapping);
 			    auto genType = this-> _context.validateType (realType, true);
 			    if (ofv.isOver () && !this-> _context.isAncestor (genType, type)) {
-				Ymir::Error::occur (var.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+				Ymir::Error::occur (var.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 						    genType.prettyString (),
 						    type.prettyString ());
 			    }
@@ -1204,7 +1204,7 @@ namespace semantic {
 			    auto genType = this-> _context.validateType (realType, true);
 			    if (ofv.isOver ()) {
 				if (!this-> _context.isAncestor (genType, type)) {
-				    Ymir::Error::occur (un.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+				    Ymir::Error::occur (un.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 							genType.prettyString (),
 							type.prettyString ());
 				}
@@ -1221,7 +1221,7 @@ namespace semantic {
 			    return mapper;
 			}
 		    } else {
-			Ymir::Error::occur (un.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+			Ymir::Error::occur (un.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 					    un.prettyString (),
 					    type.to<Type> ().getTypeName ());
 		    }
@@ -1237,7 +1237,7 @@ namespace semantic {
 			    auto genType = this-> _context.validateType (realType, true);
 			    if (ofv.isOver ()) {
 				if (!this-> _context.isAncestor (genType, type)) {
-				    Ymir::Error::occur (tr.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+				    Ymir::Error::occur (tr.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 							genType.prettyString (),
 							type.prettyString ());
 				}
@@ -1254,7 +1254,7 @@ namespace semantic {
 			    return mapper;
 			}
 		    } else {
-			Ymir::Error::occur (tr.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+			Ymir::Error::occur (tr.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 					    tr.prettyString (),
 					    type.to<Type> ().getTypeName ());
 		    }
@@ -1281,7 +1281,7 @@ namespace semantic {
 			}
 			    
 			if (current_consumed < (int) types.size ()) {
-			    Ymir::Error::occur (lst.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+			    Ymir::Error::occur (lst.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 						lst.prettyString (),
 						type.to<Type> ().getTypeName ());
 
@@ -1293,7 +1293,7 @@ namespace semantic {
 			auto genType = this-> _context.validateType (realType, true);
 			if (ofv.isOver ()) {
 			    if (!this-> _context.isAncestor (genType, type)) {
-				Ymir::Error::occur (lst.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+				Ymir::Error::occur (lst.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 						    genType.prettyString (),
 						    type.prettyString ());
 			    }
@@ -1310,14 +1310,14 @@ namespace semantic {
 		    } else if (type.is<Void> ()) {
 			return Mapper (true, 0);
 		    } else {
-			Ymir::Error::occur (lst.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+			Ymir::Error::occur (lst.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 					    lst.prettyString (),
 					    type.to<Type> ().getTypeName ());
 		    }
 		}
 		elof (syntax::FuncPtr, fPtr) {
 		    if (ofv.isOver ()) {
-			Ymir::Error::occur (fPtr.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+			Ymir::Error::occur (fPtr.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 					    fPtr.prettyString (),
 					    type.prettyString ());
 		    }
@@ -1344,7 +1344,7 @@ namespace semantic {
 			}
 
 			if (current_consumed < (int) types.size ()) {
-			    Ymir::Error::occur (fPtr.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+			    Ymir::Error::occur (fPtr.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 						NoneType::init (ofv.getLocation ()).to <Type> ().getTypeName (),
 						type.to<Type> ().getTypeName ());
 				
@@ -1360,7 +1360,7 @@ namespace semantic {
 			mapper.score += Scores::SCORE_TYPE;
 			return mergeMappers (mapper, mp);
 		    } else {
-			Ymir::Error::occur (fPtr.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+			Ymir::Error::occur (fPtr.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 					    fPtr.prettyString (),
 					    type.to<Type> ().getTypeName ());
 		    }
@@ -1385,7 +1385,7 @@ namespace semantic {
 			auto genType = this-> _context.validateType (realType, true);
 			if (ofv.isOver ()) {
 			    if (!this-> _context.isAncestor (genType, type)) {
-				Ymir::Error::occur (arr.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+				Ymir::Error::occur (arr.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 						    genType.prettyString (),
 						    type.prettyString ());
 			    }
@@ -1400,7 +1400,7 @@ namespace semantic {
 			mapper.score += Scores::SCORE_TYPE;
 			return mapper;
 		    } else {
-			Ymir::Error::occur (arr.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+			Ymir::Error::occur (arr.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 					    arr.prettyString (),
 					    type.to<Type> ().getTypeName ());
 		    }
@@ -1409,7 +1409,7 @@ namespace semantic {
 		    for (auto & it : dc.getDecorators ()) {
 			if (it.getValue () != Decorator::MUT && it.getValue () != Decorator::DMUT)
 			Ymir::Error::occur (it.getLocation (),
-					    ExternalError::get (DECO_OUT_OF_CONTEXT),
+					    ExternalError::DECO_OUT_OF_CONTEXT,
 					    it.getLocation ().getStr ()
 			    );
 		    }
@@ -1420,10 +1420,10 @@ namespace semantic {
 		    if (mapper.succeed) {
 			if (dc.hasDecorator (Decorator::MUT) && !type.to <Type> ().isMutable ()) {
 			    auto note = this-> partialResolutionNote (dc.getLocation (), mapper);
-			    Ymir::Error::occurAndNote (dc.getDecorators ()[0].getLocation (), note, ExternalError::get (DISCARD_CONST));
+			    Ymir::Error::occurAndNote (dc.getDecorators ()[0].getLocation (), note, ExternalError::DISCARD_CONST);
 			} else if (dc.hasDecorator (Decorator::DMUT) && !type.to <Type> ().isDeeplyMutable ()) {
 			    auto note = this-> partialResolutionNote (dc.getLocation (), mapper);
-			    Ymir::Error::occurAndNote (dc.getDecorators ()[0].getLocation (), note, ExternalError::get (DISCARD_CONST));
+			    Ymir::Error::occurAndNote (dc.getDecorators ()[0].getLocation (), note, ExternalError::DISCARD_CONST);
 			}
 			    
 			mapper.mapping.emplace (ofv.getLocation ().getStr (), createSyntaxType (ofv.getLocation (), type));
@@ -1438,7 +1438,7 @@ namespace semantic {
 		    auto genType = this-> _context.validateType (realType, true);
 		    if (ofv.isOver ()) {
 			if (!this-> _context.isAncestor (genType, type)) {
-			    Ymir::Error::occur (cl.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+			    Ymir::Error::occur (cl.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 						genType.prettyString (),
 						type.prettyString ());
 			}
@@ -1461,7 +1461,7 @@ namespace semantic {
 	    if (type.is <ClassPtr> ()) {
 		if (ofv.isOver ()) {
 		    if (!this-> _context.isAncestor (left, type)) {
-			Ymir::Error::occur (ofv.getType ().getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+			Ymir::Error::occur (ofv.getType ().getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 					    left.prettyString (),
 					    type.prettyString ());
 		    }
@@ -1531,28 +1531,28 @@ namespace semantic {
 			
 		    if (errors.size () == 0) {
 			auto note = Ymir::Error::createNote (implv.getType ().getLocation ());
-			Ymir::Error::occurAndNote (type.getLocation (), note, ExternalError::get (NOT_IMPL_TRAIT), type.prettyString (), implv.getType ().prettyString ());
+			Ymir::Error::occurAndNote (type.getLocation (), note, ExternalError::NOT_IMPL_TRAIT, type.prettyString (), implv.getType ().prettyString ());
 		    }
 			
 		    throw Error::ErrorList {errors};
 		}
 		elof (syntax::List, lst) {
-		    Ymir::Error::occur (lst.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+		    Ymir::Error::occur (lst.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 					lst.prettyString (),
 					type.to<Type> ().getTypeName ());
 		}
 		elof (syntax::FuncPtr, fPtr) {
-		    Ymir::Error::occur (fPtr.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+		    Ymir::Error::occur (fPtr.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 					fPtr.prettyString (),
 					type.to<Type> ().getTypeName ());
 		}
 		elof (syntax::ArrayAlloc, arr) {
-		    Ymir::Error::occur (arr.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+		    Ymir::Error::occur (arr.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 					arr.prettyString (),
 					type.to<Type> ().getTypeName ());
 		}
 		elof (DecoratedExpression, dc) {
-		    Ymir::Error::occur (dc.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+		    Ymir::Error::occur (dc.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 					dc.prettyString (),
 					type.to<Type> ().getTypeName ());
 		} fo;
@@ -2182,7 +2182,7 @@ namespace semantic {
 		    for (auto & it : mapping) {
 			auto expr = findExpression (it.first, tmpl.getParams ());
 			if (!expr.isEmpty ())
-			Error::occur (expr.getLocation (), ExternalError::get (SHADOWING_DECL), it.first);
+			Error::occur (expr.getLocation (), ExternalError::SHADOWING_DECL, it.first);
 		    }
 		    
 		    for (auto & it : tmpl.getParams ()) {
@@ -2322,7 +2322,7 @@ namespace semantic {
 	    auto test = this-> _context.validateTemplateTest (ref, replaceAll (decl.getTest (), mapping));
 	    auto val = this-> _context.retreiveValue (test);
 	    if (!val.is<BoolValue> ()) {
-		Ymir::Error::occur (test.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+		Ymir::Error::occur (test.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 				    val.to <Value> ().getType ().to <Type> ().getTypeName (),
 				    Bool::NAME
 		    );
@@ -2580,7 +2580,7 @@ namespace semantic {
 			toValidate.push_back ({retType, protoGen.to <FrameProto> ().getReturnType ()});
 		    } else if (!protoGen.to <FrameProto> ().getReturnType ().equals (type)) {
 			auto note = Ymir::Error::createNote (protoGen.to <FrameProto> ().getReturnType ().getLocation ());
-			Ymir::Error::occurAndNote (type.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
+			Ymir::Error::occurAndNote (type.getLocation (), note, ExternalError::INCOMPATIBLE_TYPES,
 						   type.prettyString (),
 						   protoGen.to <FrameProto> ().getReturnType ().prettyString ()
 			    );
@@ -2606,7 +2606,7 @@ namespace semantic {
 		    auto vec = {it.second};
 		    auto mp = validateTypeFromImplicit (exprs, param, array_view<Generator> (vec), current_consumed);
 		    if (!mp.succeed) {
-			Ymir::Error::occur (it.first.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+			Ymir::Error::occur (it.first.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 					    it.first.prettyString (),
 					    it.second.prettyString ()
 			    );
@@ -2637,7 +2637,7 @@ namespace semantic {
 		auto value = this-> _context.validateTemplateTest (context, replaceAll (test, mapper.mapping));
 		auto val = this-> _context.retreiveValue (value);
 		if (!val.is<BoolValue> ()) {
-		    Ymir::Error::occur (test.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+		    Ymir::Error::occur (test.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 					val.to <Value> ().getType ().to <Type> ().getTypeName (),
 					Bool::NAME
 			);
@@ -2649,7 +2649,7 @@ namespace semantic {
 			vec.push_back (format ("% -> %", it , mapper.mapping.find (it)-> second.prettyString ()));
 		    }
 		
-		    Ymir::Error::occur (test.getLocation (), ExternalError::get (TEMPLATE_TEST_FAILED), vec);
+		    Ymir::Error::occur (test.getLocation (), ExternalError::TEMPLATE_TEST_FAILED, vec);
 		}
 	    }
 	}

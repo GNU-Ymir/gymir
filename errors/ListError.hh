@@ -20,205 +20,201 @@ namespace Ymir {
        This enumaration lists all the error types 
        We cannot use C++ enum, as it does not allows to have string values
     */
-    DECLARE_ENUM_HEADER (ExternalError, std::string,
-			 ADDR_MIGHT_THROW,
-			 AFFECT_COMPILE_TIME,
-			 ALIAS_NO_EFFECT,
-			 ALLOC_ABSTRACT_CLASS,
-			 ASSERT_FAILED,
-			 BRANCHING_VALUE,
-			 BREAK_INSIDE_EXPR,
-			 BREAK_NO_LOOP,
-			 CALL_RECURSION,
-			 CANDIDATE_ARE,
-			 CANNOT_BE_CTE,
-			 CANNOT_OVERRIDE_AS_PRIVATE,
-			 CANNOT_OVERRIDE_FINAL,
-			 CANNOT_OVERRIDE_NON_TRAIT_IN_IMPL,
-			 CANNOT_OVERRIDE_TRAIT_OUTSIDE_IMPL, 
-			 CATCH_MULTIPLE_TIME,
-			 CATCH_OUT_OF_SCOPE,
-			 COMPILATION_END,
-			 COMPILE_TIME_UNKNOWN,
-			 CONDITIONAL_NON_TEMPLATE_CLASS,
-			 CONDITIONAL_NON_TEMPLATE_TRAIT,
-			 CONFLICTING_DECLARATIONS,
-			 CONFLICT_DECORATOR,
-			 DECLARED_PROTECTION,
-			 DECL_VARIADIC_FUNC,
-			 DECO_OUT_OF_CONTEXT,
-			 DISCARD_CONST,
-			 DISCARD_CONST_LEVEL,
-			 DISCARD_CONST_LEVEL_TEMPLATE,
-			 DOC_FILE_ERROR,
-			 DOLLAR_OUSIDE_CONTEXT,
-			 DYNAMIC_CAST_FAILED,
-			 ENUM_EMPTY,
-			 EN_NO_VALUE,
-			 EXTERNAL_VAR_DECL_WITHOUT_TYPE,
-			 EXTERNAL_VAR_WITH_VALUE,
-			 FAILURE_NO_THROW,
-			 FIELD_NO_DEFAULT,
-			 FORGET_TOKEN,
-			 FORWARD_REFERENCE_VAR,
-			 GLOBAL_VAR_DECL_WITHOUT_VALUE,
-			 GLOBAL_VAR_DEPENDENCY, 
-			 IMMUTABLE_LVALUE,
-			 IMPLICIT_ALIAS,
-			 IMPLICIT_OVERRIDE,
-			 IMPLICIT_OVERRIDE_BY_TRAIT,
-			 IMPLICIT_REFERENCE,
-			 IMPL_NO_TRAIT,
-			 IMPOSSIBLE_EXTERN,
-			 INCOMPATIBLE_TOKENS,
-			 INCOMPATIBLE_TYPES,			 
-			 INCOMPATIBLE_VALUES,
-			 INCOMPLETE_TEMPLATE,
-			 INCOMPLETE_TYPE,
-			 INCOMPLETE_TYPE_CLASS,
-			 INFINITE_CONSTRUCTION_LOOP,
-			 INHERIT_FINAL_CLASS,
-			 INHERIT_NO_CLASS,
-			 INSERT_NO_TABLE,
-			 INVALID_MACRO_EVAL,
-			 INVALID_MACRO_RULE,
-			 IN_BLOCK_OPEN,
-			 IN_COMPILE_TIME_EXEC,
-			 IN_IMPORT,
-			 IN_MACRO_EXPANSION,
-			 IN_MATCH_DEF,
-			 IN_TEMPLATE_DEF,
-			 IN_TRAIT_VALIDATION,
-			 IS_TYPE,
-			 LOCAL_FIELD_OFFSET_OUT_CLASS,
-			 LOCAL_TUPLEOF_OUT_CLASS,
-			 LOCKED_CONTEXT,
-			 MACRO_MULT_NO_VAR,
-			 MACRO_REST,
-			 MAIN_FUNCTION_ONE_ARG,
-			 MALFORMED_CHAR,
-			 MALFORMED_PRAGMA, 
-			 MATCH_CALL,			 
-			 MATCH_FINAL_NO_DEFAULT,
-			 MATCH_NO_DEFAULT,
-			 MATCH_PATTERN_CLASS,
-			 MISMATCH_ARITY,
-			 MONITOR_NON_CLASS,
-			 MOVE_ONLY_CLOSURE,
-			 MULTIPLE_CATCH,
-			 MULTIPLE_DESTRUCTOR,
-			 MULTIPLE_FIELD_INIT,
-			 MUST_ESCAPE_CHAR, 
-			 MUTABLE_CONST_ITER,
-			 MUTABLE_CONST_PARAM,
-			 NEVER_USED,
-			 NOTHING_TO_CATCH,
-			 NOT_ABSTRACT_NO_OVER,
-			 NOT_AN_ALIAS,
-			 NOT_A_CLASS,
-			 NOT_A_LVALUE,
-			 NOT_A_STRUCT,
-			 NOT_CATCH,
-			 NOT_CTE_ITERABLE,
-			 NOT_IMPL_TRAIT,
-			 NOT_ITERABLE,
-			 NOT_ITERABLE_WITH,
-			 NOT_OVERRIDE,
-			 NO_ALIAS_EXIST,
-			 NO_BODY_METHOD,
-			 NO_COPY_EXIST,
-			 NO_SIZE_FORWARD_REF,
-			 NO_SUCH_FILE,
-			 NO_SUPER_FOR_CLASS,
-			 NULL_PTR,
-			 OF, 
-			 OTHER_ERRORS,
-			 OVERFLOW,
-			 OVERFLOW_ARITY,
-			 OVERFLOW_ARRAY,
-			 OVERRIDE_MISMATCH_PROTECTION,
-			 OVERRIDE_PRIVATE,
-			 PACKED_AND_UNION,
-			 PARAMETER_NAME,
-			 PRIVATE_IN_THIS_CONTEXT,
-			 PROTECTION_NO_IMPACT,
-			 REF_NO_EFFECT,
-			 REF_NO_VALUE,
-			 REF_RETURN_TYPE,
-			 REF_SELF,
-			 RESERVED_RULE_NAME,
-			 RETHROW_NOT_MATCHING_PARENT,
-			 RETURN_INSIDE_EXPR,
-			 RETURN_NO_FRAME,
-			 SCOPE_OUT_OF_SCOPE,
-			 SHADOWING_DECL,
-			 SPACE_EXTERN_C,
-			 SPECIALISATION_WORK_TYPE_BOTH,
-			 SPECIALISATION_WORK_WITH_BOTH,
-			 SPECIALISATION_WORK_WITH_BOTH_PURE,
-			 SYNTAX_ERROR_AT,
-			 SYNTAX_ERROR_AT_SIMPLE,
-			 SYNTAX_ERROR_IF_ON_NON_TEMPLATE,
-			 SYNTAX_ERROR_MISSING_TEMPL_PAR,
-			 TEMPLATE_IN_TRAIT,
-			 TEMPLATE_RECURSION,
-			 TEMPLATE_REST,
-			 TEMPLATE_TEST_FAILED,
-			 TEMPLATE_VALUE_TRY,
-			 THROWS,
-			 THROWS_IN_LAMBDA,
-			 THROWS_NOT_DECLARED,
-			 THROWS_NOT_USED,
-			 TRAIT_NO_METHOD,
-			 TYPE_NO_FIELD,
-			 UFC_REWRITING,
-			 UNDEFINED_BIN_OP,
-			 UNDEFINED_BRACKETS_OP,
-			 UNDEFINED_CA,
-			 UNDEFINED_CALL_OP,
-			 UNDEFINED_CAST_OP,
-			 UNDEFINED_ESCAPE,
-			 UNDEFINED_FIELD_FOR,
-			 UNDEFINED_MACRO_OP,
-			 UNDEFINED_SCOPE_GUARD,
-			 UNDEFINED_SUB_PART_FOR,
-			 UNDEFINED_TEMPLATE_OP,
-			 UNDEFINED_UN_OP,
-			 UNDEF_MACRO_EVAL,
-			 UNDEF_MACRO_EVAL_IN,
-			 UNDEF_TYPE,
-			 UNDEF_VAR,
-			 UNINIT_FIELD,
-			 UNION_CST_MULT,
-			 UNION_INIT_FIELD,
-			 UNKNOWN_LAMBDA_TYPE,
-			 UNKNOWN_OPTION_NAME,
-			 UNKOWN_PRAGMA,
-			 UNREACHBLE_STATEMENT,
-			 UNRESOLVED_TEMPLATE,
-			 UNTERMINATED_SEQUENCE,			 
-			 UNTRUSTED_CONTEXT,
-			 UNUSED_MATCH_CALL_OP,
-			 USELESS_CATCH,
-			 USELESS_DECORATOR,
-			 USELESS_EXPR,
-			 USE_AS_TYPE,
-			 USE_AS_VALUE,
-			 USE_UNIT_FOR_VOID,
-			 VALIDATING,
-			 VAR_DECL_IN_TRAIT,
-			 VAR_DECL_WITHOUT_VALUE,			 
-			 VAR_DECL_WITH_NOTHING,
-			 VOID_VALUE,
-			 VOID_VAR,
-			 VOID_VAR_VALUE,
-			 WRONG_IMPLEMENT,
-			 WRONG_MODULE_NAME,
-    );
+    struct ExternalError {
+	static const char*	ADDR_MIGHT_THROW;
+	static const char*	AFFECT_COMPILE_TIME;
+	static const char*	ALIAS_NO_EFFECT;
+	static const char*	ALLOC_ABSTRACT_CLASS;
+	static const char*	ASSERT_FAILED;
+	static const char*	BRANCHING_VALUE;
+	static const char*	BREAK_INSIDE_EXPR;
+	static const char*	BREAK_NO_LOOP;
+	static const char*	CALL_RECURSION;
+	static const char*	CANDIDATE_ARE;
+	static const char*	CANNOT_BE_CTE;
+	static const char*	CANNOT_OVERRIDE_AS_PRIVATE;
+	static const char*	CANNOT_OVERRIDE_FINAL;
+	static const char*	CANNOT_OVERRIDE_NON_TRAIT_IN_IMPL;
+	static const char*	CANNOT_OVERRIDE_TRAIT_OUTSIDE_IMPL; 
+	static const char*	CATCH_MULTIPLE_TIME;
+	static const char*	CATCH_OUT_OF_SCOPE;
+	static const char*	COMPILATION_END;
+	static const char*	COMPILE_TIME_UNKNOWN;
+	static const char*	CONDITIONAL_NON_TEMPLATE_CLASS;
+	static const char*	CONDITIONAL_NON_TEMPLATE_TRAIT;
+	static const char*	CONFLICTING_DECLARATIONS;
+	static const char*	CONFLICT_DECORATOR;
+	static const char*	DECLARED_PROTECTION;
+	static const char*	DECL_VARIADIC_FUNC;
+	static const char*	DECO_OUT_OF_CONTEXT;
+	static const char*	DISCARD_CONST;
+	static const char*	DISCARD_CONST_LEVEL;
+	static const char*	DISCARD_CONST_LEVEL_TEMPLATE;
+	static const char*	DOC_FILE_ERROR;
+	static const char*	DOLLAR_OUSIDE_CONTEXT;
+	static const char*	DYNAMIC_CAST_FAILED;
+	static const char*	ENUM_EMPTY;
+	static const char*	EN_NO_VALUE;
+	static const char*	EXTERNAL_VAR_DECL_WITHOUT_TYPE;
+	static const char*	EXTERNAL_VAR_WITH_VALUE;
+	static const char*	FAILURE_NO_THROW;
+	static const char*	FIELD_NO_DEFAULT;
+	static const char*	FORGET_TOKEN;
+	static const char*	FORWARD_REFERENCE_VAR;
+	static const char*	GLOBAL_VAR_DECL_WITHOUT_VALUE;
+	static const char*	GLOBAL_VAR_DEPENDENCY; 
+	static const char*	IMMUTABLE_LVALUE;
+	static const char*	IMPLICIT_ALIAS;
+	static const char*	IMPLICIT_OVERRIDE;
+	static const char*	IMPLICIT_OVERRIDE_BY_TRAIT;
+	static const char*	IMPLICIT_REFERENCE;
+	static const char*	IMPL_NO_TRAIT;
+	static const char*	IMPOSSIBLE_EXTERN;
+	static const char*	INCOMPATIBLE_TOKENS;
+	static const char*	INCOMPATIBLE_TYPES;
+	static const char*	INCOMPATIBLE_VALUES;
+	static const char*	INCOMPLETE_TEMPLATE;
+	static const char*	INCOMPLETE_TYPE;
+	static const char*	INCOMPLETE_TYPE_CLASS;
+	static const char*	INFINITE_CONSTRUCTION_LOOP;
+	static const char*	INHERIT_FINAL_CLASS;
+	static const char*	INHERIT_NO_CLASS;
+	static const char*	INSERT_NO_TABLE;
+	static const char*	INVALID_MACRO_EVAL;
+	static const char*	INVALID_MACRO_RULE;
+	static const char*	IN_BLOCK_OPEN;
+	static const char*	IN_COMPILE_TIME_EXEC;
+	static const char*	IN_IMPORT;
+	static const char*	IN_MACRO_EXPANSION;
+	static const char*	IN_MATCH_DEF;
+	static const char*	IN_TEMPLATE_DEF;
+	static const char*	IN_TRAIT_VALIDATION;
+	static const char*	IS_TYPE;
+	static const char*	LOCAL_FIELD_OFFSET_OUT_CLASS;
+	static const char*	LOCAL_TUPLEOF_OUT_CLASS;
+	static const char*	LOCKED_CONTEXT;
+	static const char*	MACRO_MULT_NO_VAR;
+	static const char*	MACRO_REST;
+	static const char*	MAIN_FUNCTION_ONE_ARG;
+	static const char*	MALFORMED_CHAR;
+	static const char*	MALFORMED_PRAGMA; 
+	static const char*	MATCH_CALL;
+	static const char*	MATCH_FINAL_NO_DEFAULT;
+	static const char*	MATCH_NO_DEFAULT;
+	static const char*	MATCH_PATTERN_CLASS;
+	static const char*	MISMATCH_ARITY;
+	static const char*	MONITOR_NON_CLASS;
+	static const char*	MOVE_ONLY_CLOSURE;
+	static const char*	MULTIPLE_CATCH;
+	static const char*	MULTIPLE_DESTRUCTOR;
+	static const char*	MULTIPLE_FIELD_INIT;
+	static const char*	MUST_ESCAPE_CHAR; 
+	static const char*	MUTABLE_CONST_ITER;
+	static const char*	MUTABLE_CONST_PARAM;
+	static const char*	NEVER_USED;
+	static const char*	NOTHING_TO_CATCH;
+	static const char*	NOT_ABSTRACT_NO_OVER;
+	static const char*	NOT_AN_ALIAS;
+	static const char*	NOT_A_CLASS;
+	static const char*	NOT_A_LVALUE;
+	static const char*	NOT_A_STRUCT;
+	static const char*	NOT_CATCH;
+	static const char*	NOT_CTE_ITERABLE;
+	static const char*	NOT_IMPL_TRAIT;
+	static const char*	NOT_ITERABLE;
+	static const char*	NOT_ITERABLE_WITH;
+	static const char*	NOT_OVERRIDE;
+	static const char*	NO_ALIAS_EXIST;
+	static const char*	NO_BODY_METHOD;
+	static const char*	NO_COPY_EXIST;
+	static const char*	NO_SIZE_FORWARD_REF;
+	static const char*	NO_SUCH_FILE;
+	static const char*	NO_SUPER_FOR_CLASS;
+	static const char*	NULL_PTR;
+	static const char*	OF; 
+	static const char*	OTHER_ERRORS;
+	static const char*	OVERFLOW;
+	static const char*	OVERFLOW_ARITY;
+	static const char*	OVERFLOW_ARRAY;
+	static const char*	OVERRIDE_MISMATCH_PROTECTION;
+	static const char*	OVERRIDE_PRIVATE;
+	static const char*	PACKED_AND_UNION;
+	static const char*	PARAMETER_NAME;
+	static const char*	PRIVATE_IN_THIS_CONTEXT;
+	static const char*	PROTECTION_NO_IMPACT;
+	static const char*	REF_NO_EFFECT;
+	static const char*	REF_NO_VALUE;
+	static const char*	REF_RETURN_TYPE;
+	static const char*	REF_SELF;
+	static const char*	RESERVED_RULE_NAME;
+	static const char*	RETHROW_NOT_MATCHING_PARENT;
+	static const char*	RETURN_INSIDE_EXPR;
+	static const char*	RETURN_NO_FRAME;
+	static const char*	SCOPE_OUT_OF_SCOPE;
+	static const char*	SHADOWING_DECL;
+	static const char*	SPACE_EXTERN_C;
+	static const char*	SPECIALISATION_WORK_TYPE_BOTH;
+	static const char*	SPECIALISATION_WORK_WITH_BOTH;
+	static const char*	SPECIALISATION_WORK_WITH_BOTH_PURE;
+	static const char*	SYNTAX_ERROR_AT;
+	static const char*	SYNTAX_ERROR_AT_SIMPLE;
+	static const char*	SYNTAX_ERROR_IF_ON_NON_TEMPLATE;
+	static const char*	SYNTAX_ERROR_MISSING_TEMPL_PAR;
+	static const char*	TEMPLATE_IN_TRAIT;
+	static const char*	TEMPLATE_RECURSION;
+	static const char*	TEMPLATE_REST;
+	static const char*	TEMPLATE_TEST_FAILED;
+	static const char*	TEMPLATE_VALUE_TRY;
+	static const char*	THROWS;
+	static const char*	THROWS_IN_LAMBDA;
+	static const char*	THROWS_NOT_DECLARED;
+	static const char*	THROWS_NOT_USED;
+	static const char*	TRAIT_NO_METHOD;
+	static const char*	TYPE_NO_FIELD;
+	static const char*	UFC_REWRITING;
+	static const char*	UNDEFINED_BIN_OP;
+	static const char*	UNDEFINED_BRACKETS_OP;
+	static const char*	UNDEFINED_CA;
+	static const char*	UNDEFINED_CALL_OP;
+	static const char*	UNDEFINED_CAST_OP;
+	static const char*	UNDEFINED_ESCAPE;
+	static const char*	UNDEFINED_FIELD_FOR;
+	static const char*	UNDEFINED_MACRO_OP;
+	static const char*	UNDEFINED_SCOPE_GUARD;
+	static const char*	UNDEFINED_SUB_PART_FOR;
+	static const char*	UNDEFINED_TEMPLATE_OP;
+	static const char*	UNDEFINED_UN_OP;
+	static const char*	UNDEF_MACRO_EVAL;
+	static const char*	UNDEF_MACRO_EVAL_IN;
+	static const char*	UNDEF_TYPE;
+	static const char*	UNDEF_VAR;
+	static const char*	UNINIT_FIELD;
+	static const char*	UNION_CST_MULT;
+	static const char*	UNION_INIT_FIELD;
+	static const char*	UNKNOWN_LAMBDA_TYPE;
+	static const char*	UNKNOWN_OPTION_NAME;
+	static const char*	UNREACHBLE_STATEMENT;
+	static const char*	UNRESOLVED_TEMPLATE;
+	static const char*	UNTERMINATED_SEQUENCE;
+	static const char*	UNTRUSTED_CONTEXT;
+	static const char*	UNUSED_MATCH_CALL_OP;
+	static const char*	USELESS_CATCH;
+	static const char*	USELESS_DECORATOR;
+	static const char*	USELESS_EXPR;
+	static const char*	USE_AS_TYPE;
+	static const char*	USE_AS_VALUE;
+	static const char*	USE_UNIT_FOR_VOID;
+	static const char*	VALIDATING;
+	static const char*	VAR_DECL_IN_TRAIT;
+	static const char*	VAR_DECL_WITHOUT_VALUE;
+	static const char*	VAR_DECL_WITH_NOTHING;
+	static const char*	VOID_VALUE;
+	static const char*	VOID_VAR;
+	static const char*	VOID_VAR_VALUE;
+	static const char*	WRONG_IMPLEMENT;
+	static const char*	WRONG_MODULE_NAME;
+	static const char*	UNKNOWN_PRAGMA;
+    };
     
-    // 	    SYNTAX_ERROR_FOR = "%%% unexpected when analysing statement %%%",
-    // 	    SYNTAX_ERROR_SIMPLE = "%%% unexpected",
-    // 	    LAST_ERROR
-    // 	    };
         
 }

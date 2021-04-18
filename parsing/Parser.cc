@@ -54,15 +54,15 @@ namespace Ymir {
 	    semanticTime ();
 	} catch (Error::ErrorList list) {
 	    list.print ();
-	    Error::end (ExternalError::get (COMPILATION_END));
+	    Error::end (ExternalError::COMPILATION_END);
 	} catch (Error::FatalError ftl) {
 	    ftl.print ();
-	    Error::end (ExternalError::get (COMPILATION_END));
+	    Error::end (ExternalError::COMPILATION_END);
 	}
     }
     
     void Parser::syntaxicTime () {
-	if (!Ymir::file_exists (this-> _path.c_str ())) Error::occur (ExternalError::get (NO_SUCH_FILE), _path);
+	if (!Ymir::file_exists (this-> _path.c_str ())) Error::occur (ExternalError::NO_SUCH_FILE, _path);
 
 	auto visitor = syntax::Visitor::init (this-> _path);
 	this-> _module = visitor.visitModGlobal ();
@@ -90,7 +90,7 @@ namespace Ymir {
 		fwrite (res.c_str (), sizeof (char), res.length (), file);
 		fclose (file);
 	    } else {
-		(Error::ErrorList {{Error::makeOccurOneLine (ExternalError::get (DOC_FILE_ERROR), path)}}).print ();
+		(Error::ErrorList {{Error::makeOccurOneLine (ExternalError::DOC_FILE_ERROR, path)}}).print ();
 	    }
 	}
 

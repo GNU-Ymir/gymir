@@ -30,10 +30,10 @@ namespace semantic {
 			// in pragma compile the errors are not printed, so we need to keep them in case of retry
 			sym.to <semantic::Struct> ().setGenerator (NoneType::init (str.getName ()));
 		    }
-		    Ymir::Error::occurAndNote (str.getName (), err.getErrors (), ExternalError::get (VALIDATING), str.getRealName ());
+		    Ymir::Error::occurAndNote (str.getName (), err.getErrors (), ExternalError::VALIDATING, str.getRealName ());
 		    return Generator::empty ();
 		} elfo {
-		    Ymir::Error::occur (str.getName (), ExternalError::get (INCOMPLETE_TYPE_CLASS), str.getRealName ());
+		    Ymir::Error::occur (str.getName (), ExternalError::INCOMPLETE_TYPE_CLASS, str.getRealName ());
 		    return Generator::empty ();
 		}
 	    }
@@ -55,7 +55,7 @@ namespace semantic {
 		try {
 		    auto field = this-> _context.validateVarDeclValue (it.to <syntax::VarDecl> (), false); 
 		    if (str.to <semantic::Struct> ().isUnion () && !it.to <syntax::VarDecl> ().getValue ().isEmpty ())
-		    errors.push_back (Ymir::Error::makeOccur (it.to <syntax::VarDecl> ().getValue ().getLocation (), ExternalError::get (UNION_INIT_FIELD)));
+		    errors.push_back (Ymir::Error::makeOccur (it.to <syntax::VarDecl> ().getValue ().getLocation (), ExternalError::UNION_INIT_FIELD));
 			
 		    fieldsDecl.push_back (field);		    	    		    
 		} catch (Error::ErrorList list) {
@@ -76,7 +76,7 @@ namespace semantic {
 		} else {
 		    sym.to <semantic::Struct> ().setGenerator (ErrorType::init (sym.getName (), sym.getRealName (), errors));
 		}
-		Ymir::Error::occurAndNote (sym.getName (), errors, ExternalError::get (VALIDATING), sym.getRealName ());
+		Ymir::Error::occurAndNote (sym.getName (), errors, ExternalError::VALIDATING, sym.getRealName ());
 
 	    }
 				
@@ -92,7 +92,7 @@ namespace semantic {
 		of (StructRef, str_ref) {
 		    if (str_ref.isRefOf (sym) && !fst) {
 			auto note = Ymir::Error::createNote (sym.getName ());
-			Ymir::Error::occurAndNote (loc, note, ExternalError::get (NO_SIZE_FORWARD_REF));
+			Ymir::Error::occurAndNote (loc, note, ExternalError::NO_SIZE_FORWARD_REF);
 		    } else {
 			auto & str = str_ref.getRef ().to <semantic::Struct> ().getGenerator ();
 			for (auto & it : str.to<generator::Struct> ().getFields ()) {

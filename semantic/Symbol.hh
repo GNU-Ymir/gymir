@@ -530,7 +530,7 @@ namespace semantic {
 	template <typename T>
 	T& to ()  {
 	    if (dynamic_cast <T*> (this-> _value.get ()) == nullptr)
-		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
+		Ymir::Error::halt (Ymir::ExternalError::DYNAMIC_CAST_FAILED, "type differ");
 	    return *((T*) this-> _value.get ());	    
 	}
 
@@ -541,7 +541,7 @@ namespace semantic {
 	template <typename T>
 	const T& to () const  {
 	    if (dynamic_cast <T*> (this-> _value.get ()) == nullptr)
-		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
+		Ymir::Error::halt (Ymir::ExternalError::DYNAMIC_CAST_FAILED, "type differ");
 	    return *((const T*) this-> _value.get ());	    
 	}
 

@@ -21,7 +21,7 @@ namespace semantic {
 	Generator Visitor::validateValueNonVoid (const syntax::Expression & expr) {
 	    auto ret = this-> validateValue (expr, false, false);
 	    if (ret.to <Value> ().getType ().is<NoneType> () || ret.to <Value> ().getType ().is <Void> ()) {
-		Ymir::Error::occur (expr.getLocation (), ExternalError::get (VOID_VALUE));
+		Ymir::Error::occur (expr.getLocation (), ExternalError::VOID_VALUE);
 	    }
 	    return ret;
 	}
@@ -43,18 +43,18 @@ namespace semantic {
 	    
 	    else if (value.isEmpty ()) {
 		auto note = Ymir::Error::createNote (expr.getLocation ());
-		Ymir::Error::occurAndNote (expr.getLocation (), note, ExternalError::get (USE_AS_VALUE));
+		Ymir::Error::occurAndNote (expr.getLocation (), note, ExternalError::USE_AS_VALUE);
 	    }
 		
 	    if (!value.is <Value> () && !canBeType) {
 		auto note = Ymir::Error::createNote (expr.getLocation ());
-		Ymir::Error::occurAndNote (expr.getLocation (), note, ExternalError::get (USE_AS_VALUE));
+		Ymir::Error::occurAndNote (expr.getLocation (), note, ExternalError::USE_AS_VALUE);
 	    }
 
 	    if (checkReach) {
 		if (value.is <Value> () && value.to <Value> ().isBreaker () && !value.to <Value> ().getType ().is <Void> ()) {
 		    auto note = Ymir::Error::createNote (value.getLocation ());
-		    Ymir::Error::occurAndNote (value.to<Value> ().getBreakerLocation (), note, ExternalError::get (BREAK_INSIDE_EXPR));
+		    Ymir::Error::occurAndNote (value.to<Value> ().getBreakerLocation (), note, ExternalError::BREAK_INSIDE_EXPR);
 		}
 	    }
 	    

@@ -375,7 +375,7 @@ namespace Ymir {
 		addedNote = true;
 		if (jt != this-> notes.size () && jt == Error::MAX_ERROR_DEPTH && !global::State::instance ().isVerboseActive () && windable) {
 		    noteBuf.writef ("     : %(B)\n", "...");
-		    noteBuf.writef ("%(b) : %\n", "Note", ExternalError::get (OTHER_ERRORS));		    
+		    noteBuf.writef ("%(b) : %\n", "Note", ExternalError::OTHER_ERRORS);		    
 		} else if (jt < Error::MAX_ERROR_DEPTH || jt == this-> notes.size () || global::State::instance ().isVerboseActive () || !windable) {
 		    it.computeMessage (noteBuf, depth + 1, max_depth, writeSub, windable);
 		    notOneLine = !it.one_line || it.notes.size () != 0;
@@ -389,7 +389,7 @@ namespace Ymir {
 	    
 	    if (writeSub) {
 		buf.writef ("     : %(B)\n", "...");
-		buf.writef ("%(b) : %\n", "Note", ExternalError::get (OTHER_ERRORS));
+		buf.writef ("%(b) : %\n", "Note", ExternalError::OTHER_ERRORS);
 		buf.write (noteBuf.str ());
 	    } else if (enpadding) {
 		if (this-> begin.isEof ()) buf.writeln (msg);
@@ -429,6 +429,12 @@ namespace Ymir {
 
 	std::list <ErrorMsg>  ErrorMsg::getNotes () const {
 	    return this-> notes;
+	}
+
+	void halt (const char* format) {
+	    auto msg = Ymir::format (std::string ("%(r) : ") + format, "Assert");
+	    fprintf (stderr, "%s\n", msg.c_str ());
+	    raise (SIGABRT);
 	}
 	
     }

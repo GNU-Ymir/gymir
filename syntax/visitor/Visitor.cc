@@ -177,7 +177,7 @@ namespace syntax {
 		} else {
 		    token = this-> _lex.next ();
 		    if (!token.isEof ()) {
-			Error::occur (token, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), token.getStr ());		
+			Error::occur (token, ExternalError::SYNTAX_ERROR_AT_SIMPLE, token.getStr ());		
 		    }
 		}
 	    }
@@ -413,7 +413,7 @@ namespace syntax {
 	    cursor = this-> _lex.next ();
 	    if (cursor.isEof ()) {
 		auto note = Ymir::Error::createNote (begin_content);
-		Error::occurAndNote (cursor, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.getStr ());		
+		Error::occurAndNote (cursor, note, ExternalError::SYNTAX_ERROR_AT_SIMPLE, cursor.getStr ());		
 	    } else if (cursor == close) {
 		nb -= 1;
 		if (nb != 0)
@@ -533,7 +533,7 @@ namespace syntax {
 	    return Template::init (name, comments, templates, Aka::init (name, comments, value), test);
 	} else {
 	    if (!test.isEmpty ()) {
-		Error::occur (ifLoc, ExternalError::get (SYNTAX_ERROR_IF_ON_NON_TEMPLATE));
+		Error::occur (ifLoc, ExternalError::SYNTAX_ERROR_IF_ON_NON_TEMPLATE);
 	    }
 	    return Aka::init (name, comments, value);
 	}
@@ -565,7 +565,7 @@ namespace syntax {
 	    return Template::init (name, comments, templates, Class::init (name, comments, ancestor, decls, attribs), test);
 	} else {
 	    if (!test.isEmpty ()) 
-		Error::occur (ifLoc, ExternalError::get (SYNTAX_ERROR_IF_ON_NON_TEMPLATE));
+		Error::occur (ifLoc, ExternalError::SYNTAX_ERROR_IF_ON_NON_TEMPLATE);
 	    return Class::init (name, comments, ancestor, decls, attribs);
 	}
     }
@@ -619,7 +619,7 @@ namespace syntax {
 	    if (token == Token::RACC) {
 		close -= 1;
 	    } else if (token.isEof ())
-		Error::occur (token, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), token.getStr ());
+		Error::occur (token, ExternalError::SYNTAX_ERROR_AT_SIMPLE, token.getStr ());
 	} while (close != 0);
     }
 
@@ -699,19 +699,19 @@ namespace syntax {
 	} else if (token == Keys::IMPL) {
 	    if (!fromProtection.isEof ()) {
 		auto note = Ymir::Error::createNote (fromProtection);
-		Ymir::Error::occurAndNote (token, note, ExternalError::get (PROTECTION_NO_IMPACT), fromProtection.getStr (), token.getStr ());
+		Ymir::Error::occurAndNote (token, note, ExternalError::PROTECTION_NO_IMPACT, fromProtection.getStr (), token.getStr ());
 	    }
 	    return visitClassMixin ();
 	} else if (token == Keys::IMPORT) {
 	    if (!fromProtection.isEof ()) {
 		auto note = Ymir::Error::createNote (fromProtection);
-		Ymir::Error::occurAndNote (token, note, ExternalError::get (PROTECTION_NO_IMPACT), fromProtection.getStr (), token.getStr ());
+		Ymir::Error::occurAndNote (token, note, ExternalError::PROTECTION_NO_IMPACT, fromProtection.getStr (), token.getStr ());
 	    }
 	    return visitImport ();
 	} else if (token == Keys::DTOR) {
 	    if (!fromProtection.isEof ()) {
 		auto note = Ymir::Error::createNote (fromProtection);
-		Ymir::Error::occurAndNote (token, note, ExternalError::get (PROTECTION_NO_IMPACT), fromProtection.getStr (), token.getStr ());
+		Ymir::Error::occurAndNote (token, note, ExternalError::PROTECTION_NO_IMPACT, fromProtection.getStr (), token.getStr ());
 	    }
 	    return visitClassDestructor ();
 	} else {
@@ -783,14 +783,14 @@ namespace syntax {
 		    if (ident == Keys::SUPER) {
 			getSuper = ident;
 			if (supers.size () != 0)
-			    Error::occur (ident, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), ident.getStr ());
+			    Error::occur (ident, ExternalError::SYNTAX_ERROR_AT_SIMPLE, ident.getStr ());
 			this-> _lex.next ({Token::LPAR});
 			supers = visitParamList ({Token::RPAR}, true);
 			this-> _lex.next ({Token::RPAR});
 		    } else if (ident == Keys::SELF) {
 			getSelf = ident;
 			if (supers.size () != 0)
-			    Error::occur (ident, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), ident.getStr ());
+			    Error::occur (ident, ExternalError::SYNTAX_ERROR_AT_SIMPLE, ident.getStr ());
 			this-> _lex.next ({Token::LPAR});
 			supers = visitParamList ({Token::RPAR}, true);
 			this-> _lex.next ({Token::RPAR});
@@ -821,7 +821,7 @@ namespace syntax {
 	    return Template::init (location, comments, templates, Constructor::init (location, comments, name, proto, supers, constructions, body, getSuper, getSelf, cas, throwers), test);
 	} else {
 	    if (!test.isEmpty ()) {
-		Error::occur (ifLoc, ExternalError::get (SYNTAX_ERROR_IF_ON_NON_TEMPLATE));
+		Error::occur (ifLoc, ExternalError::SYNTAX_ERROR_IF_ON_NON_TEMPLATE);
 	    }
 	    return Constructor::init (location, comments, name, proto, supers, constructions, body, getSuper, getSelf, cas, throwers);
 	}
@@ -878,7 +878,7 @@ namespace syntax {
 	    return Template::init (name, comments, templates, Enum::init (name, comments, type, values, comms), test);
 	} else {
 	    if (!test.isEmpty ()) {
-		Error::occur (ifLoc, ExternalError::get (SYNTAX_ERROR_IF_ON_NON_TEMPLATE));
+		Error::occur (ifLoc, ExternalError::SYNTAX_ERROR_IF_ON_NON_TEMPLATE);
 	    }
 	    return Enum::init (name, comments, type, values, comms);
 	}
@@ -900,7 +900,7 @@ namespace syntax {
 	auto attribs = visitAttributes ();
 	auto name = visitIdentifier ();
 	if (name == Keys::SELF || (name == Keys::DTOR && isClass))
-	    Error::occur (name, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), name.getStr ());
+	    Error::occur (name, ExternalError::SYNTAX_ERROR_AT_SIMPLE, name.getStr ());
 	
 	auto templates = visitTemplateParameters ();	
 	auto proto = visitFunctionPrototype (false, isClass);
@@ -918,7 +918,7 @@ namespace syntax {
 	    return Template::init (name, comments, templates, function, test);
 	} else {
 	    if (!test.isEmpty ())
-		Error::occur (ifLoc, ExternalError::get (SYNTAX_ERROR_IF_ON_NON_TEMPLATE)); 
+		Error::occur (ifLoc, ExternalError::SYNTAX_ERROR_IF_ON_NON_TEMPLATE); 
 	    return function;
 	}
     }
@@ -1044,7 +1044,7 @@ namespace syntax {
 	    return Template::init (name, comments, templates, Module::init (name, comments, decls, false), test);
 	} else {
 	    if (!test.isEmpty ()) {
-		Error::occur (ifLoc, ExternalError::get (SYNTAX_ERROR_IF_ON_NON_TEMPLATE));
+		Error::occur (ifLoc, ExternalError::SYNTAX_ERROR_IF_ON_NON_TEMPLATE);
 	    }
 	    return Module::init (name, comments, decls, false);	    
 	}
@@ -1088,7 +1088,7 @@ namespace syntax {
 	    return Template::init (name, comments, templates, Struct::init (name, comments, attrs, vars, comms), test);
 	} else {
 	    if (!test.isEmpty ()) {
-		Error::occur (ifLoc, ExternalError::get (SYNTAX_ERROR_IF_ON_NON_TEMPLATE));
+		Error::occur (ifLoc, ExternalError::SYNTAX_ERROR_IF_ON_NON_TEMPLATE);
 	    }
 	    return Struct::init (name, comments, attrs, vars, comms);
 	}
@@ -1114,7 +1114,7 @@ namespace syntax {
 	    return Template::init (name, comments, templates, Trait::init (name, comments, decls), test);
 	} else {
 	    if (!test.isEmpty ())
-		Error::occur (ifLoc, ExternalError::get (SYNTAX_ERROR_IF_ON_NON_TEMPLATE));
+		Error::occur (ifLoc, ExternalError::SYNTAX_ERROR_IF_ON_NON_TEMPLATE);
 	    return Trait::init (name, comments, decls);
 	}
     }
@@ -1413,7 +1413,7 @@ namespace syntax {
 		return Block::init (begin, end, Declaration::empty (), content, catcher, scopes);
 	    }
 	} catch (Error::ErrorList msg) {
-	    Error::occurAndNote (begin, msg.errors, ExternalError::get(IN_BLOCK_OPEN));
+	    Error::occurAndNote (begin, msg.errors, ExternalError::IN_BLOCK_OPEN);
 	}
 	return Expression::empty ();
     }    
@@ -1790,7 +1790,7 @@ namespace syntax {
 	    for (auto d : decos) {
 		if (d.getValue () == deco.getValue ()) {
 		    auto note = Ymir::Error::createNote (d.getLocation ());
-		    Error::occurAndNote (token, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), token.getStr ());
+		    Error::occurAndNote (token, note, ExternalError::SYNTAX_ERROR_AT_SIMPLE, token.getStr ());
 		}
 	    }
 	    
@@ -1844,7 +1844,7 @@ namespace syntax {
 		return ret;
 	    }
 	} else if (next == Token::NOT) {
-	    Error::occur (next, ExternalError::get (SYNTAX_ERROR_MISSING_TEMPL_PAR));
+	    Error::occur (next, ExternalError::SYNTAX_ERROR_MISSING_TEMPL_PAR);
 	}
 	
 	this-> _lex.rewind ();
@@ -1875,7 +1875,7 @@ namespace syntax {
 	    cursor = this-> _lex.next ();
 	    if (cursor.isEof ()) {
 		auto note = Ymir::Error::createNote (tok);
-		Error::occurAndNote (cursor, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.getStr ());		
+		Error::occurAndNote (cursor, note, ExternalError::SYNTAX_ERROR_AT_SIMPLE, cursor.getStr ());		
 	    } else if (cursor == close) {
 		nb -= 1;
 		if (nb != 0)
@@ -2021,7 +2021,7 @@ namespace syntax {
 	if (tok == Keys::NULL_)                        return Null::init (this-> _lex.next ());
 	if (tok == Token::DOLLAR)                      return Dollar::init (this-> _lex.next ());
 	
-	Error::occur (tok, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), tok.getStr ());
+	Error::occur (tok, ExternalError::SYNTAX_ERROR_AT_SIMPLE, tok.getStr ());
 	return Expression::empty ();
     }
 
@@ -2073,21 +2073,21 @@ namespace syntax {
 	if (value.length () > 2 && value [0] == '0' && value [1] == Keys::LX [0]) {
 	    for (uint i = 2 ; i < value.length (); i++) {
 		if ((value [i] < '0' || value [i] > '9') && (value [i] < 'A' || value [i] > 'F') && (value [i] < 'a' || value [i] > 'f') && value [i] != Keys::UNDER [0]) {
-		    Error::occur (loc, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), loc.getStr ());
+		    Error::occur (loc, ExternalError::SYNTAX_ERROR_AT_SIMPLE, loc.getStr ());
 		}
 	    }
 	    return true;
 	} else if (value.length () > 2 && value [0] == '0' && value [1] == 'o') {
 	    for (uint i = 2 ; i < value.length (); i++) {
 		if ((value [i] < '0' || value [i] > '7') && value [i] != Keys::UNDER [0]) {
-		    Error::occur (loc, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), loc.getStr ());
+		    Error::occur (loc, ExternalError::SYNTAX_ERROR_AT_SIMPLE, loc.getStr ());
 		}
 	    }
 	    return true;
 	} else {
 	    for (uint i = 0 ; i < value.length (); i++) {
 		if ((value [i] < '0' || value [i] > '9') && value [i] != Keys::UNDER [0]) {
-		    Error::occur (loc, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), loc.getStr ());
+		    Error::occur (loc, ExternalError::SYNTAX_ERROR_AT_SIMPLE, loc.getStr ());
 		}
 	    }
 	    return false;
@@ -2121,7 +2121,7 @@ namespace syntax {
 		    if (!verifNumeric (after, value))
 			return Float::init (dot, begin, lexing::Word::init (after, value), suffix);
 		    else
-			Error::occur (after, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), after.getStr ());
+			Error::occur (after, ExternalError::SYNTAX_ERROR_AT_SIMPLE, after.getStr ());
 		}
 	    }
 	
@@ -2129,7 +2129,7 @@ namespace syntax {
 	    for (uint i = 0 ; i < value.length (); i++) {
 		if ((value [i] < '0' || value [i] > '9') && value [i] != Keys::UNDER [0]) {
 		    if (begin.isEof ())
-			Error::occur (after, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), after.getStr ());
+			Error::occur (after, ExternalError::SYNTAX_ERROR_AT_SIMPLE, after.getStr ());
 		    else {
 			this-> _lex.rewind ();
 			after = lexing::Word::eof ();
@@ -2139,7 +2139,7 @@ namespace syntax {
 	    }
 	    return Float::init (dot, begin, after, lexing::Word::eof ());
 	} else if (begin.isEof ()) {
-	    Error::occur (after, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), after.getStr ());
+	    Error::occur (after, ExternalError::SYNTAX_ERROR_AT_SIMPLE, after.getStr ());
 	} else if (after.is (this-> _floatSuffix)) {
 	    return Float::init (dot, begin, lexing::Word::eof (), after);	    
 	} else this-> _lex.rewind ();
@@ -2163,12 +2163,12 @@ namespace syntax {
 	    cursor = this-> _lex.next ();
 	    if (cursor == Token::TAB || cursor == Token::RETURN || cursor == Token::RRETURN) {
 		std::list <Ymir::Error::ErrorMsg> notes;
-		notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (MUST_ESCAPE_CHAR)));
+		notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::MUST_ESCAPE_CHAR));
 		notes.push_back (Ymir::Error::createNote (begin));
-		Error::occurAndNote (cursor, notes, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.getStr ());		
+		Error::occurAndNote (cursor, notes, ExternalError::SYNTAX_ERROR_AT_SIMPLE, cursor.getStr ());		
 	    } else if (cursor.isEof ()) {		
 		auto note = Ymir::Error::createNote (begin);
-		Error::occurAndNote (cursor, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.getStr ());		
+		Error::occurAndNote (cursor, note, ExternalError::SYNTAX_ERROR_AT_SIMPLE, cursor.getStr ());		
 	    } else if (cursor != Token::APOS || escaping) {
 		all.write (cursor.getStr ());
 		if (escaping) cursor = lexing::Word::eof ();
@@ -2210,7 +2210,7 @@ namespace syntax {
 	    cursor = this-> _lex.next ();
 	    if (cursor.isEof ()) {
 		auto note = Ymir::Error::createNote (begin);
-		Error::occurAndNote (cursor, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.getStr ());		
+		Error::occurAndNote (cursor, note, ExternalError::SYNTAX_ERROR_AT_SIMPLE, cursor.getStr ());		
 	    } else if (cursor != begin || escaping) {
 		all.write (cursor.getStr ());
 		if (escaping) cursor = lexing::Word::eof ();
@@ -2267,7 +2267,7 @@ namespace syntax {
 	    for (auto d : decos) {
 		if (d.getValue () == deco.getValue ()) {
 		    auto note = Ymir::Error::createNote (d.getLocation ());
-		    Error::occurAndNote (token, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), token.getStr ());
+		    Error::occurAndNote (token, note, ExternalError::SYNTAX_ERROR_AT_SIMPLE, token.getStr ());
 		}
 	    }
 	    
@@ -2282,7 +2282,7 @@ namespace syntax {
 
 	if (name != Keys::SELF || !isClass) {
 	    if (name == Keys::SELF || isClass)
-		Error::occur (name, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), name.getStr ());
+		Error::occur (name, ExternalError::SYNTAX_ERROR_AT_SIMPLE, name.getStr ());
 	    
 	    if (mandType) token = this-> _lex.next ({Token::COLON});
 	    else token = this-> _lex.next ();
@@ -2310,7 +2310,7 @@ namespace syntax {
 	    for (auto d : decos) {
 		if (d.getValue () == deco.getValue ()) {
 		    auto note = Ymir::Error::createNote (d.getLocation ());
-		    Error::occurAndNote (token, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), token.getStr ());
+		    Error::occurAndNote (token, note, ExternalError::SYNTAX_ERROR_AT_SIMPLE, token.getStr ());
 		}
 	    }
 	    
@@ -2324,7 +2324,7 @@ namespace syntax {
 	}
 	
 	if (name == Keys::SELF)
-	    Error::occur (name, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), name.getStr ());
+	    Error::occur (name, ExternalError::SYNTAX_ERROR_AT_SIMPLE, name.getStr ());
 	
 	token = this-> _lex.next ({Token::COLON});	
 	token = this-> _lex.consumeIf ({Keys::UNDER});
@@ -2354,7 +2354,7 @@ namespace syntax {
 		for (auto d : decos) {
 		    if (d.getValue () == deco.getValue ()) {
 			auto note = Ymir::Error::createNote (d.getLocation ());
-			Error::occurAndNote (token, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), token.getStr ());
+			Error::occurAndNote (token, note, ExternalError::SYNTAX_ERROR_AT_SIMPLE, token.getStr ());
 		    }
 		}
 	    
@@ -2432,7 +2432,7 @@ namespace syntax {
     lexing::Word Visitor::visitIdentifier () {
 	if (!canVisitIdentifier ()) {
 	    auto token = this-> _lex.next ();
-	    Error::occur (token, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), token.getStr ());		
+	    Error::occur (token, ExternalError::SYNTAX_ERROR_AT_SIMPLE, token.getStr ());		
 	}
 	return this-> _lex.next ();
     }

@@ -21,13 +21,13 @@ namespace semantic {
 	Generator Visitor::validateCatchOutOfScope (const syntax::Catch & cat) {
 	    // There is no reason to have a catch scope out of a block
 	    // THe catcher is validated inside the validateBlock function
-	    Ymir::Error::occur (cat.getLocation (), ExternalError::get (CATCH_OUT_OF_SCOPE));
+	    Ymir::Error::occur (cat.getLocation (), ExternalError::CATCH_OUT_OF_SCOPE);
 	    return Generator::empty ();
 	}
 
 	Generator Visitor::validateScopeOutOfScope (const syntax::Scope & scope) {
 	    // Similarely, there is no reason to have a scope out of a block
-	    Ymir::Error::occur (scope.getLocation (), ExternalError::get (SCOPE_OUT_OF_SCOPE));
+	    Ymir::Error::occur (scope.getLocation (), ExternalError::SCOPE_OUT_OF_SCOPE);
 	    return Generator::empty ();
 	}
 
@@ -84,7 +84,7 @@ namespace semantic {
 	    for (int i = 0 ; i < (int) block.getContent ().size () ; i ++) {
 		try {
 		    if ((returner || breaker) && !block.getContent ()[i].is <syntax::Unit> ()) { // if there is a expression after a break or a return, then we throw an error			
-			Error::occur (block.getContent () [i].getLocation (), ExternalError::get (UNREACHBLE_STATEMENT));
+			Error::occur (block.getContent () [i].getLocation (), ExternalError::UNREACHBLE_STATEMENT);
 		    }
 
 		    auto value = validateValue (block.getContent () [i], false, false, false); // the value can't be a type, is not from a call, and we don't check if it is a break statement
@@ -107,7 +107,7 @@ namespace semantic {
 		if (!type.is<Void> ()) {
 		    verifyMemoryOwner (block.getEnd (), type, values.back(), false); // If the block has a value, we check for implicitely aliases or else
 		} else if (type.is<Void> () && values.size () != 0 && !values.back ().is <None> () && isUseless (values.back ())) { 
-		    Ymir::Error::occur (block.getContent ().back ().getLocation (), ExternalError::get (USE_UNIT_FOR_VOID)); // TODO, this error does not work
+		    Ymir::Error::occur (block.getContent ().back ().getLocation (), ExternalError::USE_UNIT_FOR_VOID); // TODO, this error does not work
 		}
 	    } catch (Error::ErrorList list) {  
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
@@ -119,7 +119,7 @@ namespace semantic {
 	    auto catcher = block.getCatcher ();
 	    if (catcher.isEmpty ()) return; // if there is no catcher to validate, do nothing
 	    if (throwsTypes.size () == 0) { // If there is a catcher, but no throwers inside the block
-		errors.push_back (Error::makeOccur (catcher.getLocation (), ExternalError::get (NOTHING_TO_CATCH)));
+		errors.push_back (Error::makeOccur (catcher.getLocation (), ExternalError::NOTHING_TO_CATCH));
 		return;
 	    }
 	    
@@ -164,10 +164,10 @@ namespace semantic {
 			onSuccess.push_back (validateValue (scope.getContent ()));
 		    } else if (scope.isFailure ()) { // Failure
 			if (!hasThrowers) { // If there is no throwers inside the block, then there is no reason to fail
-			    Ymir::Error::occur (scope.getLocation (), ExternalError::get (FAILURE_NO_THROW));
+			    Ymir::Error::occur (scope.getLocation (), ExternalError::FAILURE_NO_THROW);
 			}
 			onFailure.push_back (validateValue (scope.getContent ()));
-		    } else Ymir::Error::occur (scope.getLocation (), ExternalError::get (UNDEFINED_SCOPE_GUARD), scope.getLocation ().getStr ());
+		    } else Ymir::Error::occur (scope.getLocation (), ExternalError::UNDEFINED_SCOPE_GUARD, scope.getLocation ().getStr ());
 		    // This last error can't really happen actually, but well it guards the compiler from adding things and forgetting some modifications
 		} 
 	    } catch (Error::ErrorList list) {
@@ -210,7 +210,7 @@ namespace semantic {
 	    for (int i = 0 ; i < (int) set.getContent ().size () ; i ++) {
 		try {
 		    if (returner || breaker) {		
-			Error::occur (set.getContent () [i].getLocation (), ExternalError::get (UNREACHBLE_STATEMENT));
+			Error::occur (set.getContent () [i].getLocation (), ExternalError::UNREACHBLE_STATEMENT);
 		    }
 		    
 		    auto value = validateValue (set.getContent () [i]);

@@ -108,7 +108,7 @@ namespace semantic {
 			    if (elems.size () == 0) {
 				elems = gen.to <ModuleAccess> ().getLocal (right);
 				for (auto & it : elems) {
-				    errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), it.getName (), right));
+				    errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::PRIVATE_IN_THIS_CONTEXT, it.getName (), right));
 				}
 			    }
 			    syms.insert (syms.end (), elems.begin (), elems.end ());
@@ -186,7 +186,7 @@ namespace semantic {
 		if (syms.size () == 0) {
 		    auto elems = acc.getLocal (right);
 		    for (auto & it : elems)
-			errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), it.getName (), right));
+			errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::PRIVATE_IN_THIS_CONTEXT, it.getName (), right));
 		}
 	    }
 	    
@@ -670,7 +670,7 @@ namespace semantic {
 		
 		if (aux_name == ClassRef::INIT_NAME) {
 		    if (t.to <generator::Class> ().getRef ().to <semantic::Class> ().isAbs ()) {
-			errors.push_back (Ymir::Error::makeOccur (expression.getLocation (), ExternalError::get (ALLOC_ABSTRACT_CLASS), t.prettyString ()));			
+			errors.push_back (Ymir::Error::makeOccur (expression.getLocation (), ExternalError::ALLOC_ABSTRACT_CLASS, t.prettyString ()));			
 		    }
 		    
 		    bool succeed = true;
@@ -710,7 +710,7 @@ namespace semantic {
 		    }
 		} else {
 		    if (t.to <generator::Class> ().getRef ().to <semantic::Class> ().isAbs ()) {
-			errors.push_back (Ymir::Error::makeOccur (expression.getLocation (), ExternalError::get (ALLOC_ABSTRACT_CLASS), t.prettyString ()));			
+			errors.push_back (Ymir::Error::makeOccur (expression.getLocation (), ExternalError::ALLOC_ABSTRACT_CLASS, t.prettyString ()));			
 		    }
 		    
 		    bool succeed = true;
@@ -757,7 +757,7 @@ namespace semantic {
 
 		if (removeUnders (name) == ClassRef::INIT_NAME) {
 		    if (tmp.to <syntax::Class> ().isAbstract ()) {
-			errors.push_back (Ymir::Error::makeOccur (expression.getLocation (), ExternalError::get (ALLOC_ABSTRACT_CLASS), t.prettyString ()));			
+			errors.push_back (Ymir::Error::makeOccur (expression.getLocation (), ExternalError::ALLOC_ABSTRACT_CLASS, t.prettyString ()));			
 		    }
 
 		    auto constructors = this-> _context.getAllConstructors (tmp.to <syntax::Class> ().getDeclarations (), lexing::Word::eof ());
@@ -772,7 +772,7 @@ namespace semantic {
 			return Generator::empty ();
 		} else if (name != __TYPEID__ && name != __TYPEINFO__ && name != ClassRef::SUPER) {
 		    if (tmp.to <syntax::Class> ().isAbstract ()) {
-			errors.push_back (Ymir::Error::makeOccur (expression.getLocation (), ExternalError::get (ALLOC_ABSTRACT_CLASS), t.prettyString ()));			
+			errors.push_back (Ymir::Error::makeOccur (expression.getLocation (), ExternalError::ALLOC_ABSTRACT_CLASS, t.prettyString ()));			
 		    }
 
 		    auto constructors = this-> _context.getAllConstructors (tmp.to <syntax::Class> ().getDeclarations (), expression.getRight ().to <syntax::Var> ().getName ());
@@ -887,7 +887,7 @@ namespace semantic {
 	    
 	    Ymir::Error::occur (
 		expression.getLocation (),
-		ExternalError::get (UNDEFINED_SUB_PART_FOR),
+		ExternalError::UNDEFINED_SUB_PART_FOR,
 		rightName,
 		leftName
 	    );
@@ -928,7 +928,7 @@ namespace semantic {
 		expression.getLocation (),
 		expression.getRight ().getLocation (),
 		errors,
-		ExternalError::get (UNDEFINED_SUB_PART_FOR),
+		ExternalError::UNDEFINED_SUB_PART_FOR,
 		rightName,
 		leftName
 	    );
