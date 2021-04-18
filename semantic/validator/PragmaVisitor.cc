@@ -23,6 +23,7 @@ namespace semantic {
 	
 	const std::string PragmaVisitor::FIELD_NAMES = "field_names";
 	const std::string PragmaVisitor::FIELD_OFFSETS = "field_offsets";
+	const std::string PragmaVisitor::LOCAL_FIELD_OFFSETS = "local_field_offsets";
 	const std::string PragmaVisitor::HAS_DEFAULT = "field_has_value";
 	const std::string PragmaVisitor::DEFAULT_VALUE = "field_value";
 	const std::string PragmaVisitor::FIELD_TYPE = "field_type";
@@ -67,6 +68,8 @@ namespace semantic {
 		ret = this-> validateDefaultValue (prg);
 	    } else if (prg.getLocation ().getStr () == PragmaVisitor::FIELD_OFFSETS) {
 		ret = this-> validateFieldOffsets (prg);
+	    } else if (prg.getLocation ().getStr () == PragmaVisitor::LOCAL_FIELD_OFFSETS) {
+		ret = this-> validateLocalFieldOffsets (prg);
 	    } else if (prg.getLocation ().getStr () == PragmaVisitor::FIELD_TYPE) {
 		ret = this-> validateFieldType (prg);
 	    } else if (prg.getLocation ().getStr () == PragmaVisitor::TRUSTED) {
@@ -424,6 +427,65 @@ namespace semantic {
 
 	    auto arrType = Array::init (expression.getLocation (), type, params.size ());	    
 	    return ArrayValue::init (expression.getLocation (), arrType, params); 
+	}
+
+	
+	/**
+	 * ========================================================
+	 *                       LOCAL FIELDOFFSET
+	 * ========================================================
+	 */       
+
+
+	Generator PragmaVisitor::validateLocalFieldOffsets (const syntax::Pragma & prg) {
+	    if (prg.getContent ().size () != 1) {		    
+		Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+	    }
+
+	    auto type = this-> _context.validateType (prg.getContent ()[0]);
+	    match (type) {
+		s_of_u (generator::ClassPtr) return validateClassLocalFieldOffsets (prg, type);
+		s_of_u (generator::ClassProxy) return validateClassLocalFieldOffsets (prg, type);
+		s_of_u (generator::ClassRef) return validateClassLocalFieldOffsets (prg, type);
+	    }
+
+	    Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+	    return Generator::empty ();	    
+	}
+	
+	Generator PragmaVisitor::validateClassLocalFieldOffsets (const syntax::Pragma & expression, const Generator & type) {
+	    bool prv = false, prot = false;
+	    std::vector <Generator> localFields;
+	    Generator clRef (Generator::empty ());
+	    if (type.is <ClassProxy> ()) {
+		prv = false;
+	    } else if (type.is <ClassPtr> ()) {
+		localFields = type.to <ClassPtr> ().getClassRef ().getRef ().to <semantic::Class> ().getGenerator ().to <generator::Class> ().getLocalFields ();
+		clRef = type.to <ClassPtr> ().getClassRef ().getRef ().to <semantic::Class> ().getGenerator ().to <generator::Class> ().getClassRef ();
+		this-> _context.getClassContext (type.to <ClassPtr> ().getClassRef ().getRef (), prv, prot);
+	    } else {
+		this-> _context.getClassContext (type.to <ClassRef> ().getRef (), prv, prot);
+		localFields = type.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().to <generator::Class> ().getLocalFields ();
+		clRef = type;
+	    }
+
+	    if (prv) { // local field offset only exists inside class definition	    
+		std::vector <Generator> params;
+		std::list <Ymir::Error::ErrorMsg> errors;
+		auto type = Integer::init (expression.getLocation (), 0, false);
+		
+		for (auto & field : localFields) {
+		    auto field_type = field.to <generator::VarDecl> ().getVarType ();			    
+		    auto name = field.to <generator::VarDecl> ().getName ();
+			    
+		    params.push_back (FieldOffset::init (expression.getLocation (), type, clRef, name));
+		}	   
+		auto arrType = Array::init (expression.getLocation (), type, params.size ());	    
+		return ArrayValue::init (expression.getLocation (), arrType, params);
+	    }
+	    
+	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (LOCAL_FIELD_OFFSET_OUT_CLASS));
+	    return Generator::empty ();
 	}
        
 	/**

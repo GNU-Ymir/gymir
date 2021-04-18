@@ -24,7 +24,8 @@ namespace semantic {
 	    static const std::string FIELD_TYPE;
 	    
 	    static const std::string TUPLEOF;
-	    static const std::string LOCAL_TUPLEOF;
+	    static const std::string LOCAL_TUPLEOF;	    
+	    static const std::string LOCAL_FIELD_OFFSETS;
 	    static const std::string HAS_DEFAULT;
 	    static const std::string DEFAULT_VALUE;
 	    static const std::string HAS_FIELD;
@@ -95,6 +96,10 @@ namespace semantic {
 	    generator::Generator validateLocalTupleOf (const syntax::Pragma & prg);
 	    
 	    generator::Generator validateClassLocalTupleOf (const syntax::Pragma & prg, const generator::Generator & cl);
+
+	    generator::Generator validateLocalFieldOffsets (const syntax::Pragma & prg);
+	    
+	    generator::Generator validateClassLocalFieldOffsets (const syntax::Pragma & prg, const generator::Generator & cl);
 
 	    generator::Generator validateHasField (const syntax::Pragma & prg);
 

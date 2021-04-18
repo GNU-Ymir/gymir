@@ -724,8 +724,9 @@ namespace semantic {
 		    return validateMatchVarDeclForCatcher (value, decl, possibleTypes, catchingTypes, all);
 		
 		elof (syntax::MultOperator, call) {
-			if (call.getEnd () == Token::RPAR)
+		    if (call.getEnd () == Token::RPAR) {
 			return validateMatchCallForCatcher (value, call, possibleTypes, catchingTypes, all);
+		    }
 		}	       
 
 		// All the following won't pass but we wan't to get a valid error
@@ -847,7 +848,9 @@ namespace semantic {
 	    
 	    try {
 		if (!call.getLeft ().is <Var> () || call.getLeft ().to <Var> ().getName () != Keys::UNDER) {
-		    type = this-> _context.validateType (call.getLeft ());		    
+		    type = this-> _context.validateTypeClassRef (call.getLeft ());
+		    if (type.is <ClassRef> ()) type = ClassPtr::init (call.getLocation (), type);
+		    
 		    this-> _context.verifyCompatibleType (value.getLocation (), type.getLocation (), value.to <Value> ().getType (), type, true);
 		   
 		    // If we have passed the test, but still not compatible means it is a class

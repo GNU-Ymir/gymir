@@ -356,7 +356,9 @@ namespace semantic {
 			Visitor::__CALL_NB_RECURS__ += 1;
 			try {
 			    Symbol sym (Symbol::empty ());
-			    if (element_on_scores [it].is <TemplatePreSolution> ()) sym = this-> validateTemplatePreSolution (element_on_scores [it], loc_elem.find ((int) all_score)-> second [it]);
+			    if (element_on_scores [it].is <TemplatePreSolution> ()) {
+				sym = this-> validateTemplatePreSolution (element_on_scores [it], loc_elem.find ((int) all_score)-> second [it]);
+			    }
 			    if (location_elems [it].is<MethodTemplateRef> ()) {
 				if (!sym.isEmpty () && sym.is <TemplateSolution> ()) {
 				    auto self = location_elems [it].to <MethodTemplateRef> ().getSelf ();

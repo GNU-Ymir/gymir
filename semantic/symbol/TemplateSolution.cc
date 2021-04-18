@@ -8,7 +8,8 @@
 namespace semantic {
 
     TemplateSolution::TemplateSolution () :
-	ISymbol (lexing::Word::eof (), "", false)
+	ISymbol (lexing::Word::eof (), "", false),
+	_solutionName (this, &TemplateSolution::computeSolutionName)
     {}
     
 
@@ -16,7 +17,8 @@ namespace semantic {
 	ISymbol (loc, comments, isWeak),
 	_templs (templs), 
 	_params (params),
-	_nameOrder (nameOrders)
+	_nameOrder (nameOrders),
+	_solutionName (this, &TemplateSolution::computeSolutionName)
     {}
     
     Symbol TemplateSolution::init (const lexing::Word & name, const std::string & comments, const std::vector <syntax::Expression> & templs, const std::map <std::string, syntax::Expression> & mapping, const std::vector <std::string> & nameOrders, bool isWeak) {
@@ -58,36 +60,37 @@ namespace semantic {
     bool TemplateSolution::equals (const Symbol & other, bool parent) const {
 	if (!other.is<TemplateSolution> ()) return false;
 	if (this-> getName ().isSame (other.getName ())) {
-	    auto & ot = other.to<TemplateSolution> ();	    
-	    for (auto & it : _params) {
-		auto _it = ot._params.find (it.first);
-		if (_it == ot._params.end ()) return false;
-		else if (_it-> second.is <generator::TemplateSyntaxWrapper> () && it.second.is <generator::TemplateSyntaxWrapper> ()) {
-		    if (_it-> second.to <generator::TemplateSyntaxWrapper> ().getContent ().is <generator::Type> ()) {
-			if (!_it-> second.to <generator::TemplateSyntaxWrapper> ().getContent ().to <generator::Type> ().completeEquals (it.second.to <generator::TemplateSyntaxWrapper> ().getContent ())) {
-			    return false;
-			}
-		    } else if (!_it-> second.to <generator::TemplateSyntaxWrapper> ().getContent ().equals (it.second.to <generator::TemplateSyntaxWrapper> ().getContent ())) {
-			return false;
-		    }
-		} else if (_it-> second.is <generator::TemplateSyntaxList> () && it.second.is <generator::TemplateSyntaxList> ()) {
-		    if (_it-> second.to <generator::TemplateSyntaxList> ().getContents ().size () != it.second.to <generator::TemplateSyntaxList> ().getContents ().size ())
-			return false;
-		    for (auto j : Ymir::r (0, _it-> second.to <generator::TemplateSyntaxList> ().getContents ().size ())) {
-			if (!_it-> second.to <generator::TemplateSyntaxList> ().getContents ()[j].is <generator::Type> ()) {
-			    if (!_it-> second.to <generator::TemplateSyntaxList> ().getContents ()[j].to <generator::Type> ().completeEquals (it.second.to <generator::TemplateSyntaxList> ().getContents () [j]))
-				return false;
-			} else if (!_it-> second.to <generator::TemplateSyntaxList> ().getContents ()[j].equals (it.second.to <generator::TemplateSyntaxList> ().getContents () [j])) 
-			    return false;
-		    }
-		} else if (_it-> second.prettyString () != it.second.prettyString ()) // Single value
-		    return false;
-	    }
+	    auto & ot = other.to<TemplateSolution> ();
+	    if (this-> getSolutionName ().getValue () != ot.getSolutionName ().getValue ()) return false;
+	    // for (auto & it : _params) {
+	    // 	auto _it = ot._params.find (it.first);
+	    // 	if (_it == ot._params.end ()) return false;
+	    // 	else if (_it-> second.is <generator::TemplateSyntaxWrapper> () && it.second.is <generator::TemplateSyntaxWrapper> ()) {
+	    // 	    if (_it-> second.to <generator::TemplateSyntaxWrapper> ().getContent ().is <generator::Type> ()) {
+	    // 		if (!_it-> second.to <generator::TemplateSyntaxWrapper> ().getContent ().to <generator::Type> ().completeEquals (it.second.to <generator::TemplateSyntaxWrapper> ().getContent ())) {
+	    // 		    return false;
+	    // 		}
+	    // 	    } else if (!_it-> second.to <generator::TemplateSyntaxWrapper> ().getContent ().equals (it.second.to <generator::TemplateSyntaxWrapper> ().getContent ())) {
+	    // 		return false;
+	    // 	    }
+	    // 	} else if (_it-> second.is <generator::TemplateSyntaxList> () && it.second.is <generator::TemplateSyntaxList> ()) {
+	    // 	    if (_it-> second.to <generator::TemplateSyntaxList> ().getContents ().size () != it.second.to <generator::TemplateSyntaxList> ().getContents ().size ())
+	    // 		return false;
+	    // 	    for (auto j : Ymir::r (0, _it-> second.to <generator::TemplateSyntaxList> ().getContents ().size ())) {
+	    // 		if (!_it-> second.to <generator::TemplateSyntaxList> ().getContents ()[j].is <generator::Type> ()) {
+	    // 		    if (!_it-> second.to <generator::TemplateSyntaxList> ().getContents ()[j].to <generator::Type> ().completeEquals (it.second.to <generator::TemplateSyntaxList> ().getContents () [j]))
+	    // 			return false;
+	    // 		} else if (!_it-> second.to <generator::TemplateSyntaxList> ().getContents ()[j].equals (it.second.to <generator::TemplateSyntaxList> ().getContents () [j])) 
+	    // 		    return false;
+	    // 	    }
+	    // 	} else if (_it-> second.prettyString () != it.second.prettyString ()) // Single value
+	    // 	    return false;
+	    // }
 
-	    if (_nameOrder.size () != ot._nameOrder.size ()) return false;
-	    for (auto it : Ymir::r (0, _nameOrder.size ())) {
-		if (_nameOrder [it] != ot._nameOrder [it]) return false;
-	    }
+	    // if (_nameOrder.size () != ot._nameOrder.size ()) return false;
+	    // for (auto it : Ymir::r (0, _nameOrder.size ())) {
+	    // 	if (_nameOrder [it] != ot._nameOrder [it]) return false;
+	    // }
 
 	    // We can assume that this will be true, if a symbol is declared with the same template parameters, it will necessarily create the same sub symbols
 	    // auto & inner = this-> getAllLocal ();
@@ -134,7 +137,11 @@ namespace semantic {
 	}
     }
 
-    std::string TemplateSolution::getSolutionName () const {
+    const Ymir::Lazy<std::string, TemplateSolution> & TemplateSolution::getSolutionName () const {
+	return this-> _solutionName;
+    }
+    
+    std::string TemplateSolution::computeSolutionName () const {
 	Ymir::OutBuffer buf;
 	buf.writef ("%", this-> getName ().getStr ());
 	int i = 0;

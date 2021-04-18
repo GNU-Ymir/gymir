@@ -23,6 +23,8 @@ namespace semantic {
 	std::map <std::string, syntax::Expression> _params;
 	
 	std::vector <std::string> _nameOrder;
+
+	Ymir::Lazy<std::string, TemplateSolution> _solutionName;
 	
     private : 
 
@@ -58,8 +60,10 @@ namespace semantic {
 
 	std::string computeRealName () const override;
 	
-	std::string getSolutionName () const;
+	const Ymir::Lazy<std::string, TemplateSolution> & getSolutionName () const;
 
+	std::string computeSolutionName () const;
+	
 	std::string computeMangledName () const override;
 
 	void pruneTable ();

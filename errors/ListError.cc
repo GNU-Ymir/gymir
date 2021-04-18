@@ -71,6 +71,7 @@ namespace Ymir {
 			    IN_TEMPLATE_DEF                 = "in template specialization",
 			    IN_TRAIT_VALIDATION             = "in trait validation", 
 			    IS_TYPE                         = "cannot declare a variable named %(y), identifier is already used for a type",
+			    LOCAL_FIELDS_OFFSET_OUT_CLASS   = "local_field_offsets cannot be used outside class context"
 			    LOCAL_TUPLEOF_OUT_CLASS         = "local_tupleof cannot be used outside class context",
 			    LOCKED_CONTEXT                  = "the mutable element %(y) is locked in this iteration context",
 			    MACRO_MULT_NO_VAR               = "macro multiple expression must be identified inside a var",
