@@ -79,8 +79,8 @@ namespace semantic {
 		if (content.back ().size () != 0 && content.back ().back () == '\n')
 		    content.back () = content.back ().substr (0, content.back ().size () - 1);
 	    }
-	    if (this-> _name != "") {
-		Ymir::Path p (this-> _name, "::");
+	    Ymir::Path p (this-> _name, "::");
+	    if (p.fileName ().toString () != "self") {
 		return Ymir::format ("self % (%)-> %", p.fileName ().toString (), content, this-> _type.prettyString ());
 	    } else {
 		return Ymir::format ("self (%)-> %", content, this-> _type.prettyString ());
