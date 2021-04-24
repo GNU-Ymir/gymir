@@ -3,6 +3,7 @@
 #include <ymir/semantic/generator/value/ProtoVar.hh>
 #include <ymir/semantic/generator/type/LambdaType.hh>
 #include <ymir/semantic/symbol/Constructor.hh>
+#include <ymir/utils/Path.hh>
 
 namespace semantic {
 
@@ -78,7 +79,12 @@ namespace semantic {
 		if (content.back ().size () != 0 && content.back ().back () == '\n')
 		    content.back () = content.back ().substr (0, content.back ().size () - 1);
 	    }
-	    return Ymir::format ("self (%)-> %", content, this-> _type.prettyString ());
+	    if (this-> _name != "") {
+		Ymir::Path p (this-> _name, "::");
+		return Ymir::format ("self % (%)-> %", p.fileName ().toString (), content, this-> _type.prettyString ());
+	    } else {
+		return Ymir::format ("self (%)-> %", content, this-> _type.prettyString ());
+	    }
 	}
 	
 

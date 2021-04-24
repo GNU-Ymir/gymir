@@ -26,7 +26,6 @@ namespace semantic {
 	VisitorCache::VisitorCache (Visitor & context) :
 	    typeInfo (&context, &Visitor::getTypeInfoType),
 	    typeIds (&context, &Visitor::getTypeInfoIds),
-	    outOfArray (&context, &Visitor::getOutOfArrayCall),
 	    disposeTrait (&context, &Visitor::getDisposeTrait),
 	    exceptionType (&context, &Visitor::getExceptionType),
 	    objectType (&context, &Visitor::getObjectType),

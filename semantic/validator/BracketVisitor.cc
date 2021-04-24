@@ -82,7 +82,7 @@ namespace semantic {
 		    );
 		
 
-		auto call = this-> _context.getCache ().outOfArray.getValue ();
+		auto call = this-> _context.getOutOfArrayCall (loc);
 		auto conditional = Conditional::init (loc, Void::init (loc), test, call, Generator::empty ());				
 		
 		if (
@@ -207,7 +207,7 @@ namespace semantic {
 		    ;
 		    
 
-		auto call = this-> _context.getCache ().outOfArray.getValue ();
+		auto call = this-> _context.getOutOfArrayCall (loc);
 		auto throwType = Ymir::format ("%::%::%", CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (OUT_OF_ARRAY));
 		auto throwBl = ThrowBlock::init (loc, call, throwType);
 		
@@ -295,7 +295,7 @@ namespace semantic {
 			)
 		    );
 
-		auto call = this-> _context.getCache ().outOfArray.getValue ();		
+		auto call = this-> _context.getOutOfArrayCall (loc);
 		auto conditional = Conditional::init (loc, Void::init (loc), test, call, Generator::empty ());
 		auto innerType = left.to <Value> ().getType ().to <Slice> ().getInners () [0];
 		if (

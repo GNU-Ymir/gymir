@@ -145,6 +145,11 @@ namespace semantic {
 	    generator::Generator executeMultSym (const generator::Generator & addr);
 
 	    /**
+	     * \brief Execute a sizeof 
+	     */
+	    generator::Generator executeSizeOf (const generator::Generator & sof);
+
+	    /**
 	     * \brief Return a funcptr on the prototype
 	     */
 	    generator::Generator executeFrameProto (const generator::Generator & proto);

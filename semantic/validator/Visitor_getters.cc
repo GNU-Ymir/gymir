@@ -314,7 +314,7 @@ namespace semantic {
 	    return this-> validateValue (typeIDs);
 	}
 
-	Generator Visitor::getOutOfArrayCall () {
+	Generator Visitor::getOutOfArrayCall (const lexing::Word & loc) {
 	    auto func = this-> createVarFromPath (lexing::Word::eof (), {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (OUT_OF_ARRAY)});
 	    auto proto = this-> validateValue (func);
 	    auto callvisitor = CallVisitor::init (*this);
@@ -322,13 +322,13 @@ namespace semantic {
 
 	    if (proto.is <FrameProto> ()) {
 		int score = 0;
-		auto ret = callvisitor.validateFrameProto (lexing::Word::eof  (), proto, {}, score, errors);
+		auto ret = callvisitor.validateFrameProto (loc, proto, {}, score, errors);
 		if (errors.size () != 0) {
 		    throw Error::ErrorList {errors};
 		}
 		return ret;
 	    } else {
-		Error::occur (lexing::Word::eof (), ExternalError::UNDEF_VAR, func.prettyString ());
+		Error::occur (loc, ExternalError::UNDEF_VAR, func.prettyString ());
 		return Generator::empty ();
 	    }
 	}

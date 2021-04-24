@@ -292,7 +292,7 @@ namespace semantic {
 		if (content.to <Value> ().isReturner () || content.to <Value> ().isBreaker ()) type = _else.to <Value> ().getType ();
 		return Conditional::init (_if.getLocation (), type, test, content, _else);	    
 	    } else {
-		verifyCompatibleType (_if.getLocation (), _if.getLocation (), Void::init (_if.getLocation ()), type);
+		verifyCompatibleType (_if.getLocation (), content.getLocation (), Void::init (_if.getLocation ()), type);
 		// We check if the type is void, it impose to add a ; at the end of if expression
 		
 		return Conditional::init (_if.getLocation (), type, test, content, Generator::empty ());

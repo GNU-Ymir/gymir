@@ -25,7 +25,6 @@ namespace semantic {
 	struct VisitorCache {
 	    Ymir::Lazy <generator::Generator, Visitor> typeInfo;	    
 	    Ymir::Lazy <generator::Generator, Visitor> typeIds;
-	    Ymir::Lazy <generator::Generator, Visitor> outOfArray;
 	    Ymir::Lazy <generator::Generator, Visitor> disposeTrait;
 	    Ymir::Lazy <generator::Generator, Visitor> exceptionType;
 	    Ymir::Lazy <generator::Generator, Visitor> objectType;
@@ -1052,7 +1051,7 @@ namespace semantic {
 	    /**
 	     * @returns: the function outofarray
 	     */
-	    generator::Generator getOutOfArrayCall ();
+	    generator::Generator getOutOfArrayCall (const lexing::Word & loc);
 
 	    /**
 	     * @returns: the trait Disposable

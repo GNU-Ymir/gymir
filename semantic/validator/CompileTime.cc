@@ -1,4 +1,5 @@
 #include <ymir/semantic/validator/CompileTime.hh>
+#include <ymir/semantic/generator/Visitor.hh>
 #include <ymir/global/State.hh>
 
 namespace semantic {
@@ -106,7 +107,10 @@ namespace semantic {
 			return executeMultSym (gen);		
 
 		    s_of (UniqValue, val)
-			return execute (val.getValue ());		
+			return execute (val.getValue ());
+
+		    s_of_u (SizeOf)
+			return executeSizeOf (gen);		    
 		}	    
 	    } catch (Error::ErrorList list) {
 		Ymir::Error::occurAndNote (
@@ -647,6 +651,16 @@ namespace semantic {
 	    return MultSym::init (gen.getLocation (), mult);
 	}
 
+	generator::Generator CompileTime::executeSizeOf (const generator::Generator & sof) {
+	    auto type = sof.to <SizeOf> ().getWho ();
+	    auto genVisitor = generator::Visitor::init ();	    
+	    auto treeType = genVisitor.generateType (type);
+	    Fixed::UI result;
+	    result.u = treeType.getSize ();
+	    auto itype = Integer::init (sof.getLocation (), 0, false);
+	    return Fixed::init (sof.getLocation (), itype, result);
+	}
+	
 	generator::Generator CompileTime::executeFrameProto (const generator::Generator & proto) {
 	    auto params = proto.to <FrameProto> ().getParameters ();
 	    auto ret = proto.to <FrameProto> ().getReturnType ();
