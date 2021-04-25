@@ -71,7 +71,7 @@ namespace Ymir {
     void Parser::semanticTime () {	
 	// STAMP(DECLARATOR);
 	auto declarator = semantic::declarator::Visitor::init ();
-	auto module = declarator.visit (this-> _module);
+	auto module = declarator.visit (this-> _module, false);
 	// ELAPSED(DECLARATOR);
 
 	// STAMP(VALIDATOR); 

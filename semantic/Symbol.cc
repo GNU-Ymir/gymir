@@ -62,12 +62,12 @@ namespace semantic {
     // 	Ymir::Error::halt (Ymir::ExternalError::INSERT_NO_TABLE);
     // }
 
-    void ISymbol::use (const std::string & name, const Symbol & sym) {
+    void ISymbol::use (const std::string & name, bool pub, const Symbol & sym) {
 	auto ptr = this-> _used.find (name);
 	if (ptr == this-> _used.end ()) {
-	    this-> _used.emplace (name, sym);
+	    this-> _used.emplace (name, std::pair <bool, Symbol> (pub, sym));
 	} else {	    
-	    ptr-> second = sym;
+	    ptr-> second = std::pair <bool, Symbol> (pub, sym);
 	}
     }
 
@@ -130,7 +130,7 @@ namespace semantic {
     void ISymbol::getLocalPublic (const std::string &, std::vector <Symbol> &) const {
     }    
     
-    const std::map <std::string, Symbol> & ISymbol::getUsedSymbols () const {
+    const std::map <std::string, std::pair <bool, Symbol> > & ISymbol::getUsedSymbols () const {
 	return this-> _used;
     }
     
@@ -265,10 +265,10 @@ namespace semantic {
     // 	}
     // }
     
-    void Symbol::use (const std::string & name, const Symbol & sym) {
-	if (this-> _value != nullptr)
-	    this-> _value-> use (name, sym);
-	else {
+    void Symbol::use (const std::string & name, bool pub, const Symbol & sym) {
+	if (this-> _value != nullptr) {
+	    this-> _value-> use (name, pub, sym);
+	} else {
 	    // We cannot use a symbol outside of any scope
 	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	}
@@ -371,10 +371,10 @@ namespace semantic {
 
 	this-> _value-> get (name, ret);
 	for (auto & it : this-> _value-> getUsedSymbols ()) {
-	    auto mod = it.second;
-	    if (it.second.isEmpty ()) {
+	    auto mod = it.second.second;
+	    if (it.second.second.isEmpty ()) {
 		mod = getModuleByPath (it.first);
-		this-> _value-> use (it.first, mod);
+		this-> _value-> use (it.first, it.second.first, mod);
 	    }
 
 	    if (!mod.isEmpty ()) {
@@ -400,10 +400,10 @@ namespace semantic {
 	    current.emplace (this-> _value);
 	    this-> _value-> getPrivate (name, ret);
 	    for (auto & it : this-> _value-> getUsedSymbols ()) {
-		auto mod = it.second;
-		if (it.second.isEmpty ()) {
+		auto mod = it.second.second;
+		if (it.second.second.isEmpty ()) {
 		    mod = getModuleByPath (it.first);
-		    this-> _value-> use (it.first, mod);
+		    this-> _value-> use (it.first, it.second.first, mod);
 		}
 		
 		if (!mod.isEmpty ()) {
@@ -431,13 +431,13 @@ namespace semantic {
 	    current.emplace (this-> _value);
 	    this-> _value-> getPublic (name, ret);	    
 	    for (auto & it : this-> _value-> getUsedSymbols ()) {
-		auto mod = it.second;
-		if (it.second.isEmpty ()) {
+		auto mod = it.second.second;
+		if (it.second.second.isEmpty ()) {
 		    mod = getModuleByPath (it.first);
-		    this-> _value-> use (it.first, mod);
+		    this-> _value-> use (it.first, it.second.first, mod);
 		}
 		
-		if (!mod.isEmpty () && mod.isPublic ()) {
+		if (!mod.isEmpty () && it.second.first) {
 		    mod.getPublic (name, ret);		
 		}
 	    }
@@ -448,7 +448,7 @@ namespace semantic {
 	Symbol::mergeEqSymbols (ret);
     }
 
-	std::vector <Symbol> Symbol::getUsed (const std::string & name) {
+    std::vector <Symbol> Symbol::getUsed (const std::string & name) {
 	std::vector <Symbol> rets;
 	this-> getUsed (name, rets);
 	return rets;
@@ -463,13 +463,13 @@ namespace semantic {
 	    current.emplace (this-> _value);
 	    this-> _value-> getPublic (name, ret);
 	    for (auto & it : this-> _value-> getUsedSymbols ()) {
-		auto mod = it.second;
-		if (it.second.isEmpty ()) {
+		auto mod = it.second.second;
+		if (it.second.second.isEmpty ()) {
 		    mod = getModuleByPath (it.first);
-		    this-> _value-> use (it.first, mod);
+		    this-> _value-> use (it.first, it.second.first, mod);
 		}
 
-		if (!mod.isEmpty () && mod.isPublic ()) {
+		if (!mod.isEmpty () && it.second.first) {
 		    mod.getUsed (name, ret);		    
 		}
 	    }
@@ -479,7 +479,7 @@ namespace semantic {
 	Symbol::mergeEqSymbols (ret);
     }
 
-    const std::map <std::string, Symbol> & Symbol::getUsedSymbols () const {
+    const std::map <std::string, std::pair <bool, Symbol> > & Symbol::getUsedSymbols () const {
 	if (this-> _value != nullptr)
 	    return this-> _value-> getUsedSymbols ();
 	else {

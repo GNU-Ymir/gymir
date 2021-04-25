@@ -61,7 +61,7 @@ namespace semantic {
 	    /**
 	     * \brief Transform a AST into a semantic tree
 	     */
-	    semantic::Symbol visit (const syntax::Declaration & ast);
+	    semantic::Symbol visit (const syntax::Declaration & ast, bool pub);
 
 	    /**
 	     * \brief Transform a syntax::module into a semantic tree
@@ -169,7 +169,7 @@ namespace semantic {
 	    /**
 	     * \brief Transform an import into a semantic tree
 	     */
-	    semantic::Symbol visitImport (const syntax::Import & imp);
+	    semantic::Symbol visitImport (const syntax::Import & imp, bool pub);
 
 	    /**
 	     * \brief Transform a template declaration into semantic tree

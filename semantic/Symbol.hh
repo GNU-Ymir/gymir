@@ -32,7 +32,7 @@ namespace semantic {
 
 	/** The list of usable symbols for symbol search */
 	/** This list is intended to be used only in the proxy symbol */
-	std::map <std::string, Symbol> _used;
+	std::map <std::string, std::pair <bool, Symbol> > _used;
 
 
 	bool _isPublic = false;
@@ -114,7 +114,7 @@ namespace semantic {
 	 * \param name the name of the symbol (its path)
 	 * \param use this symbol possess a table of symbols, that we have the right to access (publically)		
 	 */
-	virtual void use (const std::string & name, const Symbol & use);
+	virtual void use (const std::string & name, bool pub, const Symbol & use);
 	
 	/**
 	 * \brief Does the opposite of use (name, _);
@@ -201,7 +201,7 @@ namespace semantic {
 	/**
 	 * \return the list of used symbols
 	 */
-	const std::map <std::string, Symbol> & getUsedSymbols () const;
+	const std::map <std::string, std::pair <bool, Symbol> > & getUsedSymbols () const;
 	
 	/**
 	 * \brief In the symbol hierarchy, each symbol is attached to a referent
@@ -342,7 +342,7 @@ namespace semantic {
 	/**
 	 * Proxy function for symbol
 	 */
-	void use (const std::string & name, const Symbol & sym);
+	void use (const std::string & name, bool pub, const Symbol & sym);
 	
 	/**
 	 * Proxy function for symbol
@@ -435,7 +435,7 @@ namespace semantic {
 	/**
 	 * Proxy function for symbol
 	 */
-	const std::map <std::string, Symbol> & getUsedSymbols () const;
+	const std::map <std::string, std::pair <bool, Symbol> > & getUsedSymbols () const;
 	
 	/**
 	 * Proxy function for symbol

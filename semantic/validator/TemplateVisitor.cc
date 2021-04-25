@@ -689,7 +689,7 @@ namespace semantic {
 		    visit.setWeak ();
 		    visit.pushReferent (ref.to <TemplateRef> ().getTemplateRef ().getReferent ());				
 		    visit.pushReferent (soluce);
-		    visit.visit (func);
+		    visit.visit (func, false);
 		    glob = visit.popReferent ();
 		
 		    // Strange but not always the case, it depends on what is glob

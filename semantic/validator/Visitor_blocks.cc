@@ -178,7 +178,7 @@ namespace semantic {
 
 	Symbol Visitor::validateInnerModule (const syntax::Declaration & decl, std::list <Error::ErrorMsg> & errors) {
 	    if (decl.isEmpty ()) return Symbol::empty (); // This function is really simple, we just create a module thanks to declarator visitor
-	    auto sym = declarator::Visitor::init ().visit (decl);
+	    auto sym = declarator::Visitor::init ().visit (decl, false);
 	    if (!sym.isEmpty ()) {
 		std::list <Ymir::Error::ErrorMsg> errors;
 

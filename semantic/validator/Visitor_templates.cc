@@ -69,7 +69,7 @@ namespace semantic {
 	    if (already.isEmpty ()) {
 		auto final_syntax = tmplVisitor.replaceAll (preSol.getDeclaration (), preSol.getMapping (), preSol.getTemplateReferent ());
 		visit.pushReferent (soluce);
-		visit.visit (final_syntax);
+		visit.visit (final_syntax, false);
 		glob = visit.popReferent ();
 		glob.setReferent (visit.getReferent ());
 		

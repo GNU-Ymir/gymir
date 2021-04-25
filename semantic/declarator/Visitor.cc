@@ -27,7 +27,7 @@ namespace semantic {
 	    return Visitor (isTrusted);
 	}
 
-	semantic::Symbol Visitor::visit (const syntax::Declaration & ast) {
+	semantic::Symbol Visitor::visit (const syntax::Declaration & ast, bool pub) {
 	    match (ast) {
 		s_of (syntax::Module, mod) 
 		    return visitModule (mod);		
@@ -60,7 +60,7 @@ namespace semantic {
 		    return visitGlobal (glb);
 
 		s_of (syntax::Import, im)
-		    return visitImport (im);
+		    return visitImport (im, pub);
 
 		s_of (syntax::Template, tep)
 		    return visitTemplate (tep);
@@ -122,7 +122,7 @@ namespace semantic {
 	    }
 	    
 	    for (auto it : mod.getDeclarations ()) {
-		visit (it);
+		visit (it, false);
 	    }
 
 	    auto ret = popReferent ();	    
@@ -159,7 +159,7 @@ namespace semantic {
 			    last.insert (it);
 			}
 			for (auto & it : sym.getUsedSymbols ()) {
-			    last.use (it.first, it.second);
+			    last.use (it.first, false, it.second.second);
 			}
 		    }
 		}
@@ -276,7 +276,7 @@ namespace semantic {
 	    for (syntax::Declaration decl : block.getDeclarations ()) {
 		if (block.getDeclarations ().size () == 1)
 		    decl.setComments (block.getComments () + decl.getComments ());
-	    	visit (decl);		
+	    	visit (decl, !block.isPrivate ());		
 	    }	    
 	    
 	    auto ret = popReferent ();
@@ -292,10 +292,7 @@ namespace semantic {
 		}
 
 		for (auto it : ret.getUsedSymbols ()) {
-		    if (!block.isPrivate () && !it.second.isEmpty ()) // Why it can be empty ? 
-			it.second.setPublic ();
-		    
-		    getReferent ().use (it.first, it.second);
+		    getReferent ().use (it.first, !block.isPrivate (), it.second.second);
 		}
 	    }
 	    
@@ -390,7 +387,7 @@ namespace semantic {
 		    } elof (syntax::CondBlock, cb) {
 			Ymir::Error::occur (cb.getLocation (), ExternalError::CONDITIONAL_NON_TEMPLATE_CLASS);
 		    } elfo {
-			auto sym = visit (jt);
+			auto sym = visit (jt, false);
 			if (!sym.isEmpty () && pub)  sym.setPublic ();
 			if (!sym.isEmpty () && prot) sym.setProtected ();
 		    }		    
@@ -454,12 +451,12 @@ namespace semantic {
 			    tr.to <semantic::Trait> ().addAssertion (wrap.getContent ());
 			    tr.to <semantic::Trait> ().addAssertionComments (wrap.getComments ());
 			} else {
-			    auto sym = visit (it);
+			    auto sym = visit (it, false);
 			    if (!sym.isEmpty () && prot) sym.setProtected ();
 			    if (!sym.isEmpty () && pub) sym.setPublic ();
 			}
 		    } elfo {			
-	    		auto sym = visit (it);
+	    		auto sym = visit (it, false);
 			if (!sym.isEmpty () && prot) sym.setProtected ();
 			if (!sym.isEmpty () && pub) sym.setPublic ();
 	    	    }
@@ -488,7 +485,7 @@ namespace semantic {
 	    pushReferent (enm);
 	    for (auto it : stenm.getValues ()) {
 		// Inside an enum the vars are declared using a vardecl expression
-		auto en = visit (syntax::ExpressionWrapper::init (it.getLocation (), "",it));
+		auto en = visit (syntax::ExpressionWrapper::init (it.getLocation (), "",it), false);
 		en.setPublic ();
 	    }
 
@@ -569,7 +566,7 @@ namespace semantic {
 	}
     
 	semantic::Symbol Visitor::visitGlobal (const syntax::Global & stglob) {
-	    return visit (syntax::ExpressionWrapper::init (stglob.getLocation (), stglob.getComments (), stglob.getContent ()));	
+	    return visit (syntax::ExpressionWrapper::init (stglob.getLocation (), stglob.getComments (), stglob.getContent ()), false);	
 	}
 
 	std::map <std::string, std::string> dirEntries (const std::string & path, const std::string & init) {
@@ -609,7 +606,7 @@ namespace semantic {
 			    std::list <Ymir::Error::ErrorMsg> errors;
 			    try {
 				auto synt_module = syntax::Visitor::init (file_path).visitModGlobal ();
-				declarator::Visitor::init ().visit (synt_module);			    
+				declarator::Visitor::init ().visit (synt_module, false);			    
 			    } catch (Error::ErrorList list) {
 			    
 				errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
@@ -620,16 +617,16 @@ namespace semantic {
 			}
 		    }
 		
-		    getReferent ().use (it.second, Symbol::getModuleByPath (it.second));		
+		    getReferent ().use (it.second, false, Symbol::empty ()); //Symbol::getModuleByPath (it.second));		
 		}
 	    } else {
 		for (auto & it : entries) {
-		    getReferent ().use (it.second, Symbol::getModuleByPath (it.second));
+		    getReferent ().use (it.second, false, Symbol::empty ()); //Symbol::getModuleByPath (it.second));
 		}
 	    }
 	}
 
-	semantic::Symbol Visitor::visitImport (const syntax::Import & imp) {
+	semantic::Symbol Visitor::visitImport (const syntax::Import & imp, bool pub) {
 	    auto path = Path {imp.getModule ().getStr (), "::"};
 	    bool success = false;
 
@@ -643,7 +640,7 @@ namespace semantic {
 		    try {
 			auto synt_module = syntax::Visitor::init (file_path).visitModGlobal ();
 			bool isTrusted = path.startWith (Path {CoreNames::get (STD_MODULE), "::"}) || path.startWith (Path {CoreNames::get (CORE_MODULE), "::"}) || path.startWith ({CoreNames::get (ETC_MODULE), "::"});
-			declarator::Visitor::init (isTrusted).visit (synt_module);
+			declarator::Visitor::init (isTrusted).visit (synt_module, false);
 		    } catch (Error::ErrorList list) {
 			
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
@@ -672,7 +669,7 @@ namespace semantic {
 			    try {
 				auto synt_module = syntax::Visitor::init (file_path).visitModGlobal ();
 				bool isTrusted = path.startWith (Path {CoreNames::get (STD_MODULE), "::"}) || path.startWith (Path {CoreNames::get (CORE_MODULE), "::"}) || path.startWith ({CoreNames::get (ETC_MODULE), "::"});
-				declarator::Visitor::init (isTrusted).visit (synt_module);
+				declarator::Visitor::init (isTrusted).visit (synt_module, false);
 			    } catch (Error::ErrorList list) {				
 				errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 			    } 
@@ -694,7 +691,7 @@ namespace semantic {
 		}
 	    }
 
-	    getReferent ().use (imp.getModule ().getStr () , Symbol::getModuleByPath (imp.getModule ().getStr ()));
+	    getReferent ().use (imp.getModule ().getStr () , pub, Symbol::empty ()); //Symbol::getModuleByPath (imp.getModule ().getStr ()));
 	    
 	    return Symbol::empty ();	    		    
 	}	
