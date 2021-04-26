@@ -167,8 +167,9 @@ namespace documentation {
 	    for (auto & it : mod.getAllLocal ()) {
 		if (!it.is <semantic::Module> () || !it.to <semantic::Module> ().isGlobal ()) {		
 		    auto ch = this-> dump (it);
-		    if (!ch.isEmpty ())
-		    childs.push_back (ch);
+		    if (!ch.isEmpty ()) {
+			childs.push_back (ch);
+		    }
 		}
 	    }
 
@@ -315,7 +316,7 @@ namespace documentation {
 	    params.push_back (JsonDict::init (param));
 	}
 	
-	val ["param"] = JsonArray::init (params);
+	val ["params"] = JsonArray::init (params);
 	val ["ret_type"] = dumpType (decl.getPrototype ().getType ());
 
 	std::vector <JsonValue> throwers;
