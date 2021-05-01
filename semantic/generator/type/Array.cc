@@ -38,6 +38,12 @@ namespace semantic {
 	    return this-> getInners () [0].equals (array.getInners () [0]) && this-> _size == array._size;
 	}
 
+	bool Array::isCompatible (const Generator & gen) const {
+	    if (!gen.is<Array> ()) return false;	    
+	    auto array = gen.to <Array> ();
+	    return this-> getInners () [0].to <Type> ().isCompatible (array.getInners () [0]) && this-> _size == array._size;
+	}	
+
 	std::string Array::typeName () const {
 	    Ymir::OutBuffer buf;
 	    buf.write ("[", this-> getInners () [0].to<Type> ().computeTypeName (this-> isMutable ()), " ; ", (int) this-> _size, "]");

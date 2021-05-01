@@ -1,6 +1,7 @@
 #include <ymir/semantic/generator/type/ClassProxy.hh>
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/errors/Error.hh>
+#include <ymir/semantic/validator/Visitor.hh>
 
 namespace semantic {
     namespace generator {
@@ -28,6 +29,11 @@ namespace semantic {
 	    auto array = gen.to <ClassProxy> ();
 	    return this-> _proxy.equals (array._proxy) && ClassPtr::equals (gen);
 	}
+
+	bool ClassProxy::isCompatible (const Generator & gen) const {
+	    if (this-> equals (gen)) return true;
+	    return validator::Visitor::isAncestor (this-> getInners ()[0], gen);
+	}	
 
 	const ClassRef & ClassProxy::getProxyRef () const {
 	    return this-> _proxy.to <ClassRef> ();

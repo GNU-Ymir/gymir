@@ -157,7 +157,7 @@ namespace semantic {
 		// That is exactly the reverse of function call, or var affectation
 		this-> _context.verifyCompatibleType (var.getLocation (), varType.getLocation (), value.to <Value> ().getType (), varType, true);
 		Generator type_test (Generator::empty ());
-		if (!value.to <Value> ().getType ().to <Type> ().isCompatible (varType)) { // If we have passed the test, but still not compatible means it is a class
+		if (this-> _context.isAncestor (value.to <Value> ().getType (), varType)) { // if it is an ancestor we need more tests
 		    auto loc = var.getLocation ();
 		    auto bin = syntax::Binary::init (lexing::Word::init (loc, Token::DCOLON),
 						     TemplateSyntaxWrapper::init (loc, value),
@@ -301,8 +301,8 @@ namespace semantic {
 		    if (type.is <ClassRef> ()) type = ClassPtr::init (call.getLocation (), type);
 		    
 		    this-> _context.verifyCompatibleType (value.getLocation (), type.getLocation (), value.to <Value> ().getType (), type, true);
-		    if (!value.to <Value> ().getType ().to <Type> ().isCompatible (type)) {
-			// If we have passed the test, but still not compatible means it is a class
+		    if (this-> _context.isAncestor (value.to <Value> ().getType (), type)) {
+			// If it is an ancestor we need more test
 			auto bin = syntax::Binary::init (lexing::Word::init (loc, Token::DCOLON),
 							 TemplateSyntaxWrapper::init (loc, value),
 							 syntax::Var::init (lexing::Word::init (loc, SubVisitor::__TYPEINFO__)),
@@ -853,7 +853,6 @@ namespace semantic {
 		    
 		    this-> _context.verifyCompatibleType (value.getLocation (), type.getLocation (), value.to <Value> ().getType (), type, true);
 		   
-		    // If we have passed the test, but still not compatible means it is a class
 		    auto bin = syntax::Binary::init (lexing::Word::init (loc, Token::DCOLON),
 						     TemplateSyntaxWrapper::init (loc, value),
 						     syntax::Var::init (lexing::Word::init (loc, SubVisitor::__TYPEINFO__)),
@@ -864,6 +863,7 @@ namespace semantic {
 							    syntax::Var::init (lexing::Word::init (loc, global::CoreNames::get (global::TYPE_INFO_EQUAL))),
 							    {bin, TemplateSyntaxWrapper::init (loc, this-> _context.validateTypeInfo (loc, type))}							    
 		    );
+		    
 		    globTest = this-> _context.validateValue (call);		   
 		}
 	    } catch (Error::ErrorList list) {		

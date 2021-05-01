@@ -59,7 +59,10 @@ namespace semantic {
 	}
 
 	bool Option::isCompatible (const Generator & gen) const {
-	    if (this-> equals (gen)) return true;
+	    if (gen.is <Option> ()) {
+		auto array = gen.to <Option> ();
+		return this-> getInners () [0].to <Type> ().isCompatible (array.getInners () [0]);
+	    }
 	    return false;
 	}	
 	

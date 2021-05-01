@@ -36,6 +36,9 @@ namespace semantic {
 	     */
 	    bool equals (const Generator & other) const override;
 
+	    
+	    bool isCompatible (const Generator & other) const override;
+	    
 	    /**
 	     * \return the ref that generated the proxy
 	     */

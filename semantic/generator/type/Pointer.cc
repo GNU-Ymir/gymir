@@ -52,8 +52,8 @@ namespace semantic {
 
 	bool Pointer::isCompatible (const Generator & gen) const {
 	    if (this-> equals (gen)) return true;
-	    if (!gen.is <Array> ()) return false;
-	    auto array = gen.to <Array> ();
+	    if (!gen.is <Pointer> ()) return false;
+	    auto array = gen.to <Pointer> ();
 		
 	    return this-> getInners () [0].to<Type> ().isCompatible (array.getInners () [0]);
 	}	

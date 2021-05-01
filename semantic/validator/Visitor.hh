@@ -935,7 +935,7 @@ namespace semantic {
 	    /**
 	     * @return true if left is a classRef that is an ancestor of right also a classref
 	     */
-	    bool isAncestor (const generator::Generator & left, const generator::Generator & right);
+	    static bool isAncestor (const generator::Generator & left, const generator::Generator & right);
 	    
 	    /**
 	     * Is the value known at compile time and is a fixed constant

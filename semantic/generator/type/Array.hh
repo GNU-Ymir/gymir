@@ -42,6 +42,8 @@ namespace semantic {
 	    bool equals (const Generator & other) const override;
 	    
 
+	    bool isCompatible (const Generator & other) const override;
+	    
 	    std::string typeName () const override;
 	    
 	    /**

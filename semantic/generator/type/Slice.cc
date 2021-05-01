@@ -1,6 +1,7 @@
 #include <ymir/semantic/generator/type/Slice.hh>
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/semantic/generator/type/Array.hh>
+#include <ymir/semantic/validator/Visitor.hh>
 
 namespace semantic {
     namespace generator {
@@ -39,11 +40,14 @@ namespace semantic {
 
 	bool Slice::isCompatible (const Generator & gen) const {
 	    if (this-> equals (gen)) return true;
-	    if (!gen.is <Array> ()) return false;
-	    auto array = gen.to <Array> ();
-		
-	    return this-> getInners () [0].to<Type> ().isCompatible (array.getInners () [0]);
-	}	
+	    if (gen.is <Array> ()) {
+		auto array = gen.to <Array> ();		
+		return this-> getInners () [0].to<Type> ().isCompatible (array.getInners () [0]);
+	    } else if (gen.is <Slice> ()) {
+		auto array = gen.to <Slice> ();
+		return this-> getInners () [0].to<Type> ().isCompatible (array.getInners () [0]);
+	    } else return false;
+	}
 
 	bool Slice::needExplicitAlias () const {
 	    return true;

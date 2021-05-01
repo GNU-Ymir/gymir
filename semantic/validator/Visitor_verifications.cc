@@ -348,12 +348,12 @@ namespace semantic {
 	
 	void Visitor::verifyCompatibleType (const lexing::Word & loc, const lexing::Word & rightLoc, const Generator & left, const Generator & right, bool fromObject) {
 	    bool error = false;
-	    std::string leftName;	    
+	    std::string leftName;
 	    if (!left.to<Type> ().isCompatible (right)) {
 		// It can be compatible with an ancestor of right
-		error = !isAncestor (left, right); 
-		if (!error) return;
-		
+		// error = !isAncestor (left, right); 
+		// if (!error) return;
+		error = true;
 		leftName = left.to<Type> ().getTypeName ();
 	    }
 	    	    

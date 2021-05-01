@@ -47,6 +47,17 @@ namespace semantic {
 	    return true;
 	}
 
+	bool Tuple::isCompatible (const Generator & gen) const {
+	    if (!gen.is<Tuple> ()) return false;
+	    auto tu = gen.to <Tuple> ();
+	    if (tu.getInners ().size () != this-> getInners ().size ()) return false;
+	    for (auto it : Ymir::r (0, this-> getInners ().size ())) {
+		if (!this-> getInners () [it].to <Type> ().isCompatible (tu.getInners () [it])) return false;
+	    }
+		
+	    return true;
+	}
+	
 	bool Tuple::needExplicitAlias () const {
 	    for (auto it : Ymir::r (0, this-> getInners ().size ())) {
 		if (this-> getInners () [it].to <Type> ().needExplicitAlias ()
