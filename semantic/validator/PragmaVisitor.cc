@@ -177,13 +177,13 @@ namespace semantic {
 		Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 	    }
 	    
-	    if (this-> _context.isInTrusted ()) {		
-		return Value::initBrRet (Panic::init (prg.getLocation ()).to <Value> (), true, true, prg.getLocation (), prg.getLocation ());
-	    } else {
-		Ymir::Error::occur (prg.getLocation (), ExternalError::UNTRUSTED_CONTEXT);
-	    }
+	    //if (this-> _context.isInTrusted ()) {		
+	    return Value::initBrRet (Panic::init (prg.getLocation ()).to <Value> (), true, true, prg.getLocation (), prg.getLocation ());
+	    // } else {
+	    // 	Ymir::Error::occur (prg.getLocation (), ExternalError::UNTRUSTED_CONTEXT);
+	    // }
 	    
-	    return Generator::empty ();
+	    // return Generator::empty ();
 	}	
 
 	/**

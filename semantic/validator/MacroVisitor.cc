@@ -1,6 +1,7 @@
 #include <ymir/semantic/validator/MacroVisitor.hh>
 #include <ymir/semantic/validator/BinaryVisitor.hh>
 #include <ymir/semantic/validator/SubVisitor.hh>
+#include <ymir/semantic/validator/CallVisitor.hh>
 #include <ymir/syntax/visitor/Keys.hh>
 #include <ymir/global/State.hh>
 #include <ymir/syntax/declaration/MacroRule.hh>
@@ -97,7 +98,48 @@ namespace semantic {
 	}
 
 	generator::Generator MacroVisitor::validateMultSym (const MultSym & sym, const syntax::MacroCall & expression, std::list <Ymir::Error::ErrorMsg> & errors) {
-	    return Generator::empty ();
+	    std::vector <Generator> success;
+	    for (auto & it : sym.getGenerators ()) {
+		try {
+		    Generator ret (Generator::empty ());
+		    match (it) {			
+			of (MultSym, sym) {
+			    ret = validateMultSym (sym, expression, errors);
+			} elof (MacroRef, mref) {
+			    ret = validateMacroRef (mref, expression, errors);
+			} fo;
+			
+			if (!ret.isEmpty ()) {
+			    success.push_back (ret);
+			} else {
+			    this-> error (expression.getLocation (), expression.getEnd (), it, {});
+			}
+		    }
+		} catch (Error::ErrorList & list) {
+		    auto note = Ymir::Error::createNoteOneLine (ExternalError::CANDIDATE_ARE, it.getLocation (), it.prettyString ());
+		    for (auto & n : list.errors) {
+			note.addNote (n);
+		    }
+		    errors.push_back (note);
+		}
+	    }
+
+	    if (success.size () == 0) {
+		return Generator::empty ();
+	    } else if (success.size () != 1) {		
+		std::list <Ymir::Error::ErrorMsg> notes;
+		for (auto &gen : success) {
+		    notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::CANDIDATE_ARE, CallVisitor::realLocation (gen), CallVisitor::prettyName (gen)));		    
+		}
+		
+		Ymir::Error::occurAndNote (expression.getLocation (), expression.getEnd (),
+					   notes,
+					   ExternalError::SPECIALISATION_WORK_WITH_BOTH_PURE);
+		
+		return Generator::empty ();
+	    } else {
+		return success [0];
+	    }
 	}
 	
 	generator::Generator MacroVisitor::validateMacroRef (const MacroRef & sym, const syntax::MacroCall & expression, std::list <Ymir::Error::ErrorMsg> & errors) {
@@ -864,7 +906,7 @@ namespace semantic {
 			    } else if (right == Keys::LEN) {
 				std::vector <Mapper> ret;
 				Ymir::OutBuffer buf;
-				buf.write (left.size (), Keys::U64);
+				buf.write (left.size (), Keys::USIZE);
 				ret.push_back (Mapper (true, buf.str ()));
 				return ret;
 			    } else {

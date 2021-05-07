@@ -45,7 +45,7 @@ namespace semantic {
 	}
 	
 	std::string UniqValue::prettyString () const {
-	    return Ymir::format ("Uniq (%)", (int) this-> _refId); //this-> _value.prettyString ();
+	    return this-> _value.prettyString (); //this-> _value.prettyString ();
 	}
 	
     }

@@ -42,11 +42,20 @@ namespace semantic {
 	    if (this-> equals (gen)) return true;
 	    if (gen.is <Array> ()) {
 		auto array = gen.to <Array> ();		
-		return this-> getInners () [0].to<Type> ().isCompatible (array.getInners () [0]);
+		if (this-> getInners () [0].to<Type> ().isCompatible (array.getInners () [0])) {
+		    return true;
+		} else if (array.getInners ()[0].is <Void> ()) {
+		    return true;
+		}
 	    } else if (gen.is <Slice> ()) {
 		auto array = gen.to <Slice> ();
-		return this-> getInners () [0].to<Type> ().isCompatible (array.getInners () [0]);
-	    } else return false;
+		if (this-> getInners () [0].to<Type> ().isCompatible (array.getInners () [0])) {
+		    return true;
+		} else if (array.getInners ()[0].is <Void> ()) {
+		    return true;
+		}
+	    }
+	    return false;
 	}
 
 	bool Slice::needExplicitAlias () const {
