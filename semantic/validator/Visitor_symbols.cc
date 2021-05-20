@@ -88,15 +88,16 @@ namespace semantic {
 
 		bool isMutable = false, isRef = false, dmut = false;;
 		type = this-> applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut, false);
-		if (!isMutable) type = Type::init (type.to <Type> (), false);
+		if (!isMutable && !dmut) type = Type::init (type.to <Type> (), false);
+		
 
 		if (!value.isEmpty ()) {		    
-		    if (!type.is <LambdaType> ()) {// if the var has a real type (not a lambda type), we have to check the mutability 
+		    if (isMutable || !type.is <LambdaType> ()) {// if the var has a real type (not a lambda type), we have to check the mutability 
 			this-> verifyMemoryOwner (var.getName (), type, value, true);
 		    }
 		}
 		
-		auto glbVar = GlobalVar::init (var.getName (), var.getRealName ().getValue (), var.getExternalLanguage (), isMutable, type, value, !inModule || var.isExtern ());
+		auto glbVar = GlobalVar::init (var.getName (), var.getRealName ().getValue (), var.getExternalLanguage (), isMutable || dmut, type, value, !inModule || var.isExtern ());
 		elemSym.to<semantic::VarDecl> ().setGenerator (glbVar);	 // we store the variable inside the global, to avoid revalidation	
 
 		// if (inModule) { // we need to insert the var for the declarator to be defined in the generation phase

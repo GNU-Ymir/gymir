@@ -510,7 +510,7 @@ namespace semantic {
 	 * \param path the path to the module
 	 * \return a module (or empty)
 	 */
-	static Symbol getModuleByPath (const std::string & path);
+	static Symbol getModuleByPath (const std::string & path, bool fast = true);
 
 	
 	/**

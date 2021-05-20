@@ -157,7 +157,7 @@ namespace semantic {
 		// That is exactly the reverse of function call, or var affectation
 		this-> _context.verifyCompatibleType (var.getLocation (), varType.getLocation (), value.to <Value> ().getType (), varType, true);
 		Generator type_test (Generator::empty ());
-		if (this-> _context.isAncestor (value.to <Value> ().getType (), varType)) { // if it is an ancestor we need more tests
+		if (this-> _context.isAncestor (value.to <Value> ().getType (), varType) || this-> _context.isObjectType (value.to <Value> ().getType ())) { // if it is an ancestor we need more tests
 		    auto loc = var.getLocation ();
 		    auto bin = syntax::Binary::init (lexing::Word::init (loc, Token::DCOLON),
 						     TemplateSyntaxWrapper::init (loc, value),
@@ -301,7 +301,7 @@ namespace semantic {
 		    if (type.is <ClassRef> ()) type = ClassPtr::init (call.getLocation (), type);
 		    
 		    this-> _context.verifyCompatibleType (value.getLocation (), type.getLocation (), value.to <Value> ().getType (), type, true);
-		    if (this-> _context.isAncestor (value.to <Value> ().getType (), type)) {
+		    if (this-> _context.isAncestor (value.to <Value> ().getType (), type) || this-> _context.isObjectType (value.to <Value> ().getType ())) {
 			// If it is an ancestor we need more test
 			auto bin = syntax::Binary::init (lexing::Word::init (loc, Token::DCOLON),
 							 TemplateSyntaxWrapper::init (loc, value),

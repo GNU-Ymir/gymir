@@ -3,6 +3,7 @@
 #include <ymir/semantic/generator/type/Pointer.hh>
 #include <ymir/semantic/generator/type/Bool.hh>
 #include <ymir/semantic/generator/type/ClassPtr.hh>
+#include <ymir/semantic/generator/type/ClassProxy.hh>
 #include <ymir/errors/Error.hh>
 
 namespace semantic {
@@ -16,11 +17,11 @@ namespace semantic {
 	BinaryPtr::BinaryPtr (const lexing::Word & loc, Operator op, const Generator & type, const Generator & left, const Generator & right) :
 	    Binary (loc, op, type, left, right)
 	{
-	    if (!left.to<Value> ().getType ().is<Pointer> () && !left.to <Value> ().getType ().is <ClassPtr> ()) {
+	    if (!left.to<Value> ().getType ().is<Pointer> () && !left.to <Value> ().getType ().is <ClassPtr> () && !left.to <Value> ().getType ().is <ClassProxy> ()) {
 		Ymir::Error::halt ("%(r) Malformed BinaryPtr, left operand type is : %(y)", "Critical", left.to<Value> ().getType ().to<Type> ().getTypeName ());
 	    }
 
-	    if (!right.to<Value> ().getType ().is <Integer> () && !right.to <Value> ().getType ().is <Pointer> ()) {
+	    if (!right.to<Value> ().getType ().is <Integer> () && !right.to <Value> ().getType ().is <Pointer> () && !right.to <Value> ().getType ().is <ClassPtr> () && !right.to <Value> ().getType ().is <ClassProxy> ()) {
 		Ymir::Error::halt ("%(r) Malformed BinaryPtr, right operand type is : %(y)", "Critical", right.to<Value> ().getType ().to<Type> ().getTypeName ());
 	    }
 

@@ -1131,8 +1131,8 @@ namespace syntax {
     std::vector <Expression> Visitor::visitTemplateParameters () {
 	std::vector <Expression> list;
 	auto cursor = this-> _lex.tell ();
-	auto begin = this-> _lex.consumeIf ({Token::LACC, Token::INF});
-	if (begin == Token::LACC || begin == Token::INF) {
+	auto begin = this-> _lex.consumeIf ({Token::LACC});
+	if (begin == Token::LACC) {
 	    try {
 		lexing::Word token (lexing::Word::eof ());
 		do {
@@ -1182,10 +1182,8 @@ namespace syntax {
 			}
 		    }
 		
-		    if (begin == Token::LACC)
+		    if (begin == Token::LACC) {
 			token = this-> _lex.next ({Token::RACC, Token::COMA});
-		    else if (begin == Token::INF) {
-			token = this-> _lex.next ({Token::SUP, Token::COMA});
 		    } else break;
 		} while (token != Token::RACC && token != Token::SUP);
 	    } catch (Error::ErrorList ATTRIBUTE_UNUSED & list) {
@@ -1736,18 +1734,15 @@ namespace syntax {
     Expression Visitor::visitCast () {
 	auto location = this-> _lex.next ();
 	this-> _lex.next ({Token::NOT});
-	auto beg = this-> _lex.consumeIf ({Token::LACC, Token::INF});
+	auto beg = this-> _lex.consumeIf ({Token::LACC});
 	Expression type (Expression::empty ());
-	if (beg == Token::LACC)
+	if (beg == Token::LACC) {
 	    type = visitExpression ();
-	else
-	    type = visitOperand3 ();
-	
-	if (beg == Token::LACC) 
 	    this-> _lex.next ({Token::RACC});
-	else if (beg == Token::INF)
-	    this-> _lex.next ({Token::SUP});
-
+	} else {
+	    type = visitOperand3 ();
+	}
+	
 	this-> _lex.next ({Token::LPAR});
 	auto inner = visitExpression ();
 	this-> _lex.next ({Token::RPAR});
@@ -1830,11 +1825,6 @@ namespace syntax {
 		inTmpCall = false;
 		auto list = visitParamList ({Token::RACC});
 		this-> _lex.next ({Token::RACC});
-		return TemplateCall::init (begin, list, left);
-	    } else if (next == Token::INF) {
-		inTmpCall = false;
-		auto list = visitParamList ({Token::SUP}, false, true);
-		this-> _lex.next ({Token::SUP});
 		return TemplateCall::init (begin, list, left);
 	    } else {
 		inTmpCall = true;

@@ -570,11 +570,13 @@ namespace semantic {
 	else return sym-> second;
     }
 
-    Symbol Symbol::getModuleByPath (const std::string & path_) {	
-	auto it = __fast_mod_access__.find (path_);
-	if (it != __fast_mod_access__.end ()) {
-	    return it-> second;
-	} 
+    Symbol Symbol::getModuleByPath (const std::string & path_, bool fast) {
+	if (fast) {
+	    auto it = __fast_mod_access__.find (path_);
+	    if (it != __fast_mod_access__.end ()) {
+		return it-> second;
+	    }
+	}
 	
 	auto path = Ymir::Path {path_, "::"};	
 	auto mod = Symbol::getModule (path.getFiles () [0]);

@@ -116,8 +116,13 @@ namespace semantic {
 		    auto x = this-> _context.retreiveValue (right [0]);
 		    if (x.is <Fixed> () && x.to <Fixed> ().getUI ().u < len) {
 			uint size = innerType.to <Char> ().getSize ();
-			uint value = *((uint*) (left.to<StringValue> ().getValue ().data () + (x.to <Fixed> ().getUI ().u * (size / 8))));
-			return CharValue::init (loc, innerType, value);
+			if (size == 8) {
+			    char value = *((char*) (left.to<StringValue> ().getValue ().data () + (x.to <Fixed> ().getUI ().u * (size / 8))));			
+			    return CharValue::init (loc, innerType, (uint) value);
+			} else {			
+			    uint value = *((uint*) (left.to<StringValue> ().getValue ().data () + (x.to <Fixed> ().getUI ().u * (size / 8))));			
+			    return CharValue::init (loc, innerType, value);
+			}
 		    } else {
 			realFailure = true;
 			Ymir::Error::occur (right[0].getLocation (), ExternalError::OVERFLOW_ARRAY, x.to<Fixed> ().getUI ().u, len);
@@ -138,10 +143,10 @@ namespace semantic {
 						     left.to<StringValue> ().getValue ().begin () + (rng.getRight ().to <Fixed> ().getUI ().u * (size / 8))
 				);
 			    for (uint i = 0 ; i < size / 8; i++) {
-				value.push_back ('\0');
+			    	value.push_back ('\0');
 			    }
 			    
-			    auto nlen = value.size () / (size / 8);
+			    auto nlen = (value.size () - (size / 8)) / (size / 8);
 			    auto type = Array::init (loc, innerType, nlen);
 			    type = Type::init (type.to <Type> (), true);
 			    

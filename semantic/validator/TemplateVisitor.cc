@@ -679,7 +679,7 @@ namespace semantic {
 		score = merge.score;
 		finalValidation (ref.to <TemplateRef> ().getTemplateRef ().getReferent (), sym.to <Template> ().getPreviousParams (), merge, sym.to <semantic::Template> ().getTest ());
 
-		auto soluce = TemplateSolution::init (sym.getName (), sym.getComments (), sym.to <semantic::Template> ().getParams (), merge.mapping, merge.nameOrder, true);
+		auto soluce = TemplateSolution::init (sym.getName (), sym.getComments (), sym.to <Template> ().getPreviousParams (), merge.mapping, merge.nameOrder, true);
 		auto already = getTemplateSolution (ref.to <TemplateRef> ().getTemplateRef ().getReferent (), soluce);
 		Symbol glob (Symbol::empty ());
 		

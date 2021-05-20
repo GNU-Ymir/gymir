@@ -46,6 +46,50 @@ namespace semantic {
 	    return Ymir::format ("%.%", this-> _str.prettyString (), this-> _field);
 	}
 
+
+	FieldOffsetIndex::FieldOffsetIndex () :
+	    _str (Generator::empty ())
+	{
+	    this-> isLvalue (true);
+	}
+
+	FieldOffsetIndex::FieldOffsetIndex (const lexing::Word & loc, const Generator & type, const Generator & str, ulong field) :
+	    Value (loc, type),
+	    _str (str),
+	    _field (field)
+	{
+	    this-> isLvalue (true);	   	    
+	    this-> setThrowers (str.getThrowers ());
+	}
+
+
+	Generator FieldOffsetIndex::init (const lexing::Word & loc, const Generator & type, const Generator & str, ulong field) {
+	    return Generator {new (NO_GC) FieldOffsetIndex (loc, type, str, field)};
+	}
+	
+	Generator FieldOffsetIndex::clone () const {
+	    return Generator {new (NO_GC) FieldOffsetIndex (*this)};
+	}
+	
+	bool FieldOffsetIndex::equals (const Generator & gen) const {
+	    if (!gen.is <FieldOffsetIndex> ()) return false;
+	    auto bin = gen.to<FieldOffsetIndex> ();	    
+	    return bin._str.equals (this-> _str) && bin._field == this-> _field;
+	}
+
+	const Generator & FieldOffsetIndex::getTuple () const {
+	    return this-> _str;
+	}
+
+	ulong FieldOffsetIndex::getField () const {
+	    return this-> _field;
+	}
+
+	std::string FieldOffsetIndex::prettyString () const {
+	    return Ymir::format ("%.%", this-> _str.prettyString (), this-> _field);
+	}
+
+	
     }    
 
 }

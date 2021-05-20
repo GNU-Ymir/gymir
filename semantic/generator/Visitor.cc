@@ -858,6 +858,9 @@ namespace semantic {
 		s_of (FieldOffset, off)
 		    return generateFieldOffset (off);
 
+		s_of (FieldOffsetIndex, off)
+		    return generateFieldOffsetIndex (off);
+		
 		s_of (StructCst, cst)
 		    return generateStructCst (cst);	       
 
@@ -1363,7 +1366,7 @@ namespace semantic {
 		    list.append (value.getList ());
 		    value = value.getValue ();
 		}
-		
+
 		list.append (Tree::affect (
 				 this-> stackVarDeclChain.back (), this-> getCurrentContext (),
 				 var.getLocation (), decl, value
@@ -1839,30 +1842,30 @@ namespace semantic {
 	}
 	
 	generic::Tree Visitor::generateThrowBlock (const ThrowBlock & bl) {
-	    auto lbl = this-> _throwLabels.back ().find (bl.getName ());
+	    // auto lbl = this-> _throwLabels.back ().find (bl.getName ());
 	    
-	    if (lbl == this-> _throwLabels.back ().end ()) {
-		auto endLabel = Tree::makeLabel (bl.getLocation (), getCurrentContext (), "end_throw");
-		auto beginLabel = Tree::makeLabel (bl.getLocation (), getCurrentContext (), "begin_throw");
-		auto doLabel = Tree::makeLabel (bl.getLocation (), getCurrentContext (), "do_throw");
+	    // if (lbl == this-> _throwLabels.back ().end ()) {
+	    // 	auto endLabel = Tree::makeLabel (bl.getLocation (), getCurrentContext (), "end_throw");
+	    // 	auto beginLabel = Tree::makeLabel (bl.getLocation (), getCurrentContext (), "begin_throw");
+	    // 	auto doLabel = Tree::makeLabel (bl.getLocation (), getCurrentContext (), "do_throw");
 		
-		enterBlock (bl.getLocation ().toString ());
-		TreeStmtList list (TreeStmtList::init ());
-		list.append (Tree::labelExpr (bl.getLocation (), beginLabel));
-		list.append (Tree::gotoExpr (bl.getLocation (), endLabel));
-		list.append (Tree::labelExpr (bl.getLocation (), doLabel));
-		list.append (generateValue (bl.getContent ()));
-		list.append (Tree::labelExpr (bl.getLocation (), endLabel));
-		auto binding = quitBlock (bl.getLocation (), list.toTree (), bl.getLocation ().toString ());
-		TreeStmtList all (TreeStmtList::init ());
-		all.append (binding.bind_expr);
-		all.append (Tree::gotoExpr (bl.getLocation (), doLabel));
-		this-> _throwLabels.back ().emplace (bl.getName (), doLabel);
+	    // 	enterBlock (bl.getLocation ().toString ());
+	    // 	TreeStmtList list (TreeStmtList::init ());
+	    // 	list.append (Tree::labelExpr (bl.getLocation (), beginLabel));
+	    // 	list.append (Tree::gotoExpr (bl.getLocation (), endLabel));
+	    // 	list.append (Tree::labelExpr (bl.getLocation (), doLabel));
+	    return generateValue (bl.getContent ());
+	    // 	list.append (Tree::labelExpr (bl.getLocation (), endLabel));
+	    // 	auto binding = quitBlock (bl.getLocation (), list.toTree (), bl.getLocation ().toString ());
+	    // 	TreeStmtList all (TreeStmtList::init ());
+	    // 	all.append (binding.bind_expr);
+	    // 	all.append (Tree::gotoExpr (bl.getLocation (), doLabel));
+	    // 	this-> _throwLabels.back ().emplace (bl.getName (), doLabel);
 		
-		return all.toTree ();
-	    }
+	    // 	return all.toTree ();
+	    // }
 	    
-	    return Tree::gotoExpr (bl.getLocation (), lbl-> second);
+	    // return Tree::gotoExpr (bl.getLocation (), lbl-> second);
 	}
 
 	generic::Tree Visitor::generateOptionValue (const OptionValue & val) {
@@ -2291,6 +2294,20 @@ namespace semantic {
 				 sizeType,
 				 Tree::buildAddress (off.getLocation (), null_val.buildPointerUnref (0).getField (off.getField ()), ptrVoid));
 	}
+
+	generic::Tree Visitor::generateFieldOffsetIndex (const FieldOffsetIndex & off) {
+	    auto strType = generateType (off.getTuple ());
+	    auto ptrType = Tree::pointerType (strType);
+	    auto null_val = Tree::castTo (off.getLocation (), ptrType, Tree::buildPtrCst (off.getLocation (), 0));
+
+	    auto ptrVoid = Tree::pointerType (Tree::voidType ());
+	    auto sizeType = Tree::intType (0, false);
+	    auto field = Ymir::format ("_%", (int) off.getField ());;
+	    return Tree::castTo (off.getLocation (),
+				 sizeType,
+				 Tree::buildAddress (off.getLocation (), null_val.buildPointerUnref (0).getField (field), ptrVoid));
+	}
+
 	
 	generic::Tree Visitor::generateVtableAccess (const VtableAccess & acc) {
 	    auto elem = generateValue (acc.getClass ());

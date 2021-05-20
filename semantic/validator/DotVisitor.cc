@@ -131,11 +131,14 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 
-	Generator DotVisitor::validateSlice (const syntax::Binary & expression, const Generator & left) {
+	Generator DotVisitor::validateSlice (const syntax::Binary & expression, const Generator & left) {	   
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
 	    auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
-
+	    auto strLit = this-> _context.isStringLiteral (left);
 	    if (name == Slice::LEN_NAME) {
+		if (!strLit.isEmpty ()) {
+		    return ufixed (expression.getLocation (), strLit.to <StringValue> ().getLen ());
+		}
 		return StructAccess::init (expression.getLocation (),
 					   Integer::init (expression.getLocation (), 0, false),
 					   left, name);

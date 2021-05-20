@@ -4,6 +4,7 @@
 #include <ymir/semantic/validator/DotVisitor.hh>
 #include <ymir/semantic/validator/UtfVisitor.hh>
 #include <ymir/semantic/generator/Mangler.hh>
+#include <ymir/semantic/generator/value/Fixed.hh>
 #include <ymir/global/Core.hh>
 #include <ymir/errors/_.hh>
 #include <time.h>
@@ -151,7 +152,7 @@ namespace semantic {
 		Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 	    }
 	    
-	    if (this-> _context.isInTrusted ()) {
+	    // if (this-> _context.isInTrusted ()) {
 		auto bl = this-> _context.validateValue (prg.getContent ()[0]);
 		auto jmp_buf_type = this-> _context.validateType (syntax::Var::init (lexing::Word::init (prg.getLocation (), global::CoreNames::get (global::JMP_BUF_TYPE))));	
 		auto ex = ExitScope::init (bl.getLocation (), bl.to <Value> ().getType (), jmp_buf_type, bl, {}, {
@@ -159,11 +160,11 @@ namespace semantic {
 		    }, Generator::empty (), Generator::empty (), Generator::empty ());
 		ex.setThrowers ({});
 		return ex;
-	    } else {
-		Ymir::Error::occur (prg.getLocation (), ExternalError::UNTRUSTED_CONTEXT);
-	    }
+	    // } else {
+	    // 	Ymir::Error::occur (prg.getLocation (), ExternalError::UNTRUSTED_CONTEXT);
+	    // }
 	    
-	    return Generator::empty ();
+	    // return Generator::empty ();
 	}	
 	
 	/**
@@ -220,7 +221,7 @@ namespace semantic {
 	    std::string res;
 	    auto mangler = Mangler::init (false);
 	    try {
-		auto val = this-> _context.validateValue (prg.getContent ()[0], true, false);
+		auto val = this-> _context.validateValue (prg.getContent ()[0], false, false);
 		if (val.is <StringValue> ()) { // assumed to be a path
 		    res = mangler.manglePath (Ymir::format ("%", val.to <StringValue> ().getValue ()));
 		} else {
@@ -231,7 +232,11 @@ namespace semantic {
 	    } catch (Error::ErrorList list) {
 		try {
 		    auto val = this-> _context.validateType (prg.getContent ()[0], true);
-		    res = mangler.mangle (val);
+		    if (val.is <ClassPtr> () || val.is <ClassProxy> ()) {			
+			res = mangler.mangle (val.to <Type> ().getInners ()[0]);
+		    } else {
+			res = mangler.mangle (val);
+		    }
 		} catch (Error::ErrorList list) {
 		    Ymir::Error::occurAndNote (prg.getLocation (), list.errors, ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 		}
@@ -404,6 +409,7 @@ namespace semantic {
 	    match (type) {
 		s_of (generator::Struct, str) return validateStructFieldOffsets (prg, str);
 		s_of (generator::StructRef, sref) return validateStructFieldOffsets (prg, sref.getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> ());
+		s_of_u (generator::Tuple) return validateTupleFieldOffsets (prg, type);
 	    }
 
 	    Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
@@ -423,6 +429,21 @@ namespace semantic {
 		auto name = field.to <generator::VarDecl> ().getName ();
 			    
 		params.push_back (FieldOffset::init (expression.getLocation (), type, strType, name));
+	    }
+
+	    auto arrType = Array::init (expression.getLocation (), type, params.size ());	    
+	    return ArrayValue::init (expression.getLocation (), arrType, params); 
+	}
+
+	Generator PragmaVisitor::validateTupleFieldOffsets (const syntax::Pragma & expression, const generator::Generator & tl) {
+	    std::vector <Generator> params;
+	    std::list <Ymir::Error::ErrorMsg> errors;
+	    auto type = Integer::init (expression.getLocation (), 0, false);
+
+	    ulong i = 0;
+	    for (auto & field_type ATTRIBUTE_UNUSED : tl.to <Type> ().getInners ()) {			    
+		params.push_back (FieldOffsetIndex::init (expression.getLocation (), type, tl, i));
+		i += 1;
 	    }
 
 	    auto arrType = Array::init (expression.getLocation (), type, params.size ());	    
@@ -814,15 +835,16 @@ namespace semantic {
 	    auto type = this-> _context.validateType (prg.getContent ()[0]);
 	    auto name = this-> _context.retreiveValue (this-> _context.validateValue (prg.getContent ()[1]));
 	    match (type) {
-		s_of (generator::Struct, str) return validateStructFieldType (prg, str, name);
-		s_of (generator::StructRef, sref) return validateStructFieldType (prg, sref.getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> (), name);
+		s_of (generator::Struct, str) return validateStructFieldType (prg, str, name, type.to <Type> ().isMutable ());
+		s_of (generator::StructRef, sref) return validateStructFieldType (prg, sref.getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> (), name, type.to <Type> ().isMutable ());
+		s_of_u (generator::Tuple) return validateTupleFieldType (prg, type, name);
 	    }
 
 	    Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
 	    return Generator::empty ();	    
 	}
 
-	Generator PragmaVisitor::validateStructFieldType (const syntax::Pragma & prg, const generator::Struct & str, const Generator & name_) {
+	Generator PragmaVisitor::validateStructFieldType (const syntax::Pragma & prg, const generator::Struct & str, const Generator & name_, bool ismutable) {
 	    auto name = name_;
 	    if (name.is<Aliaser> ()) name = name.to <Aliaser> ().getWho ();
 	    if (!name.is <StringValue> ()) {
@@ -849,7 +871,12 @@ namespace semantic {
 	    
 	    for (auto & field : fields) {
 		if (field.to <generator::VarDecl> ().getName () == str_name) {
-		    return field.to <generator::VarDecl> ().getVarType ();		
+		    auto type = field.to <generator::VarDecl> ().getVarType ();
+		    if (ismutable && type.to <Type> ().isMutable ()) {
+			return  Type::init (type.to <Type> (), true);
+		    } else {
+			return Type::init (type.to<Type> (), false);
+		    }
 		}
 	    }
 	    
@@ -863,6 +890,31 @@ namespace semantic {
 	    );
 	    
 	    return Generator::empty ();
+	}
+
+	Generator PragmaVisitor::validateTupleFieldType (const syntax::Pragma & prg, const generator::Generator & tl, const Generator & name_) {
+	    auto name = name_;
+	    if (!name.is <Fixed> ()) {
+		auto inner = Integer::init (tl.getLocation (), 0, false);
+		Ymir::Error::occur (prg.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
+				    name_.to <Value> ().getType ().to <Type> ().getTypeName (),
+				    inner.prettyString ()
+		    );
+	    }
+
+	    auto index_val = name.to<Fixed> ().getUI ().u;
+	    auto & tu_inners = tl.to <Tuple> ().getInners ();
+	    if (index_val >= tu_inners.size ()) {
+		auto note = Ymir::Error::createNote (prg.getLocation ());
+		Ymir::Error::occurAndNote (name.getLocation (), note, ExternalError::OVERFLOW_ARITY, index_val, tu_inners.size ());
+	    }
+	    
+	    auto type = tu_inners [index_val];
+	    if (type.to <Type> ().isMutable () && tl.to <Type> ().isMutable ()) {
+		return  Type::init (type.to <Type> (), true);
+	    } else {
+		 return Type::init (type.to<Type> (), false);
+	    }
 	}
 	
 	/**

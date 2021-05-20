@@ -315,6 +315,11 @@ namespace semantic {
 	     * \brief Transform a field offset into gimple
 	     */
 	    generic::Tree generateFieldOffset (const FieldOffset & f);
+
+	    /**
+	     * \brief Transform a field offset into gimple
+	     */
+	    generic::Tree generateFieldOffsetIndex (const FieldOffsetIndex & f);
 	    
 	    /**
 	     * \brief Transform a vtable access into gimple

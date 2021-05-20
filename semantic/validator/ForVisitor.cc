@@ -87,9 +87,9 @@ namespace semantic {
 	    
 	    auto value = Generator::empty ();
 	    auto loc = var.getLocation ();
-	    if (!isRef)
-	    value = value_;
-	    else {
+	    if (!isRef) {
+		value = value_;
+	    } else {
 	    	if (level < 2)
 	    	    Ymir::Error::occur (expression.getIter ().getLocation (),
 	    				ExternalError::DISCARD_CONST_LEVEL,
@@ -630,36 +630,26 @@ namespace semantic {
 	    if (decl.getName ().getStr () != Keys::UNDER)
 		this-> _context.verifyShadow (decl.getName ());
 
-
+	    if (decl.getDecorators ().size () != 0) {
+		auto deco = decl.getDecorators ()[0];
+		Ymir::Error::occur (deco.getLocation (),
+				    ExternalError::DECO_OUT_OF_CONTEXT,
+				    deco.getLocation ().getStr ()
+		);
+	    }
 
 	    auto type = innerTuple.to <Value> ().getType ();
 	    if (!decl.getType ().isEmpty ())
 		type = this-> _context.validateType (decl.getType ());
-	    
-	    bool isMutable = false, isRef = false, dmut = false;	    
-	    type = this-> _context.applyDecoratorOnVarDeclType (decl.getDecorators (), type, isRef, isMutable, dmut);
-	    this-> _context.verifyMutabilityRefParam (decl.getLocation (), type, ExternalError::MUTABLE_CONST_ITER);		
-	    //this-> _context.verifyMemoryOwner (decl.getLocation (), type, innerTuple, true);
-	    
+	    	    
 	    auto loc = decl.getLocation ();
 
-	    auto value = innerTuple;
-	    // if (isRef) {
-	    // 	auto llevel = type.to <Type> ().mutabilityLevel ();
-	    // 	if (level < llevel)
-	    // 	    Ymir::Error::occur (expression.getIter ().getLocation (),
-	    // 				ExternalError::DISCARD_CONST_LEVEL,
-	    // 				llevel, level
-	    // 	    );
-		
-	    // 	value = Referencer::init (loc, type, innerTuple);	
-	    // }
-	    
+	    auto value = innerTuple;	    
 	    auto var = generator::VarDecl::init (loc,
 						 decl.getName ().getStr (),
 						 type, 
 						 value,
-						 isMutable
+						 false
 	    );
 
 	    auto ref = VarRef::init (loc,

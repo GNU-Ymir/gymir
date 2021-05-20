@@ -117,11 +117,15 @@ namespace semantic {
 
 	    generator::Generator validateFieldType (const syntax::Pragma & prg);
 
-	    generator::Generator validateStructFieldType (const syntax::Pragma & prg, const generator::Struct & str, const generator::Generator & name);
+	    generator::Generator validateStructFieldType (const syntax::Pragma & prg, const generator::Struct & str, const generator::Generator & name, bool isMutable);
+
+	    generator::Generator validateTupleFieldType (const syntax::Pragma & prg, const generator::Generator & str, const generator::Generator & name);
 
 	    generator::Generator validateFieldOffsets (const syntax::Pragma & prg);
 
-	    generator::Generator validateStructFieldOffsets (const syntax::Pragma & prg, const generator::Struct & str);	    
+	    generator::Generator validateStructFieldOffsets (const syntax::Pragma & prg, const generator::Struct & str);
+
+	    generator::Generator validateTupleFieldOffsets (const syntax::Pragma & prg, const generator::Generator & str);	    
 
 	};
 

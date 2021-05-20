@@ -31,9 +31,7 @@ namespace semantic {
 	    if (function.getLocation () == Keys::MAIN) { // special case of main function, that must be validated with a specific prototype		
 		this-> verifyMainPrototype (func.getName (), function.getPrototype (), params, retType, errors);
 	    }	    
-	    
-	    this-> _context.setCurrentFuncType (retType); // used for the return statement
-	    
+	    	    
 	    bool needFinalReturn = false; // if true, the body is not a returner
 	    auto body = this-> validateBody (func.getName (), func.getRealName ().getValue (), function.getBody (), throwers, retType, needFinalReturn, errors); 
 	    
@@ -76,6 +74,7 @@ namespace semantic {
 	Generator FunctionVisitor::validateBody (const lexing::Word & loc, const std::string & funcName, const syntax::Expression & bodyExpr, const std::vector <generator::Generator> & throwers, const Generator & retType, bool & needFinalReturn, std::list <Ymir::Error::ErrorMsg> & errors) {
 	    if (!bodyExpr.isEmpty () && errors.empty ()) {
 		try {
+		    this-> _context.setCurrentFuncType (retType); // used for the return statement
 		    auto body = this-> _context.validateValue (bodyExpr);
 		    needFinalReturn = this-> verifyFinalReturn (bodyExpr.getLocation (), retType, body);
 		    this-> verifyThrowing (loc, funcName, body.getThrowers (), throwers, errors);
@@ -794,6 +793,10 @@ namespace semantic {
 
 
 	    this-> validatePrototypeForFrame (cs.getName (), cs.getContent ().getPrototype (), params, retType, errors);
+	    if (errors.size () != 0) {
+		throw Error::ErrorList {errors};
+	    }
+
 	    retType = clRef.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().to <Value> ().getType ();
 	    params.insert (params.begin (), ParamVar::init (cs.getName (), clRef, true, true));
 	    this-> _context.insertLocal (params [0].getName (), params [0]);
@@ -919,7 +922,7 @@ namespace semantic {
 		auto proto = syntax::Function::Prototype::init (fakeParams, function.getPrototype ().getType (), false);
 		
 		this-> validatePrototypeForFrame (cs.getName (), proto, params, retType, errors);
-		if (retType.isEmpty ()) retType = Void::init (func.getName ());
+		if (retType.isEmpty ()) retType = Void::init (func.getName ());		
 	    } catch (Error::ErrorList list) {
 		errors = list.errors;
 	    } 

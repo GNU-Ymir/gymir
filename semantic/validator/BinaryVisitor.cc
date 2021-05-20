@@ -1267,6 +1267,14 @@ namespace semantic {
 					op,
 					Bool::init (expression.getLocation ()),
 					left, right);
+	    } else if (left.to <Value> ().getType ().is <ClassPtr> () || left.to <Value> ().getType ().is <ClassProxy> ()) {
+		auto lptr = left.to <Value> ().getType ();
+		auto rptr = right.to <Value> ().getType ();
+		if (lptr.to <Type> ().isCompatible (rptr))
+		return BinaryPtr::init (expression.getLocation (),
+					op,
+					Bool::init (expression.getLocation ()),
+					left, right);
 	    }
 
 	    Ymir::Error::occur (expression.getLocation (), ExternalError::UNDEFINED_BIN_OP,

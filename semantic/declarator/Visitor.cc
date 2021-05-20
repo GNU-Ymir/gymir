@@ -105,7 +105,7 @@ namespace semantic {
 	    }
 
 	    if (mod.isGlobal () && modules.size () != 0) {
-		auto sym = Symbol::getModuleByPath (path.fileName ().toString ());
+		auto sym = Symbol::getModuleByPath (path.toString (), false);
 		if (!sym.isEmpty ()) {
 		    pushReferent (sym);
 		} else {
@@ -132,10 +132,10 @@ namespace semantic {
 		    glob = Module::init (lexing::Word::init (mod.getLocation (), modules [0]), mod.getComments (), this-> _isWeak, this-> _isTrusted || State::instance ().isStandalone (), mod.isGlobal ());
 		    pushReferent (glob);
 		} else pushReferent (glob);
-
+		
 		createSubModules (mod.getLocation (), std::vector <std::string> (modules.begin () + 1, modules.end ()), ret);
 		
-		glob = popReferent ();
+		glob = popReferent ();		
 		Symbol::registerModule (modules [0], glob);
 	    } else if (mod.isGlobal ()) {
 		if (modules.size () == 1) {
@@ -640,7 +640,7 @@ namespace semantic {
 		    try {
 			auto synt_module = syntax::Visitor::init (file_path).visitModGlobal ();
 			bool isTrusted = path.startWith (Path {CoreNames::get (STD_MODULE), "::"}) || path.startWith (Path {CoreNames::get (CORE_MODULE), "::"}) || path.startWith ({CoreNames::get (ETC_MODULE), "::"});
-			declarator::Visitor::init (isTrusted).visit (synt_module, false);
+			auto ret = declarator::Visitor::init (isTrusted).visit (synt_module, false);
 		    } catch (Error::ErrorList list) {
 			
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
@@ -669,7 +669,7 @@ namespace semantic {
 			    try {
 				auto synt_module = syntax::Visitor::init (file_path).visitModGlobal ();
 				bool isTrusted = path.startWith (Path {CoreNames::get (STD_MODULE), "::"}) || path.startWith (Path {CoreNames::get (CORE_MODULE), "::"}) || path.startWith ({CoreNames::get (ETC_MODULE), "::"});
-				declarator::Visitor::init (isTrusted).visit (synt_module, false);
+				auto ret = declarator::Visitor::init (isTrusted).visit (synt_module, false);
 			    } catch (Error::ErrorList list) {				
 				errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 			    } 

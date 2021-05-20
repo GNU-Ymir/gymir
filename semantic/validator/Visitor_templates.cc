@@ -27,7 +27,7 @@ namespace semantic {
 		match (sol) {
 		    s_of_u (TemplatePreSolution) {
 			this-> validateTemplatePreSolution (sol, Generator::empty (), true, true);
-		    }
+		    } 
 		}
 	    }
 	}

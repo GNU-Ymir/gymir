@@ -59,6 +59,12 @@ namespace semantic {
 	    generator::Generator executeBinaryInt (const generator::BinaryInt & binInt);
 
 	    /**
+	     * \brief Execute a binary int expression
+	     * \brief Two operands needs to be compile time known
+	     */
+	    generator::Generator executeBinaryChar (const generator::BinaryChar & binChar);
+
+	    /**
 	     * \brief Execute an unary int expression
 	     */
 	    generator::Generator executeUnaryInt (const generator::UnaryInt & unaInt);

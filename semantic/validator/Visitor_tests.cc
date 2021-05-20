@@ -85,6 +85,10 @@ namespace semantic {
 	    }
 	}
 
+	bool Visitor::isObjectType (const Generator & type) {
+	    auto aux = this-> getObjectType ();
+	    return type.equals (aux);
+	}	
 
 	Generator Visitor::isStringLiteral (const Generator & value) {	    
 	    if (!value.to <Value> ().getType ().is <Slice> () ||

@@ -452,8 +452,9 @@ namespace semantic {
 		    fn_type = type;
 		} else if (!value.isEmpty ()) { // If value, it can be a mut [mut void]
 		    verifyCompatibleTypeWithValue (fn_type.getLocation (), fn_type, value);
-		} else
-		verifyCompatibleType (fn_type.getLocation (), type.getLocation (), fn_type, type);
+		} else {		    
+		    verifyCompatibleType (fn_type.getLocation (), type.getLocation (), fn_type, type);
+		}
 	    } catch (Error::ErrorList list) {
 		list.errors.back ().addNote (Ymir::Error::createNote (rt.getLocation()));
 		throw list;

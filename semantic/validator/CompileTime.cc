@@ -56,7 +56,10 @@ namespace semantic {
 			return executeArrayAccess (arr);		
 
 		    s_of (BinaryInt, bin)
-			return executeBinaryInt (bin);		
+			return executeBinaryInt (bin);
+		    
+		    s_of (BinaryChar, bin)
+			return executeBinaryChar (bin);		
 
 		    s_of (BinaryBool, bin)
 			return executeBinaryBool (bin);		
@@ -460,6 +463,61 @@ namespace semantic {
 	    } else {
 		auto res = applyBinFloatBool<double> (binFloat.getOperator (), left, right);
 		return BoolValue::init (binFloat.getLocation (), Bool::init (binFloat.getLocation ()), res);
+	    }
+	}
+
+
+	template <typename T>
+	T applyBinChar (Binary::Operator op, T left, T right) {
+	    switch (op) {
+	    case Binary::Operator::ADD : return left + right;
+	    case Binary::Operator::SUB : return left - right;
+	    case Binary::Operator::MUL : return left * right;
+	    case Binary::Operator::DIV : return left / right;
+	    default :
+		Ymir::Error::halt ("%(r) - unhandeld case", "Critical");
+		return T ();
+	    }	    
+	}
+	
+	template <typename T>
+	bool applyBinCharBool (Binary::Operator op, T left, T right) {
+	    switch (op) {
+	    case Binary::Operator::INF : return left < right; 
+	    case Binary::Operator::SUP : return left > right; 
+	    case Binary::Operator::INF_EQUAL : return left <= right; 
+	    case Binary::Operator::SUP_EQUAL : return left >= right; 
+	    case Binary::Operator::EQUAL : return left == right; 
+	    case Binary::Operator::NOT_EQUAL : return left != right; 
+	    default :
+		Ymir::Error::halt ("%(r) - unhandeld case", "Critical");
+		return false;
+	    }
+	}
+	
+	generator::Generator CompileTime::executeBinaryChar (const generator::BinaryChar & binChar) {
+	    auto leftEx = this-> execute (binChar.getLeft ());
+	    auto rightEx = this-> execute (binChar.getRight ());
+	    if (!leftEx.is<CharValue> ())
+		Ymir::Error::occur (
+		    leftEx.getLocation (),
+		    ExternalError::COMPILE_TIME_UNKNOWN
+		);
+	    if (!rightEx.is<CharValue> ())
+		Ymir::Error::occur (
+		    rightEx.getLocation (),
+		    ExternalError::COMPILE_TIME_UNKNOWN
+		);
+
+	    
+	    auto left = leftEx.to<CharValue> ().getValue ();
+	    auto right = rightEx.to<CharValue> ().getValue ();
+	    if (binChar.getType ().is<Char> ()) {
+		auto res = applyBinChar (binChar.getOperator (), left, right);		
+		return CharValue::init (binChar.getLocation (), binChar.getType (), res);
+	    } else {
+		auto res = applyBinCharBool (binChar.getOperator (), left, right);
+		return BoolValue::init (binChar.getLocation (), Bool::init (binChar.getLocation ()), res);
 	    }
 	}
 

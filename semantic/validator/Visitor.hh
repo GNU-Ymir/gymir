@@ -947,6 +947,10 @@ namespace semantic {
 	     */
 	    bool isFloatConstant (const generator::Generator & val);
 
+	    /**
+	     * Is the type the object type
+	     */
+	    bool isObjectType (const generator::Generator & type);
 	    
 	    /**
 	     * Tell if an expression use alone has any effect, or if it is just a lost of computation power
