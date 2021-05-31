@@ -408,6 +408,8 @@ namespace semantic {
 			    verifyMutabilityRefParam (var.getLocation (), type, ExternalError::MUTABLE_CONST_PARAM);
 			    if (type.is <NoneType> () || type.is<Void> ()) {
 				Ymir::Error::occur (var.getLocation (), ExternalError::VOID_VAR);
+			    } else if (type.is <TraitRef> ()) {
+				Ymir::Error::occur (type.getLocation (), ExternalError::USE_AS_TYPE);
 			    }
 			}
 		

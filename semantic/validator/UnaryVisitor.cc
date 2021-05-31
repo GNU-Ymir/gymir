@@ -217,7 +217,7 @@ namespace semantic {
 
 			auto llevel = del.to <DelegateValue> ().getClosure ().to <Value> ().getType ().to <Type> ().mutabilityLevel ();
 			auto rlevel = type.to <Type> ().mutabilityLevel () + 1;
-			auto score = rlevel - llevel;
+			auto score = rlevel - llevel; if (score < 0) score = 0;
 			if (score > highest) highest = score;
 			
 			auto delType = Delegate::init (un.getLocation (), FunctionVisitor::init (this-> _context).validateFunctionType (proto));
@@ -272,7 +272,7 @@ namespace semantic {
 	    match (left) {
 		of (FrameProto, proto) leftName = proto.getName ();
 		elof (generator::Struct, str) leftName = str.getName ();
-		elof (MultSym,    sym)   leftName = sym.getType ().prettyString ();
+		elof (MultSym,    sym)   leftName = sym.prettyString ();
 		elof (Value,      val)   leftName = val.getType ().to <Type> ().getTypeName ();
 		fo;
 	    }

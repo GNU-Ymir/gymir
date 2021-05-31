@@ -580,7 +580,9 @@ namespace semantic {
 		    Ymir::Error::occur (var.getLocation (), ExternalError::VOID_VAR_VALUE, value.prettyString ());
 		} else {
 		    Ymir::Error::occur (var.getLocation (), ExternalError::VOID_VAR);
-		}
+		} 
+	    } else if (type.is <TraitRef> ()) {
+		Ymir::Error::occur (type.getLocation (), ExternalError::USE_AS_TYPE);
 	    }
 	    
 	    

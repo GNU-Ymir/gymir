@@ -141,7 +141,7 @@ namespace semantic {
 		try {
 		    type = this-> _context.validateType (var.getType ());
 		} catch (Ymir::Error::ErrorList list) {
-		    Ymir::Error::occurAndNote (var.getType ().getLocation (), list.errors, "");
+		    Ymir::Error::occurAndNote (var.getType ().getLocation (), list.errors, ExternalError::VALIDATING, var.prettyString ());
 		}
 	    }
 		    		
@@ -177,7 +177,7 @@ namespace semantic {
 		try {
 		    retType = this-> _context.validateType (ret, true);
 		} catch (Ymir::Error::ErrorList list) {
-		    Ymir::Error::noteAndNote (ret.getLocation (), list.errors, "");
+		    Ymir::Error::noteAndNote (ret.getLocation (), list.errors, ExternalError::VALIDATING, ret.prettyString ());
 		}
 		
 		if (retType.to <Type> ().isRef ()) {
@@ -397,6 +397,8 @@ namespace semantic {
 
 		    if (type.is <NoneType> () || type.is<Void> ()) {
 			Ymir::Error::occur (var.getLocation (), ExternalError::VOID_VAR);
+		    } else if (type.is <TraitRef> ()) {
+			Ymir::Error::occur (type.getLocation (), ExternalError::USE_AS_TYPE);
 		    } else if (type.is <generator::LambdaType> ()) {
 			Ymir::Error::occur (type.getLocation (), ExternalError::INCOMPLETE_TYPE, type.prettyString ());
 		    }
@@ -430,6 +432,8 @@ namespace semantic {
 		    
 		    if (type.is <NoneType> () || type.is<Void> ()) {
 			Ymir::Error::occur (var.getLocation (), ExternalError::VOID_VAR);
+		    } else if (type.is <TraitRef> ()) {
+			Ymir::Error::occur (type.getLocation (), ExternalError::USE_AS_TYPE);
 		    }
 		    
 		    if (type.is <generator::LambdaType> ()) {
