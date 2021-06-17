@@ -520,7 +520,7 @@ namespace syntax {
 	lexing::Word ifLoc = lexing::Word::eof ();
 	if (token == Keys::IF) {
 	    ifLoc = token;
-	    test = visitExpression ();
+	    test = visitExpression (10);
 	}
 	
 	auto name = visitIdentifier ();
@@ -547,7 +547,7 @@ namespace syntax {
 	lexing::Word ifLoc = lexing::Word::eof ();
 	if (token == Keys::IF) {
 	    ifLoc = token;
-	    test = visitExpression ();
+	    test = visitExpression (10);
 	}
 
 	auto attribs = visitAttributes ();
@@ -760,7 +760,7 @@ namespace syntax {
 	lexing::Word ifLoc = lexing::Word::eof ();
 	if (token == Keys::IF) {
 	    ifLoc = token;
-	    test = visitExpression ();
+	    test = visitExpression (10);
 	}
 	
 	auto cas = visitAttributes ();
@@ -847,7 +847,7 @@ namespace syntax {
 	lexing::Word ifLoc = lexing::Word::eof ();
 	if (token == Keys::IF) {
 	    ifLoc = token;
-	    test = visitExpression ();
+	    test = visitExpression (10);
 	}
 
 	Expression type (Expression::empty ());
@@ -894,7 +894,7 @@ namespace syntax {
 	lexing::Word ifLoc = lexing::Word::eof ();
 	if (token == Keys::IF) {
 	    ifLoc = token;
-	    test = visitExpression ();
+	    test = visitExpression (10);
 	}
 
 	auto attribs = visitAttributes ();
@@ -1021,7 +1021,7 @@ namespace syntax {
 	lexing::Word ifLoc = lexing::Word::eof ();
 	if (token == Keys::IF) {
 	    ifLoc = token;
-	    test = visitExpression ();
+	    test = visitExpression (10);
 	}
 	
 	auto name = visitIdentifier ();
@@ -1058,7 +1058,7 @@ namespace syntax {
 	lexing::Word ifLoc = lexing::Word::eof ();
 	if (token == Keys::IF) {
 	    ifLoc = token;
-	    test = visitExpression ();
+	    test = visitExpression (10);
 	}
 	
 	lexing::Word end = lexing::Word::eof ();
@@ -1102,7 +1102,7 @@ namespace syntax {
 	lexing::Word ifLoc = lexing::Word::eof ();
 	if (token == Keys::IF) {
 	    ifLoc = token;
-	    test = visitExpression ();
+	    test = visitExpression (10);
 	}
 
 	auto name = visitIdentifier ();
@@ -1207,13 +1207,7 @@ namespace syntax {
     Expression Visitor::visitExpression (const Expression & left, uint priority) {
 	auto token = this-> _lex.next ();
 	if (token.is (this-> _operators [priority])) {
-	    Expression ctype (Expression::empty ());
-	    {
-		auto next = this-> _lex.next ();
-		if (next == Token::COLON) ctype = visitExpression (0);
-		else this-> _lex.rewind ();
-	    }
-	    
+	    Expression ctype (Expression::empty ());	    
 	    auto right = visitExpression (priority + 1);
 	    return visitExpression (Binary::init (token, left, right, ctype), priority);	    
 	} else if (token == Token::NOT) {

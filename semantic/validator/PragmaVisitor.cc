@@ -35,6 +35,7 @@ namespace semantic {
 	const std::string PragmaVisitor::TRUSTED = "trusted";
 	const std::string PragmaVisitor::PANIC = "panic";
 	const std::string PragmaVisitor::FAKE_THROW = "fake_throw";
+	const std::string PragmaVisitor::VTABLE = "vtable";
 	
 	const std::string PragmaVisitor::PRAGMA_COMPILE_CONTEXT = "#PRAGMA_COMPILE";
 	
@@ -81,6 +82,8 @@ namespace semantic {
 		ret = this-> validateFakeThrow (prg);
 	    } else if (prg.getLocation ().getStr () == PragmaVisitor::HAS_FIELD) {
 		ret = this-> validateHasField (prg);
+	    } else if (prg.getLocation ().getStr () == PragmaVisitor::VTABLE) {
+		ret = this-> validateVtable (prg);
 	    } else {
 		Ymir::Error::occur (prg.getLocation (), ExternalError::UNKNOWN_PRAGMA, prg.getLocation ().getStr ());
 	    }
@@ -973,6 +976,30 @@ namespace semantic {
 	    return BoolValue::init (prg.getLocation (), Bool::init (prg.getLocation ()), false);
 	}
 
+	/**
+	 * ========================================================
+	 *                       VTABLE 
+	 * ========================================================
+	 */
+
+	Generator PragmaVisitor::validateVtable (const syntax::Pragma & prg) {
+	    if (prg.getContent ().size () != 1) {
+		Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
+	    }
+	    
+	    auto type = this-> _context.validateType (prg.getContent ()[0]);
+	    match (type) {
+		s_of_u (generator::ClassRef) {
+		    return VtablePointer::init (prg.getLocation (), Pointer::init (prg.getLocation (), Void::init (prg.getLocation ())), type);
+		}
+		s_of_u (generator::ClassPtr) {
+		    return VtablePointer::init (prg.getLocation (), Pointer::init (prg.getLocation (), Void::init (prg.getLocation ())), type.to <generator::ClassPtr> ().getClassRefNoConv ());
+		}
+	    }
+
+	    Ymir::Error::occur (prg.getLocation (), ExternalError::MALFORMED_PRAGMA, prg.getLocation ().getStr ());
+	    return Generator::empty ();	    
+	}	
 	
 
 	

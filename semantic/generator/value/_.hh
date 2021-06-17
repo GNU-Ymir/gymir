@@ -79,5 +79,6 @@
 #include <ymir/semantic/generator/value/VarDecl.hh>
 #include <ymir/semantic/generator/value/VarRef.hh>
 #include <ymir/semantic/generator/value/VtableAccess.hh>
+#include <ymir/semantic/generator/value/VtablePointer.hh>
 #include <ymir/semantic/generator/value/Panic.hh>
 #include <ymir/semantic/generator/value/TypeInfoAccess.hh>

@@ -51,6 +51,11 @@ namespace semantic {
 	     * \return the associated class reference
 	     */
 	    const ClassRef & getClassRef () const;
+
+	    /**
+	     * \return the associated class reference
+	     */
+	    const Generator & getClassRefNoConv () const;
 	    
 	    /** 
 	     * \return the name of the type formatted

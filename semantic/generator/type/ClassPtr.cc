@@ -55,6 +55,10 @@ namespace semantic {
 	const ClassRef & ClassPtr::getClassRef () const {
 	    return this-> _ref.to <ClassRef> ();
 	}
+
+	const Generator & ClassPtr::getClassRefNoConv () const {
+	    return this-> _ref;
+	}
 	
 	std::string ClassPtr::typeName () const {
 	    Ymir::OutBuffer buf;

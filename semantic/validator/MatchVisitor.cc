@@ -70,9 +70,12 @@ namespace semantic {
 			} else {
 			    result = Conditional::init (matchers [it].getLocation (), type, test, content, result, local_mandatory);
 			}
+			
+			if (type.isEmpty () && (!content.to <Value> ().isReturner () && !content.to <Value> ().isBreaker ())) type = Void::init (expression.getLocation ());
+		    } else {
+			if (type.isEmpty ()) type = Void::init (expression.getLocation ());
 		    }
 		
-		    if (type.isEmpty ()) type = Void::init (expression.getLocation ());
 		} catch (Error::ErrorList list) {			
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		}
@@ -90,7 +93,8 @@ namespace semantic {
 
 	    if (errors.size () != 0)
 		throw Error::ErrorList {errors};
-	    
+
+	    if (type.isEmpty ()) type = Void::init (expression.getLocation ());
 	    if (!isMandatory && (!type.is<Void> () || expression.isFinal ())) {
 		if (!type.is<Void> ()) {
 		    Ymir::Error::occur (expression.getLocation (), ExternalError::MATCH_NO_DEFAULT, type.prettyString ());

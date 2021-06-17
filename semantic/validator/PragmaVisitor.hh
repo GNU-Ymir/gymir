@@ -29,6 +29,7 @@ namespace semantic {
 	    static const std::string HAS_DEFAULT;
 	    static const std::string DEFAULT_VALUE;
 	    static const std::string HAS_FIELD;
+	    static const std::string VTABLE;
 
 	    static const std::string TRUSTED;
 	    static const std::string PANIC;
@@ -127,6 +128,9 @@ namespace semantic {
 
 	    generator::Generator validateTupleFieldOffsets (const syntax::Pragma & prg, const generator::Generator & str);	    
 
+	    generator::Generator validateVtable (const syntax::Pragma & prg);
+
+	    
 	};
 
 	

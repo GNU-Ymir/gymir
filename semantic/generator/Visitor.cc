@@ -403,18 +403,18 @@ namespace semantic {
 		    {Slice::LEN_NAME, Slice::PTR_NAME},
 		    {
 			Tree::buildSizeCst (1),
-			    Tree::buildAddress (classType.getLocation (), ancestor, Tree::pointerType (Tree::voidType ()))
-			    }
-		);		    
-	    } else {		
+			Tree::buildAddress (classType.getLocation (), ancestor, Tree::pointerType (Tree::voidType ()))
+		    }
+		    );		    
+	    } else {
 		ancestorSlice = Tree::constructField (
 		    classType.getLocation (),
 		    generateType (typeInfo.to <StructCst> ().getTypes ()[2]),
 		    {Slice::LEN_NAME, Slice::PTR_NAME},
 		    {
 			Tree::buildSizeCst (Integer::INIT),
-			    Tree::buildIntCst (classType.getLocation (), Integer::INIT, Tree::pointerType (Tree::voidType ()))
-			    }
+			Tree::buildIntCst (classType.getLocation (), Integer::INIT, Tree::pointerType (Tree::voidType ()))
+		    }
 		);
 	    }
 
@@ -918,6 +918,9 @@ namespace semantic {
 		s_of (VtableAccess, acc)
 		    return generateVtableAccess (acc);
 
+		s_of (VtablePointer, ptr)
+		    return generateVtablePointer (ptr);
+		
 		s_of (ThrowBlock, bl)
 		    return generateThrowBlock (bl);
 
@@ -2326,6 +2329,11 @@ namespace semantic {
 	    );
 	}
 
+	generic::Tree Visitor::generateVtablePointer (const VtablePointer & acc) {
+	    auto vtable = generateVtable (acc.getClass ());
+	    return Tree::buildAddress (acc.getLocation (), vtable, Tree::pointerType (Tree::pointerType (Tree::voidType ())));
+	}
+	
 	generic::Tree Visitor::generateCall (const Call & cl) {
 	    std::vector <Tree> results;
 	    TreeStmtList pre = TreeStmtList::init ();

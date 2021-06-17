@@ -327,7 +327,9 @@ namespace semantic {
 			} fo;
 		    }		    		
 		} catch (Error::ErrorList list) {
-		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		    auto error = Ymir::Error::makeOccurAndNote (it.getName (), list.errors, ExternalError::VALIDATING, it.getRealName ());
+		    error.setWindable (true);
+		    errors.push_back (error);
 		} 
 	    }
 
@@ -353,7 +355,9 @@ namespace semantic {
 		try {
 		    this-> validateVtableImpl (it.first.to <semantic::Impl> (), it.second, classType, ancestor, vtable, protection, implVtable, addMethods);
 		} catch (Error::ErrorList list) {
-		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		    auto error = Ymir::Error::makeOccurAndNote (it.first.getName (), list.errors, ExternalError::VALIDATING, it.first.getRealName ());
+		    error.setWindable (true);
+		    errors.push_back (error);
 		} 	
 		
 	    }

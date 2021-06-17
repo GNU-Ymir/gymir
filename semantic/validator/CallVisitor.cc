@@ -786,7 +786,7 @@ namespace semantic {
 			} catch (Error::ErrorList  list) {
 			    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 			    errors.push_back (
-				Ymir::Error::createNoteOneLine (ExternalError::PARAMETER_NAME, proto [it].to <Value> ().getLocation (), frame.prettyString ())
+				Ymir::Error::createNoteOneLine (ExternalError::PARAMETER_NAME, proto [it].getLocation (), frame.prettyString ())
 				);
 			    return {};
 			}

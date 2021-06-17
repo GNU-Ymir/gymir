@@ -47,6 +47,9 @@ namespace semantic {
 	    /** This type contains a value, and is mutable ? */
 	    bool _isMutable = false;
 
+	    /** The value contained in this type is pure */
+	    bool _isPure = false;
+	    
 	    /** The list of inner type (applicable iif _isComplex) */
 	    std::vector <Generator> _inners;
 

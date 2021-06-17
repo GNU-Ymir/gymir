@@ -226,6 +226,7 @@ ymir_OBJS = \
 	ymir/generator_Visitor.o \
 	ymir/generator_Void.o \
 	ymir/generator_VtableAccess.o \
+	ymir/generator_VtablePointer.o \
 	ymir/generic_StmtList.o \
 	ymir/generic_Tree.o \
 	ymir/global_Core.o \

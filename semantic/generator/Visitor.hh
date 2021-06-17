@@ -325,6 +325,11 @@ namespace semantic {
 	     * \brief Transform a vtable access into gimple
 	     */	    
 	    generic::Tree generateVtableAccess (const VtableAccess & acc);
+
+	    /**
+	     * \brief Transform a vtable pointer into gimple
+	     */	    
+	    generic::Tree generateVtablePointer (const VtablePointer & acc);	    
 	    
 	    /**
 	     * \brief Transform a struct construction into gimple

@@ -97,14 +97,14 @@ namespace semantic {
 
 	Generator Visitor::validateDeepCopy (const syntax::Intrinsics & intr) {
 	    auto inner = validateValue (intr.getContent ());
-	    syntax::Expression call (syntax::Expression::empty ());
+	    Generator val (Generator::empty ());
 	    auto loc = intr.getLocation ();
 	    if (inner.to <Value> ().getType ().is <ClassPtr> ()) {
 		auto trait = createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (DUPLICATION_MODULE), CoreNames::get (DCOPY_TRAITS)});		
 		auto impl = validateType (trait);
 		
 		verifyClassImpl (intr.getLocation (), inner.to <Value> ().getType (), impl);		
-		call = syntax::MultOperator::init (
+		auto call = syntax::MultOperator::init (
 		    lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
 		    syntax::Binary::init (lexing::Word::init (loc, Token::DOT),
 					  TemplateSyntaxWrapper::init (inner.getLocation (), inner), 	       
@@ -113,17 +113,20 @@ namespace semantic {
 			),
 		    {}, false
 		    );
+		val = validateValue (call);
+		val = Cast::init (intr.getLocation (), inner.to <Value> ().getType ().to <Type> ().toDeeplyMutable (), val);
 	    } else {
 		auto func = createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (DUPLICATION_MODULE), CoreNames::get (DCOPY_OP_OVERRIDE)});
 		
-		call = syntax::MultOperator::init (
+		auto call = syntax::MultOperator::init (
 		    lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
 		    func,
 		    {TemplateSyntaxWrapper::init (inner.getLocation (), inner)}	       
 		    );
+		
+		val = validateValue (call);
 	    }
 
-	    auto val = validateValue (call);
 	    return Aliaser::init (intr.getLocation (), val.to <Value> ().getType (), val);
 	}
 	
