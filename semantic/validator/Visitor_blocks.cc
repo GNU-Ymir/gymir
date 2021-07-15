@@ -43,8 +43,8 @@ namespace semantic {
 	    
 	    this-> enterBlock (); // A block is composed of four parts,
 	    // A declarator module, containing the symbol declared inside the block
-	    auto decl = this-> validateInnerModule (block.getDeclModule (), errors);
-
+	    auto decl = this-> validateInnerModule (block.getDeclModule (), errors);	    
+	    
 	    if (!decl.isEmpty ()) pushReferent (decl, "validateBlock"); // we need to add the declarations as the referent of the block	    
 	    // The second part is the block itself, (list of values)
 	    this-> validateInnerBlock (block, values, type, valueLoc, returner, rtLoc, breaker, brLoc, errors);
@@ -56,11 +56,11 @@ namespace semantic {
 	    if (errors.size () != 0) {
 		this-> discardAllLocals (); 
 	    }
-	    
+
 	    this-> quitBlock (errors.size () == 0, errors);
 	    
 	    auto ret = Value::initBrRet (Block::init (valueLoc, type, values).to <Value> (), breaker, returner, brLoc, rtLoc);	    
-	    Generator catchVar (Generator::empty ()), catchInfo (Generator::empty ()), catchAction (Generator::empty ());
+	    Generator catchVar (Generator::empty ()), catchInfo (Generator::empty ()), catchAction (Generator::empty ());	    
 	    if (errors.size () == 0) { // The third part is a catcher
 		this-> validateCatcher (block, catchVar, catchInfo, catchAction, type, ret.getThrowers (), errors);
 	    }
@@ -180,19 +180,16 @@ namespace semantic {
 	    if (decl.isEmpty ()) return Symbol::empty (); // This function is really simple, we just create a module thanks to declarator visitor
 	    auto sym = declarator::Visitor::init ().visit (decl, false);
 	    if (!sym.isEmpty ()) {
-		std::list <Ymir::Error::ErrorMsg> errors;
-
 		this-> _referent.back ().insert (sym);
 		this-> enterForeign (); // Symbols does not have access to the scope of the block
 		try {
 		    this-> validate (sym); // and we validate all the declared symbols
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList list) {		    
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 		
-		this-> exitForeign ();
-						
+		this-> exitForeign ();						
 	    }
-	    
+	    	    
 	    if (errors.size () != 0) {
 		return Symbol::empty ();
 	    }
