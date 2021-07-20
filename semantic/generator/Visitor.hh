@@ -535,6 +535,11 @@ namespace semantic {
 	     * \brief Transform a slice concatenation into gimple
 	     */
 	    generic::Tree generateSliceConcat (const SliceConcat & concat);
+
+	    /**
+	     * \brief Transform a slice comparison into gimple
+	     */
+	    generic::Tree generateSliceCompare (const SliceCompare & cmp);
 	    
 	private :
 

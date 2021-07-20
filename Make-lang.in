@@ -194,6 +194,7 @@ ymir_OBJS = \
 	ymir/generator_Slice.o \
 	ymir/generator_SliceAccess.o \
 	ymir/generator_SliceConcat.o \
+	ymir/generator_SliceCompare.o \
 	ymir/generator_SliceValue.o \
 	ymir/generator_StringValue.o \
 	ymir/generator_Struct.o \

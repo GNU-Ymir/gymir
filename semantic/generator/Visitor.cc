@@ -815,7 +815,10 @@ namespace semantic {
 		
                 s_of (SliceConcat, sc)
 		    return generateSliceConcat (sc);		    
-			     
+
+		s_of (SliceCompare, sc)
+		    return generateSliceCompare (sc);
+		
 		s_of (UnaryBool, ub)
 		    return generateUnaryBool (ub);
 
@@ -2530,6 +2533,10 @@ namespace semantic {
 		{left, right, Tree::buildSizeCst (size)}
 	    );
 
+	}
+
+	generic::Tree Visitor::generateSliceCompare (const SliceCompare & cmp) {
+	    return generateValue (cmp.getValue ());
 	}
 
 	generic::Tree Visitor::generateSizeOf (const SizeOf & size) {

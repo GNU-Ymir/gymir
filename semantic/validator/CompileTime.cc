@@ -48,7 +48,10 @@ namespace semantic {
 
 		    s_of (SliceConcat, slc)
 			return executeSliceConcat (slc);
-		
+
+		    s_of (SliceCompare, slc)
+			return executeSliceCompare (slc);
+		    
 		    s_of (Affect, aff)
 			return executeAffect (aff);
 		
@@ -188,7 +191,9 @@ namespace semantic {
 		); 	    
 	    return Generator::empty ();
 	}
+
 	
+       	
 	generator::Generator CompileTime::executeArrayAccess (const generator::ArrayAccess & acc) {
 	    auto array = this-> execute (acc.getArray ());
 	    auto index = this-> execute (acc.getIndex ());
@@ -577,6 +582,39 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 
+	int strcmp (const std::vector <char> & left, const std::vector <char> & right) {	    
+	    uint i = 0;
+	    while (i < left.size () && i < right.size ()) {
+		if (left [i] != right [i]) break;
+		else i += 1;
+	    }
+
+	    return (int) left [i] - (int) right [i];
+	}
+	
+	generator::Generator CompileTime::executeSliceCompare (const generator::SliceCompare & slc) {
+	    auto left = execute (slc.getLeft ());
+	    auto right = execute (slc.getRight ());
+	    if (left.is<Aliaser> ()) left = left.to <Aliaser> ().getWho ();
+	    if (right.is<Aliaser> ()) right = right.to <Aliaser> ().getWho ();
+	    
+	    if (left.is <StringValue> () && right.is<StringValue> ()) {
+		auto & lft = left.to <StringValue> ().getValue ();
+		auto & rgt = right.to <StringValue> ().getValue ();		
+		auto v = strcmp (lft, rgt);
+
+		auto b = applyBinIntBool<int> (slc.getOperator (), v, 0);
+		return BoolValue::init (slc.getLocation (), Bool::init (slc.getLocation ()), b);
+	    }
+
+	    Ymir::Error::occur (
+		slc.getLocation (),
+		ExternalError::COMPILE_TIME_UNKNOWN
+		); 	    
+	    return Generator::empty ();
+	}
+
+	
 	generator::Generator CompileTime::executeSet (const generator::Set & set) {
 	    Ymir::Error::occur (
 		set.getLocation (),

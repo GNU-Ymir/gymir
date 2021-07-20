@@ -169,6 +169,11 @@ namespace semantic {
 	     * \brief execute a slice concat value (validate the content of the slice value)
 	     */	    
 	    generator::Generator executeSliceConcat (const generator::SliceConcat & slc);
+
+	    /**
+	     * \brief execute a slice compare value
+	     */	    
+	    generator::Generator executeSliceCompare (const generator::SliceCompare & slc);
 	    
 	};
 	

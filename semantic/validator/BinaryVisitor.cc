@@ -614,7 +614,7 @@ namespace semantic {
 	    return this-> _context.validateValue (test);
 	}
 
-	Generator BinaryVisitor::validateLogicalSliceLeft (Binary::Operator, const syntax::Binary & expression, const Generator & left, const Generator & right) {
+	Generator BinaryVisitor::validateLogicalSliceLeft (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
 	    auto loc = expression.getLocation ();
 	    auto leftSynt = TemplateSyntaxWrapper::init (loc, left);
 	    syntax::Expression rightSynt (syntax::Expression::empty ());
@@ -642,7 +642,9 @@ namespace semantic {
 		    ), syntax::Expression::empty ()
 		);
 	    
-	    return this-> _context.validateValue (test);
+	    auto val =  this-> _context.validateValue (test);
+	    auto type = Bool::init (expression.getLocation ());
+	    return SliceCompare::init (expression.getLocation (), op, val.to <Value> ().getType (), val, left, right);
 	}
 
 	Generator BinaryVisitor::validateLogicalClass (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
