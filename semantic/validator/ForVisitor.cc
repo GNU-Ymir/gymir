@@ -853,7 +853,6 @@ namespace semantic {
 		innerValues.push_back (right);
 		
 		loop = Loop::init (lexing::Word::init (loc, "#_for"), loop_type, test, Block::init (loc, loop_type, innerValues), false);
-
 	    } catch (Error::ErrorList list) {
 		errors = list.errors;
 		// We discard local to avoid useless error message when quitting the block

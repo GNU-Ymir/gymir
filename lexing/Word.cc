@@ -10,14 +10,15 @@ namespace lexing {
     
     std::map <std::string, char*> Word::__filenames__;
 
-    Word Word::__empty__ = Word {new (NO_GC) IWord ("", "", 0, 0, 0, 0, false, lexing::File::empty (), 0)};
+    Word Word::__empty__ = Word {new (NO_GC) IWord ("", "", 0, 0, 0, 0, false, lexing::File::empty (), 0, 0)};
 
-    IWord::IWord (const std::string & str, const std::string & locFile, ulong line, ulong col, ulong seek, long len, bool isFromString, const lexing::File & file, ulong start) :	
+    IWord::IWord (const std::string & str, const std::string & locFile, ulong line, ulong col, ulong seek, long len, bool isFromString, const lexing::File & file, ulong start, ulong self_seek) :	
 	str (str),
 	locFile (locFile),
 	line (line),
 	column (col),
 	seek (seek),
+	self_seek (self_seek),
 	length (len),
 	isFromString (isFromString),
 	file (file),
@@ -29,7 +30,7 @@ namespace lexing {
 
     
     Word Word::eof (const std::string & file) {
-    	return Word {new (NO_GC) IWord ("", file, 0, 0, 0, -1, false, lexing::File::empty (), 0)};
+    	return Word {new (NO_GC) IWord ("", file, 0, 0, 0, -1, false, lexing::File::empty (), 0, 0)};
     }
 
     Word Word::eof () {
@@ -37,20 +38,20 @@ namespace lexing {
     }
 
     Word Word::init (const std::string & str, const lexing::File & file, ulong line, ulong col, ulong seek) {
-	return Word {new (NO_GC) IWord (str, "", line, col, seek, -1, false, file, 0)};
+	return Word {new (NO_GC) IWord (str, "", line, col, seek, -1, false, file, 0, seek)};
     }
 
 
-    Word Word::init (const std::string & str, const lexing::File & file, ulong line, ulong col, ulong seek, bool isFromString, ulong start) {
-	return Word {new (NO_GC) IWord (str, "", line, col, seek, -1, isFromString, file, start)};
+    Word Word::init (const std::string & str, const lexing::File & file, ulong line, ulong col, ulong seek, bool isFromString, ulong start, ulong self_seek) {
+	return Word {new (NO_GC) IWord (str, "", line, col, seek, -1, isFromString, file, start, self_seek)};
     }
     
     Word Word::init (const lexing::Word & other, const std::string & str) {
-	return Word {new (NO_GC) IWord (str, other._value-> locFile, other._value-> line, other._value-> column, other._value-> seek, other._value-> length, other._value-> isFromString, other._value-> file, other._value-> start)};	
+	return Word {new (NO_GC) IWord (str, other._value-> locFile, other._value-> line, other._value-> column, other._value-> seek, other._value-> length, other._value-> isFromString, other._value-> file, other._value-> start, other._value-> self_seek)};	
     }
     
     Word Word::init (const lexing::Word & other, const std::string & str, ulong length) {
-	return Word {new (NO_GC) IWord (str, other._value-> locFile, other._value-> line, other._value-> column, other._value-> seek, length, other._value-> isFromString, other._value-> file, other._value-> start)};	
+	return Word {new (NO_GC) IWord (str, other._value-> locFile, other._value-> line, other._value-> column, other._value-> seek, length, other._value-> isFromString, other._value-> file, other._value-> start, other._value-> self_seek)};	
     }
     
     location_t Word::getLocation () const {
@@ -98,6 +99,10 @@ namespace lexing {
     ulong Word::getSeek () const {	
 	return this-> _value-> seek;
     }
+
+    ulong Word::getSelfSeek () const {
+	return this-> _value-> self_seek;
+    }
     
     bool Word::isEof () const {
 	return this-> _value-> file.isEmpty ();
@@ -118,6 +123,7 @@ namespace lexing {
     ulong Word::getStart () const {	
 	return this-> _value-> start;
     }
+
     
     const std::string & Word::getFilename () const {	
 	if (this-> isEof ()) return this-> _value-> locFile;

@@ -268,6 +268,8 @@ namespace semantic {
 	    auto value = this-> validateValue (tcl.getContent (), false, true);
 	    std::list <Ymir::Error::ErrorMsg> errors;
 	    std::vector <Generator> params;
+	    bool subError = false;
+	    
 	    for (auto & it : tcl.getParameters ()) {
 		bool succeed = true;
 		std::list <Ymir::Error::ErrorMsg> locErrors;
@@ -401,6 +403,7 @@ namespace semantic {
 			    errors = std::move (list.errors);
 			}
 			Visitor::__CALL_NB_RECURS__ -= 1;
+			subError = true;
 		    }
 		    		    
 		    if (aux.size () != 0 || syms.size () != 0) {
@@ -422,21 +425,25 @@ namespace semantic {
 		}
 	    }
 
-	    std::vector<std::string> names;
-	    for (auto & it : params) {
-		names.push_back (it.prettyString ());
+	    if (!subError) {
+		std::vector<std::string> names;
+		for (auto & it : params) {
+		    names.push_back (it.prettyString ());
+		}
+	    
+		std::string leftName = value.getLocation ().getStr ();
+		auto err = Ymir::Error::makeOccurAndNote (
+		    tcl.getLocation (),
+		    errors,
+		    ExternalError::UNDEFINED_TEMPLATE_OP,
+		    leftName,
+		    names
+		    );
+		err.setWindable (true);
+		throw Error::ErrorList {{err}};
+	    } else {
+		throw Error::ErrorList {errors};
 	    }
-		    
-	    std::string leftName = value.getLocation ().getStr ();
-	    auto err = Ymir::Error::makeOccurAndNote (
-		tcl.getLocation (),
-		errors,
-		ExternalError::UNDEFINED_TEMPLATE_OP,
-		leftName,
-		names
-		);
-	    err.setWindable (true);
-	    throw Error::ErrorList {{err}};
 	}
 
 	bool Visitor::insertTemplateSolution (const Symbol & sol, std::list <Error::ErrorMsg> & errors) {

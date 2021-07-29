@@ -39,6 +39,8 @@ namespace lexing {
 	/** the cursor in file*/
 	ulong seek;
 
+	ulong self_seek;
+	
 	/// The length of the word (may differ with str.length ())
 	long length = -1;
 
@@ -52,7 +54,7 @@ namespace lexing {
 	/**
 	 * Create a word with all field initialized
 	 */
-	IWord (const std::string & str, const std::string & locFile, ulong line, ulong col, ulong seek, long len, bool isFromString, const lexing::File & file, ulong start);
+	IWord (const std::string & str, const std::string & locFile, ulong line, ulong col, ulong seek, long len, bool isFromString, const lexing::File & file, ulong start, ulong self_seek);
 	
 	
 	friend Word;
@@ -100,7 +102,7 @@ namespace lexing {
 	/**
 	 * Create a new from string
 	 */
-	static Word init (const std::string & str, const lexing::File & file, ulong line, ulong col, ulong seek, bool isFromString, ulong start);
+	static Word init (const std::string & str, const lexing::File & file, ulong line, ulong col, ulong seek, bool isFromString, ulong start, ulong self_seek);
 	
 
 	/**
@@ -139,9 +141,14 @@ namespace lexing {
 	ulong getLine () const;
 
 	/**
-	 * @return: the cursor position of the word within the file
+	 * @return: the cursor position of the line containing the word in the file
 	 */
 	ulong getSeek () const;
+
+	/**
+	 * @return the cursor position of the word in the file
+	 */
+	ulong getSelfSeek () const;
 	
 	/**
 	 * Get the file that created the word

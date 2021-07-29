@@ -310,7 +310,7 @@ namespace lexing {
 	while (start < line.length ()) {
 	    auto len = this-> _tokenizer.next (start, line);
 	    auto it = std::move (line.substr (start, len));
-	    result.push_back (Word::init (it, this-> file, this-> line, this-> column, line_start, this-> isFromString, this-> start));
+	    result.push_back (Word::init (it, this-> file, this-> line, this-> column, line_start, this-> isFromString, this-> start, where));
 	    start += len;
 	    where = where + len;
 	    if (it  == "\n") {

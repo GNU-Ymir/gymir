@@ -503,7 +503,9 @@ namespace documentation {
 	}
 
 	if (cl.isAbs ()) val ["abstract"] = JsonString::init ("true");
-	if (cl.isFinal ()) val ["final"] = JsonString::init ("true");	
+	else val ["abstract"] = JsonString::init ("false");
+	if (cl.isFinal ()) val ["final"] = JsonString::init ("true");
+	else val ["final"] = JsonString::init ("false");	
 	
 	std::vector <JsonValue> fields;
 	for (auto & it : gen.to <semantic::generator::Class> ().getLocalFields ()) {

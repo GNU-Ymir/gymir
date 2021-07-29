@@ -558,7 +558,7 @@ namespace semantic {
 
 		auto x = lex.next ();
 		int end = content.length () - current;
-		if (!x.isEof ()) end = x.getSeek ();
+		if (!x.isEof ()) end = x.getSelfSeek ();
 		
 		auto result = content.substr (current, end);
 		current += end;
