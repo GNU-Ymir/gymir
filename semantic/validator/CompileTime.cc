@@ -1,5 +1,6 @@
 #include <ymir/semantic/validator/CompileTime.hh>
 #include <ymir/semantic/generator/Visitor.hh>
+#include <ymir/semantic/validator/UtfVisitor.hh>
 #include <ymir/global/State.hh>
 
 namespace semantic {
@@ -588,7 +589,6 @@ namespace semantic {
 		if (left [i] != right [i]) break;
 		else i += 1;
 	    }
-
 	    return (int) left [i] - (int) right [i];
 	}
 	
@@ -599,9 +599,17 @@ namespace semantic {
 	    if (right.is<Aliaser> ()) right = right.to <Aliaser> ().getWho ();
 	    
 	    if (left.is <StringValue> () && right.is<StringValue> ()) {
-		auto & lft = left.to <StringValue> ().getValue ();
-		auto & rgt = right.to <StringValue> ().getValue ();		
-		auto v = strcmp (lft, rgt);
+		auto size = left.to <StringValue> ().getType ().to <Type> ().getInners ()[0].to <Char> ().getSize ();
+		auto v = 0;
+		if (size == 32) {
+		    auto & lft = left.to <StringValue> ().getValue ();
+		    auto & rgt = right.to <StringValue> ().getValue ();		
+		    v = strcmp (UtfVisitor::utf32_to_utf8 (lft), UtfVisitor::utf32_to_utf8 (rgt));
+		} else {
+		    auto & lft = left.to <StringValue> ().getValue ();
+		    auto & rgt = right.to <StringValue> ().getValue ();		
+		    v = strcmp (lft, rgt);
+		}		
 
 		auto b = applyBinIntBool<int> (slc.getOperator (), v, 0);
 		return BoolValue::init (slc.getLocation (), Bool::init (slc.getLocation ()), b);

@@ -671,8 +671,12 @@ namespace semantic {
 			    this-> _funcVisitor.validateConstructor (it, clRef, ancestor, ancestorFields);
 			} fo;			
 		    }
-		} catch (Error::ErrorList list) {
-		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		} catch (Error::ErrorList list) {		    
+		    auto error = Ymir::Error::createNote (it.getName (), ExternalError::VALIDATING, it.getRealName ());
+		    for (auto & it : list.errors) {
+			error.addNote (it);
+		    }		    
+		    errors.push_back (error);
 		} 
 	       		
 		this-> _context.popReferent ("validate::innerClass");			
