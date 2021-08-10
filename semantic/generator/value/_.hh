@@ -24,6 +24,7 @@
 #include <ymir/semantic/generator/value/Conditional.hh>
 #include <ymir/semantic/generator/value/ConstructorProto.hh>
 #include <ymir/semantic/generator/value/Copier.hh>
+#include <ymir/semantic/generator/value/DeepCopy.hh>
 #include <ymir/semantic/generator/value/DelegateValue.hh>
 #include <ymir/semantic/generator/value/Enum.hh>
 #include <ymir/semantic/generator/value/ExitScope.hh>

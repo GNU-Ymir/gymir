@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ymir/semantic/generator/value/Binary.hh>
+#include <ymir/semantic/generator/value/Aliaser.hh>
 
 namespace semantic {
 
@@ -11,18 +11,14 @@ namespace semantic {
 	 * Transform a value to a reference to this value
 	 * The value must be a lvalue
 	 */
-	class Aliaser : public Value {
-	protected :
-	    
-	    Generator _who;
-
-	protected :
+	class DeepCopy : public Aliaser {
+	private :
 
 	    friend Generator;
 	    
-	    Aliaser ();
+	    DeepCopy ();
 
-	    Aliaser (const lexing::Word & loc, const Generator & type, const Generator & who);
+	    DeepCopy (const lexing::Word & loc, const Generator & type, const Generator & who);
 
 	public :
 
@@ -41,11 +37,6 @@ namespace semantic {
 	     * \return is this symbol the same as other (no only address, or type)
 	     */
 	    bool equals (const Generator & other) const override;	    
-
-	    /** 
-	     * \return the left operand of the operation
-	     */
-	    const Generator & getWho () const;
 
 	    std::string prettyString () const override;
 	};

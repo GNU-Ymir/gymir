@@ -15,7 +15,8 @@ namespace syntax {
 	CONST,
 	MUT,
 	DMUT,
-	STATIC, 
+	STATIC,
+	PURE,
 	CTE
     };
 

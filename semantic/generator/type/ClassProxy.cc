@@ -50,7 +50,7 @@ namespace semantic {
 	
 	std::string ClassProxy::typeName () const {
 	    Ymir::OutBuffer buf;
-	    buf.writef ("&(%)::%", this-> _proxy.to <ClassRef> ().computeTypeName (this-> isMutable ()), this-> _ref.to <ClassRef> ().computeTypeName (false), ")");
+	    buf.writef ("&(%)::%", this-> _proxy.to <ClassRef> ().computeTypeName (this-> isMutable (), true, true), this-> _ref.to <ClassRef> ().computeTypeName (false), ")");
 	    return buf.str ();
 	}
 		

@@ -70,13 +70,17 @@ namespace semantic {
 	    
 	public : 
 
+	    static Generator initPure (const lexing::Word & loc, const Type & other);
+	    
 	    static Generator init (const lexing::Word & loc, const Type & other);
 	    
 	    static Generator init (const lexing::Word & loc, const Type & other, bool isMutable, bool isRef);
-
+	    
 	    static Generator init (const Type & other, bool isMutable, bool isRef);
 	    
 	    static Generator init (const Type & other, bool isMutable);
+
+	    static Generator initPure (const Type & other);
 	    
 	    /** 
 	     * \brief Set the proxy of the type, used in Enum 
@@ -113,7 +117,7 @@ namespace semantic {
 	     * \param includeRef add the keyword ref if it is a ref ?
 	     * \return the typename of the type formatted
 	     */
-	    std::string computeTypeName (bool isParentMutable = true, bool includeRef = true) const;
+	    std::string computeTypeName (bool isParentMutable = true, bool includeRef = true, bool isParentPure = false) const;
 
 	    /**
 	     * @return the typename of the type formatted
@@ -129,6 +133,11 @@ namespace semantic {
 	     */
 	    bool isMutable () const;
 
+	    /**
+	     * \return is the type pure ?
+	     */
+	    bool isPure () const;
+	    
 	    /**
 	     * \return is this type and all inner types mutable?
 	     */

@@ -192,9 +192,18 @@ namespace semantic {
 	    type = validateType (expr.getContent ());
 	    
 	    lexing::Word gotConstOrMut (lexing::Word::eof ());
+	    lexing::Word gotRef (lexing::Word::eof ());
+	    lexing::Word gotPure (lexing::Word::eof ());
 	    for (auto & deco : expr.getDecorators ()) {
 		switch (deco.getValue ()) {
-		case syntax::Decorator::REF : type = Type::init (type.to<Type> (), type.to <Type> ().isMutable (), true); break;
+		case syntax::Decorator::REF : {
+		    if (!gotPure.isEof ()) {
+			auto note = Ymir::Error::createNote (gotPure);
+			Ymir::Error::occurAndNote (expr.getDecorator (syntax::Decorator::CONST).getLocation (), note, ExternalError::CONFLICT_DECORATOR);
+		    }
+		    gotRef = expr.getDecorator (syntax::Decorator::REF).getLocation ();
+		    type = Type::init (type.to<Type> (), type.to <Type> ().isMutable (), true); break;		    
+		}
 		case syntax::Decorator::CONST : {
 		    if (!gotConstOrMut.isEof ()) {
 			auto note = Ymir::Error::createNote (gotConstOrMut);
@@ -210,6 +219,17 @@ namespace semantic {
 		    }
 		    gotConstOrMut = expr.getDecorator (syntax::Decorator::MUT).getLocation ();
 		    type = Type::init (type.to<Type> (), true); break;
+		}
+		case syntax::Decorator::PURE : {
+		    if (!gotConstOrMut.isEof ()) {
+			auto note = Ymir::Error::createNote (gotConstOrMut);
+			Ymir::Error::occur (expr.getDecorator (syntax::Decorator::PURE).getLocation (), ExternalError::CONFLICT_DECORATOR);
+		    } else if (!gotRef.isEof ()) {
+			auto note = Ymir::Error::createNote (gotRef);
+			Ymir::Error::occur (expr.getDecorator (syntax::Decorator::PURE).getLocation (), ExternalError::CONFLICT_DECORATOR);
+		    }
+		    gotPure = expr.getDecorator (syntax::Decorator::PURE).getLocation ();
+		    type = Type::initPure (type.to <Type> ()); break;
 		}
 		case syntax::Decorator::DMUT : {
 		    if (!gotConstOrMut.isEof ()) {

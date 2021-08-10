@@ -262,15 +262,15 @@ namespace semantic {
 	}
 
 	std::string Mangler::mangleCharT (const Char & c) const {
-	    return c.computeTypeName (false, false);
+	    return c.computeTypeName (false, false, true);
 	}
-
+       
 	std::string Mangler::mangleFloatT (const Float & f) const {
-	    return f.computeTypeName (false, false);
+	    return f.computeTypeName (false, false, true);
 	}
 
 	std::string Mangler::mangleIntegerT (const Integer & i) const {
-	    return i.computeTypeName (false, false);
+	    return i.computeTypeName (false, false, true);
 	}
 
 	std::string Mangler::mangleSliceT (const Slice & s) const {

@@ -46,7 +46,7 @@ namespace semantic {
 
 	std::string Array::typeName () const {
 	    Ymir::OutBuffer buf;
-	    buf.write ("[", this-> getInners () [0].to<Type> ().computeTypeName (this-> isMutable ()), " ; ", (int) this-> _size, "]");
+	    buf.write ("[", this-> getInners () [0].to<Type> ().computeTypeName (this-> isMutable (), true, true), " ; ", (int) this-> _size, "]");
 	    return buf.str ();
 	}	
 

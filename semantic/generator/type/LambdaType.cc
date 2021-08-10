@@ -51,8 +51,9 @@ namespace semantic {
 		if (it != 1) buf.write (", ");
 		if (this-> getInners ()[it].isEmpty ())
 		    buf.write ("any");
-		else
-		    buf.write (this-> getInners () [it].to <Type> ().computeTypeName (false));
+		else {
+		    buf.write (this-> getInners () [it].to <Type> ().computeTypeName (false, true, true));
+		}
 	    }
 	    buf.write (")-> ");
 	    if (this-> getInners ()[0].isEmpty ()) buf.write ("any");

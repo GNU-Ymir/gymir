@@ -118,6 +118,7 @@ ymir_OBJS = \
 	ymir/generator_Addresser.o \
 	ymir/generator_Affect.o \
 	ymir/generator_Aliaser.o \
+	ymir/generator_DeepCopy.o \
 	ymir/generator_Array.o \
 	ymir/generator_ArrayAccess.o \
 	ymir/generator_ArrayAlloc.o \

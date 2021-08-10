@@ -86,8 +86,8 @@ namespace semantic {
 		    type = Type::init (value.to <Value> ().getType ().to<Type> (), false, false);
 		}
 
-		bool isMutable = false, isRef = false, dmut = false;;
-		type = this-> applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut, false);
+		bool isMutable = false, isRef = false, dmut = false, isPure = false;
+		type = this-> applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut, isPure, false);
 		if (!isMutable && !dmut) type = Type::init (type.to <Type> (), false);
 		
 

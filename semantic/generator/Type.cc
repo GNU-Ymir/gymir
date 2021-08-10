@@ -10,6 +10,7 @@ namespace semantic {
 	    _isComplex (false),
 	    _isLocal (false),
 	    _isMutable (false),
+	    _isPure (false),
 	    _inners ({}),
 	    _proxy (Generator::empty ()),
 	    _typeName (this, &Type::performComputeTypeName)
@@ -21,6 +22,7 @@ namespace semantic {
 	    _isComplex (false),
 	    _isLocal (false),
 	    _isMutable (false),
+	    _isPure (false),
 	    _inners ({}),
 	    _proxy (Generator::empty ()),
 	    _typeName (this, &Type::performComputeTypeName)
@@ -62,6 +64,23 @@ namespace semantic {
 	    return ret;
 	}
 
+	Generator Type::initPure (const lexing::Word & loc, const Type & other) {
+	    auto ret = other.clone ();
+	    ret.to <Type> ().changeLocation (loc);
+	    ret.to <Type> ()._isMutable = false;
+	    ret.to <Type> ()._isRef = false;
+	    ret.to <Type> ()._isPure = true;
+	    return ret;
+	}
+
+	Generator Type::initPure (const Type & other) {
+	    auto ret = other.clone ();
+	    ret.to <Type> ()._isMutable = false;
+	    ret.to <Type> ()._isRef = false;
+	    ret.to <Type> ()._isPure = true;
+	    return ret;
+	}
+	
 	Generator Type::init (const Type &other, const Generator & gen) {
 	    auto ret = other.clone ();
 	    ret.to <Type> ()._proxy = gen;
@@ -108,12 +127,15 @@ namespace semantic {
 	    return this-> equals (gen);
 	}
 	
-	std::string Type::computeTypeName (bool isParentMutable, bool includeRef) const {
+	std::string Type::computeTypeName (bool isParentMutable, bool includeRef, bool isParentPure) const {
 	    auto inner = std::move (this-> typeName ());
 	    if (this-> _isMutable && isParentMutable)
 		inner = "mut " + inner;
 	    if (this-> _isRef && includeRef)
 		inner = "ref " + inner;
+	    if (this-> _isPure && !isParentPure) {
+		inner = "pure " + inner;
+	    }
 	    
 	    if (!this-> _proxy.isEmpty () && includeRef)
 		return this-> _proxy.to <Type> ().getTypeName () + Ymir::format ("(%)", inner);
@@ -143,6 +165,10 @@ namespace semantic {
 
 	bool Type::isMutable () const {
 	    return this-> _isMutable;
+	}
+
+	bool Type::isPure () const {
+	    return this-> _isPure;
 	}
 
 	bool Type::isDeeplyMutable () const {

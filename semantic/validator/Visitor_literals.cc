@@ -402,8 +402,9 @@ namespace semantic {
 			bool isMutable = false;
 			bool isRef = false;
 			bool dmut = false;
+			bool isPure = false;
 			if (!type.isEmpty ()) {
-			    type = applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut);
+			    type = applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut, isPure);
 			    
 			    verifyMutabilityRefParam (var.getLocation (), type, ExternalError::MUTABLE_CONST_PARAM);
 			    if (type.is <NoneType> () || type.is<Void> ()) {

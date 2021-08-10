@@ -46,6 +46,7 @@ namespace Ymir {
     const char*		ExternalError::GLOBAL_VAR_DEPENDENCY		  = "the global var %(y) cannot be initialized from the value of %(y)";
     const char*		ExternalError::IMMUTABLE_LVALUE			  = "left operand of type %(y) is immutable";
     const char*		ExternalError::IMPLICIT_ALIAS			  = "implicit alias of type %(y) is not allowed, it will implicitly discard constant qualifier";
+    const char*         ExternalError::IMPLICIT_PURE                      = "implicit pure of type %(y) is not allowed, it will implicitly discard constant qualifier";
     const char*		ExternalError::IMPLICIT_OVERRIDE		  = "implicit override of method %(y) is not allowed";
     const char*		ExternalError::IMPLICIT_OVERRIDE_BY_TRAIT	  = "implicit override of method %(y) by trait implementation is not allowed";
     const char*		ExternalError::IMPLICIT_REFERENCE		  = "implicit referencing of type %(y) is not allowed";

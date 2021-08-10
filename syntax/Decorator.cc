@@ -12,7 +12,7 @@ namespace syntax {
 
     std::vector <std::string> DecoratorWord::members () {
 	return {
-	    Keys::REF, Keys::CONST, Keys::MUTABLE, Keys::DMUTABLE, Keys::STATIC, Keys::IMMUTABLE
+	    Keys::REF, Keys::CONST, Keys::MUTABLE, Keys::DMUTABLE, Keys::STATIC, Keys::IMMUTABLE, Keys::PURE
 		};
     }
     
@@ -23,7 +23,8 @@ namespace syntax {
 	if (content == Keys::DMUTABLE) return DecoratorWord (content, Decorator::DMUT);
 	if (content == Keys::IMMUTABLE) return DecoratorWord (content, Decorator::CTE);
 	if (content == Keys::STATIC) return DecoratorWord (content, Decorator::STATIC);
-
+	if (content == Keys::PURE) return DecoratorWord (content, Decorator::PURE);
+	
 	Ymir::Error::halt ("%(r) - reaching unhandled point", "Critical");
 	return DecoratorWord (content, Decorator::REF);
     }

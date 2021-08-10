@@ -989,7 +989,7 @@ namespace documentation {
 	    elof (Void, v) {
 		val ["type"] = JsonString::init ("void");
 		val ["name"] = JsonString::init (v.computeTypeName (false));
-	    }
+	    }	    
 	    elof (Bool, b) {
 		val ["type"] = JsonString::init ("bool");
 		val ["name"] = JsonString::init (b.computeTypeName (false));

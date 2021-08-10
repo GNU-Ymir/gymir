@@ -566,8 +566,8 @@ namespace semantic {
 		Error::occur (var.getLocation (), ExternalError::VAR_DECL_WITHOUT_VALUE);
 	    } 
 		    
-	    bool isMutable = false, isRef = false, dmut = false;
-	    type = applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut);
+	    bool isMutable = false, isRef = false, dmut = false, isPure = false;
+	    type = applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut, isPure);
 	    
 	    if (!value.isEmpty ()) {
 		// We do not check the lambdatype complete type if the var is not mutable

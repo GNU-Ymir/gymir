@@ -25,6 +25,7 @@ namespace syntax {
 	    case Decorator::DMUT : decosName.push_back ("dmut"); break;
 	    case Decorator::STATIC : decosName.push_back ("static"); break;
 	    case Decorator::CTE : decosName.push_back ("cte"); break;
+	    case Decorator::PURE : decosName.push_back ("pure"); break;
 	    }
 	
 	stream.writef ("%*<VarDecl> : ", i, '\t');
@@ -39,6 +40,7 @@ namespace syntax {
 	    switch (it.getValue ()) {
 	    case Decorator::REF : buf.write ("ref "); break;
 	    case Decorator::MUT : buf.write ("mut "); break;
+	    case Decorator::PURE : buf.write ("pure "); break;
 	    default : {} break;
 	    }
 	

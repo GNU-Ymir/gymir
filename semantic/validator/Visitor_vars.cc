@@ -308,6 +308,14 @@ namespace semantic {
 		inner = Value::init (inner.to<Value> (), type);
 	    }
 
+	    if (dec_expr.hasDecorator (syntax::Decorator::PURE)) {
+		auto deco = dec_expr.getDecorator (syntax::Decorator::PURE);
+		Ymir::Error::occur (deco.getLocation (),
+				    ExternalError::DECO_OUT_OF_CONTEXT,
+				    deco.getLocation ().getStr ()
+		    );			
+	    }
+	    
 	    return inner;
 	}
 

@@ -81,8 +81,8 @@ namespace semantic {
 
 	    type = Type::init (type.to<Type> (), false);
 	    
-	    bool isMutable = false, isRef = false, dmut = false;	    
-	    type = this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut);
+	    bool isMutable = false, isRef = false, dmut = false, isPure = false;	    
+	    type = this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut, isPure);
 	    this-> _context.verifyMutabilityRefParam (var.getLocation (), type, ExternalError::MUTABLE_CONST_ITER);
 	    
 	    auto value = Generator::empty ();

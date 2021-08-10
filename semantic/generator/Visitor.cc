@@ -803,7 +803,7 @@ namespace semantic {
 			 
 		s_of (Aliaser, al)
 		    return generateAliaser (al);		    
-
+		
 		s_of_u (None)
 		    return Tree::empty ();
 

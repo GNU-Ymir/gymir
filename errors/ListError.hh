@@ -65,6 +65,7 @@ namespace Ymir {
 	static const char*	GLOBAL_VAR_DEPENDENCY; 
 	static const char*	IMMUTABLE_LVALUE;
 	static const char*	IMPLICIT_ALIAS;
+	static const char*      IMPLICIT_PURE;
 	static const char*	IMPLICIT_OVERRIDE;
 	static const char*	IMPLICIT_OVERRIDE_BY_TRAIT;
 	static const char*	IMPLICIT_REFERENCE;

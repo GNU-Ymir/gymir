@@ -127,7 +127,7 @@ namespace semantic {
 		val = validateValue (call);
 	    }
 
-	    return Aliaser::init (intr.getLocation (), val.to <Value> ().getType (), val);
+	    return DeepCopy::init (intr.getLocation (), val.to <Value> ().getType (), val);
 	}
 	
 	Generator Visitor::validateExpand (const syntax::Intrinsics & intr) {

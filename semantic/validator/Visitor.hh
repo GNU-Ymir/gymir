@@ -978,7 +978,7 @@ namespace semantic {
 	     * @return isRef ref decorator found
 	     * @return isMutable mut decorator found
 	     */
-	    generator::Generator applyDecoratorOnVarDeclType (const std::vector <syntax::DecoratorWord> & decos, const generator::Generator & type, bool & isRef, bool & isMutable, bool & dmut, bool canBeRef = true, bool canBeMut = true, bool canBeDmut = true);
+	    generator::Generator applyDecoratorOnVarDeclType (const std::vector <syntax::DecoratorWord> & decos, const generator::Generator & type, bool & isRef, bool & isMutable, bool & dmut, bool & isPure, bool canBeRef = true, bool canBeMut = true, bool canBeDmut = true, bool canBePure = true);
 
 	    
 	    /**

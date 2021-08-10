@@ -571,7 +571,8 @@ namespace semantic {
 		    bool isMutable = false;
 		    bool isRef = false;
 		    bool dmut = false;
-		    type = this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut);
+		    bool isPure = false;
+		    type = this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut, isPure);
 		    auto param = findParameter (list, ProtoVar::init (var.getName (), Generator::empty (), value, isMutable, 1, false).to<ProtoVar> ());
 
 		    if (param.isEmpty ()) {
@@ -697,7 +698,8 @@ namespace semantic {
 		    bool isMutable = false;
 		    bool isRef = false;
 		    bool dmut = false;
-		    type = this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut);
+		    bool isPure = false;
+		    type = this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut, isPure);
 		    
 		    auto param = findParameter (list, ProtoVar::init (var.getName (), Generator::empty (), value, isMutable, 1, false).to<ProtoVar> ());
 		    if (param.isEmpty ())

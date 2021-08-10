@@ -28,6 +28,7 @@ namespace syntax {
 	    case Decorator::DMUT : decosName.push_back ("dmut"); break;
 	    case Decorator::STATIC : decosName.push_back ("static"); break;
 	    case Decorator::CTE : decosName.push_back ("cte"); break;
+	    case Decorator::PURE : decosName.push_back ("pure"); break;
 	    }
 	
 	stream.writef ("%*<DecoratedExpression> : ", i, '\t');
@@ -71,6 +72,7 @@ namespace syntax {
 	    case Decorator::DMUT : buf.write ("dmut"); break;
 	    case Decorator::STATIC : buf.write ("static"); break;
 	    case Decorator::CTE : buf.write ("cte"); break;
+	    case Decorator::PURE : buf.write ("pure"); break;
 	    }
 	    i += 1;
 	}
@@ -89,6 +91,7 @@ namespace syntax {
 	    case Decorator::DMUT : buf.write ("dmut"); break;
 	    case Decorator::STATIC : buf.write ("static"); break;
 	    case Decorator::CTE : buf.write ("cte"); break;
+	    case Decorator::PURE : buf.write ("pure"); break;
 	    }
 	    i += 1;
 	}

@@ -18,15 +18,20 @@ namespace semantic {
 	using namespace generator;
 	using namespace Ymir;       
 
-	Generator Visitor::applyDecoratorOnVarDeclType (const std::vector <syntax::DecoratorWord> & decos, const Generator & type, bool & isRef, bool & isMutable, bool & dmut, bool canBeRef, bool canBeDmut, bool canBeMut) {
+	Generator Visitor::applyDecoratorOnVarDeclType (const std::vector <syntax::DecoratorWord> & decos, const Generator & type, bool & isRef, bool & isMutable, bool & dmut, bool & isPure, bool canBeRef, bool canBeDmut, bool canBeMut, bool canBePure) {
 	    isMutable = false;
 	    isRef = false;
 	    dmut = false;
+	    isPure = false;
+
+	    lexing::Word mutLoc = lexing::Word::eof (), dmutLoc = mutLoc, refLoc = mutLoc, pureLoc = mutLoc;
+	    
 	    for (auto & deco : decos) {
 		switch (deco.getValue ()) {
 		case syntax::Decorator::REF : {
 		    if (canBeRef) { 
 			isRef = true;
+			refLoc = deco.getLocation ();
 		    } else {
 			Ymir::Error::occur (deco.getLocation (),
 					    ExternalError::DECO_OUT_OF_CONTEXT,
@@ -37,6 +42,7 @@ namespace semantic {
 		case syntax::Decorator::MUT : {
 		    if (canBeMut) {
 			isMutable = true;
+			mutLoc = deco.getLocation ();
 		    } else {
 			Ymir::Error::occur (deco.getLocation (),
 					    ExternalError::DECO_OUT_OF_CONTEXT,
@@ -47,6 +53,18 @@ namespace semantic {
 		case syntax::Decorator::DMUT : {
 		    if (canBeDmut) {
 			dmut = true;
+			dmutLoc = deco.getLocation ();
+		    } else {
+			Ymir::Error::occur (deco.getLocation (),
+					    ExternalError::DECO_OUT_OF_CONTEXT,
+					    deco.getLocation ().getStr ()
+			    );
+		    }
+		} break;
+		case syntax::Decorator::PURE : {
+		    if (canBePure) {
+			isPure = true;
+			pureLoc = deco.getLocation ();
 		    } else {
 			Ymir::Error::occur (deco.getLocation (),
 					    ExternalError::DECO_OUT_OF_CONTEXT,
@@ -62,8 +80,25 @@ namespace semantic {
 		}
 	    }
 
+	    if (isMutable && dmut) {
+		auto note = Ymir::Error::createNote (mutLoc);
+		Ymir::Error::occurAndNote (dmutLoc, note, ExternalError::CONFLICT_DECORATOR);
+	    } else if (isPure) {
+		if (isMutable) {
+		    auto note = Ymir::Error::createNote (mutLoc);
+		    Ymir::Error::occurAndNote (pureLoc, note, ExternalError::CONFLICT_DECORATOR);
+		} else if (dmut) {
+		    auto note = Ymir::Error::createNote (dmutLoc);
+		    Ymir::Error::occurAndNote (pureLoc, note, ExternalError::CONFLICT_DECORATOR);
+		} else if (isRef) {
+		    auto note = Ymir::Error::createNote (refLoc);
+		    Ymir::Error::occurAndNote (pureLoc, note, ExternalError::CONFLICT_DECORATOR);
+		}
+	    }
+	    
 	    auto retType = Type::init (type.to <Type> (), isMutable, isRef);
 	    if (dmut) retType = retType.to <Type> ().toDeeplyMutable ();
+	    else if (isPure) retType = Type::initPure (retType.to <Type> ());
 	    
 	    return retType;
 	}

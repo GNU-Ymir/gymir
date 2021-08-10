@@ -155,7 +155,8 @@ namespace semantic {
 		bool isMutable = false;
 		bool isRef = false;
 		bool dmut = false;
-		varType = this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), varType, isRef, isMutable, dmut);
+		bool isPure = false;
+		varType = this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), varType, isRef, isMutable, dmut, isPure);
 		// The type checking is made in reverse
 		// We want to be able to get an inherit class, from an ancestor class
 		// That is exactly the reverse of function call, or var affectation
@@ -767,7 +768,8 @@ namespace semantic {
 		bool isMutable = false;
 		bool isRef = false;
 		bool dmut = false;
-		varType = this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), varType, isRef, isMutable, dmut);
+		bool isPure = false;
+		varType = this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), varType, isRef, isMutable, dmut, isPure);
 		
 		// value is typed exception, this will pass if varType is an heir 
 		this-> _context.verifyCompatibleType (var.getLocation (), varType.getLocation (), value.to <Value> ().getType (), varType, true);

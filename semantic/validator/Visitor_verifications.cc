@@ -175,8 +175,19 @@ namespace semantic {
 	void Visitor::verifyImplicitAlias (const lexing::Word & loc, const Generator & type, const Generator & gen) {
 	    if (!type.to <Type> ().needExplicitAlias ()) return; // No need to explicitly alias
 	    auto llevel = type.to <Type> ().mutabilityLevel ();
-	    	    
-	    if (gen.is<Copier> () || gen.is <Aliaser> () || gen.is <Referencer> ()) return; // It is aliased or copied, that's ok
+
+	    if (type.to <Type> ().isPure ()) {
+		if (gen.to <Value> ().getType ().to <Type> ().isPure () || gen.is <DeepCopy> ()) return;
+		else {
+		    std::list <Ymir::Error::ErrorMsg> notes;
+		    notes.push_back (Ymir::Error::createNote (gen.getLocation (), ExternalError::IMPLICIT_PURE,
+							      gen.to <Value> ().getType ().to <Type> ().getTypeName ()));
+
+		    Ymir::Error::occurAndNote (loc, notes, ExternalError::DISCARD_CONST);
+		}
+	    }
+	    
+	    if (gen.is<Copier> () || gen.is <Aliaser> () || gen.is <Referencer> () || gen.is <DeepCopy> ()) return; // It is aliased or copied, that's ok
 	    auto max_level = 1;
 
 	    {

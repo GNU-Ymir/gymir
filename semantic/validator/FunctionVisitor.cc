@@ -160,8 +160,8 @@ namespace semantic {
 	    }
 				
 	    bool isRef = false;
-	    bool dmut = false;
-	    type = this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut);
+	    bool dmut = false, isPure = false;
+	    type = this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut, isPure);
 		    
 	    this-> _context.verifyMutabilityRefParam (var.getLocation (), type, ExternalError::MUTABLE_CONST_PARAM);
 		
