@@ -33,7 +33,8 @@ namespace semantic {
 	    _isRef (other._isRef),
 	    _isComplex (other._isComplex),
 	    _isLocal (other._isLocal),
-	    _inners (other._inners),
+	    _isPure (other._isPure),
+	    _inners (other._inners),	    
 	    _proxy (other._proxy),
 	    _typeName (this, &Type::performComputeTypeName)
 	{}
@@ -104,6 +105,7 @@ namespace semantic {
 	    }
 	    
 	    ret.to<Type> ()._isMutable  = is;
+	    ret.to<Type> ()._isPure = false;
 	    return ret;	    
 	}	
 
@@ -178,7 +180,7 @@ namespace semantic {
 		}
 	    }
 	    
-	    return this-> _isMutable;
+	    return this-> _isMutable && !this-> _isPure;
 	}
 	
 	bool Type::isComplex () const {
@@ -187,6 +189,7 @@ namespace semantic {
 		
 	void Type::setMutable (bool is) {
 	    this-> _isMutable = is;
+	    this-> _isPure = false;
 	    this-> _typeName.unvalidate ();
 	}
 	
@@ -225,6 +228,7 @@ namespace semantic {
 	Generator Type::toDeeplyMutable () const {
 	    Generator ret = Generator {this-> clone ()};
 	    ret.to<Type> ()._isMutable = true;
+	    ret.to<Type> ()._isPure = false;
 	    
 	    if (this-> isComplex ()) {
 		std::vector <Generator> inners;
@@ -232,13 +236,15 @@ namespace semantic {
 		    inners.push_back (it.to <Type> ().toDeeplyMutable ());
 		ret.to <Type> ().setInners (inners);	    
 	    }
-	    	    
+
+
 	    return ret;	    
 	}	
 
 	Generator Type::toMutable () const {
 	    Generator ret = Generator (this-> clone ());
 	    ret.to<Type> ()._isMutable = true;
+	    ret.to<Type> ()._isPure = false;
 
 	    if (this-> isComplex ()) {
 		std::vector <Generator> inners;
@@ -262,13 +268,14 @@ namespace semantic {
 		
 		Generator ret = Generator {this-> clone ()};
 		ret.to <Type> ()._isMutable = true;
+		ret.to<Type> ()._isPure = false;
 		ret.to <Type> ().setInners (inners);
 		return ret;
 	    }
 	}
 	
 	int Type::mutabilityLevel (int level) const {
-	    if (this-> isMutable ()) {
+	    if (this-> isMutable () && !this-> _isPure) {
 		if (this-> isComplex ()) {
 		    auto max = level + 1;
 		    for (auto & it : this-> getInners ()) {

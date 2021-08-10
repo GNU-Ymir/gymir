@@ -20,15 +20,17 @@ namespace semantic {
 
 	Generator Visitor::validateType (const syntax::Expression & expr, bool lock) {
 	    auto type = validateType (expr);
-	    if (lock && !type.to<Type> ().isMutable ())
-	    return Type::init (type.to <Type> (), false);
+	    if (lock && !type.to<Type> ().isMutable () && !type.to <Type> ().isPure ()) {		
+		return Type::init (type.to <Type> (), false);
+	    }
 	    return type;		
 	}
 
 	Generator Visitor::validateTypeClassRef (const syntax::Expression & expr, bool lock) {
 	    auto type = validateTypeClassRef (expr);
-	    if (lock && !type.to<Type> ().isMutable ())
-	    return Type::init (type.to <Type> (), false);
+	    if (lock && !type.to<Type> ().isMutable () && !type.to <Type> ().isPure ()) {
+		return Type::init (type.to <Type> (), false);
+	    }
 	    return type;		
 	}
 

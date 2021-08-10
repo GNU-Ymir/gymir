@@ -27,7 +27,7 @@ namespace semantic {
 	    // We start by entering a specific context, with the custom attributes of the user
 	    this-> _context.enterContext (function.getCustomAttributes ());
 	    this-> _context.enterBlock (); // enter a new block for the validation of the prototype
-	    this-> validatePrototypeForFrame (func.getName (), function.getPrototype (), params, retType, errors); 
+	    this-> validatePrototypeForFrame (func.getName (), function.getPrototype (), params, retType, errors);	    
 	    if (function.getLocation () == Keys::MAIN) { // special case of main function, that must be validated with a specific prototype		
 		this-> verifyMainPrototype (func.getName (), function.getPrototype (), params, retType, errors);
 	    }	    

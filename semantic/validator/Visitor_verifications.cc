@@ -179,6 +179,7 @@ namespace semantic {
 	    if (type.to <Type> ().isPure ()) {
 		if (gen.to <Value> ().getType ().to <Type> ().isPure () || gen.is <DeepCopy> ()) return;
 		else {
+		    println (gen, " ", gen.to <Value> ().getType ());
 		    std::list <Ymir::Error::ErrorMsg> notes;
 		    notes.push_back (Ymir::Error::createNote (gen.getLocation (), ExternalError::IMPLICIT_PURE,
 							      gen.to <Value> ().getType ().to <Type> ().getTypeName ()));
