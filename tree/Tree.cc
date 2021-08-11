@@ -279,7 +279,6 @@ namespace generic {
     }
 
     Tree Tree::methodType (const Tree & retType, const std::vector <Tree> & params) {
-	println (params.size ());
 	if (params.size () == 0) Ymir::Error::halt ("", "");
 	std::vector <tree> tree_params (params.size () - 1);	
 	for (auto i : Ymir::r (1, params.size ())) {
@@ -337,8 +336,12 @@ namespace generic {
 	    if (left.getType () == right.getType ())
 		return Tree::build (MODIFY_EXPR, loc, left.getType (), left, right);
 
-	    auto name = Ymir::format ("#_aff(%)", loc.getLine ());
-	    Tree var = Tree::varDecl (loc, name, right.getType ());
+	    auto lvalue = left.getValue ();
+	    auto rvalue = right.getValue ();
+	    
+	    auto name = Ymir::format ("#_aff(%)", loc.getLine ());	
+	    Tree var = Tree::varDecl (loc, name, rvalue.getType ());
+	    
 	    var.setDeclContext (segmentContext);
 	    stackContext.append (var);
 	    
@@ -346,13 +349,10 @@ namespace generic {
 	    
 	    list.append (left.getList ());
 	    list.append (right.getList ());
-	    
-	    auto lvalue = left.getValue ();
-	    auto rvalue = right.getValue ();
-	    
+	    	    
 	    // If rvalue is a call expression, allocation etc, we must not recall it again
 	    // So we put it in temp variable
-	    list.append (Tree::build (MODIFY_EXPR, loc, right.getType (), var, right));
+	    list.append (Tree::build (MODIFY_EXPR, loc, var.getType (), var, rvalue));
 	    
 	    auto ptrl = Tree::buildAddress (loc, lvalue, Tree::pointerType (lvalue.getType ()));
 	    auto ptrr = Tree::buildAddress (loc, var, Tree::pointerType (rvalue.getType ()));
@@ -361,8 +361,8 @@ namespace generic {
 	    auto size = Tree::init (UNKNOWN_LOCATION, TYPE_SIZE_UNIT (lvalue.getType ().getTree ()));
 	    
 	    list.append (
-		Tree::init (loc.getLocation (), build_call_expr (tmemcopy.getTree (), 3, ptrl.getTree (), ptrr.getTree (), size.getTree ()))
-	    );
+	    	Tree::init (loc.getLocation (), build_call_expr (tmemcopy.getTree (), 3, ptrl.getTree (), ptrr.getTree (), size.getTree ()))
+	    );	   
 	    
 	    return  Tree::compound (
 	    	loc,

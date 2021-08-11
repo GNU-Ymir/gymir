@@ -2233,8 +2233,8 @@ namespace semantic {
 	generic::Tree Visitor::generateFrameProto (const FrameProto & proto) {
 	    static std::map <std::string, Tree> __dones__;
 	    auto name = Mangler::init ().mangleFrameProto (proto);
-	    auto it = __dones__.find (name);
-	    if (it == __dones__.end ()) {
+	    auto it = __dones__.find (name);	    
+	    if (it == __dones__.end () || proto.getManglingStyle () != Frame::ManglingStyle::Y) {
 		std::vector <Tree> params;
 		for (auto & it : proto.getParameters ())
 		params.push_back (generateType (it.to <ProtoVar> ().getType ()));
@@ -2369,11 +2369,13 @@ namespace semantic {
 		    pre.toTree ()
 		);
 	    } else {
-		auto fn = generateValue (cl.getFrame ());	    
+		auto fn = generateValue (cl.getFrame ());		
 		auto type = generateType (cl.getType ());
+		auto call = Tree::buildCall (cl.getLocation (), type, fn, results);
+		
 		return Tree::compound (
-		    cl.getLocation (), 
-		    Tree::buildCall (cl.getLocation (), type, fn, results),
+		    cl.getLocation (),
+		    call,
 		    pre.toTree ()
 		);
 	    }
