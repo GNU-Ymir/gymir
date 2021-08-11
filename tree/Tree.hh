@@ -635,6 +635,11 @@ namespace generic {
 	Tree getType () const;
 
 	/**
+	 * Change the type of the value
+	 */
+	void setType (const Tree & type);
+	
+	/**
 	 * \return this tree encode a pointer type ?
 	 */
 	bool isPointerType () const;

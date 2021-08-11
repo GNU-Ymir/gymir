@@ -264,9 +264,11 @@ namespace semantic {
 		    __dones__.emplace (name, type);
 		    return type;
 		} else return it-> second;
-	    } else return // Tree::pointerType (
+	    } else {
+		return // Tree::pointerType (
 		       Tree::voidType ()//);
 		       ;
+	    }
 	}
 		
 	Tree Visitor::generateInitValueForType (const Generator & type) {
@@ -2279,12 +2281,17 @@ namespace semantic {
 	    
 	    // If the type is a class, we need to unref it to access its inner fields
 	    // Same if it is a ref to a struct, or a ref to class
-	    while (elem.getType ().isPointerType ())
+	    while (elem.getType ().isPointerType ()) {
 		elem = elem.toDirect ();
+	    }	    
+
+	    auto val = elem.getValue ().getField (acc.getField ());
+	    auto type = generateType (acc.getType ());
+	    val.setType (type); // we change the type, because it can be a void* due to recursive types inside class
 	    
 	    return Tree::compound (
 		acc.getLocation (),
-		elem.getValue ().getField (acc.getField ()),
+		val,
 		elem.getList ()
 	    );
 	}

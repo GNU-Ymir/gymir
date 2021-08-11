@@ -856,6 +856,10 @@ namespace generic {
 	return Tree::init (this-> _loc, TREE_TYPE (this-> _t));
     }
 
+    void Tree::setType (const Tree & type) {
+	TREE_TYPE (this-> _t) = type._t;
+    }
+    
     uint Tree::getSize () const {
 	if (this-> _t == NULL_TREE)
 	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
@@ -956,8 +960,8 @@ namespace generic {
     Tree Tree::buildPointerUnref (int index) const {
 	auto inner = TREE_TYPE (this-> getType ().getTree ());
 	auto element_size = TYPE_SIZE_UNIT (inner);
-	tree it = build_int_cst_type (long_unsigned_type_node, index);
-	it = fold_convert_loc (this-> _loc, size_type_node, it);
+	tree it = build_int_cst_type (long_unsigned_type_node, index);	
+	it = fold_convert_loc (this-> _loc, size_type_node, it);	
 	auto offset = fold_build2_loc (this-> _loc, MULT_EXPR, size_type_node, it, element_size);
 
 	it = convert_to_ptrofftype (offset);
