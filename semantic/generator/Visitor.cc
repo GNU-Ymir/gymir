@@ -2286,8 +2286,10 @@ namespace semantic {
 	    }	    
 
 	    auto val = elem.getValue ().getField (acc.getField ());
-	    auto type = generateType (acc.getType ());
-	    val.setType (type); // we change the type, because it can be a void* due to recursive types inside class
+	    if (acc.getType ().is <ClassPtr> () || acc.getType ().is <ClassProxy> ()) {
+		auto type = generateType (acc.getType ());
+		val.setType (type); // we change the type, because it can be a void* due to recursive types inside class
+	    }
 	    
 	    return Tree::compound (
 		acc.getLocation (),
