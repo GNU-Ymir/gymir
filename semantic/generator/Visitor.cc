@@ -1263,9 +1263,30 @@ namespace semantic {
 		return ret;
 	    } else {
 		auto type = generateType (bin.getType ());
-		auto value = Tree::binaryPtrTest (bin.getLocation (), code, type, lvalue, rvalue);
-		auto ret = Tree::compound (bin.getLocation (), value, list.toTree ());
-		return ret;
+		if (bin.getLeft ().to <Value> ().getType ().is <Delegate> ()) {
+		    auto lclosure = left.getField (Ymir::format ("_%", 0));
+		    auto rclosure = right.getField (Ymir::format ("_%", 0));
+
+		    auto lfunc = left.getField (Ymir::format ("_%", 1));
+		    auto rfunc = right.getField (Ymir::format ("_%", 1));
+
+		    auto closure_test = Tree::binaryPtrTest (bin.getLocation (), code, type, lclosure, rclosure);
+		    auto func_test = Tree::binaryPtrTest (bin.getLocation (), code, type, lfunc, rfunc);
+
+		    if (bin.getOperator () == Binary::Operator::IS) {
+			auto value = Tree::binary (bin.getLocation (), TRUTH_ANDIF_EXPR, type, closure_test, func_test);
+			auto ret = Tree::compound (bin.getLocation (), value, list.toTree ());
+			return ret;
+		    } else {
+			auto value = Tree::binary (bin.getLocation (), TRUTH_ORIF_EXPR, type, closure_test, func_test);
+			auto ret = Tree::compound (bin.getLocation (), value, list.toTree ());
+			return ret;
+		    }
+		} else {
+		    auto value = Tree::binaryPtrTest (bin.getLocation (), code, type, lvalue, rvalue);
+		    auto ret = Tree::compound (bin.getLocation (), value, list.toTree ());
+		    return ret;
+		}
 	    }
 	}
 	

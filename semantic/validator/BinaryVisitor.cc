@@ -1269,10 +1269,26 @@ namespace semantic {
 					op,
 					Bool::init (expression.getLocation ()),
 					left, right);
-	    } else if (left.to <Value> ().getType ().is <ClassPtr> () || left.to <Value> ().getType ().is <ClassProxy> ()) {
+	    } else if (left.to <Value> ().getType ().is <ClassPtr> () || left.to <Value> ().getType ().is <ClassProxy> ()) {		
 		auto lptr = left.to <Value> ().getType ();
 		auto rptr = right.to <Value> ().getType ();
-		if (lptr.to <Type> ().isCompatible (rptr))
+		if (lptr.to <Type> ().isCompatible (rptr) && (op == Binary::Operator::IS || op == Binary::Operator::NOT_IS))
+		return BinaryPtr::init (expression.getLocation (),
+					op,
+					Bool::init (expression.getLocation ()),
+					left, right);
+	    } else if (left.to <Value> ().getType ().is <FuncPtr> ()) {
+		auto lptr = left.to <Value> ().getType ();
+		auto rptr = right.to <Value> ().getType ();
+		if (lptr.to <Type> ().isCompatible (rptr) && (op == Binary::Operator::IS || op == Binary::Operator::NOT_IS))
+		return BinaryPtr::init (expression.getLocation (),
+					op,
+					Bool::init (expression.getLocation ()),
+					left, right);
+	    } else if (left.to <Value> ().getType ().is <Delegate> ()) {
+		auto lptr = left.to <Value> ().getType ();
+		auto rptr = right.to <Value> ().getType ();
+		if (lptr.to <Type> ().isCompatible (rptr) && (op == Binary::Operator::IS || op == Binary::Operator::NOT_IS))
 		return BinaryPtr::init (expression.getLocation (),
 					op,
 					Bool::init (expression.getLocation ()),
