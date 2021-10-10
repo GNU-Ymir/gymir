@@ -24,6 +24,10 @@
 #define LIBGC "gc"
 #endif
 
+#ifndef LIBM
+#define LIBM "m"
+#endif
+
 #ifndef LIBPTHREAD
 #define LIBPTHREAD "pthread"
 #endif
@@ -41,7 +45,7 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
     int added_libraries = *in_added_libraries;
     bool need_gc = *in_decoded_options_count != 1;
     bool need_pthread = *in_decoded_options_count != 1;
-    bool need_libs = true;
+    bool need_libs = true, need_m = true;
     /* bool need_midgard = *in_decoded_options_count != 1; */
     /* bool need_runtime = *in_decoded_options_count != 1; */
     bool yr_file_found = false;
@@ -52,7 +56,8 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 	const char * arg = decoded_options [i].arg;
 	if (decoded_options [i].opt_index == OPT_l) {
 	    if (arg != NULL && (strcmp (arg, LIBGC) == 0)) need_gc = false;
-	    if (arg != NULL && (strcmp (arg, LIBPTHREAD) == 0)) need_pthread = false;	    
+	    if (arg != NULL && (strcmp (arg, LIBPTHREAD) == 0)) need_pthread = false;
+	    if (arg != NULL && (strcmp (arg, LIBM) == 0)) need_m = false;
 	} else if (decoded_options [i].opt_index == OPT_SPECIAL_input_file) {
 	    yr_file_found = true;
 	} else if (decoded_options [i].opt_index == OPT_nomidgardlib) {
@@ -63,7 +68,7 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
     }
     
     if (yr_file_found) {
-	num_args = argc + need_gc + need_pthread + (need_libs * 4) + includes.size () - toRemove.size ();
+	num_args = argc + need_gc + need_pthread + (need_libs * 4) + need_m + includes.size () - toRemove.size ();
 	new_decoded_options = XNEWVEC (cl_decoded_option, num_args);
 	i = 0;
 
@@ -71,6 +76,12 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 	    if (std::find (toRemove.begin (), toRemove.end (), i) == toRemove.end ())
 		new_decoded_options [i] = decoded_options [i];
 	    i ++;
+	}
+
+	if (need_m) {
+	    generate_option (OPT_l, LIBM, 1, CL_DRIVER, &new_decoded_options [i]);
+	    added_libraries ++;
+	    i++;
 	}
 	
 	if (need_gc) {
