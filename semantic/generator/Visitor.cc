@@ -1694,13 +1694,24 @@ namespace semantic {
 	}
 
 	generic::Tree Visitor::generateDelegateValue (const DelegateValue & dlg) {
+	    TreeStmtList pre = TreeStmtList::init ();
 	    auto type = generateType (dlg.getType ());
+	    
+	    auto left = castTo (dlg.getClosureType (), dlg.getClosure ());
+	    auto right = generateValue (dlg.getFuncPtr ());
+	    pre.append (left.getList ());
+	    pre.append (right.getList ());
+	    	    
 	    std::vector <Tree> params = {
-		castTo (dlg.getClosureType (), dlg.getClosure ()),
-		generateValue (dlg.getFuncPtr ())
+		left.getValue (),
+		right.getValue ()
 	    };
 	    
-	    return Tree::constructField (dlg.getLocation (), type, {}, params);
+	    return Tree::compound (
+		dlg.getLocation (),
+		Tree::constructField (dlg.getLocation (), type, {}, params),
+		pre.toTree ()
+		);
 	}
 	
 	generic::Tree Visitor::generateCast (const Cast & cast) {
@@ -2349,16 +2360,20 @@ namespace semantic {
 	    auto elem = generateValue (acc.getClass ());
 	    // If the type is a class, we need to unref it to access its inner fields
 	    // Same if it is a ref to a struct, or a ref to class
+
+	    TreeStmtList pre = TreeStmtList::init ();
+	    pre.append (elem.getList ());
 	    
-	    while (elem.getType ().isPointerType ())
-		elem = elem.toDirect ();
+	    while (elem.getValue ().getType ().isPointerType ()) {
+		elem = elem.getValue ().toDirect ();
+	    }
 	    
-	    auto vtable = elem.getValue ().getField ("#_vtable");
+	    auto vtable = elem.getField ("#_vtable");
 	    auto type = generateType (acc.getType ());
 	    return Tree::compound (
 		acc.getLocation (),
 		vtable.buildPointerUnref (type, acc.getField ()),
-		elem.getList ()
+		pre.toTree ()
 	    );
 	}
 
@@ -2389,7 +2404,8 @@ namespace semantic {
 		var.setDeclContext (getCurrentContext ());
 		
 		stackVarDeclChain.back ().append (var);
-		pre.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), cl.getLocation (), var, fn));
+		pre.append (fn.getList ());
+		pre.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), cl.getLocation (), var, fn.getValue ()));
 		
 		results.insert (results.begin (), var.getField (Ymir::format ("_%", 0)));		
 		auto type = generateType (cl.getType ());
@@ -2442,9 +2458,10 @@ namespace semantic {
 	    }
 	    
 	    auto fn = generateValue (cl.getFrame ());
+	    pre.append (Tree::buildCall (cl.getLocation (), classType, fn, results));
 	    return Tree::compound ( // call the constructor
 		cl.getLocation (),
-		Tree::buildCall (cl.getLocation (), classType, fn, results),
+		results [0], 
 		pre.toTree ()
 	    );
 	}

@@ -127,7 +127,7 @@ namespace semantic {
 	    if (name == Array::LEN_NAME) {
 		return ufixed (left.to <Value> ().getType ().to <Array> ().getSize ());		
 	    }
-	    
+	    	    
 	    return Generator::empty ();
 	}
 
@@ -286,15 +286,16 @@ namespace semantic {
 					)
 				    );
 			    } else {
+				auto uniq = UniqValue::init (left.getLocation (), left.to<Value> ().getType (), left);
 				syms.push_back (
 				    DelegateValue::init (lexing::Word::init (expression.getLocation (), name), delType,
 							 vtable [i].to <MethodProto> ().getClassType (),
-							 left,
+							 uniq,
 							 VtableAccess::init (expression.getLocation (),
 									     FuncPtr::init (expression.getLocation (),
 											    vtable [i].to <FrameProto> ().getReturnType (),
 											    types),
-									     left,
+									     uniq,
 									     i + 2, // + 2 to ignore the typeinfo, and dtor
 									     name
 							     )

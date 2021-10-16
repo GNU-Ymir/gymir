@@ -19,6 +19,8 @@ namespace semantic {
 
 	    std::string _name;
 
+	    bool _uniq;
+
 	private : 
 
 	    friend Generator;

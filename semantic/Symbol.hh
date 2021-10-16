@@ -399,6 +399,26 @@ namespace semantic {
 	 * Proxy function for symbol
 	 */
 	std::vector <Symbol> get (const std::string & name);
+
+	/**
+	 * Proxy function for symbol
+	 */
+	void getAllReachableUsed (std::vector <Symbol>  & ret);
+
+	/**
+	 * Proxy function for symbol
+	 */
+	std::vector <Symbol> getAllReachableUsed ();
+
+	/**
+	 * Proxy function for symbol
+	 */
+	void getAllReachableUsedIn (std::vector <Symbol>  & ret);
+
+	/**
+	 * Proxy function for symbol
+	 */
+	std::vector <Symbol> getAllReachableUsedIn ();
 	
 	/**
 	 * Proxy function for symbol

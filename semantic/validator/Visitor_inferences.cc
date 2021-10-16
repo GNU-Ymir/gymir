@@ -16,7 +16,18 @@ namespace semantic {
     namespace validator {
 
 	using namespace generator;
-	using namespace Ymir;       
+	using namespace Ymir;
+
+
+	Generator Visitor::inferTypeBranchingWithValue (const lexing::Word & lloc, const lexing::Word & rloc, const generator::Generator & leftValue, const generator::Generator & rightType) {
+	    auto ret = inferTypeBranching (lloc, rloc, leftValue.to <Value> ().getType (), rightType);
+	    try {
+		verifyImplicitAlias (lloc, ret, leftValue);
+		return ret;
+	    } catch (Error::ErrorList list) {
+		return Type::init (ret.to <Type> (), false);
+	    }
+	}
 
 	Generator Visitor::inferTypeBranching (const lexing::Word & lloc, const lexing::Word & rloc, const generator::Generator & left, const generator::Generator & right) {
 	    /**

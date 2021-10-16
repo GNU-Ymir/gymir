@@ -385,6 +385,30 @@ namespace semantic {
 	Symbol::mergeEqSymbols (ret);
     }
 
+       
+    std::vector <Symbol> Symbol::getAllReachableUsed () {
+	std::vector <Symbol> rets;
+	this-> getAllReachableUsed (rets);
+	return rets;
+    }
+
+    void Symbol::getAllReachableUsed (std::vector <Symbol> & ret) {
+	if (this-> _value == nullptr) return;
+
+	for (auto & it : this-> _value-> getUsedSymbols ()) {
+	    auto mod = it.second.second;	    
+	    if (it.second.second.isEmpty ()) {
+		mod = getModuleByPath (it.first);
+		this-> _value-> use (it.first, it.second.first, mod);
+	    }
+
+	    if (!mod.isEmpty ()) {
+		ret.push_back (mod);
+		mod.getAllReachableUsedIn (ret);		
+	    }
+	}	           	
+    }
+    
     std::vector <Symbol> Symbol::getPrivate (const std::string & name) {
 	std::vector <Symbol> rets;
 	this-> getPrivate (name, rets);
@@ -478,6 +502,35 @@ namespace semantic {
 	
 	Symbol::mergeEqSymbols (ret);
     }
+
+    std::vector <Symbol> Symbol::getAllReachableUsedIn () {
+	std::vector <Symbol> rets;
+	this-> getAllReachableUsedIn (rets);
+	return rets;
+    }
+    
+    void Symbol::getAllReachableUsedIn (std::vector <Symbol> & ret) {
+	if (this-> _value == nullptr) return;
+
+	static std::set <std::shared_ptr <ISymbol> > current;
+	if (current.find (this-> _value) == current.end ()) {
+	    current.emplace (this-> _value);
+	    for (auto & it : this-> _value-> getUsedSymbols ()) {		
+		auto mod = it.second.second;
+		if (it.second.second.isEmpty ()) {
+		    mod = getModuleByPath (it.first);
+		    this-> _value-> use (it.first, it.second.first, mod);
+		}
+
+		if (!mod.isEmpty () && it.second.first) {
+		    ret.push_back (mod);
+		    mod.getAllReachableUsedIn (ret);		    
+		}
+	    }
+	    current.erase (this-> _value);
+	}		
+    }
+    
 
     const std::map <std::string, std::pair <bool, Symbol> > & Symbol::getUsedSymbols () const {
 	if (this-> _value != nullptr)

@@ -41,6 +41,9 @@ YMIR Driver
 fversion=
 YMIR Joined
 
+fdependency
+YMIR Driver
+
 imultilib
 YMIR Joined Separate
 ; Documented in C

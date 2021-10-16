@@ -228,17 +228,27 @@ namespace semantic {
 			params.push_back (g_it);
 			if (innerType.isEmpty ()) {
 			    innerType = params [0].to <Value> ().getType ();
+			    try {
+				verifyImplicitAlias (params [0].getLocation (), innerType, params [0]);
+			    } catch (Error::ErrorList list) {
+				innerType = Type::init (innerType.to<Type> (), false);
+			    }
 			} else {
-			    innerType = this-> inferTypeBranching (params [0].getLocation (), params.back ().getLocation (), innerType, params.back ().to <Value> ().getType ());
+			    innerType = this-> inferTypeBranchingWithValue (params.back ().getLocation (), params [0].getLocation (), params.back (), innerType);
 			}
 			//verifyMemoryOwner (params.back ().getLocation (), params [0].to <Value> ().getType (), params.back (), false);
 		    }
 		} else {
 		    params.push_back (val);
-		    if (innerType.isEmpty ()) {
+		    if (innerType.isEmpty ()) {			
 			innerType = params [0].to <Value> ().getType ();
+			try {
+			    verifyImplicitAlias (params [0].getLocation (), innerType, params [0]);
+			} catch (Error::ErrorList list) {
+			    innerType = Type::init (innerType.to <Type> (), false);
+			}
 		    } else {
-			innerType = this-> inferTypeBranching (params [0].getLocation (), params.back ().getLocation (), innerType, params.back ().to <Value> ().getType ());
+			innerType = this-> inferTypeBranchingWithValue (params.back ().getLocation (), params [0].getLocation (), params.back (), innerType);
 		    }
 		    //verifyMemoryOwner (params.back ().getLocation (), params [0].to <Value> ().getType (), params.back (), false);
 		}

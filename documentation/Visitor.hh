@@ -29,6 +29,11 @@ namespace documentation {
 	static Visitor init (semantic::validator::Visitor & context);
 
 	/**
+	 * Dump the dependecies for the symbol `sym`
+	 */
+	json::JsonValue dumpDependency (semantic::Symbol & sym);
+	
+	/**
 	 * Dump the documentation for the symbol `sym`
 	 * \param sym a semantically validated symbol (basically a module)
 	 */

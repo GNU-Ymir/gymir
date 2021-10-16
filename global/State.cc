@@ -100,6 +100,14 @@ namespace global {
 	return this-> _isDumpDoc;
     }	
 
+    void State::activateDependencyDumping (bool act) {
+	this-> _isDumpDependency = act;
+    }
+
+    bool State::isDependencyDumpingActive () const {
+	return this-> _isDumpDependency;
+    }
+    
     const std::string & State::getOutputDir () const {
 	return this-> _ouputDir;
     }

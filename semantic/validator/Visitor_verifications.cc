@@ -173,6 +173,7 @@ namespace semantic {
 	}
 
 	void Visitor::verifyImplicitAlias (const lexing::Word & loc, const Generator & type, const Generator & gen) {
+	    if (gen.is <UniqValue> ()) return verifyImplicitAlias (loc, type, gen.to<UniqValue> ().getValue ());
 	    if (!type.to <Type> ().needExplicitAlias ()) return; // No need to explicitly alias
 	    auto llevel = type.to <Type> ().mutabilityLevel ();
 

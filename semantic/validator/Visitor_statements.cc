@@ -272,7 +272,12 @@ namespace semantic {
 
 	    auto content = validateValue (_if.getContent (), false, false, false);
 	    auto type = content.to <Value> ().getType ();
-
+	    try {
+		verifyImplicitAlias (_if.getContent ().getLocation (), type, content);
+	    } catch (Error::ErrorList list) {
+		type = Type::init (type.to<Type> (), false);
+	    }
+	    
 	    if (!_if.getElsePart ().isEmpty ()) {
 		auto _else = validateValue (_if.getElsePart (), false, false, false);
 		if (!_else.to <Value> ().isReturner () && !_else.to <Value> ().isBreaker ()) {
@@ -283,7 +288,7 @@ namespace semantic {
 		    }
 
 		    try {
-			type = this-> inferTypeBranching (content.getLocation (), _else.getLocation (), type, _else.to<Value> ().getType ());
+			type = this-> inferTypeBranchingWithValue (_else.getLocation (), content.getLocation (), _else, type);
 		    } catch (Error::ErrorList list) {
 			Ymir::Error::occurAndNote (_if.getLocation (), list.errors, ExternalError::BRANCHING_VALUE);
 		    }
@@ -413,7 +418,7 @@ namespace semantic {
 		    	verifyMemoryOwner (_break.getLocation (), loop_type, value, false); // if this pass, the loop type is const, and it is ok
 		    }		    
 		} else {
-		    loop_type = this-> inferTypeBranching (_break.getLocation (), loop_type.getLocation (), value.to <Value> ().getType (), loop_type);
+		    loop_type = this-> inferTypeBranchingWithValue (_break.getLocation (), loop_type.getLocation (), value, loop_type);
 		    setCurrentLoopType (loop_type);
 		}
 	    }

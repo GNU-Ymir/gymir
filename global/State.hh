@@ -39,6 +39,8 @@ namespace global {
 	bool _isDumpDoc = false;
 
 	bool _isTrusted = true;
+
+	bool _isDumpDependency = false;
 	
     private :
 
@@ -94,6 +96,11 @@ namespace global {
 	void activateDocDumping (bool act);
 
 	/**
+	 * \brief If act, dump the dependency
+	 */
+	void activateDependencyDumping (bool act);
+	
+	/**
 	 * \brief If act, the compiler while compile trusted blocks
 	 */
 	void activeTrusted (bool act);
@@ -118,6 +125,11 @@ namespace global {
 	 */
 	bool isDocDumpingActive () const;
 
+	/**
+	 * \return tell if we nned to dump the dependencies
+	 */
+	bool isDependencyDumpingActive () const;
+	
 
 	/**
 	 * \brief False, if the option --no-trusted is activated, true otherwise

@@ -72,6 +72,7 @@ namespace Ymir {
 	// STAMP(DECLARATOR);
 	auto declarator = semantic::declarator::Visitor::init ();
 	auto module = declarator.visit (this-> _module, false);
+
 	// ELAPSED(DECLARATOR);
 	// for (auto & it : semantic::Symbol::getAllModules ()) {
 	//     println (it.second.formatTree ());
@@ -81,6 +82,20 @@ namespace Ymir {
 	validator.validate (module);
 	validator.validateAllClasses ();
 	// ELAPSED(VALIDATOR);
+
+	if (global::State::instance ().isDependencyDumpingActive ()) {
+	    auto doc_visit = documentation::Visitor::init (validator);
+	    auto res = doc_visit.dumpDependency (module).toString ();
+	    auto name = Ymir::replace (module.getRealName () + ".dep.json", ':', '_');
+	    auto path = Path::build (global::State::instance ().getOutputDir (), name).toString ();
+	    auto file = fopen (path.c_str (), "w");
+	    if (file != NULL) {
+		fwrite (res.c_str (), sizeof (char), res.length (), file);
+		fclose (file);
+	    } else {
+		(Error::ErrorList {{Error::makeOccurOneLine (ExternalError::DOC_FILE_ERROR, path)}}).print ();
+	    }
+	}
 	
 	if (global::State::instance ().isDocDumpingActive ()) {
 	    auto doc_visit = documentation::Visitor::init (validator);
@@ -94,17 +109,17 @@ namespace Ymir {
 	    } else {
 		(Error::ErrorList {{Error::makeOccurOneLine (ExternalError::DOC_FILE_ERROR, path)}}).print ();
 	    }
-	}
-
+	} 
+		
 	// STAMP(GENERATOR);
+		
 	auto generator = semantic::generator::Visitor::init ();	
 	for (auto & gen : validator.getGenerators ()) {
 	    generator.generate (gen);
 	}
-
+		
 	generator.finalize (module.getRealName ());
-	// ELAPSED(GENERATOR);	//
-	
+	    
 	semantic::Symbol::purge ();
 	semantic::declarator::Visitor::purge ();
     }

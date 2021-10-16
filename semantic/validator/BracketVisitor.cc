@@ -99,6 +99,25 @@ namespace semantic {
 		    innerType,
 		    { conditional, ArrayAccess::init (expression.getLocation (), innerType, left, right [0]) }
 		);		
+	    } else if (right.size () == 0) {
+		auto innerType = left.to <Value> ().getType ().to <Array> ().getInners () [0];
+		auto sliceType = Slice::init (expression.getLocation (), innerType);
+		
+		if (
+		    left.to <Value> ().isLvalue () &&
+		    left.to <Value> ().getType ().to <Type> ().isMutable () &&
+		    left.to <Value> ().getType ().to <Array> ().getInners () [0].to <Type> ().isMutable () 		    
+		    ) {
+		    sliceType = Type::init (sliceType.to <Type> (), true);
+		} else {
+		    sliceType = Type::init (sliceType.to <Type> (), false);
+		}
+
+		return Aliaser::init (
+		    expression.getLocation (),
+		    sliceType,
+		    left
+		    );		
 	    }
 
 	    BracketVisitor::error (expression, left, right);

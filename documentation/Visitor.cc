@@ -25,6 +25,19 @@ namespace documentation {
 	return Visitor (context);
     }
 
+    JsonValue Visitor::dumpDependency (semantic::Symbol & sym) {
+	std::vector <JsonValue> deps;
+	auto list = sym.getAllReachableUsed ();
+	for (auto & it : list) {
+	    deps.push_back (JsonString::init (it.getRealName ()));
+	}
+
+	std::map <std::string, JsonValue> ret;
+	ret ["dependencies"] = JsonArray::init (deps);
+	return JsonDict::init (ret);
+    }
+    
+
     JsonValue Visitor::dump (const semantic::Symbol & sym) {
 	JsonValue val (JsonValue::empty ());
 	if (!sym.isWeak ()) {

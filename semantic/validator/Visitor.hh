@@ -1097,6 +1097,12 @@ namespace semantic {
 	     */
 	    generator::Generator inferTypeBranching (const lexing::Word & lloc, const lexing::Word & rloc, const generator::Generator & left, const generator::Generator & right);
 
+	    /**
+	     * Deduce the type that can be used as a common ancestor type for left and right
+	     * Might no throw anything even if left and right are incompatible, must verify the compatibility afterwards, between type, left and right
+	     */
+	    generator::Generator inferTypeBranchingWithValue (const lexing::Word & lloc, const lexing::Word & rloc, const generator::Generator & leftValue, const generator::Generator & rightType);
+
 
 	    /**
 	     * ================================================================================
