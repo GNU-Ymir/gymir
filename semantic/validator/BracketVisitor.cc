@@ -22,6 +22,7 @@ namespace semantic {
 	    std::list <Ymir::Error::ErrorMsg> errors;
 	    std::vector <Generator> rights;
 	    
+	    left = UniqValue::init (left.getLocation (), left.to<Value> ().getType (), left);	    
 	    this-> _context.enterDollar (left);
 	    
 	    try {
