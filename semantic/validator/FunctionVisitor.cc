@@ -48,6 +48,13 @@ namespace semantic {
 	    
 	    if (!body.isEmpty ()) { // the function has a body, then we must insert a generator
 		auto frame = Frame::init (function.getLocation (), func.getRealName ().getValue (), params, retType, body, needFinalReturn);
+		static int i = 1;
+		if (func.getRealName ().getValue () == "std::fs::isWritable") {
+		    println (function.getLocation ());
+		    if (i == 2) {
+			Ymir::Error::halt ("", "");
+		    } else i += 1;
+		} 
 		auto ln = func.getExternalLanguage ();
 		if (ln == Keys::CLANG) 
 		frame.to <Frame> ().setManglingStyle (Frame::ManglingStyle::C);

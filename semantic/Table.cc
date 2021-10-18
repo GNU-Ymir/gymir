@@ -50,7 +50,8 @@ namespace semantic {
 	    }   
 	}
 	
-	this-> _all.push_back (sym);
+	println ("Insert : ", sym.getName ());
+	this-> _all.push_back (sym);	
     }
     
     void Table::insertTemplate (const Symbol & sym) {

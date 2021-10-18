@@ -641,6 +641,7 @@ namespace semantic {
 	    
 	    auto asmName = Mangler::init ().mangleFrame (frame);
 	    fn_decl.asmName (asmName);
+	    
 	    if (!frame.isWeak () || __definedFrame__.find (asmName) == __definedFrame__.end ())	{
 		if (frame.getName () == Keys::MAIN) 
 		    generateMainCall (frame.getLocation (), frame.getType ().is <Void> (), asmName);

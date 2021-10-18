@@ -214,8 +214,9 @@ namespace semantic {
 		if (func.getPrototype ().isVariadic ()) Ymir::Error::occur (func.getLocation (), ExternalError::DECL_VARIADIC_FUNC);
 	    }
 
-	    if (insert) 
+	    if (insert) {
 		getReferent ().insert (function);
+	    }
 	    return function;
 	}        
 
@@ -269,7 +270,7 @@ namespace semantic {
 	    return alias;
 	}    
 
-	semantic::Symbol Visitor::visitBlock (const syntax::DeclBlock &  block) {
+	semantic::Symbol Visitor::visitBlock (const syntax::DeclBlock &  block) {	    
 	    pushReferent (Module::init (block.getLocation (), block.getComments (), this-> _isWeak, this-> _isTrusted || State::instance ().isStandalone (), false));
 	    
 	    // A declaration block is just a list of declaration, we do not enter a new referent
@@ -279,15 +280,18 @@ namespace semantic {
 	    	visit (decl, !block.isPrivate ());		
 	    }	    
 	    
-	    auto ret = popReferent ();
+	    auto ret = popReferent ();	    
 	    auto syms = ret.to <semantic::Module> ().getAllLocal ();
 	    if (!block.isPrivate ()) {
 		for (auto it : syms)
 		    it.setPublic ();		
 	    }
-	    
+
 	    if (!getReferent ().isEmpty ()) {
 		for (auto it : syms) {
+		    if (it.getName () == "isWritable") {
+			println ("2 ", getReferent ().formatTree ());
+		    }
 		    getReferent ().insert (it);
 		}
 
@@ -298,7 +302,7 @@ namespace semantic {
 	    
 	    return Symbol::empty ();	    
 	}
-
+	
 	semantic::Symbol Visitor::visitExtern (const syntax::ExternBlock & ex_block) {
 	    if (ex_block.getFrom () == Keys::CLANG) {
 		if (!ex_block.getSpace ().isEof ()) 

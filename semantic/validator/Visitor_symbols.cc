@@ -21,14 +21,18 @@ namespace semantic {
 	void Visitor::validateModule (const semantic::Module & mod) {
 	    std::list <Error::ErrorMsg> errors;
 	    if (!mod.isExtern ()) {
-		const std::vector <Symbol> & syms = mod.getAllLocal ();
+		std::vector <Symbol> syms = mod.getAllLocal ();
+		println ("Starting : ================", mod.getRealName ().getValue ());
+		println (mod.formatTree (0));
 		for (auto & it : syms) { // a module is a just a list of symbol
+		    println (it.getName ());
 		    try {
 			validate (it); // we simple validate all the symbol inside the module
 		    } catch (Error::ErrorList lst) {
 			errors.insert (errors.end (), lst.errors.begin (), lst.errors.end ());
 		    }
 		}
+		println ("Ending ====================", mod.getRealName ().getValue ());
 	    }
 	    if (errors.size () != 0) {
 		throw Error::ErrorList {errors};
