@@ -134,6 +134,7 @@ struct Keys {
     static const std::string  USE;
     static const std::string  USIZE;    
     static const std::string  VERSION;
+    static const std::string  TEST;
     static const std::string  VTABLE_FIELD;
     static const std::string  WHILE;
     static const std::string  WITH;

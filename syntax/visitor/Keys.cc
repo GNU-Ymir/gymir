@@ -127,6 +127,7 @@ const std::string	Keys::UNION	   = "union";
 const std::string	Keys::USE	   = "use";
 const std::string	Keys::USIZE	   = "us";
 const std::string	Keys::VERSION	   = "__version";
+const std::string	Keys::TEST	   = "__test";
 const std::string	Keys::VTABLE_FIELD = "0__vtbl";
 const std::string	Keys::WHILE	   = "while";
 const std::string	Keys::WITH         = "with";

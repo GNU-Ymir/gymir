@@ -62,5 +62,7 @@ namespace global {
 			    TYPE_INFO_MODULE	     = "typeinfo",
 			    UNARY_ASSIGN_OP_OVERRIDE = "opUnaryAssign",
 			    UNARY_OP_OVERRIDE	     = "opUnary",
+			    RUN_TEST_FUNC            = "_yrt_run_tests",
+			    GET_TEST_ERRORS_CODE     = "_yrt_get_test_code",
 	);
 }

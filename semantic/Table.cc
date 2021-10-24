@@ -50,7 +50,6 @@ namespace semantic {
 	    }   
 	}
 	
-	println ("Insert : ", sym.getName ());
 	this-> _all.push_back (sym);	
     }
     

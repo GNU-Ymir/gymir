@@ -68,6 +68,8 @@ namespace global {
 			 TYPE_INFO_MODULE,
 			 UNARY_ASSIGN_OP_OVERRIDE,
 			 UNARY_OP_OVERRIDE,
+			 RUN_TEST_FUNC,
+			 GET_TEST_ERRORS_CODE,
     );
     
 }

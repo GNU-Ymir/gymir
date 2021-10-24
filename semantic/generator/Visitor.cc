@@ -37,8 +37,12 @@ namespace semantic {
 	}
 
 	void Visitor::finalize (const std::string & moduleName) {
-	    if (this-> _globalInitialiser.size () != 0) {
+	    if (this-> _globalInitialiser.size () != 0 || this-> _globalTests.size () != 0) {
 		generateGlobalInitFrame (moduleName);
+	    }
+
+	    if (global::State::instance ().isIncludeTesting ()) {
+		generateTestCall ();
 	    }
 	    
 	    int len = vec_safe_length (globalDeclarations);
@@ -63,6 +67,11 @@ namespace semantic {
 
 		s_of (Class, cl) {
 		    generateVtable (cl.getClassRef ());
+		    return;
+		}
+
+		s_of (Test, ts) {
+		    generateTest (ts);
 		    return;
 		}
 	    }
@@ -506,6 +515,66 @@ namespace semantic {
 	    
 	    return decl;
 	}
+
+	void Visitor::generateTestCall () {
+	    auto loc = lexing::Word::eof ();
+	    
+	    auto argcT = Tree::intType (64, false);
+	    auto argvT = Tree::pointerType (Tree::pointerType (Tree::charType (8)));
+	    std::vector <Tree> args = {argcT, argvT};
+	    
+	    auto ret = Tree::intType (32, true);
+
+	    Tree fnType = Tree::functionType (ret, args);
+	    Tree fn_decl = Tree::functionDecl (loc, Keys::MAIN, fnType);
+	    TREE_TYPE (fn_decl.getTree ()) = fnType.getTree ();
+	    auto asmName = Keys::MAIN;
+	    fn_decl.asmName (asmName);
+
+	    setCurrentContext (fn_decl);
+	    enterFrame ();
+
+	    auto argc = generateParamVar ("argc", argcT);
+	    auto argv = generateParamVar ("argv", argvT);
+	    std::list <Tree> argsList = {argc, argv};
+
+	    fn_decl.setDeclArguments (argsList);
+
+	    enterBlock (loc.toString ());
+	    auto resultDecl = Tree::resultDecl (loc, ret);
+	    fn_decl.setResultDecl (resultDecl);
+	    
+	    TreeStmtList list = TreeStmtList::init ();	    
+	    Tree mainRet = ret;
+	    
+	    auto name = global::CoreNames::get (GET_TEST_ERRORS_CODE);	    
+	    auto call = Tree::buildCall (
+		loc,
+		mainRet,
+		name,
+		{}
+		);
+	    list.append (Tree::returnStmt (loc, resultDecl, call));	    	    
+	    Tree value = list.toTree ();
+
+	    auto fnTree = quitBlock (loc, value, loc.toString ());
+	    auto fnBlock = fnTree.block;
+	    fnBlock.setBlockSuperContext (fn_decl);
+
+	    fn_decl.setDeclInitial (fnBlock);
+	    fn_decl.setDeclSavedTree (fnTree.bind_expr);
+	    fn_decl.isExternal (false);
+	    fn_decl.isWeak (true);
+	    fn_decl.isPreserved (true);
+	    fn_decl.isPublic (true);
+	    fn_decl.isStatic (true);
+
+
+	    Tree::gimplifyFunction (fn_decl);
+	    Tree::finalizeFunction (fn_decl);
+	    setCurrentContext (Tree::empty ());
+	    quitFrame ();	    	    
+	}
 	
 	
 	void Visitor::generateMainCall (const lexing::Word & loc, bool isVoid, const std::string & mainName) {
@@ -605,6 +674,18 @@ namespace semantic {
 		list.append (Tree::affect (stackVarDeclChain.back (), getCurrentContext (), it.second.first.getLocation (), decl-> second, value.getValue ()));
 	    }
 
+	    for (auto & it : this-> _globalTests) {
+		auto run_test_fn = global::CoreNames::get (RUN_TEST_FUNC);
+		auto test_fn = Tree::buildFrameProto (lexing::Word::eof (), ret, it.second, {});
+		auto name = Tree::buildStringLiteral (lexing::Word::eof (), it.first.c_str (), it.first.length () + 1, 8);
+				
+		list.append (Tree::buildCall (
+				 lexing::Word::eof (),
+				 ret, run_test_fn, {name, test_fn}
+				 )
+		    );
+	    }
+
 	    auto fnTree = quitBlock (lexing::Word::eof (), list.toTree (), "__GLOBAL__");
 	    auto fnBlock = fnTree.block;
 	    fnBlock.setBlockSuperContext (fn_decl);
@@ -626,6 +707,7 @@ namespace semantic {
 	    quitFrame ();
 	    setCurrentContext (Tree::empty ());
 	}
+
 	
 	void Visitor::generateFrame (const Frame & frame) {
 	    std::vector <Tree> args;
@@ -643,7 +725,7 @@ namespace semantic {
 	    fn_decl.asmName (asmName);
 	    
 	    if (!frame.isWeak () || __definedFrame__.find (asmName) == __definedFrame__.end ())	{
-		if (frame.getName () == Keys::MAIN) 
+		if (frame.getName () == Keys::MAIN && !global::State::instance ().isIncludeTesting ()) 
 		    generateMainCall (frame.getLocation (), frame.getType ().is <Void> (), asmName);
 	    
 		setCurrentContext (fn_decl);
@@ -691,6 +773,54 @@ namespace semantic {
 		
 		setCurrentContext (Tree::empty ());
 		quitFrame ();
+	    }
+	}
+
+	void Visitor::generateTest (const Test & test) {
+	    auto v = Void::init (test.getLocation ());
+	    Tree ret = generateType (v);
+	    Tree fntype = Tree::functionType (ret, {});
+	    
+	    Tree fn_decl = Tree::functionDecl (test.getLocation (), test.getName (), fntype);
+	    TREE_TYPE (fn_decl.getTree ()) = fntype.getTree ();
+	    
+	    auto asmName = Mangler::init ().mangleTest (test);
+	    fn_decl.asmName (asmName);
+	    
+	    if (__definedFrame__.find (asmName) == __definedFrame__.end ())	{	    
+		setCurrentContext (fn_decl);
+		enterFrame ();	    
+		fn_decl.setDeclArguments ({});
+	    
+		enterBlock (test.getLocation ().toString ());
+		auto resultDecl = Tree::resultDecl (test.getLocation (), ret);
+		fn_decl.setResultDecl (resultDecl);	       
+		
+		auto value = generateValue (v, test.getValue ());
+	    
+		auto fnTree = quitBlock (lexing::Word::eof (), value, test.getLocation ().toString ());
+		auto fnBlock = fnTree.block;
+		fnBlock.setBlockSuperContext (fn_decl);	    
+	    
+		fn_decl.setDeclInitial (fnBlock);	    
+		fn_decl.setDeclSavedTree (fnTree.bind_expr);
+
+		fn_decl.isExternal (false);
+		fn_decl.isPreserved (true);
+		fn_decl.isWeak (false);
+
+		fn_decl.isPublic (true);
+		fn_decl.isStatic (true);
+
+		Tree::gimplifyFunction (fn_decl);
+		Tree::finalizeFunction (fn_decl);
+
+		__definedFrame__.emplace (asmName);
+		
+		setCurrentContext (Tree::empty ());
+		quitFrame ();
+
+		this-> _globalTests.push_back (std::make_pair (test.getName (), asmName));
 	    }
 	}
 	
@@ -1802,7 +1932,17 @@ namespace semantic {
 		TreeStmtList list = TreeStmtList::init ();
 		auto t = castTo (uniq.getValue ().to <Value> ().getType (), uniq.getValue ());
 		decl.setDeclContext (getCurrentContext ());
-		stackVarDeclChain.back ().append (decl);
+		stackVarDeclChain [0].append (decl); // uniq variable must be accessed everywhere in the frame ?
+		// No the real reason is that they can be created from inner blocks, and refere to values of upper blocks
+		// We need to have access to them in upper blocks sometimes, but the best way would be to get the correct block location
+
+		// The best example is opDollar, that can be rewritten as such
+		/**
+		 * let len = {
+		 *   Uniq (slice).len
+		 * }
+		 * Uniq (slice) [len] // uniq was created in sub block, then not accessible anymore
+		 */
 		
 		insertDeclarator (uniq.getRefId (), decl);
 
@@ -2547,7 +2687,7 @@ namespace semantic {
 	generic::Tree Visitor::generateSliceAccess (const SliceAccess & access) {
 	    auto left = generateValue (access.getSlice ());
 	    auto right = generateValue (access.getIndex ());
-
+	    
 	    TreeStmtList list = TreeStmtList::init ();
 	    list.append (left.getList ());
 	    list.append (right.getList ());

@@ -68,7 +68,7 @@ namespace syntax {
 		Keys::TRUE_, Keys::FALSE_, Keys::NULL_, Keys::CAST,
 		Keys::FUNCTION, Keys::DELEGATE, Keys::LET, Keys::IS, Keys::EXTERN,
 		Keys::PUBLIC, Keys::PRIVATE, Keys::TYPEOF, Keys::IMMUTABLE,
-		Keys::MACRO, Keys::TRAIT, Keys::REF, Keys::CONST,
+		Keys::MACRO, Keys::TRAIT, Keys::REF, Keys::CONST, Keys::TEST,
 		Keys::MOD,  Keys::STRINGOF, Keys::CLASS, Keys::ALIAS, Keys::AKA,
 		Keys::STATIC, Keys::CATCH, Keys::COPY, Keys::DCOPY, Keys::ATOMIC
 	    };
@@ -109,7 +109,7 @@ namespace syntax {
 		Keys::AKA, Keys::CLASS, Keys::ENUM,
 		Keys::DEF, Keys::STATIC, Keys::IMPORT,
 		Keys::MACRO, Keys::MOD, Keys::STRUCT,
-		Keys::TRAIT, Keys::EXTERN
+		Keys::TRAIT, Keys::EXTERN, Keys::TEST
 	    };
 	
 	    visit._declarationsBlock = {
@@ -506,6 +506,7 @@ namespace syntax {
 	if (location == Keys::MOD) return visitLocalMod ();
 	if (location == Keys::STRUCT) return visitStruct ();
 	if (location == Keys::TRAIT) return visitTrait ();
+	if (location == Keys::TEST) return visitTest ();
 	else {
 	    Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Declaration::empty ();
@@ -922,6 +923,14 @@ namespace syntax {
 	    return function;
 	}
     }
+
+    Declaration Visitor::visitTest () {
+	std::string comments;
+	auto location = this-> _lex.rewind ().nextWithDocs (comments);	
+	auto body = visitFunctionBody ();		
+	return Function::init (lexing::Word::init (location, "_"), comments, Function::Prototype::init ({}, Expression::empty (), false), body, {}, {}, false, true);	
+    }
+    
 
     Function::Prototype Visitor::visitFunctionPrototype (bool isClosure, bool isClass) {
 	std::vector <Expression> vars;

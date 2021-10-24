@@ -41,8 +41,9 @@ namespace semantic {
 	    if (left.to <Value> ().getType ().is <Array> ())
 	    	return validateArray (expression, left, rights);
 
-	    if (left.to <Value> ().getType ().is <Slice> ())
+	    if (left.to <Value> ().getType ().is <Slice> ()) {
 		return validateSlice (expression, left, rights);
+	    }
 
 	    if (left.to <Value> ().getType ().is<ClassPtr> ())
 		return validateClass (expression, left, rights);

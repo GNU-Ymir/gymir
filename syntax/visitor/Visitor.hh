@@ -316,6 +316,13 @@ namespace syntax {
 	 \endverbatim
 	 */
 	Declaration visitFunction (bool isClass = false, bool isOver = false);
+
+	/**
+	 * \brief Visit a test function
+	 * \verbatim 
+	 test := '__test' Identifier '(' ')' (throwing)? function_body
+	 */
+	Declaration visitTest ();
 	
 	/**
 	 * \brief Visit a function prototype

@@ -120,7 +120,7 @@ namespace semantic {
 
 	Generator Visitor::validateTemplateSolutionMethod (const semantic::Symbol & sol, const Generator & self) {
 	    std::list <Ymir::Error::ErrorMsg> errors;	    
-	    const std::vector <Symbol> & syms = sol.to <TemplateSolution> ().getAllLocal ();
+	    std::vector <Symbol> syms = sol.to <TemplateSolution> ().getAllLocal ();
 	    
 	    auto classType = sol.getReferent ().to <semantic::Class> ().getGenerator ().to <generator::Class> ().getClassRef ();
 	    if (insertTemplateSolution (sol, errors)) { // If it is the first time the solution is presented

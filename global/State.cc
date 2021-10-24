@@ -54,6 +54,14 @@ namespace global {
 	return this-> _isDebug;
     }
 
+    void State::activateIncludeTesting (bool act) {
+	this-> _includeTest = act;
+    }
+    
+    bool State::isIncludeTesting () const {
+	return this-> _includeTest;
+    }
+    
     void State::activateStandalone (bool stand) {
 	this-> _isStandalone = stand;
 	if (stand) {

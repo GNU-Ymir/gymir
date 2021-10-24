@@ -207,7 +207,8 @@ namespace semantic {
 	    }
 
 	    
-	    if (func.isOver ()) function.to <Function> ().isOver (true);	    
+	    if (func.isOver ()) function.to <Function> ().isOver (true);
+	    if (func.isTest ()) function.to <Function> ().isTest (true);
 	    function.to <Function> ().setThrowers (func.getThrowers ()); 
 		
 	    if (!isExtern || !func.getBody ().isEmpty ()) {
@@ -289,9 +290,6 @@ namespace semantic {
 
 	    if (!getReferent ().isEmpty ()) {
 		for (auto it : syms) {
-		    if (it.getName () == "isWritable") {
-			println ("2 ", getReferent ().formatTree ());
-		    }
 		    getReferent ().insert (it);
 		}
 

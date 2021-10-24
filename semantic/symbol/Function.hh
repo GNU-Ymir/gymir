@@ -41,6 +41,8 @@ namespace semantic {
 	 */
 	bool _isOver = false;
 
+	bool _isTest = false;
+
 	/**
 	 * Is this function marked @final
 	 */
@@ -91,6 +93,10 @@ namespace semantic {
 	bool isSafe () const;
 
 	void isOver (bool is);
+
+	void isTest (bool is);
+
+	bool isTest () const;
 	
 	bool isVariadic () const;
 

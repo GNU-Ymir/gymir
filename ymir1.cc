@@ -149,6 +149,8 @@ ymir_langhook_handle_option (size_t scode, const char *arg, long int value ATTRI
   } else if (code == OPT_fdependency) {
       // print the dependency of the current file compilations
       global::State::instance ().activateDependencyDumping (true);
+  } else if (code == OPT_funittest) {
+      global::State::instance ().activateIncludeTesting (true);
   } else if (code == OPT_fversion_) {
     global::State::instance ().activateVersion (arg);
   } else if (code == OPT_imultilib) {

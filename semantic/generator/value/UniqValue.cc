@@ -45,7 +45,10 @@ namespace semantic {
 	}
 	
 	std::string UniqValue::prettyString () const {
-	    return this-> _value.prettyString (); //this-> _value.prettyString ();
+	    // Ymir::OutBuffer buf;
+	    // buf.write ("Uniq:", this-> _refId, "(", this-> _value.prettyString (), ")");
+	    // return buf.str ();
+	    return this-> _value.prettyString ();
 	}
 	
     }

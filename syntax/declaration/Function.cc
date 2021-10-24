@@ -50,17 +50,18 @@ namespace syntax {
 	_body (Expression::empty ())
     {}
 
-    Function::Function (const lexing::Word & name, const std::string & comment, const Prototype & proto, const Expression & body, const std::vector <lexing::Word> & cas, const std::vector <Expression> & throwers, bool isOver) :
+    Function::Function (const lexing::Word & name, const std::string & comment, const Prototype & proto, const Expression & body, const std::vector <lexing::Word> & cas, const std::vector <Expression> & throwers, bool isOver, bool isTest) :
 	IDeclaration (name, comment),
 	_proto (proto),
 	_body (body),
 	_cas (cas),
 	_throwers (throwers),
-	_isOver (isOver)
+	_isOver (isOver),
+	_isTest (isTest)
     {}
     
-    Declaration Function::init (const lexing::Word & name, const std::string & comment, const Prototype & proto, const Expression & body, const std::vector <lexing::Word> & cas, const std::vector <Expression> & throwers, bool isOver) {
-	return Declaration {new (NO_GC) Function (name, comment, proto, body, cas, throwers, isOver)};
+    Declaration Function::init (const lexing::Word & name, const std::string & comment, const Prototype & proto, const Expression & body, const std::vector <lexing::Word> & cas, const std::vector <Expression> & throwers, bool isOver, bool isTest) {
+	return Declaration {new (NO_GC) Function (name, comment, proto, body, cas, throwers, isOver, isTest)};
     }
 
     Declaration Function::init (const Function & other) {
@@ -92,6 +93,10 @@ namespace syntax {
 
     bool Function::isOver () const {
 	return this-> _isOver;
+    }
+
+    bool Function::isTest () const {
+	return this-> _isTest;
     }
 
     const std::vector <syntax::Expression> & Function::getThrowers () const {

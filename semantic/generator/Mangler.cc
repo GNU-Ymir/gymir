@@ -11,6 +11,7 @@ namespace semantic {
 
 	std::string Mangler::YMIR_PREFIX = "_Y";
 	std::string Mangler::YMIR_FUNCTION = "F";
+	std::string Mangler::YMIR_TEST = "T";
 	std::string Mangler::YMIR_FUNCTION_RET = "Z";
 	std::string Mangler::YMIR_VAR = "V";
 	std::string Mangler::YMIR_CST = "CST";
@@ -32,6 +33,7 @@ namespace semantic {
 	std::string Mangler::mangle (const generator::Generator & gen) const {
 	    match (gen) {
 		s_of (Frame, fr) return mangleFrame (fr);
+		s_of (Test, ts) return mangleTest (ts);
 		s_of (FrameProto, proto) return mangleFrameProto (proto);
 		s_of (ConstructorProto, proto) return mangleConstructorProto (proto);
 		s_of (GlobalVar, v) return mangleGlobalVar (v);
@@ -111,6 +113,19 @@ namespace semantic {
 	    }
 	}
 
+	std::string Mangler::mangleTest (const Test & ts) const {
+	    auto name = ts.getName ();
+	    std::vector <std::string> splits = split (name, "::");
+
+	    OutBuffer buf;
+	    buf.write (Mangler::YMIR_PREFIX);
+	    for (auto & it : splits) buf.write (it.length (), it);
+		
+	    buf.write (Mangler::YMIR_TEST);
+	    buf.write (Mangler::YMIR_FUNCTION_RET, "v");
+	    return buf.str ();
+	}
+	
 	std::string Mangler::mangleFrameProto (const FrameProto & proto) const {
 	    if (proto.getManglingStyle () == Frame::ManglingStyle::Y) {
 		auto name = proto.getMangledName ();

@@ -44,6 +44,9 @@ YMIR Joined
 fdependency
 YMIR Driver
 
+funittest
+YMIR Driver
+
 imultilib
 YMIR Joined Separate
 ; Documented in C

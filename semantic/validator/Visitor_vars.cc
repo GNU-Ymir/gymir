@@ -214,6 +214,7 @@ namespace semantic {
 			}
 			elof (semantic::Function, func) {
 			    if (!func.isMethod ()) {
+				
 				locGen = FunctionVisitor::init (*this).validateFunctionProto (multSym [it]);
 			    }
 			} elfo {			    

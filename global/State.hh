@@ -40,6 +40,8 @@ namespace global {
 
 	bool _isTrusted = true;
 
+	bool _includeTest = false;
+	
 	bool _isDumpDependency = false;
 	
     private :
@@ -104,6 +106,12 @@ namespace global {
 	 * \brief If act, the compiler while compile trusted blocks
 	 */
 	void activeTrusted (bool act);
+
+	/**
+	 * \brief If act, the compiler include testing
+	 */
+	void activateIncludeTesting (bool act);
+	
 	
 	/**
 	 * \brief tell if the debug mode is active (option -g or -ggdb)
@@ -135,6 +143,11 @@ namespace global {
 	 * \brief False, if the option --no-trusted is activated, true otherwise
 	 */
 	bool isTrustedActive () const;
+
+	/**
+	 * \brief true if the option -funittest is active
+	 */
+	bool isIncludeTesting () const;
 	
 	/**
 	 * \brief Set the prefix path dir

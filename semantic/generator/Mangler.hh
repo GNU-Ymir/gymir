@@ -15,6 +15,8 @@ namespace semantic {
 	    static std::string YMIR_PREFIX;
 
 	    static std::string YMIR_FUNCTION;
+
+	    static std::string YMIR_TEST;
 	    
 	    static std::string YMIR_FUNCTION_RET;
 
@@ -57,6 +59,11 @@ namespace semantic {
 	     * \brief Mangle a frame name
 	     */
 	    std::string mangleFrame (const Frame & fr) const;
+
+	    /**
+	     * \brief Mangle a frame name
+	     */
+	    std::string mangleTest (const Test & ts) const;
 
 	    /**
 	     * \brief Mangle a frame prototype

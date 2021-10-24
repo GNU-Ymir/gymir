@@ -88,6 +88,8 @@ namespace syntax {
 	
 	/** Some method can be marked over */
 	bool _isOver;
+
+	bool _isTest;
 	
     protected :
 
@@ -96,7 +98,7 @@ namespace syntax {
 	/** \brief Does nothing special, just to ensure that the function cannot be created without init */
 	Function ();
 
-	Function (const lexing::Word & name,  const std::string & comment, const Prototype & proto, const Expression & body, const std::vector <lexing::Word> & cas, const std::vector <Expression> & throwers, bool isOver);
+	Function (const lexing::Word & name,  const std::string & comment, const Prototype & proto, const Expression & body, const std::vector <lexing::Word> & cas, const std::vector <Expression> & throwers, bool isOver, bool isTest);
 	
     public:
 
@@ -106,7 +108,7 @@ namespace syntax {
 	 * \param proto the prototype of the function
 	 * \param body the content of the function
 	 */
-	static Declaration init (const lexing::Word & name, const std::string & comment, const Prototype & proto, const Expression & body, const std::vector <lexing::Word> & cas, const std::vector <Expression> & throwers, bool isOver);
+	static Declaration init (const lexing::Word & name, const std::string & comment, const Prototype & proto, const Expression & body, const std::vector <lexing::Word> & cas, const std::vector <Expression> & throwers, bool isOver, bool isTest = false);
 
 	/**
 	 * \return an encapsulation into a Declaration
@@ -137,6 +139,8 @@ namespace syntax {
 	 */
 	bool isOver () const;
 
+	bool isTest () const;
+	
 	const std::vector <syntax::Expression> & getThrowers () const;
     };
     

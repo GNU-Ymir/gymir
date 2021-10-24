@@ -64,7 +64,7 @@ namespace semantic {
 	    
 	    lth.insert (lth.end (), cth.begin (), cth.end ());
 	    lth.insert (lth.end (), eth.begin (), eth.end ());
-	    
+
 	    this-> setThrowers (lth);	    
 	}	
 	

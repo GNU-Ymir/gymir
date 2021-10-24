@@ -90,6 +90,14 @@ namespace semantic {
 	this-> _isOver = is;
     }
 
+    void Function::isTest (bool is) {
+	this-> _isTest = is;
+    }
+
+    bool Function::isTest () const {
+	return this-> _isTest;
+    }
+
     bool Function::isOver () const {
 	return this-> _content.to <syntax::Function> ().isOver ();
     }

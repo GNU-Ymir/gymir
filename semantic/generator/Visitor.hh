@@ -53,6 +53,9 @@ namespace semantic {
 	    /** The declaration of the global var */
 	    std::map <uint, generic::Tree> _globalDeclarators;
 
+	    /** The test to call */
+	    std::vector <std::pair <std::string, std::string> > _globalTests;
+
 	    /**
 	     * The value of global vars needing a static initialization
 	     */
@@ -115,12 +118,23 @@ namespace semantic {
 	     * \param name the asmName of the function main
 	     */
 	    void generateMainCall (const lexing::Word & loc, bool isVoid, const std::string & name);
+
+	    /**
+	     * Generate the call of the test function from the runtime of Ymir
+	     */
+	    void generateTestCall ();
 	    
 	    /**
 	     * \brief Generate a new frame from a frame generator
 	     * \param frame the frame to generate
 	     */
 	    void generateFrame (const Frame & frame);
+
+	    /**
+	     * \brief Generate a new frame from a test generator
+	     * \param test the test to generate
+	     */
+	    void generateTest (const Test & test);
 
 	    /**
 	     * \brief Transform a global constant into gimple

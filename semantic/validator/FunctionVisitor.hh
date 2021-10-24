@@ -16,6 +16,8 @@ namespace semantic {
 
 	    Visitor & _context;
 
+	    static int __NB_TESTS__;
+
 	private :
 
 	    /**
@@ -37,6 +39,11 @@ namespace semantic {
 	     */
 	    void validate (const semantic::Function & func);
 
+	    /**
+	     * Validate a test
+	     */
+	    void validateTest (const semantic::Function & test);
+
 
 	    /**
 	     * ================================================================================
@@ -54,8 +61,7 @@ namespace semantic {
 	     */
 	    generator::Generator validateBody (const lexing::Word & loc, const std::string & funcName, const syntax::Expression & body, const std::vector <generator::Generator> & throwers, const generator::Generator & retType, bool & needFinalReturn, std::list <Ymir::Error::ErrorMsg> & errors);
 
-
-
+	    
 	    /**
 	     * Verify that the function has a final return, or that the value of the body correspond to the value of the function
 	     */

@@ -6,7 +6,8 @@ namespace semantic {
 
 	using namespace generator;
 	using namespace Ymir;
-	
+
+	int FunctionVisitor::__NB_TESTS__ = 0;
 	
 	FunctionVisitor::FunctionVisitor (Visitor & context) :
 	    _context (context) 
@@ -17,6 +18,8 @@ namespace semantic {
 	}
 	
 	void FunctionVisitor::validate (const semantic::Function & func) {
+	    if (func.isTest ()) return this-> validateTest (func);
+	    
 	    auto & function = func.getContent ();
 	    std::vector <Generator> params;
 	    std::list <Ymir::Error::ErrorMsg> errors;
@@ -48,13 +51,6 @@ namespace semantic {
 	    
 	    if (!body.isEmpty ()) { // the function has a body, then we must insert a generator
 		auto frame = Frame::init (function.getLocation (), func.getRealName ().getValue (), params, retType, body, needFinalReturn);
-		static int i = 1;
-		if (func.getRealName ().getValue () == "std::fs::isWritable") {
-		    println (function.getLocation ());
-		    if (i == 2) {
-			Ymir::Error::halt ("", "");
-		    } else i += 1;
-		} 
 		auto ln = func.getExternalLanguage ();
 		if (ln == Keys::CLANG) 
 		frame.to <Frame> ().setManglingStyle (Frame::ManglingStyle::C);
@@ -68,6 +64,41 @@ namespace semantic {
 	    }
 	}
 
+	void FunctionVisitor::validateTest (const semantic::Function & func) {
+	    if (!global::State::instance ().isIncludeTesting ()) return;
+
+	    FunctionVisitor::__NB_TESTS__ += 1;
+	    Ymir::OutBuffer buf;
+	    std::list <Ymir::Error::ErrorMsg> errors;
+
+	    buf.write (func.getRealName ().getValue (), __NB_TESTS__);
+	    auto name = buf.str ();
+	    auto & function = func.getContent ();
+	    
+	    this-> _context.enterContext ({});
+	    this-> _context.enterBlock ();
+	    Generator body (Generator::empty ());
+	    
+	    try {
+		this-> _context.setCurrentFuncType (Void::init (func.getName ())); // used for the return statement
+		body = this-> _context.validateValue (function.getBody ());
+	    } catch (Error::ErrorList list) {
+		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+	    }
+
+	    try { // we enclose that in a try catch, because some vars may be unused
+		this-> _context.quitBlock (errors.size () == 0);
+	    } catch (Error::ErrorList list) {
+		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+	    }
+
+	    this-> _context.exitContext (); // closing the context (custom user attributes)
+	    if (errors.size () != 0) {
+		throw Error::ErrorList {errors};
+	    }
+	    
+	    this-> _context.insertNewGenerator (Test::init (func.getName (), name, body));
+	}
 	
 	/**
 	 * ================================================================================
@@ -242,9 +273,17 @@ namespace semantic {
 		bool no_value = false;
 		Generator retType (Generator::empty ());
 
+		bool first = true;
 		for (auto func_loc : __validating__) {
 		    // If there is a foward reference, we can't validate the values
-		    if (func_loc.isSame (func.getName ())) no_value = true;		    
+		    if (func_loc.isSame (func.getName ())) {
+			if (first) {
+			    no_value = true;
+			    first = false;
+			} else {
+			    Ymir::Error::occur (func_loc, ExternalError::FORWARD_REFERENCE_VAR);
+			}
+		    }		    
 		}
 
 		__validating__.push_back (func.getName ());
@@ -418,7 +457,7 @@ namespace semantic {
 
 	    try {
 		this-> insertParameters (addedParams);
-		params.insert (params.end (), addedParams.begin (), addedParams.end ());
+		params.insert (params.end (), addedParams.begin (), addedParams.end ());		
 		retType = this-> validateReturnType (loc, proto.getType ());
 	    } catch (Error::ErrorList list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
@@ -461,7 +500,7 @@ namespace semantic {
 
 	    try {
 		this-> insertParameters (addedParams);
-		params.insert (params.end (), addedParams.begin (), addedParams.end ());	    	    
+		params.insert (params.end (), addedParams.begin (), addedParams.end ());
 		retType = this-> validateReturnType (loc, proto.getType ());
 	    } catch (Error::ErrorList list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
