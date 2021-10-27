@@ -1124,9 +1124,12 @@ namespace semantic {
 		last = it;
 	    }
 
+	    auto value = generateValue (last);
+	    list.append (value.getList ());
+	    
 	    return Tree::compound (
 		block.getLocation (),
-		generateValue (last),
+		value.getValue (),
 		list.toTree ()
 	    );
 	}	
@@ -2676,7 +2679,7 @@ namespace semantic {
 	    list.append (right.getList ());
 
 	    auto lvalue = left.getValue (), rvalue = right.getValue ();
-	    
+
 	    return Tree::compound (
 		access.getLocation (),
 		Tree::buildArrayRef (access.getLocation (), lvalue, rvalue),
