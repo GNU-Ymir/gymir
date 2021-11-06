@@ -122,6 +122,7 @@ namespace Ymir {
     const char*		ExternalError::OVERRIDE_PRIVATE			  = "cannot override private method %(y)";
     const char*		ExternalError::PACKED_AND_UNION			  = "structures could not be packed and union at the same time";
     const char*		ExternalError::PARAMETER_NAME			  = "for parameter % of %";
+    const char*		ExternalError::NO_PARAMETER_NAMED		  = "no parameter named %(y)";
     const char*		ExternalError::PRIVATE_IN_THIS_CONTEXT		  = "%(B) : % is private within this context";
     const char*		ExternalError::PROTECTION_NO_IMPACT		  = "protection %(y) has no impact on %(y) declaration";
     const char*		ExternalError::REF_NO_EFFECT			  = "the creation of ref has no effect on the left operand";

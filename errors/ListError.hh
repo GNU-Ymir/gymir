@@ -141,6 +141,7 @@ namespace Ymir {
 	static const char*	OVERRIDE_PRIVATE;
 	static const char*	PACKED_AND_UNION;
 	static const char*	PARAMETER_NAME;
+	static const char*	NO_PARAMETER_NAMED;
 	static const char*	PRIVATE_IN_THIS_CONTEXT;
 	static const char*	PROTECTION_NO_IMPACT;
 	static const char*	REF_NO_EFFECT;

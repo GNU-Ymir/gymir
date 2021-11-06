@@ -45,7 +45,7 @@ namespace syntax {
     }
 
     std::string Block::prettyString () const {
-	if (!this-> _declModule.isEmpty ()) Ymir::Error::halt ("", ""); // TODO
+	//if (!this-> _declModule.isEmpty ()) Ymir::Error::halt ("", ""); // TODO
 	Ymir::OutBuffer buf;
 	buf.write ("{\n");
 	int i = 0;

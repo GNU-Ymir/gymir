@@ -28,6 +28,7 @@ namespace semantic {
 	const std::string MacroVisitor::__FLOAT__ = "__float";
 	const std::string MacroVisitor::__STRING__ = "__str";
 	const std::string MacroVisitor::__CHAR__ = "__char";
+	const std::string MacroVisitor::__RULE_INDEX__ = "__index";
 
 	std::string some (const std::string & text, ulong current) {
 	    auto len = text.length () - current;
@@ -426,6 +427,7 @@ namespace semantic {
 	    std::list <Ymir::Error::ErrorMsg> errors;
 	    Visitor::__CALL_NB_RECURS__ += 1;
 
+	    this-> _ruleIndex += 1;
 	    try {
 		generator::Generator rules (Generator::empty ());
 		if (expr.is <syntax::Var> ()) {
@@ -464,8 +466,8 @@ namespace semantic {
 
 
 				Mapper result (true, ret);
-				result.mapping.emplace ("rule", std::vector <Mapper> ({mapper}));
-				return result;
+				result.mapping.emplace ("rule", std::vector <Mapper> ({mapper}));				
+				mapper = result;
 			    }
 			} catch (Error::ErrorList err) {
 			    errors = err.errors;
@@ -475,18 +477,19 @@ namespace semantic {
 			if (errors.size () != 0) throw Error::ErrorList {errors};
 		    }
 		    elfo {
-			Ymir::Error::occur (
-			    expr.getLocation (),
-			    ExternalError::INVALID_MACRO_RULE,
-			    rules.prettyString ()
-			);
+			errors.push_back (Ymir::Error::makeOccur (
+					      expr.getLocation (),
+					      ExternalError::INVALID_MACRO_RULE,
+					      rules.prettyString ()
+					      ));
 		    }
 		}
-	    } catch (Error::ErrorList list) {		
+	    } catch (Error::ErrorList list) {
 		list.errors.insert (list.errors.begin (), Ymir::Error::createNote (expr.getLocation (), ExternalError::IN_MACRO_EXPANSION));		    		
 		errors = std::move (list.errors);
 	    }
-	    
+
+	    this-> _ruleIndex -= 1;
 	    Visitor::__CALL_NB_RECURS__ -= 1;
 	    if (errors.size () != 0) throw Error::ErrorList {errors};
 	   
@@ -547,6 +550,10 @@ namespace semantic {
 		    lex = visit.getLexer ();
 		} else if (name == MacroVisitor::__TOKEN__) {
 		    auto ignore = lex.next (Token::members ());
+		} else if (name == MacroVisitor::__STRING__) {
+		    auto visit = syntax::Visitor::init (lex);
+		    auto ignore = visit.visitString ();
+		    lex = visit.getLexer ();
 		} else if (name == MacroVisitor::__WORD__) {
 		    auto m = Token::members ();
 		    auto ignore = lex.next ();
@@ -564,17 +571,7 @@ namespace semantic {
 		current += end;
 	    
 		return Mapper (true, result);
-	    } catch (Ymir::Error::ErrorList list) {
-		// Assumed to be a syntax error, so relativally simple to change
-		auto back_error = list.errors.back ();
-		auto n = back_error.getLocation ();
-
-		ulong line = 0, col = 0, seek = 0;
-		computeLine (line, col, seek, n.getSeek () + current, this-> _call);
-		
-		lexing::Word word = lexing::Word::init (n.getStr (), this-> _call.getFile (), line, col, seek);
-		
-		list.errors.back () = Ymir::Error::ErrorMsg (word, back_error.getMessage ());
+	    } catch (Ymir::Error::ErrorList list) {		
 		list.errors.insert (list.errors.begin (), Ymir::Error::createNote (expr.getLocation (), ExternalError::IN_MACRO_EXPANSION));		
 		errors = std::move (list.errors);
 	    }
@@ -863,6 +860,12 @@ namespace semantic {
 			auto inner = mapper.mapping.find (var.getName ().getStr ());
 			if (inner != mapper.mapping.end ()) {
 			    return inner-> second;
+			} else if (var.getName ().getStr () == MacroVisitor::__RULE_INDEX__) {
+			    std::vector<Mapper> ret;
+			    Ymir::OutBuffer buf;
+			    buf.write (this-> _ruleIndex);
+			    ret.push_back (Mapper (true, buf.str ()));
+			    return ret;
 			} else {
 			    Ymir::OutBuffer buf;
 			    int i = 0;
@@ -982,7 +985,7 @@ namespace semantic {
 	}	
 
 	std::vector <std::string> MacroVisitor::getKnwonRules () {
-	    return {__EXPR__, __IDENT__, __TOKEN__, __ANY__, __WORD__, __CHAR__};
+	    return {__EXPR__, __IDENT__, __TOKEN__, __ANY__, __WORD__, __CHAR__, __STRING__};
 	}
 	
     }

@@ -32,6 +32,8 @@ namespace semantic {
 	    static const std::string __STRING__;
 
 	    static const std::string __CHAR__;
+
+	    static const std::string __RULE_INDEX__;
 	    
 	private : 
 
@@ -42,6 +44,8 @@ namespace semantic {
 	    lexing::Word _call;
 
 	    std::vector <std::string> _known_rules;
+
+	    int _ruleIndex = 0;
 	   	    
 	public :
 

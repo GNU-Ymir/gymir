@@ -1065,8 +1065,11 @@ namespace semantic {
 
 		s_of (FakeValue, fv)
 		    return generateFakeValue (fv);
+
+		s_of_u (MultSym)
+		    return Tree::empty ();
 	    }	    
-	    
+
 	    Ymir::Error::halt ("%(r) - reaching impossible point %(y)", "Critical", identify (gen));
 	    return Tree::empty ();
 	}
