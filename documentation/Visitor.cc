@@ -136,6 +136,8 @@ namespace documentation {
 		return JsonValue::empty ();
 	    } elof (syntax::Macro, m) {
 		return this-> dumpMacroUnvalidated (m, pub, prot);		
+	    } elof (syntax::Aka, a) {
+		return this-> dumpAkaUnvalidated (a, pub, prot);
 	    } fo;
 	}
 	Ymir::OutBuffer buf;
@@ -381,6 +383,15 @@ namespace documentation {
 	this-> dumpStandard (al, val);
 	
 	val ["value"] = JsonString::init (gen.prettyString ());
+	return JsonDict::init (val);
+    }
+
+    JsonValue Visitor::dumpAkaUnvalidated (const syntax::Aka & al, bool pub, bool prot) {
+	std::map <std::string, JsonValue> val;
+	val ["type"] = JsonString::init ("aka");
+	this-> dumpStandard (al, pub, prot, val);
+	
+	val ["value"] = JsonString::init (al.getValue ().prettyString ());
 	return JsonDict::init (val);
     }
 

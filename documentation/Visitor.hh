@@ -111,6 +111,12 @@ namespace documentation {
 	json::JsonValue dumpAka (const semantic::Aka & al);
 
 	/**
+	 * Dump the documentation of an unvalidated alias 
+	 * \return the doc
+	 */
+	json::JsonValue dumpAkaUnvalidated (const syntax::Aka & al, bool pub, bool prot);
+
+	/**
 	 * Dump the documentation of a struct
 	 * \return the doc
 	 */
