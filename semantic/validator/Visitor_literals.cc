@@ -24,7 +24,7 @@ namespace semantic {
 	    	auto left = this-> _dollars.back ();
 	    	if (left.to <Value> ().getType ().is <Slice> ()) {
 		    auto strLit = this-> isStringLiteral (left);
-		    if (!strLit.isEmpty ()) return ufixed (strLit.to <StringValue> ().getLen ());
+		    if (!strLit.isEmpty ()) return ufixed (strLit.to <StringValue> ().getLen () - 1);
 	    	    return StructAccess::init (loc,
 	    				       Integer::init (dl.getLocation (), 0, false),
 	    				       left, Slice::LEN_NAME

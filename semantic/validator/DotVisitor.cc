@@ -137,7 +137,7 @@ namespace semantic {
 	    auto strLit = this-> _context.isStringLiteral (left);
 	    if (name == Slice::LEN_NAME) {
 		if (!strLit.isEmpty ()) {
-		    return ufixed (expression.getLocation (), strLit.to <StringValue> ().getLen ());
+		    return ufixed (expression.getLocation (), strLit.to <StringValue> ().getLen () - 1);
 		}
 		return StructAccess::init (expression.getLocation (),
 					   Integer::init (expression.getLocation (), 0, false),
