@@ -2678,23 +2678,24 @@ namespace semantic {
 	    auto right = generateValue (access.getIndex ());
 
 	    TreeStmtList list = TreeStmtList::init ();
+	    
 	    list.append (left.getList ());
 	    list.append (right.getList ());
-
+	    
 	    auto lvalue = left.getValue (), rvalue = right.getValue ();
 
 	    return Tree::compound (
 		access.getLocation (),
 		Tree::buildArrayRef (access.getLocation (), lvalue, rvalue),
 		list.toTree ()
-	    );
+		);
 	}
 	
 	generic::Tree Visitor::generateSliceAccess (const SliceAccess & access) {
 	    auto left = generateValue (access.getSlice ());
 	    auto right = generateValue (access.getIndex ());
 	    
-	    TreeStmtList list = TreeStmtList::init ();
+	    TreeStmtList list = TreeStmtList::init ();	    
 	    list.append (left.getList ());
 	    list.append (right.getList ());
 

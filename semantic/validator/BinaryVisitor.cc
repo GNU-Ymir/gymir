@@ -614,7 +614,53 @@ namespace semantic {
 	    return this-> _context.validateValue (test);
 	}
 
+	Generator BinaryVisitor::validateEqualSliceLeft (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
+	    lexing::Word loc = lexing::Word::init (expression.getLocation (), toString (op));
+	    auto leftSynt = TemplateSyntaxWrapper::init (loc, left);
+	    syntax::Expression rightSynt (syntax::Expression::empty ());
+	    if (right.to <Value> ().getType ().is <Array> ()) {
+		rightSynt = syntax::Intrinsics::init (lexing::Word::init (loc, Keys::ALIAS), TemplateSyntaxWrapper::init (loc, right));
+	    } else if (right.to <Value> ().getType ().is <Slice> ()) {
+		rightSynt = TemplateSyntaxWrapper::init (loc, right);
+	    } else return Generator::empty ();
+
+	    auto var = this-> _context.createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (EQUALS_OP_OVERRIDE)});
+	    auto call = syntax::MultOperator::init (
+		lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
+		var,
+		{leftSynt, rightSynt}, false
+		);
+
+	    if (op == Binary::Operator::NOT_EQUAL) {
+		call = syntax::Unary::init (lexing::Word::init (loc, Token::NOT), call);
+	    }
+
+	    try {
+		auto val = this-> _context.validateValue (call);
+		return SliceCompare::init (expression.getLocation (), op, val.to <Value> ().getType (), val, left, right);
+	    } catch (Error::ErrorList list) {
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::VALIDATING, var.prettyString ());
+		list.errors.back ().addNote (note);
+		throw list;
+	    }
+	}
+	
 	Generator BinaryVisitor::validateLogicalSliceLeft (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
+	    
+	    std::list <Ymir::Error::ErrorMsg> errors;
+	    if (op == Binary::Operator::EQUAL || op == Binary::Operator::NOT_EQUAL) {
+		Generator result (Generator::empty ());
+		{
+		    try {
+			result = validateEqualSliceLeft (op, expression, left, right);
+		    } catch (Error::ErrorList list) {
+			errors = list.errors;
+		    }
+		}
+			       		
+		if (!result.isEmpty ()) return result;
+	    }
+	    
 	    auto loc = expression.getLocation ();
 	    auto leftSynt = TemplateSyntaxWrapper::init (loc, left);
 	    syntax::Expression rightSynt (syntax::Expression::empty ());
@@ -643,6 +689,9 @@ namespace semantic {
 		);
 	    
 	    auto val =  this-> _context.validateValue (test);
+	    if (val.isEmpty ()) {
+		throw Error::ErrorList {errors};
+	    }
 	    auto type = Bool::init (expression.getLocation ());
 	    return SliceCompare::init (expression.getLocation (), op, val.to <Value> ().getType (), val, left, right);
 	}

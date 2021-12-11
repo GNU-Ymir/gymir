@@ -206,6 +206,11 @@ namespace semantic {
 	    generator::Generator validateLogicalSliceLeft (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
 
 	    /**
+	     * \brief Validate a binary logical operator with a slice on left operand
+	     */
+	    generator::Generator validateEqualSliceLeft (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
+
+	    /**
 	     * \brief Validate a binary logical operator with a class on left operand
 	     */
 	    generator::Generator validateLogicalClass (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);

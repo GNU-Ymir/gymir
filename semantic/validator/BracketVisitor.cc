@@ -84,7 +84,7 @@ namespace semantic {
 		    );
 		
 
-		auto call = this-> _context.getOutOfArrayCall (loc);
+		auto call = Panic::init (loc);
 		auto conditional = Conditional::init (loc, Void::init (loc), test, call, Generator::empty ());				
 		
 		if (
@@ -96,11 +96,15 @@ namespace semantic {
 		else
 		    innerType = Type::init (innerType.to <Type> (), false);
 
-		return LBlock::init (
-		    loc,
-		    innerType,
-		    { conditional, ArrayAccess::init (expression.getLocation (), innerType, left, right [0]) }
-		);		
+		if (global::State::instance ().isDebugActive ()) {
+		    return LBlock::init (
+			loc,
+			innerType,
+			{ conditional, ArrayAccess::init (expression.getLocation (), innerType, left, right [0]) }
+			);
+		} else {
+		    return ArrayAccess::init (expression.getLocation (), innerType, left, right [0]);
+		}
 	    } else if (right.size () == 0) {
 		auto innerType = left.to <Value> ().getType ().to <Array> ().getInners () [0];
 		auto sliceType = Slice::init (expression.getLocation (), innerType);
@@ -233,7 +237,7 @@ namespace semantic {
 		    ;
 		    
 
-		auto call = this-> _context.getOutOfArrayCall (loc);
+		auto call = Panic::init (loc);
 		auto throwType = Ymir::format ("%::%::%", CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (OUT_OF_ARRAY));
 		auto throwBl = ThrowBlock::init (loc, call, throwType);
 		
@@ -248,11 +252,15 @@ namespace semantic {
 		else
 		    innerType = Type::init (innerType.to <Type> (), false);
 
-		return LBlock::init (
-		    loc,
-		    innerType,
-		    { conditional, SliceAccess::init (expression.getLocation (), innerType, lRef, rRef) } 
-		    );
+		if (global::State::instance ().isDebugActive ()) {
+		    return LBlock::init (
+			loc,
+			innerType,
+			{ conditional, SliceAccess::init (expression.getLocation (), innerType, lRef, rRef) } 
+			);
+		} else {
+		    return SliceAccess::init (expression.getLocation (), innerType, lRef, rRef);
+		}
 	    } else if (right.size () == 1 && right [0].to <Value> ().getType ().is <Range> () && right [0].to <Value> ().getType ().to <Range> ().getInners () [0].is <Integer> ()) {
 		auto loc = expression.getLocation ();
 		
@@ -321,7 +329,7 @@ namespace semantic {
 			)
 		    );
 
-		auto call = this-> _context.getOutOfArrayCall (loc);
+		auto call = Panic::init (loc);
 		auto conditional = Conditional::init (loc, Void::init (loc), test, call, Generator::empty ());
 		auto innerType = left.to <Value> ().getType ().to <Slice> ().getInners () [0];
 		if (
@@ -374,11 +382,19 @@ namespace semantic {
 		    slcType = Type::init (slcType.to <Type> (), false);
 		
 		auto value = SliceValue::init (loc, slcType, ptrFinal, lenFinal);
-		return Block::init (
-		    loc,
-		    slcType,
-		    {rRef, lRef, conditional, value}
-		);
+		if (global::State::instance ().isDebugActive ()) {
+		    return Block::init (
+			loc,
+			slcType,
+			{rRef, lRef, conditional, value}
+			);
+		} else {
+		    return Block::init (
+			loc,
+			slcType,
+			{rRef, lRef, value}
+			);
+		}
 	    }
 
 	    BracketVisitor::error (expression, left, right);
