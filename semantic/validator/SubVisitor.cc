@@ -461,8 +461,7 @@ namespace semantic {
 		    case 32 : value.i = INT_MAX; break;
 		    case 64 : value.i = LONG_MAX; break;
 		    default :
-			Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-			break;
+			value.i = LONG_MAX; break;
 		    }
 		} else {
 		    switch (i.to<Integer> ().getSize ()) {
@@ -471,8 +470,7 @@ namespace semantic {
 		    case 32 : value.u = UINT_MAX; break;
 		    case 64 : value.u = ULONG_MAX; break;
 		    default :
-			Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-			break;
+			value.u = ULONG_MAX; break;
 		    }
 		}
 		return Fixed::init (i.getLocation (), i, value);
@@ -485,8 +483,7 @@ namespace semantic {
 		    case 32 : value.i = INT_MIN; break;
 		    case 64 : value.i = LONG_MIN; break;
 		    default :
-			Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-			break;
+			value.i = LONG_MIN; break;
 		    }
 		} else {
 		    value.u = 0;
