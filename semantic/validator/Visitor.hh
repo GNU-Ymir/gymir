@@ -229,10 +229,6 @@ namespace semantic {
 	     */
 	    generator::Generator validateTemplateSolutionMethod (const semantic::Symbol & sol, const generator::Generator & self);
 
-	    /**
-	     * Validate a template call type from a template call literal
-	     */
-	    generator::Generator validateTypeTemplateCall (const syntax::TemplateCall & tmpCall);
 
 	    /**
 	     * Validate a template checker
@@ -377,6 +373,11 @@ namespace semantic {
 	     */
 	    generator::Generator validateTypeTuple (const syntax::List & tuple);
 
+	    /**
+	     * Validate a type from a range type expression
+	     */
+	    generator::Generator validateTypeRange (const syntax::RangeType & rng);
+	    
 	    /**
 	     * Validate a tuple type from a template syntax list
 	     */

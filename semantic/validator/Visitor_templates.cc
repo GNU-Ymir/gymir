@@ -181,23 +181,6 @@ namespace semantic {
 	}
 
 
-	Generator Visitor::validateTypeTemplateCall (const syntax::TemplateCall & call) {
-	    auto left = call.getContent ();
-	    match (left) {
-		of (syntax::Var, var) {
-		    Generator innerType (Generator::empty ());
-		    if (call.getParameters ().size () == 1) {
-			innerType = validateType (call.getParameters ()[0], true);
-		    }
-		    
-		    if (var.getName ().getStr () == Range::NAME) {
-			return Range::init (var.getName (), innerType);
-		    }
-		} fo;
-	    }
-	    
-	    return Generator::empty ();
-	}
 
 	Generator Visitor::validateTemplateChecker (const syntax::TemplateChecker & check) {
 	    std::vector<Generator> params;

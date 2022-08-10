@@ -54,6 +54,7 @@ namespace Ymir {
     const char*		ExternalError::IMPOSSIBLE_EXTERN		  = "impossible extern declaration";
     const char*		ExternalError::INCOMPATIBLE_TOKENS		  = "incompatible tokens : [%(y)] and [%(y)]";
     const char*		ExternalError::INCOMPATIBLE_TYPES		  = "incompatible types %(y) and %(y)";
+    const char*         ExternalError::INCOMPATIBLE_TYPES_RANGE           = "type %(y) cannot be used to construct a range";
     const char*		ExternalError::INCOMPATIBLE_VALUES		  = "incompatible values";
     const char*		ExternalError::INCOMPLETE_TEMPLATE		  = "the template %(y) is incomplete due to previous errors, use -v to show them";
     const char*		ExternalError::INCOMPLETE_TYPE			  = "the type %(y) is not complete";

@@ -1314,6 +1314,7 @@ namespace syntax {
 	if (begin == Keys::TEMPLATE) return visitTemplateChecker ();
 	if (begin == Token::LCRO)    return visitArray ();
 	if (begin == Token::LPAR)    return visitTuple ();
+	if (begin == Token::DDOT)    return visitRangeType ();
 	if (begin == Token::PIPE || begin == Token::DPIPE)
 	    return visitLambda ();
 
@@ -1924,6 +1925,13 @@ namespace syntax {
 	} 
 	this-> _lex.rewind (); // we rewind the closing 
 	return params;
+    }
+
+    Expression Visitor::visitRangeType () {
+	auto begin = this-> _lex.next ({Token::DDOT});
+	auto type = this-> visitExpression (10);
+
+	return RangeType::init (begin, type);
     }
 
     Expression Visitor::visitTuple () {

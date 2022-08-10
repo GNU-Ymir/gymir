@@ -86,16 +86,16 @@ namespace semantic {
 		    if (list.isTuple ())
 		    val = validateTypeTuple (list);
 		}
+		
+		elof (syntax::RangeType, rng) 
+		    val = validateTypeRange (rng);		
 
 		elof (TemplateSyntaxList, tmplSynt)
 		    val = validateTypeTupleTemplate (tmplSynt);		
 		
 		elof (TemplateSyntaxWrapper, tmplSynt)
 		    val =  tmplSynt.getContent ();
-		
-		elof (syntax::TemplateCall, tmpCall) 
-		    val = validateTypeTemplateCall (tmpCall);
-		
+				
 		fo;		
 	    }
 
@@ -287,6 +287,20 @@ namespace semantic {
 	    return Tuple::init (list.getLocation (), params);
 	}	
 
+
+	Generator Visitor::validateTypeRange (const syntax::RangeType & rng) {
+	    auto inner = validateType (rng.getType (), true);
+	    match (inner) {
+		of_u (Integer) return Range::init (rng.getLocation (), inner);
+		elof_u (Char) return Range::init (rng.getLocation (), inner);
+		elof_u (Float) return Range::init (rng.getLocation (), inner);
+		fo;		
+	    }
+
+	    Ymir::Error::occur (rng.getLocation (), ExternalError::INCOMPATIBLE_TYPES_RANGE, inner);
+	    return Generator::empty ();
+	}
+	
 	Generator Visitor::validateTypeTupleTemplate (const TemplateSyntaxList & lst) {
 	    std::vector<Generator> params;
 	    for (auto & it : lst.getContents ()) {

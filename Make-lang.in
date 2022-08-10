@@ -86,6 +86,7 @@ ymir_OBJS = \
 	ymir/expr_Is.o \
 	ymir/expr_Lambda.o \
 	ymir/expr_List.o \
+	ymir/expr_RangeType.o \
 	ymir/expr_MacroCall.o \
 	ymir/expr_MacroEval.o \
 	ymir/expr_MacroMult.o \

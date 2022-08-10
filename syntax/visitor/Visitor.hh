@@ -632,6 +632,15 @@ namespace syntax {
 	 \endverbatim
 	 */
 	Expression visitMacroEval ();
+
+
+	/**
+	 * \brief Visit a range type expression
+	 * \verbatim
+	 range_type := '..' expression:(10)
+	 \endverbatim
+	 */
+	Expression visitRangeType ();
 	
 	/**
 	 * \brief Visit a tuple literal, or an simple expression surrounded with '(' ')'

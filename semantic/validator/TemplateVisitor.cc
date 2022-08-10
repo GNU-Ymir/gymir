@@ -187,6 +187,8 @@ namespace semantic {
 		    return this-> inferArgumentInner (params, un.getContent ());
 		} elof (syntax::Try, tr) {
 		    return this-> inferArgumentInner (params, tr.getContent ());
+		} elof (syntax::RangeType, rng) {
+		    return this-> inferArgumentInner (params, rng.getType ());
 		} elof (syntax::List, lst) {
 		    Mapper mapper (true, 0);
 		    for (auto & it : lst.getParameters ()) {
@@ -814,6 +816,29 @@ namespace semantic {
 		    }
 						    			
 		}
+		elof (syntax::RangeType, rng) {
+		    consumed += 1;
+		    auto type = types [0];
+		    if (type.is<Range> ()) {			
+			std::vector <Generator> vec = {type.to <Type> ().getInners ()[0]};
+			int loc_consumed = 0;
+			auto mapper = std::move (this-> validateTypeFromImplicit (params, rng.getType (), array_view<Generator> (vec), loc_consumed));
+
+			if (mapper.succeed) {
+			    Expression realType = this-> replaceAll (leftT, mapper.mapping);
+			    auto genType = this-> _context.validateType (realType, true);
+			    this-> _context.verifySameType (genType, type);
+			    this-> _context.verifyNotIsType (leftT.getLocation ());
+			  				
+			    mapper.score += Scores::SCORE_TYPE;
+			    return mapper;
+			}
+		    } else {
+			Ymir::Error::occur (rng.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
+					    rng.prettyString (),
+					    type.to<Type> ().getTypeName ());
+		    }
+		}
 		elof (syntax::List, lst) {
 		    consumed += 1;
 		    auto type = types [0];
@@ -993,15 +1018,6 @@ namespace semantic {
 		    auto tmplSoluce = getFirstTemplateSolution (trRef.getRef ());
 		    if (!tmplSoluce.isEmpty ())
 		    return validateTypeFromTemplCall (params, cl, tmplSoluce.to <TemplateSolution> (), consumed);
-		}
-		elof (Range, rng) { // Range are created by template Call
-		    auto left = cl.getContent ();
-		    if (left.is<syntax::Var> () && left.to <syntax::Var> ().getName () == Range::NAME) {
-			if (cl.getParameters ().size () == 1) {
-			    auto vec = {rng.getInners ()[0]};
-			    return validateTypeFromImplicit (params, cl.getParameters ()[0], array_view <Generator> (vec), consumed);
-			}
-		    }
 		} fo;
 	    }
 	    
@@ -1224,6 +1240,39 @@ namespace semantic {
 			Ymir::Error::occur (un.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
 					    un.prettyString (),
 					    type.to<Type> ().getTypeName ());
+		    }
+		}
+		elof (syntax::RangeType, rng) {
+		    if (type.is<Range> ()) {
+			std::vector <Generator> vec = {type.to<Type> ().getInners ()[0]};
+			int consumed = 0;
+			auto mapper = std::move (this-> validateTypeFromImplicit (params, rng.getType (), array_view<Generator> (vec), consumed));
+
+			if (mapper.succeed) {
+			    Expression realType = this-> replaceAll (ofv.getType (), mapper.mapping);
+			    auto genType = this-> _context.validateType (realType, true);
+			    if (ofv.isOver ()) {
+				if (!this-> _context.isAncestor (genType, type)) {
+				    Ymir::Error::occur (rng.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
+							genType.prettyString (),
+							type.prettyString ());
+				}
+			    } else {
+				this-> _context.verifySameType (genType, type);
+			    }
+			    
+			    this-> _context.verifyNotIsType (ofv.getLocation ());
+			    
+			    mapper.mapping.emplace (ofv.getLocation ().getStr (), createSyntaxValue (ofv.getLocation (), type));
+			    mapper.nameOrder.push_back (ofv.getLocation ().getStr ());
+				
+			    mapper.score += Scores::SCORE_TYPE;
+			    return mapper;						    
+			} else {
+			    Ymir::Error::occur (rng.getLocation (), ExternalError::INCOMPATIBLE_TYPES,
+						rng.prettyString (),
+						type.to<Type> ().getTypeName ());
+			}
 		    }
 		}
 		elof (syntax::Try, tr) {
@@ -2051,6 +2100,9 @@ namespace semantic {
 		}
 		elof (syntax::Try, tr) {
 		    return syntax::Try::init (tr.getLocation (), replaceAll (tr.getContent (), mapping));
+		}
+		elof (syntax::RangeType, rng) {
+		    return syntax::RangeType::init (rng.getLocation (), replaceAll (rng.getType (), mapping));
 		}
 		elof (syntax::With, wh) {
 		    std::vector <syntax::Expression> exprs;

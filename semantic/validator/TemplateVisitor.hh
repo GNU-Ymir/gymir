@@ -246,7 +246,6 @@ namespace semantic {
 	     * \return a Mapper, which store the modification to validate
 	     */
 	    Mapper validateTypeFromTemplCall (const array_view <syntax::Expression> & params, const syntax::TemplateCall & cl, const generator::Generator & type, int & consumed) const;
-
 	    
 	    /**
 	     * \brief Validate a type template specialization from implicit context

@@ -39,6 +39,7 @@
 #include <ymir/syntax/expression/Null.hh>
 #include <ymir/syntax/expression/OfVar.hh>
 #include <ymir/syntax/expression/Pragma.hh>
+#include <ymir/syntax/expression/RangeType.hh>
 #include <ymir/syntax/expression/Return.hh>
 #include <ymir/syntax/expression/Scope.hh>
 #include <ymir/syntax/expression/Set.hh>

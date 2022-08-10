@@ -72,6 +72,7 @@ namespace Ymir {
 	static const char*	IMPL_NO_TRAIT;
 	static const char*	IMPOSSIBLE_EXTERN;
 	static const char*	INCOMPATIBLE_TOKENS;
+	static const char*	INCOMPATIBLE_TYPES_RANGE;
 	static const char*	INCOMPATIBLE_TYPES;
 	static const char*	INCOMPATIBLE_VALUES;
 	static const char*	INCOMPLETE_TEMPLATE;
