@@ -217,6 +217,7 @@ namespace Ymir {
 	static const char*	WRONG_IMPLEMENT;
 	static const char*	WRONG_MODULE_NAME;
 	static const char*	UNKNOWN_PRAGMA;
+	static const char*      SCOPE_MUST_BE_SAFE;
     };
     
         

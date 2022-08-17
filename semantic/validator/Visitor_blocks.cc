@@ -61,7 +61,7 @@ namespace semantic {
 	    
 	    auto ret = Value::initBrRet (Block::init (valueLoc, type, values).to <Value> (), breaker, returner, brLoc, rtLoc);	    
 	    Generator catchVar (Generator::empty ()), catchInfo (Generator::empty ()), catchAction (Generator::empty ());	    
-	    if (errors.size () == 0) { // The third part is a catcher
+	    if (errors.size () == 0) { // The third part is a catcher		
 		this-> validateCatcher (block, catchVar, catchInfo, catchAction, type, ret.getThrowers (), errors);
 	    }
 
@@ -73,8 +73,14 @@ namespace semantic {
 	    if (onSuccess.size () != 0) ret = SuccessScope::init (valueLoc, type, ret, onSuccess); // if there is no catcher (failure, exit or catch), no need add a catcher
 	    if (onExit.size () != 0 || onFailure.size () != 0 || !catchVar.isEmpty ()) { // Otherwise an exit scope, ensure that a list of code is executed no matter what happens
 		auto jmp_buf_type = validateType (syntax::Var::init (lexing::Word::init (valueLoc, global::CoreNames::get (JMP_BUF_TYPE))));		
-		auto ex = ExitScope::init (valueLoc, type, jmp_buf_type, ret, onExit, onFailure, catchVar, catchInfo, catchAction);
-		return ex;
+		if (!catchAction.isEmpty () && (onExit.size () != 0 || onFailure.size () != 0)) {
+		    auto catching = ExitScope::init (valueLoc, type, jmp_buf_type, ret, {}, {}, catchVar, catchInfo, catchAction);
+		    return ExitScope::init (valueLoc, type, jmp_buf_type, catching, onExit, onFailure, Generator::empty (), Generator::empty (), Generator::empty ());
+		} else {
+		    auto jmp_buf_type = validateType (syntax::Var::init (lexing::Word::init (valueLoc, global::CoreNames::get (JMP_BUF_TYPE))));		
+		    auto ex = ExitScope::init (valueLoc, type, jmp_buf_type, ret, onExit, onFailure, catchVar, catchInfo, catchAction);
+		    return ex;
+		}
 	    }
 	    return ret;
 	}
@@ -157,16 +163,33 @@ namespace semantic {
 		for (auto & scope_ : block.getScopes ()) { // There are three type of scope gards
 		    auto scope = scope_.to <syntax::Scope> ();
 		    if (scope.isExit ()) { // Exiters , that can make the block break or return (because they happens all the time)
-			onExit.push_back (validateValue (scope.getContent()));
+			auto value = validateValue (scope.getContent());
+			if (value.getThrowers ().size () != 0) {
+			    auto note = Ymir::Error::createNote (value.getThrowers ()[0].getLocation (), ExternalError::THROWS, value.getThrowers ()[0].prettyString ());
+			    Ymir::Error::occurAndNote (scope.getLocation (), note, ExternalError::SCOPE_MUST_BE_SAFE);
+			}
+			
+			onExit.push_back (value);
 			if (onExit.back ().to <Value> ().isReturner ()) returner = true;
 			if (onExit.back ().to <Value> ().isBreaker ()) breaker = true;
 		    } else if (scope.isSuccess ()) { // Success
-			onSuccess.push_back (validateValue (scope.getContent ()));
+			auto value = validateValue (scope.getContent ());
+			if (value.getThrowers ().size () != 0) {
+			    auto note = Ymir::Error::createNote (value.getThrowers ()[0].getLocation (), ExternalError::THROWS, value.getThrowers ()[0].prettyString ());
+			    Ymir::Error::occurAndNote (scope.getLocation (), note, ExternalError::SCOPE_MUST_BE_SAFE);
+			}
+			onSuccess.push_back (value);
 		    } else if (scope.isFailure ()) { // Failure
 			if (!hasThrowers) { // If there is no throwers inside the block, then there is no reason to fail
 			    Ymir::Error::occur (scope.getLocation (), ExternalError::FAILURE_NO_THROW);
 			}
-			onFailure.push_back (validateValue (scope.getContent ()));
+			auto value = validateValue (scope.getContent ());
+			if (value.getThrowers ().size () != 0) {
+			    auto note = Ymir::Error::createNote (value.getThrowers ()[0].getLocation (), ExternalError::THROWS, value.getThrowers ()[0].prettyString ());
+			    Ymir::Error::occurAndNote (scope.getLocation (), note, ExternalError::SCOPE_MUST_BE_SAFE);
+			}
+
+			onFailure.push_back (value);
 		    } else Ymir::Error::occur (scope.getLocation (), ExternalError::UNDEFINED_SCOPE_GUARD, scope.getLocation ().getStr ());
 		    // This last error can't really happen actually, but well it guards the compiler from adding things and forgetting some modifications
 		} 

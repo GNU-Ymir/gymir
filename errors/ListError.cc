@@ -198,4 +198,5 @@ namespace Ymir {
     const char*		ExternalError::VOID_VAR_VALUE			  = "cannot declare a var of type void from value %(y)";
     const char*		ExternalError::WRONG_IMPLEMENT			  = "the method %(y) was declared by trait %(y), not %(y)";
     const char*		ExternalError::WRONG_MODULE_NAME		  = "the module named %(y) must be placed in a file named %(y)";
+    const char*         ExternalError::SCOPE_MUST_BE_SAFE                 = "scope guard must be safe";
 }
