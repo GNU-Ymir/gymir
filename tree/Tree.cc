@@ -150,7 +150,7 @@ namespace generic {
 	    tree ident;
 	    if (i >= attrs.size ()) {
 		Ymir::OutBuffer buf;
-		buf.write ("_", (int) i - attrs.size ());
+		buf.write ("_", (uint) (i - attrs.size ()));
 		ident = get_identifier (buf.str ().c_str ());
 	    } else ident = get_identifier (attrs [i].c_str ());
 	    
@@ -195,7 +195,7 @@ namespace generic {
 	    tree ident;
 	    if (i >= attrs.size ()) {
 		Ymir::OutBuffer buf;
-		buf.write ("_", (int) i - attrs.size ());
+		buf.write ("_", (uint) (i - attrs.size ()));
 		ident = get_identifier (buf.str ().c_str ());
 	    } else ident = get_identifier (attrs [i].c_str ());
 	    
@@ -213,7 +213,7 @@ namespace generic {
 	    tree ident;
 	    if (i + common.size () >= attrs.size ()) {
 		Ymir::OutBuffer buf;
-		buf.write ("_", (int) i - attrs.size ());
+		buf.write ("_", (uint) (i - attrs.size ()));
 		ident = get_identifier (buf.str ().c_str ());
 	    } else ident = get_identifier (attrs [common.size () + i].c_str ());
 	    
@@ -513,7 +513,7 @@ namespace generic {
 	for (auto it : Ymir::r (0, values.size ())) {
 	    if (it >= (int) names.size ()) {
 		Ymir::OutBuffer buf;
-		buf.write ("_", (int) it - names.size ());
+		buf.write ("_", (uint) (it - names.size ()));
 		CONSTRUCTOR_APPEND_ELT (elms, type.getField (buf.str ()).getTree (), values [it].getTree ());
 	    } else 
 		CONSTRUCTOR_APPEND_ELT (elms, type.getField (names [it]).getTree (), values [it].getTree ());

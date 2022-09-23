@@ -4,7 +4,7 @@
 #include <ymir/utils/Memory.hh>
 #include <ymir/global/State.hh>
 #include <ymir/utils/Colors.hh>
-#include <execinfo.h>
+//#include <execinfo.h>
 
 using namespace lexing;
 

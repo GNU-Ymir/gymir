@@ -13,6 +13,8 @@
 #include <map>
 #include <memory>
 
+typedef unsigned long ulong;
+
 namespace lexing {
 
     class Word;

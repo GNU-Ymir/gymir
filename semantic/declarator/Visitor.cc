@@ -8,7 +8,7 @@
 #include <ymir/utils/Benchmark.hh>
 #include <dirent.h>
 #include <algorithm>
-
+#include <sys/stat.h>
 
 using namespace Ymir;
 using namespace global;
@@ -578,8 +578,11 @@ namespace semantic {
 		auto entry = readdir (dir);
 		while (entry != NULL) {
 		    auto str = std::string (entry-> d_name);
-		    if (entry-> d_type == DT_DIR && str [0] != '.') {
-			auto ent = std::move (Ymir::Path::build (path, str).toString ());
+		    auto ent = std::move (Ymir::Path::build (path, str).toString ());
+      		    struct stat s;
+		    stat (ent.c_str (), &s);		    
+
+		    if (S_ISDIR (s.st_mode) && str [0] != '.') {
 			auto entries = dirEntries (ent, Ymir::Path::build (init, str).toString ("::"));
 			for (auto & it :entries) res.emplace (it.first, it.second);
 		    } else if (str.length () >= 4 && str.substr (str.length () - 3, 3) == ".yr") {

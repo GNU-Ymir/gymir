@@ -6,6 +6,8 @@
 #include <memory>
 #include <string>
 
+typedef unsigned long ulong;
+
 namespace lexing {
 
     /**

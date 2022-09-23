@@ -487,8 +487,8 @@ namespace semantic {
 			|| (!decl.isVariadic () && lst.getParameters ().size () != decl.getParameters ().size ())) {
 			Ymir::Error::occur (decl.getLocation (),
 					    ExternalError::MISMATCH_ARITY,
-					    decl.getParameters ().size (),
-					    lst.getParameters ().size ());			    
+					    (uint) decl.getParameters ().size (),
+					    (uint) lst.getParameters ().size ());			    
 		    }
 
 		    std::vector <Generator> values;
@@ -528,7 +528,7 @@ namespace semantic {
 		    if (decl.getParameters ().size () != 1) {
 			Ymir::Error::occur (decl.getLocation (),
 					    ExternalError::OVERFLOW_ARITY,
-					    decl.getParameters ().size (),
+					    (uint) decl.getParameters ().size (),
 					    1);
 		    }
 		    auto varDecl = decl.getParameters () [0].to<syntax::VarDecl> ();

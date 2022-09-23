@@ -172,7 +172,6 @@ namespace semantic {
 	    if (gens.size () == 1) return gens [0];
 	    else {
 		if (gens.size () == 0) {
-		    println ("ici ?", " ", multSym.size ());
 		    for (auto & it : multSym) println (it.getRealName (), " ", it.getName ());
 		}
 		return MultSym::init (loc, gens);

@@ -135,7 +135,7 @@ namespace Ymir {
 	static const char*	NULL_PTR;
 	static const char*	OF; 
 	static const char*	OTHER_ERRORS;
-	static const char*	OVERFLOW;
+	static const char*	OVERFLOW_;
 	static const char*	OVERFLOW_ARITY;
 	static const char*	OVERFLOW_ARRAY;
 	static const char*	OVERRIDE_MISMATCH_PROTECTION;

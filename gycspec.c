@@ -32,6 +32,8 @@
 #define LIBPTHREAD "pthread"
 #endif
 
+typedef unsigned int uint;
+
 void
 lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 		      unsigned int * in_decoded_options_count,

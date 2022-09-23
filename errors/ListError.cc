@@ -116,7 +116,7 @@ namespace Ymir {
     const char*		ExternalError::NULL_PTR				  = "try to unref a null pointer";
     const char*		ExternalError::OF				  = "of : %";
     const char*		ExternalError::OTHER_ERRORS			  = "there are other errors, use option -v to show them";
-    const char*		ExternalError::OVERFLOW				  = "overflow capacity for type %(y) = %(y)";
+    const char*		ExternalError::OVERFLOW_			  = "overflow capacity for type %(y) = %(y)";
     const char*		ExternalError::OVERFLOW_ARITY			  = "tuple access out of bound (%(y)), tuple arity is %(y)";
     const char*		ExternalError::OVERFLOW_ARRAY			  = "array access out of bound (%(y)), array size is %(y)";
     const char*		ExternalError::OVERRIDE_MISMATCH_PROTECTION	  = "the protection %(y) of the overriden method %(y) does not match with the definition of the ancestor class";

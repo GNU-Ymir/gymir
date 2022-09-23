@@ -12,6 +12,9 @@
 #include <ymir/global/State.hh>
 #include <ymir/global/Core.hh>
 
+typedef unsigned int uint;
+typedef unsigned long ulong;
+
 namespace lexing {
     struct Word;
 }

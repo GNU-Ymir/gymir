@@ -225,12 +225,12 @@ namespace semantic {
 	    if (size == 32) {
 		std::vector <uint> utf_32 = utf8_to_utf32 (str);			
 		if (utf_32.size () != 1) {		    
-		    Ymir::Error::occur (loc, ExternalError::MALFORMED_CHAR, "c32", utf_32.size ());
+		    Ymir::Error::occur (loc, ExternalError::MALFORMED_CHAR, "c32", (uint) utf_32.size ());
 		}
 		return utf_32 [0];
 	    } else if (size == 8) {
 		if (str.length () != 1)
-		    Ymir::Error::occur (loc, ExternalError::MALFORMED_CHAR, "c8", str.length ());
+		    Ymir::Error::occur (loc, ExternalError::MALFORMED_CHAR, "c8", (uint) str.length ());
 		return str [0] & 0b01111111;
 	    }
 		    

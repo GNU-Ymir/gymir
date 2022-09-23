@@ -909,7 +909,7 @@ namespace semantic {
 			    } else if (right == Keys::LEN) {
 				std::vector <Mapper> ret;
 				Ymir::OutBuffer buf;
-				buf.write (left.size (), Keys::USIZE);
+				buf.write ((uint) left.size (), Keys::USIZE);
 				ret.push_back (Mapper (true, buf.str ()));
 				return ret;
 			    } else {
@@ -934,7 +934,7 @@ namespace semantic {
 			    }
 			    auto size = value.to <Fixed> ().getUI ().u;
 			    if (size >= left.size ()) {
-				Ymir::Error::occur (value.getLocation (), ExternalError::OVERFLOW_ARITY, size, left.size ());
+				Ymir::Error::occur (value.getLocation (), ExternalError::OVERFLOW_ARITY, (uint) size, (uint) left.size ());
 			    }
 			    return {left [size]};
 			} else {

@@ -909,7 +909,7 @@ namespace semantic {
 	    auto & tu_inners = tl.to <Tuple> ().getInners ();
 	    if (index_val >= tu_inners.size ()) {
 		auto note = Ymir::Error::createNote (prg.getLocation ());
-		Ymir::Error::occurAndNote (name.getLocation (), note, ExternalError::OVERFLOW_ARITY, index_val, tu_inners.size ());
+		Ymir::Error::occurAndNote (name.getLocation (), note, ExternalError::OVERFLOW_ARITY, index_val, (uint) tu_inners.size ());
 	    }
 	    
 	    auto type = tu_inners [index_val];

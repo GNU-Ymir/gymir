@@ -4,6 +4,9 @@
 // #include <ymir/utils/OutBuffer.hh>
 #include <ymir/utils/Memory.hh>
 
+
+typedef unsigned long ulong;
+
 namespace Ymir {
     namespace Error {
 	void halt (const char*);

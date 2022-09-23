@@ -82,7 +82,7 @@ namespace semantic {
 		    }
 		    
 		    if (overflow || (value > getMaxU (type) && getMaxU (type) != 0))
-		    Error::occur (loc, ExternalError::OVERFLOW, type.getTypeName (), val);
+		    Error::occur (loc, ExternalError::OVERFLOW_, type.getTypeName (), val);
 		    
 		    return value;
 		}
@@ -106,7 +106,7 @@ namespace semantic {
 		    }
 		    
 		    if (overflow || (value > getMaxS (type) && getMaxS (type) != 0))
-		    Error::occur (loc, ExternalError::OVERFLOW, type.getTypeName (), val);
+		    Error::occur (loc, ExternalError::OVERFLOW_, type.getTypeName (), val);
 		    
 		    return value;
 		}
@@ -458,7 +458,7 @@ namespace semantic {
 	    throw Error::ErrorList {errors};
 	    
 	    auto proto = LambdaProto::init (function.getLocation (), frameName, retType, paramsProto, function.getContent (), function.isRefClosure (), function.isMoveClosure (), syms);
-	    proto = LambdaProto::init (proto.to<LambdaProto>(), format ("%%%", this-> _referent.back ().getMangledName (), name.length (), name), Frame::ManglingStyle::Y);	    
+	    proto = LambdaProto::init (proto.to<LambdaProto>(), format ("%%%", this-> _referent.back ().getMangledName (), (uint) name.length (), name), Frame::ManglingStyle::Y);	    
 
 	    if (!uncomplete) {
 		return validateLambdaProto (proto.to <LambdaProto> (), paramTypes);

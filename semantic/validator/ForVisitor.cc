@@ -191,7 +191,7 @@ namespace semantic {
 		    value.getLocation (),
 		    ExternalError::NOT_ITERABLE_WITH,
 		    value.to <Value> ().getType ().to <Type> ().getTypeName (),
-		    vars.size ()
+		    (uint) vars.size ()
 		);
 		return Generator::empty ();
 	    } else if (vars.size () == 1) {
@@ -268,7 +268,7 @@ namespace semantic {
 		    value.getLocation (),
 		    ExternalError::NOT_ITERABLE_WITH,
 		    value.to <Value> ().getType ().to <Type> ().getTypeName (),
-		    vars.size ()
+		    (uint) vars.size ()
 		);
 		return Generator::empty ();
 	    }
@@ -618,7 +618,7 @@ namespace semantic {
 		    tuple.getLocation (),
 		    ExternalError::NOT_ITERABLE_WITH,
 		    tuple.to <Value> ().getType ().to <Type> ().getTypeName (),
-		    vars.size ()
+		    (uint) vars.size ()
 		);
 		return Generator::empty ();
 	    } else {

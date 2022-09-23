@@ -321,9 +321,9 @@ namespace semantic {
 		    result.u = applyBinInt<ulong> (binInt.getOperator (), left.u, right.u);
 		
 		if (isSigned && (result.i > maxI || result.i < minI))
-		    Ymir::Error::occur (binInt.getLocation (), ExternalError::OVERFLOW, type, result.i);
+		    Ymir::Error::occur (binInt.getLocation (), ExternalError::OVERFLOW_, type, result.i);
 		else if (!isSigned && (result.u > maxU || result.u < minU))
-		    Ymir::Error::occur (binInt.getLocation (), ExternalError::OVERFLOW, type, result.u);
+		    Ymir::Error::occur (binInt.getLocation (), ExternalError::OVERFLOW_, type, result.u);
 		
 		return Fixed::init (binInt.getLocation (), binInt.getType (), result);
 	    } else {
@@ -376,9 +376,9 @@ namespace semantic {
 
 				
 		if (isSigned && (result.i > maxI || result.i < minI))
-		    Ymir::Error::occur (unaInt.getLocation (), ExternalError::OVERFLOW, type, result.i);
+		    Ymir::Error::occur (unaInt.getLocation (), ExternalError::OVERFLOW_, type, result.i);
 		else if (!isSigned && (result.u > maxU || result.u < minU))
-		    Ymir::Error::occur (unaInt.getLocation (), ExternalError::OVERFLOW, type, result.u);
+		    Ymir::Error::occur (unaInt.getLocation (), ExternalError::OVERFLOW_, type, result.u);
 
 		return Fixed::init (unaInt.getLocation (), unaInt.getType (), result);
 	    } else {
