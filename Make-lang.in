@@ -14,7 +14,7 @@ CFLAGS-ymir/gycspec.o += $(DRIVER_DEFINES)
 # Driver
 GYC_OBJS = $(GCC_OBJS) ymir/gycspec.o
  
-gyc$(exeext): $(GYC_OBJS) $(EXTRA_GCC_OBJS) libcommon-target.a $(LIBDEPS)
+gyc$(exeext): $(TARGET_H) $(GYC_OBJS) $(EXTRA_GCC_OBJS) libcommon-target.a $(LIBDEPS)
 	+$(LINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) $(GYC_INCLUDES) -o $@ \
 	  $(GYC_OBJS) $(EXTRA_GCC_OBJS) libcommon-target.a \
 	  $(EXTRA_GCC_LIBS) $(LIBS)

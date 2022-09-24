@@ -5,8 +5,8 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include <ymir/utils/types.hh>
 
-typedef unsigned long ulong;
 
 namespace lexing {
 

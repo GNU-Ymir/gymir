@@ -11,9 +11,9 @@
 #include <type_traits>
 #include <ymir/global/State.hh>
 #include <ymir/global/Core.hh>
+#include <ymir/utils/types.hh>
 
-typedef unsigned int uint;
-typedef unsigned long ulong;
+
 
 namespace lexing {
     struct Word;
@@ -31,7 +31,7 @@ namespace semantic {
     class Symbol;
 }
 
-typedef char ubyte ;
+
 
 namespace Ymir {
 

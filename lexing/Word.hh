@@ -10,10 +10,11 @@
 #include <stdlib.h>
 #include <ymir/lexing/File.hh>
 #include <ymir/lexing/Token.hh>
+#include <ymir/utils/types.hh>
 #include <map>
 #include <memory>
 
-typedef unsigned long ulong;
+
 
 namespace lexing {
 

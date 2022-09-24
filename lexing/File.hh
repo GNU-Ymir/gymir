@@ -1,11 +1,8 @@
 #pragma once
 
 #include <ymir/utils/Ref.hh>
-// #include <ymir/utils/OutBuffer.hh>
+#include <ymir/utils/types.hh>
 #include <ymir/utils/Memory.hh>
-
-
-typedef unsigned long ulong;
 
 namespace Ymir {
     namespace Error {
