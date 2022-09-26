@@ -88,6 +88,85 @@ namespace global {
 	}
     }
 
+    void State::activateDeps () {
+	this-> _deps = true;
+    }
+
+    bool State::isGCCDependencyActive () const {
+	return this-> _deps;
+    }
+    
+    void State::activateDepSkip () {
+	this-> _depSkip = true;
+    }
+
+    bool State::isGCCDepSkipActive () const {
+	return this-> _depSkip;
+    }
+	
+    void State::activateDepFilename () {
+	this-> _depFilename = true;
+    }
+
+    bool State::isGCCDepFilenameActive () const {
+	return this-> _depFilename;
+    }
+	    
+    void State::setDepFilenameUser (const std::string & depFilename) {
+	this-> _depFilenameUser = depFilename;
+    }
+
+    const std::string& State::getGCCDepFilenameUser () const {
+	return this-> _depFilenameUser;
+    }
+
+    void State::addDepTarget (const std::string & target, bool quoted) {
+	if (!quoted) {
+	    this-> _depTargets.push_back (target);
+	    return;
+	}
+
+	unsigned int slashes = 0;
+	Ymir::OutBuffer buf;
+	for (auto & c : target) {
+	    bool add = false;
+	    switch (c) {
+	    case '\\' :
+		slashes ++;
+		add = true;
+		break;
+	    case ' ':
+	    case '\t' :
+		while (slashes--) buf.write ('\\');
+		buf.write ('\\');
+		break;
+	    case '$' :
+		buf.write ('$');
+		break;
+	    case '#':
+	    case ':':
+		buf.write ('\\');
+		break;
+	    }
+	    if (!add) slashes = 0;
+	    buf.write (c);
+	}
+
+	this-> _depTargets.push_back (buf.str ());
+    }
+
+    const std::vector <std::string> & State::getGCCDepTargets () const {
+	return this-> _depTargets;
+    }
+    
+    void State::setDepPhony (bool phony) {
+	this-> _depPhony = phony;
+    }
+
+    bool State::getGCCDepPhony () const {
+	return this-> _depPhony;
+    }
+
     void State::setOutputDir (const std::string & output) {
 	this-> _ouputDir = output;
     }
@@ -114,7 +193,7 @@ namespace global {
 
     bool State::isDependencyDumpingActive () const {
 	return this-> _isDumpDependency;
-    }
+    }    
     
     const std::string & State::getOutputDir () const {
 	return this-> _ouputDir;

@@ -109,7 +109,34 @@ namespace Ymir {
 	    } else {
 		(Error::ErrorList {{Error::makeOccurOneLine (ExternalError::DOC_FILE_ERROR, path)}}).print ();
 	    }
-	} 
+	}
+
+	if (global::State::instance ().isGCCDependencyActive ()) {
+	    auto doc_visit = documentation::Visitor::init (validator);
+	    auto res = doc_visit.dumpGCCDependency (module);
+	    std::string name;
+	    FILE* deps_stream;
+	    if (global::State::instance ().getGCCDepFilenameUser () != "") {
+		name = global::State::instance ().getGCCDepFilenameUser ();
+	    } else if (global::State::instance ().isGCCDepFilenameActive ()) {
+		name = "a-" + Ymir::Path (module.getName ().getFilename ()).fileName ().toString () + ".d";
+	    }
+
+	    println (name);
+	    if (name != "") {
+		deps_stream = fopen (name.c_str (), "w");
+		if (!deps_stream) {
+		    (Error::ErrorList {{Error::makeOccurOneLine (ExternalError::DOC_FILE_ERROR, name)}}).print ();
+		} 
+	    } else deps_stream = stdout;
+
+	    if (deps_stream != nullptr) {
+		fprintf (deps_stream, "%s", res.c_str ());
+		if (deps_stream != stdout) {
+		    fclose (deps_stream);
+		}
+	    }
+	}
 		
 	// STAMP(GENERATOR);
 		

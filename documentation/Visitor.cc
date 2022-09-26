@@ -9,6 +9,9 @@
 #include <ymir/documentation/String.hh>
 #include <ymir/documentation/Array.hh>
 #include <ymir/documentation/Dict.hh>
+#include <ymir/global/Core.hh>
+#include <ymir/global/State.hh>
+#include <ymir/utils/Path.hh>
 
 
 namespace documentation {
@@ -36,7 +39,36 @@ namespace documentation {
 	ret ["dependencies"] = JsonArray::init (deps);
 	return JsonDict::init (ret);
     }
-    
+
+    std::string Visitor::dumpGCCDependency (semantic::Symbol & sym) {
+	Ymir::OutBuffer buf;
+	auto list = sym.getAllReachableUsed ();
+	int i = 0;
+	for (auto & it : global::State::instance ().getGCCDepTargets ()) {
+	    if (i != 0) buf.write (" ");
+	    i += 1;
+	    buf.write (it);
+	}
+
+	buf.write (": ", sym.getName ().getFilename ());
+	
+	for (auto & it : list) {
+	    Ymir::Path name (it.getRealName (), "::");
+	    bool isStd = false;
+	    if (name.getFiles ()[0] == global::CoreNames::get (global::CORE_MODULE) ||
+		name.getFiles ()[0] == global::CoreNames::get (global::STD_MODULE) ||
+		name.getFiles () [0] == global::CoreNames::get (global::ETC_MODULE)) {
+		isStd = true;
+	    }
+	    
+	    if (!global::State::instance ().isGCCDepSkipActive () || !isStd) {
+		buf.write (" \\\n", it.getName ().getFilename ());
+	    }
+	}
+
+	buf.writeln ("");
+	return buf.str ();
+    }    
 
     JsonValue Visitor::dump (const semantic::Symbol & sym) {
 	JsonValue val (JsonValue::empty ());

@@ -43,6 +43,24 @@ namespace global {
 	bool _includeTest = false;
 	
 	bool _isDumpDependency = false;
+
+	// Option -M[M]D
+	bool _depFilename;
+
+	// Option -M
+	bool _deps;	
+
+	// Option -MMD
+	bool _depSkip;
+	
+	// Option -MF <arg>
+	std::string _depFilenameUser;
+
+	// Option -M[QT] <arg>
+	std::vector<std::string> _depTargets;
+	
+	// -MP
+	bool _depPhony;
 	
     private :
 
@@ -137,8 +155,37 @@ namespace global {
 	 * \return tell if we nned to dump the dependencies
 	 */
 	bool isDependencyDumpingActive () const;
-	
 
+	/**
+	 * \return the option -M[M]... are actives
+	 */
+	bool isGCCDependencyActive () const;
+
+	/**
+	 * Option -MM
+	 */
+	bool isGCCDepSkipActive () const;
+
+	/**
+	 * Option -MD
+	 */
+	bool isGCCDepFilenameActive () const;
+
+	/**
+	 * Option -MF
+	 */
+	const std::string& getGCCDepFilenameUser () const;
+
+	/**
+	 * Option -M[QT]
+	 */
+	const std::vector<std::string>& getGCCDepTargets () const;
+
+	/**
+	 * Option -MP
+	 */
+	bool getGCCDepPhony () const ;
+	
 	/**
 	 * \brief False, if the option --no-trusted is activated, true otherwise
 	 */
@@ -161,6 +208,37 @@ namespace global {
 	 */
 	void setExecutable (const std::string & executable);
 
+	/**
+	 * Option -M
+	 */
+	void activateDeps ();
+
+	/**
+	 * Option -MM
+	 */
+	void activateDepSkip ();
+	
+	/**
+	 * Set the dependency filename
+	 * Option -M[M]D
+	 */
+	void activateDepFilename ();
+
+	/**
+	 * Option -MF <arg>
+	 */
+	void setDepFilenameUser (const std::string & depFilename);
+
+	/**
+	 * Add a dependency target
+	 */
+	void addDepTarget (const std::string & target, bool quoted);
+
+	/**
+	 * Option -MP
+	 */
+	void setDepPhony (bool);
+	
 	/**
 	 * Change the output directory (used for documentation dumping)
 	 */

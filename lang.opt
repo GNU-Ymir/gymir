@@ -29,6 +29,58 @@ nostdinc
 YMIR
 ; Documented in C
 
+-dependencies
+D Alias(M)
+; Documented in C
+
+-user-dependencies
+D Alias(MM)
+; Documented in C
+
+-write-dependencies
+D Separate Alias(MD)
+; Documented in C
+
+-write-user-dependencies
+D Separate Alias(MMD)
+; Documented in C
+
+M
+YMIR
+; Documented in C
+
+MD
+YMIR Separate NoDriverArg
+; Documented in C
+
+MF
+YMIR Joined Separate
+; Documented in C
+
+MG
+YMIR
+; Documented in C
+
+MM
+YMIR
+; Documented in C
+
+MMD
+YMIR Separate
+; Documented in C
+
+MP
+YMIR
+; Documented in C
+
+MT
+YMIR Joined Separate
+; Documented in C
+
+MQ
+YMIR Joined Separate
+; Documented in C
+
 I
 YMIR Joined Separate
 

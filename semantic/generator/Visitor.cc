@@ -8,6 +8,8 @@
 #include <ymir/global/Core.hh>
 #include <ymir/global/State.hh>
 #include <ymir/syntax/visitor/Keys.hh>
+#include <ymir/ymir1.hh>
+
 
 #include "toplev.h"
 using namespace global;
@@ -17,8 +19,6 @@ namespace semantic {
     namespace generator {
 
 	using namespace generic;
-
-	static GTY(()) vec<tree, va_gc> *globalDeclarations;
 
 	const ulong	Visitor::ReturnWithinCatch::NONE   = 0;
 	const ulong	Visitor::ReturnWithinCatch::RETURN = 1;
@@ -45,8 +45,8 @@ namespace semantic {
 		generateTestCall ();
 	    }
 	    
-	    int len = vec_safe_length (globalDeclarations);
-	    tree * addr = vec_safe_address (globalDeclarations);
+	    int len = vec_safe_length (__global_declarations__);
+	    tree * addr = vec_safe_address (__global_declarations__);
 	    for (int i = 0 ; i < len ; i++) {
 		tree decl = addr [i];
 		wrapup_global_declarations (&decl, 1);
@@ -349,7 +349,7 @@ namespace semantic {
 	    decl.isPublic (true);
 	    decl.setDeclContext (getGlobalContext ());
 	   
-	    vec_safe_push (globalDeclarations, decl.getTree ());
+	    vec_safe_push (__global_declarations__, decl.getTree ());
 	    insertGlobalDeclarator (var.getUniqId (), decl);
 	}
 
@@ -390,7 +390,7 @@ namespace semantic {
 	    decl.isPublic (true);	    
 	    decl.setDeclContext (getGlobalContext ());
 	    
-	    vec_safe_push (globalDeclarations, decl.getTree ());
+	    vec_safe_push (__global_declarations__, decl.getTree ());
 	    __globalConstant__.emplace (name, decl);
 	    
 	    return decl;
@@ -472,7 +472,7 @@ namespace semantic {
 	    decl.isWeak (true);
 	    decl.setDeclContext (getGlobalContext ());	 
 
-	    vec_safe_push (globalDeclarations, decl.getTree ());
+	    vec_safe_push (__global_declarations__, decl.getTree ());
 	    __globalConstant__.emplace (name, decl);
 	    
 	    return decl;	    
@@ -510,7 +510,7 @@ namespace semantic {
 	    decl.isWeak (true);
 	    decl.setDeclContext (getGlobalContext ());	 
 
-	    vec_safe_push (globalDeclarations, decl.getTree ());
+	    vec_safe_push (__global_declarations__, decl.getTree ());
 	    __globalConstant__.emplace (name, decl);
 	    
 	    return decl;
@@ -2813,7 +2813,7 @@ namespace semantic {
 	    stackBlockChain.push_back (generic::BlockChain ());
 	}
 	
-	generic::TreeSymbolMapping Visitor::quitBlock (const lexing::Word & loc, const generic::Tree & content, const std::string & blockName) {
+	generic::TreeSymbolMapping Visitor::quitBlock (const lexing::Word & loc, const generic::Tree & content, const std::string & blockName) {	    
 	    auto name = blockNames.back ();	    
 	    auto varDecl = stackVarDeclChain.back ();
 	    auto blockChain = stackBlockChain.back ();
@@ -2872,7 +2872,7 @@ namespace semantic {
 	
 	const generic::Tree & Visitor::getGlobalContext () {
 	    if (this-> _globalContext.isEmpty ()) {
-		this-> _globalContext = Tree::init (UNKNOWN_LOCATION, build_translation_unit_decl (NULL_TREE));
+		this-> _globalContext = Tree::init (UNKNOWN_LOCATION, ymir_get_global_context ());
 	    }
 	    
 	    return this-> _globalContext;
@@ -2941,7 +2941,8 @@ namespace semantic {
 
 	void Visitor::setCurrentContext (const Tree & tr) {
 	    this-> _currentContext = tr;
-	}
+	    __current_function_ctx__ = tr.getTree ();
+	}	
 	
 
 	std::string Visitor::identify (const Generator & gen) {

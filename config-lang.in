@@ -1,5 +1,6 @@
 language="ymir"
 
+boot_language=yes
 compilers="ymir1\$(exeext)"
 
 target_libs=""

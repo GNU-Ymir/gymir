@@ -32,6 +32,11 @@ namespace documentation {
 	 * Dump the dependecies for the symbol `sym`
 	 */
 	json::JsonValue dumpDependency (semantic::Symbol & sym);
+
+	/**
+	 * Dump the dependencies for the symbol `sym` in gcc style
+	 */
+	std::string dumpGCCDependency (semantic::Symbol& sym);
 	
 	/**
 	 * Dump the documentation for the symbol `sym`
