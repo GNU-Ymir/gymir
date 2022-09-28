@@ -14,6 +14,7 @@
 #include "langhooks.h"
 #include "langhooks-def.h"
 #include "common/common-target.h"
+
 #include <ymir/ymir1.hh>
 #include <ymir/generic/types.hh>
 #include <ymir/parsing/Parser.hh>
@@ -29,6 +30,10 @@ GTY(()) vec <tree, va_gc> *__global_declarations__;
 
 /** The context of the function being declared */
 tree __current_function_ctx__ = NULL_TREE;
+
+/** Ymir types */
+tree y_global_trees[YTI_MAX];
+
 
 /* Language-dependent contents of a type.  */
  
@@ -70,7 +75,45 @@ struct GTY (()) language_function
 
     int dummy;
 };
- 
+
+
+static void
+ymir_init_builtins () {
+  y_bool_type = make_unsigned_type (1);
+  TREE_SET_CODE (y_bool_type, BOOLEAN_TYPE);
+  
+  y_u8_type = make_unsigned_type (8);
+  y_i8_type = make_signed_type (8);
+  
+  y_u16_type = make_unsigned_type (16);
+  y_i16_type = make_signed_type (16);
+
+  y_u32_type = make_unsigned_type (32);
+  y_i32_type = make_signed_type (32);
+
+  y_u64_type = make_unsigned_type (64);
+  y_i64_type = make_signed_type (64);
+    
+  {
+    machine_mode type_mode = TYPE_MODE (size_type_node);
+    size_type_node = lang_hooks.types.type_for_mode (type_mode, 1);
+    y_usize_type = lang_hooks.types.type_for_mode (type_mode, 1);
+    y_isize_type = lang_hooks.types.type_for_mode (type_mode, 0);    
+  }
+
+  y_c8_type = make_unsigned_type (8);
+  TYPE_STRING_FLAG (y_c8_type) = 1;
+
+  y_c16_type = make_unsigned_type (16);
+  TYPE_STRING_FLAG (y_c16_type) = 1;
+  
+  y_c32_type = make_unsigned_type (32);
+  TYPE_STRING_FLAG (y_c32_type) = 1;
+
+  y_f32_type = build_distinct_type_copy (float_type_node);
+  y_f64_type = build_distinct_type_copy (double_type_node);
+}
+
 /* Language hooks.  */
  
 static bool
@@ -84,8 +127,9 @@ ymir_langhook_init (void)
     /* I don't know why this has to be done explicitly.  */
     void_list_node = build_tree_list (NULL_TREE, void_type_node);
  
+    ymir_init_builtins ();
     build_common_builtin_nodes ();
- 
+    
     return true;
 }
 
@@ -167,7 +211,6 @@ ymir_langhook_handle_option (size_t scode, const char *arg, HOST_WIDE_INT value 
     } else if (code == OPT_imultilib) {
 	// set multilib
     } else {
-	println ("CODE : ", code, " ", OPT_MM, " ", OPT_M, " ", OPT_MMD, " ", OPT_MD);
 	switch (code) {
 	case OPT_MM :
 	    global::State::instance ().activateDepSkip ();
@@ -215,46 +258,64 @@ ymir_langhook_parse_file (void)
 static tree
 ymir_langhook_type_for_mode (enum machine_mode mode, int unsignedp)
 {
-  
-    if (mode == TYPE_MODE (float_type_node))
+  if (mode == QImode)
+    return unsignedp ? y_u8_type : y_i8_type;
+
+  if (mode == HImode)
+    return unsignedp ? y_u16_type : y_i16_type;
+
+  if (mode == SImode)
+    return unsignedp ? y_u32_type : y_i32_type;
+
+  if (mode == DImode)
+    return unsignedp ? y_u64_type : y_i64_type;
+
+  if (mode == TYPE_MODE (y_isize_type))
+    return unsignedp ? y_usize_type : y_isize_type;
+
+  if (mode == TYPE_MODE (float_type_node))
     return float_type_node;
-  
-    if (mode == TYPE_MODE (double_type_node))
+
+  if (mode == TYPE_MODE (double_type_node))
     return double_type_node;
- 
-    if (mode == TYPE_MODE (intQI_type_node))
-    return unsignedp ? unsigned_intQI_type_node : intQI_type_node;
-    if (mode == TYPE_MODE (intHI_type_node))
-    return unsignedp ? unsigned_intHI_type_node : intHI_type_node;
-    if (mode == TYPE_MODE (intSI_type_node))
-    return unsignedp ? unsigned_intSI_type_node : intSI_type_node;
-    if (mode == TYPE_MODE (intDI_type_node))
-    return unsignedp ? unsigned_intDI_type_node : intDI_type_node;
-    if (mode == TYPE_MODE (intTI_type_node))
-    return unsignedp ? unsigned_intTI_type_node : intTI_type_node;
- 
-    if (mode == TYPE_MODE (integer_type_node))
-    return unsignedp ? unsigned_type_node : integer_type_node;
- 
-    if (mode == TYPE_MODE (long_integer_type_node))
-    return unsignedp ? long_unsigned_type_node : long_integer_type_node;
- 
-    if (mode == TYPE_MODE (long_long_integer_type_node))
-    return unsignedp ? long_long_unsigned_type_node
-	: long_long_integer_type_node;
- 
-    if (COMPLEX_MODE_P (mode))
+
+  if (mode == TYPE_MODE (long_double_type_node))
+    return long_double_type_node;
+
+  if (mode == TYPE_MODE (build_pointer_type (y_c8_type)))
+    return build_pointer_type (y_c8_type);
+
+  if (mode == TYPE_MODE (build_pointer_type (y_i32_type)))
+    return build_pointer_type (y_i32_type);
+
+  for (int i = 0; i < NUM_INT_N_ENTS; i ++)
     {
-	if (mode == TYPE_MODE (complex_float_type_node))
-	return complex_float_type_node;
-	if (mode == TYPE_MODE (complex_double_type_node))
-	return complex_double_type_node;
-	if (mode == TYPE_MODE (complex_long_double_type_node))
-	return complex_long_double_type_node;
-	if (mode == TYPE_MODE (complex_integer_type_node) && !unsignedp)
-	return complex_integer_type_node;
+      if (int_n_enabled_p[i] && mode == int_n_data[i].m)
+	{
+	  if (unsignedp)
+	    return int_n_trees[i].unsigned_type;
+	  else
+	    return int_n_trees[i].signed_type;
+	}
     }
- 
+  
+  if (COMPLEX_MODE_P (mode))
+    {
+      if (mode == TYPE_MODE (complex_float_type_node))
+	return complex_float_type_node;
+      if (mode == TYPE_MODE (complex_double_type_node))
+	return complex_double_type_node;
+      if (mode == TYPE_MODE (complex_long_double_type_node))
+	return complex_long_double_type_node;
+      if (mode == TYPE_MODE (complex_integer_type_node) && !unsignedp)
+	return complex_integer_type_node;
+    } else if (VECTOR_MODE_P (mode)) {
+      machine_mode inner_mode = (machine_mode) GET_MODE_INNER (mode);
+      tree inner_type = ymir_langhook_type_for_mode (inner_mode, unsignedp);
+      if (inner_type != NULL_TREE)
+	return build_vector_type_for_mode (inner_type, mode);
+    }
+
     /* gcc_unreachable */
     return NULL;
 }
@@ -263,49 +324,30 @@ static tree
 ymir_langhook_type_for_size (unsigned int bits,
                              int unsignedp)
 {
-    if (bits <= TYPE_PRECISION (byte_type_node))
-    return unsignedp ? ubyte_type_node : byte_type_node;
+    if (bits <= TYPE_PRECISION (y_u8_type))
+    return unsignedp ? y_u8_type : y_i8_type;
 
-    if (bits <= TYPE_PRECISION (short_type_node))
-    return unsignedp ? ushort_type_node : short_type_node;
+    if (bits <= TYPE_PRECISION (y_i16_type))
+    return unsignedp ? y_u16_type : y_u16_type;
 
-    if (bits <= TYPE_PRECISION (int_type_node))
-    return unsignedp ? uint_type_node : int_type_node;
+    if (bits <= TYPE_PRECISION (y_i32_type))
+    return unsignedp ? y_u32_type : y_i32_type;
     
-    if (bits <= TYPE_PRECISION (long_type_node))
-    return unsignedp ? ulong_type_node : long_type_node;
-    
+    if (bits <= TYPE_PRECISION (y_i64_type))
+    return unsignedp ? y_u64_type : y_i64_type;
+
+    for (int i = 0; i < NUM_INT_N_ENTS; i ++)
+      {
+	if (int_n_enabled_p[i] && bits == int_n_data[i].bitsize)
+	  {
+	    if (unsignedp)
+	      return int_n_trees[i].unsigned_type;
+	    else
+	      return int_n_trees[i].signed_type;
+	  }
+      }
+
     return NULL;
-}
-
-#include <execinfo.h>
-#include <iostream>
-
-std::string getStackTrace () {
-    static bool _in_trace_ = false;
-    if (!_in_trace_) {
-	_in_trace_ = true;
-	void *trace[100];
-	char **messages = (char **) NULL;
-
-	auto trace_size = backtrace(trace, 100);
-	messages = backtrace_symbols(trace, trace_size);
-	/* skip first stack frame (points here) */
-	std::string ss;
-
-	ss = ss + "[bt] Execution path:\n";
-	for (int i=2; i<trace_size; ++i)
-	{
-	    ss = ss + "[bt] #";
-	    ss = ss + std::to_string (i - 1) + "\n";
-	    std::string msg = messages [i];
-	    ss = ss + "\t" + msg + "\n";
-	}
-	_in_trace_ = false;
-	return ss;
-    } else {
-	return "";
-    }
 }
 
 /* Record a builtin function.  We just ignore builtin functions.  */

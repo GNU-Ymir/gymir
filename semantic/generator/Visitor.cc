@@ -2707,8 +2707,7 @@ namespace semantic {
 	    auto type = Tree::pointerType (generateType (access.getType ()));
 	    
 	    auto data_field = lvalue.getField (Slice::PTR_NAME);
-	   	    
-	    auto value = Tree::binaryDirect (access.getLocation (), POINTER_PLUS_EXPR, type, data_field, index);
+	    auto value = Tree::binaryPtr (access.getLocation (), POINTER_PLUS_EXPR, type, data_field, index);
 	    
 	    return Tree::compound (
 	    	access.getLocation (), 

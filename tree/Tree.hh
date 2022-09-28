@@ -1,7 +1,5 @@
 #pragma once
 
-
-
 #include <ymir/lexing/Word.hh>
 #include <ymir/errors/Error.hh>
 #include <ymir/errors/ListError.hh>
@@ -11,6 +9,7 @@
 #include <map>
 
 #include "tree.h"
+#include <ymir/ymir1.hh>
 
 namespace semantic {
     namespace generator {

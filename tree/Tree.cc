@@ -2,6 +2,7 @@
 #include <ymir/tree/StmtList.hh>
 #include <ymir/tree/ChainBase.hh>
 #include <ymir/errors/Error.hh>
+
 #include "config.h"
 #include "system.h"
 #include "coretypes.h"
@@ -71,54 +72,54 @@ namespace generic {
     }
 
     Tree Tree::boolType () {
-	return Tree::init (UNKNOWN_LOCATION, unsigned_char_type_node);
+	return Tree::init (UNKNOWN_LOCATION, y_u8_type);
     }
 
     Tree Tree::intType (int size, bool isSigned) {
 	if (isSigned) {
 	    switch (size) {
-	    case 8 : return Tree::init (UNKNOWN_LOCATION, signed_char_type_node);
-	    case 16 : return Tree::init (UNKNOWN_LOCATION, short_integer_type_node);
-	    case 32 : return Tree::init (UNKNOWN_LOCATION, integer_type_node);
-	    case 64 : return Tree::init (UNKNOWN_LOCATION, long_integer_type_node);
-	    default : return Tree::init (UNKNOWN_LOCATION, long_integer_type_node);
+	    case 8 : return Tree::init (UNKNOWN_LOCATION, y_i8_type);
+	    case 16 : return Tree::init (UNKNOWN_LOCATION, y_i16_type);
+	    case 32 : return Tree::init (UNKNOWN_LOCATION, y_i32_type);
+	    case 64 : return Tree::init (UNKNOWN_LOCATION, y_i64_type);
+	    default : return Tree::init (UNKNOWN_LOCATION, y_isize_type);
 	    }
 	} else {
 	    switch (size) {
-	    case 8 : return Tree::init (UNKNOWN_LOCATION, unsigned_char_type_node);
-	    case 16 : return Tree::init (UNKNOWN_LOCATION, short_unsigned_type_node);
-	    case 32 : return Tree::init (UNKNOWN_LOCATION, unsigned_type_node);
-	    case 64 : return Tree::init (UNKNOWN_LOCATION, long_unsigned_type_node);
-	    default : return Tree::init (UNKNOWN_LOCATION, long_unsigned_type_node);	       
+	    case 8 : return Tree::init (UNKNOWN_LOCATION, y_u8_type);
+	    case 16 : return Tree::init (UNKNOWN_LOCATION, y_u16_type);
+	    case 32 : return Tree::init (UNKNOWN_LOCATION, y_u32_type);
+	    case 64 : return Tree::init (UNKNOWN_LOCATION, y_u64_type);
+	    default : return Tree::init (UNKNOWN_LOCATION, y_usize_type);	       
 	    } 
 	}
     }
 
     Tree Tree::sizeType () {
-	return Tree::init (UNKNOWN_LOCATION, long_unsigned_type_node);
+	return Tree::init (UNKNOWN_LOCATION, y_usize_type);
     }
     
     Tree Tree::floatType (int size) {
 	switch (size) {
-	case 32: return Tree::init (UNKNOWN_LOCATION, float_type_node);
-	case 64: return Tree::init (UNKNOWN_LOCATION, double_type_node);
-	default : return Tree::init (UNKNOWN_LOCATION, double_type_node);
+	case 32: return Tree::init (UNKNOWN_LOCATION, y_f32_type);
+	case 64: return Tree::init (UNKNOWN_LOCATION, y_f64_type);
+	default : return Tree::init (UNKNOWN_LOCATION, y_f64_type);
 	}
     }
 
     Tree Tree::charType (int size) {
 	switch (size) {
-	case 8 : return Tree::init (UNKNOWN_LOCATION, unsigned_char_type_node);
-	case 16 : return Tree::init (UNKNOWN_LOCATION, short_unsigned_type_node);
-	case 32 : return Tree::init (UNKNOWN_LOCATION, unsigned_type_node);
-	default : return Tree::init (UNKNOWN_LOCATION, unsigned_type_node);	    
+	case 8 : return Tree::init (UNKNOWN_LOCATION, y_c8_type);
+	case 16 : return Tree::init (UNKNOWN_LOCATION, y_c16_type);
+	case 32 : return Tree::init (UNKNOWN_LOCATION, y_c32_type);
+	default : return Tree::init (UNKNOWN_LOCATION, y_u32_type);	    
 	}
     }
 
     Tree Tree::staticArray (const Tree & inner, int size) {
-	auto len = build_int_cst_type (long_unsigned_type_node, size - 1);
-	auto begin = build_int_cst_type (long_unsigned_type_node, 0);
-	auto range = Tree::init (UNKNOWN_LOCATION, build_range_type (integer_type_node, fold (begin), fold (len)));
+	auto len = build_int_cst_type (y_usize_type, size - 1);
+	auto begin = build_int_cst_type (y_usize_type, 0);
+	auto range = Tree::init (UNKNOWN_LOCATION, build_range_type (y_i32_type, fold (begin), fold (len)));
 	auto array_type = Tree::init (UNKNOWN_LOCATION, build_array_type (inner.getTree (), range.getTree ()));
 	return array_type;
     }
@@ -439,11 +440,12 @@ namespace generic {
     }
 
     Tree Tree::binaryPtr (const lexing::Word & loc, tree_code code, const Tree & type, const Tree & left, const Tree & right) {
-	return Tree::build (code, loc, type, left,
-			    Tree::init (
+      auto rright = Tree::init (
 				loc.getLocation (),
 				convert_to_ptrofftype (right.getTree ())
-			    )
+				);
+	return Tree::build (code, loc, type, left,
+			    rright
 	);
     }
 
@@ -602,7 +604,7 @@ namespace generic {
     }
     
     Tree Tree::buildSizeCst (ulong value) {
-	return Tree::init (UNKNOWN_LOCATION, build_int_cst_type (long_unsigned_type_node, value));
+	return Tree::init (UNKNOWN_LOCATION, build_int_cst_type (y_u64_type, value));
     }
     
     Tree Tree::buildFloatCst (const lexing::Word & loc, const std::string & value, const Tree & type) {
@@ -627,7 +629,7 @@ namespace generic {
     }
 
     Tree Tree::buildBoolCst (const lexing::Word & loc, bool value) {
-	return Tree::init (loc.getLocation (), build_int_cst_type (unsigned_char_type_node, (ulong) value));
+	return Tree::init (loc.getLocation (), build_int_cst_type (y_u8_type, (ulong) value));
     }
     
     Tree Tree::buildCharCst (const lexing::Word & loc, uint value, const Tree & type) {
@@ -681,18 +683,20 @@ namespace generic {
 	tree type = getType ().getTree ();
 	enum tree_code code = TREE_CODE (type);
 	switch (code) {
-	case BOOLEAN_TYPE : return Tree::init (this-> _loc, convert (integer_type_node, getTree ()));
-	case ENUMERAL_TYPE : return Tree::init (this-> _loc, convert (integer_type_node, getTree ()));
+	case BOOLEAN_TYPE : return Tree::init (this-> _loc, convert (y_i32_type, getTree ()));
+	case ENUMERAL_TYPE : return Tree::init (this-> _loc, convert (y_i32_type, getTree ()));
 	case INTEGER_TYPE : {
-	    if (type == signed_char_type_node ||
-		type == short_integer_type_node)
-		return Tree::init (this-> _loc, convert (integer_type_node, getTree ()));
-	    else if (type == unsigned_char_type_node ||
-		     type == short_unsigned_type_node)
-		return Tree::init (this-> _loc, convert (unsigned_type_node, getTree ()));
+	    if (type == y_i8_type ||
+		type == y_i16_type)
+		return Tree::init (this-> _loc, convert (y_i32_type, getTree ()));
+	    else if (type == y_u8_type ||
+		     type == y_u16_type ||
+		     type == y_c8_type ||
+		     type == y_c16_type)
+		return Tree::init (this-> _loc, convert (y_u32_type, getTree ()));
 	    else return *this;
 	}
-	case REAL_TYPE : return Tree::init (this-> _loc, convert (double_type_node, getTree ()));
+	case REAL_TYPE : return Tree::init (this-> _loc, convert (y_f64_type, getTree ()));
 	default : return *this;
 	}
 
@@ -870,11 +874,11 @@ namespace generic {
 	auto range = TYPE_DOMAIN (this-> _t);
 	return Tree::init (BUILTINS_LOCATION,
 			   convert (
-			       long_unsigned_type_node,
+			       y_u64_type,
 			       Tree::build (PLUS_EXPR, lexing::Word::eof (),
-					    Tree::init (BUILTINS_LOCATION, integer_type_node),
+					    Tree::init (BUILTINS_LOCATION, y_i32_type),
 					    Tree::init (BUILTINS_LOCATION, TYPE_MAX_VALUE (range)),
-					    Tree::init (BUILTINS_LOCATION, build_int_cst_type (integer_type_node, 1))
+					    Tree::init (BUILTINS_LOCATION, build_int_cst_type (y_i32_type, 1))
 			       ).getTree ()
 			   )
 	);
@@ -885,10 +889,10 @@ namespace generic {
 	auto t = getOperand (0).getOperand (0);
 	return Tree::init (BUILTINS_LOCATION,
 			   convert (
-			       long_unsigned_type_node,
+			       y_u64_type,
 			       Tree::init (BUILTINS_LOCATION,
 					   build_int_cst_type (
-					       long_unsigned_type_node,
+					       y_u64_type,
 					       (TREE_STRING_LENGTH (t.getTree ()) / (inner / 8)) - 1
 					   )
 			       ).getTree ()
@@ -960,9 +964,9 @@ namespace generic {
     Tree Tree::buildPointerUnref (int index) const {
 	auto inner = TREE_TYPE (this-> getType ().getTree ());
 	auto element_size = TYPE_SIZE_UNIT (inner);
-	tree it = build_int_cst_type (long_unsigned_type_node, index);	
-	it = fold_convert_loc (this-> _loc, size_type_node, it);	
-	auto offset = fold_build2_loc (this-> _loc, MULT_EXPR, size_type_node, it, element_size);
+	tree it = build_int_cst_type (y_u64_type, index);	
+	it = fold_convert_loc (this-> _loc, y_usize_type, it);	
+	auto offset = fold_build2_loc (this-> _loc, MULT_EXPR, y_usize_type, it, element_size);
 
 	it = convert_to_ptrofftype (offset);
 	tree addr = build2 (POINTER_PLUS_EXPR, this-> getType ().getTree (), this-> _t, it);
@@ -974,9 +978,9 @@ namespace generic {
 	auto ptrType = pointerType (type);
 	auto inner = type.getTree ();
 	auto element_size = TYPE_SIZE_UNIT (inner);
-	tree it = build_int_cst_type (long_unsigned_type_node, index);
-	it = fold_convert_loc (this-> _loc, size_type_node, it);
-	auto offset = fold_build2_loc (this-> _loc, MULT_EXPR, size_type_node, it, element_size);
+	tree it = build_int_cst_type (y_u64_type, index);
+	it = fold_convert_loc (this-> _loc, y_usize_type, it);
+	auto offset = fold_build2_loc (this-> _loc, MULT_EXPR, y_usize_type, it, element_size);
 
 	it = convert_to_ptrofftype (offset);
 	tree addr = build2 (POINTER_PLUS_EXPR, ptrType.getTree (), this-> _t, it);
@@ -1093,6 +1097,7 @@ tree convert (tree type, tree expr) {
 			return expr;
 		    return fold_build2 (COMPOUND_EXPR, TREE_TYPE (expr), check, expr);
 		}
+	    
 	    ret = convert_to_integer (type, e);
 	    goto maybe_fold;
 
