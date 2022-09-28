@@ -24,6 +24,10 @@ namespace global {
 	return std::find (this-> _activeVersion.begin (), this-> _activeVersion.end (), v) != this-> _activeVersion.end ();
     }
 
+  const std::vector <std::string>& State::getActiveVersions () const {
+    return this-> _activeVersion;
+  }
+
     void State::activateVersion (const std::string & version) {
 	auto v = Ymir::toUpper (version);
 	if (!isVersionActive (v))

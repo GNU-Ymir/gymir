@@ -89,6 +89,11 @@ namespace global {
 	 */
 	void activateVersion (const std::string & version);	
 
+      /**
+       * \returns: the list of active versions
+       */
+      const std::vector <std::string> &getActiveVersions () const;
+      
 	/**
 	 * \brief Add include dir path to the include sir possible includes -I options
 	 * \param dir the directory to include
