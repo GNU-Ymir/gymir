@@ -96,7 +96,7 @@ namespace semantic {
 
 		OutBuffer buf;
 		buf.write (Mangler::YMIR_PREFIX);
-		for (auto & it : splits) buf.write ((uint) it.length (), it);
+		for (auto & it : splits) buf.write ((int) it.length (), it);
 		
 		buf.write (Mangler::YMIR_FUNCTION);
 
@@ -119,7 +119,7 @@ namespace semantic {
 
 	    OutBuffer buf;
 	    buf.write (Mangler::YMIR_PREFIX);
-	    for (auto & it : splits) buf.write ((uint) it.length (), it);
+	    for (auto & it : splits) buf.write ((int) it.length (), it);
 		
 	    buf.write (Mangler::YMIR_TEST);
 	    buf.write (Mangler::YMIR_FUNCTION_RET, "v");
@@ -133,7 +133,7 @@ namespace semantic {
 	    
 		OutBuffer buf;
 		buf.write (Mangler::YMIR_PREFIX);
-		for (auto & it : splits) buf.write ((uint) it.length (), it);
+		for (auto & it : splits) buf.write ((int) it.length (), it);
 		buf.write (Mangler::YMIR_FUNCTION);
 		
 		auto cl = proto.clone ();
@@ -160,7 +160,7 @@ namespace semantic {
 
 	    OutBuffer buf;
 	    buf.write (Mangler::YMIR_PREFIX);
-	    for (auto & it : splits) buf.write ((uint) it.length (), it);
+	    for (auto & it : splits) buf.write ((int) it.length (), it);
 	    buf.write (Mangler::YMIR_FUNCTION);
 
 	    // a construct proto take the return type as first argument, but it is hidden
@@ -179,7 +179,7 @@ namespace semantic {
 
 		OutBuffer buf;
 		buf.write (Mangler::YMIR_PREFIX);
-		for (auto & it : splits) buf.write ((uint) it.length (), it);
+		for (auto & it : splits) buf.write ((int) it.length (), it);
 		buf.write (Mangler::YMIR_VAR);
 
 		buf.write (mangle (v.getType ()));
@@ -197,7 +197,7 @@ namespace semantic {
 
 	    OutBuffer buf;
 	    buf.write (Mangler::YMIR_PREFIX);
-	    for (auto & it : splits) buf.write ((uint) it.length (), it);
+	    for (auto & it : splits) buf.write ((int) it.length (), it);
 	    buf.write (Mangler::YMIR_CST);
 
 	    buf.write (mangle (v.getType ()));
@@ -231,7 +231,7 @@ namespace semantic {
 		}
 	    }
 	    
-	    return format ("A%_%_%", (uint) buf.str().length (),
+	    return format ("A%_%_%", (int) buf.str().length (),
 			   v.getType ().to <Type> ().getInners ()[0].to <Char> ().getSize (), buf.str ());
 	}
 	
@@ -251,11 +251,11 @@ namespace semantic {
 	    OutBuffer buf, res;
 	    for (auto & it : tl.getContent ()) {
 		auto mn = mangle (it);
-		buf.write ((uint) mn.length (), mn);
+		buf.write ((int) mn.length (), mn);
 	    }
 	    
 	    auto inner = buf.str ();
-	    res.write ("T", (uint) inner.length (), inner);
+	    res.write ("T", (int) inner.length (), inner);
 	    return res.str ();
 	}
 
@@ -301,7 +301,7 @@ namespace semantic {
 		buf.write (mangleType (it, tu.isMutable ()));
 
 	    auto inner = buf.str ();
-	    res.write ("T", (uint) inner.length (), inner);
+	    res.write ("T", (int) inner.length (), inner);
 	    
 	    return res.str ();
 	}
@@ -313,14 +313,14 @@ namespace semantic {
 	std::string Mangler::mangleStructRef (const StructRef & ref) const {
 	    Ymir::OutBuffer buf;
 	    auto splits = split (ref.getMangledName (), "::");
-	    for (auto & it : splits) buf.write ((uint) it.length (), it);
+	    for (auto & it : splits) buf.write ((int) it.length (), it);
 	    return buf.str ();
 	}
 
 	std::string Mangler::mangleClassRef (const ClassRef & ref) const {
 	    Ymir::OutBuffer buf;
 	    auto splits = split (ref.getMangledName (), "::");
-	    for (auto & it : splits) buf.write ((uint) it.length (), it);
+	    for (auto & it : splits) buf.write ((int) it.length (), it);
 	    return buf.str ();
 	}
 
@@ -337,28 +337,28 @@ namespace semantic {
 	std::string Mangler::mangleEnumRef (const EnumRef & ref) const {
 	    Ymir::OutBuffer buf;
 	    auto splits = split (ref.getMangledName (), "::");
-	    for (auto & it : splits) buf.write ((uint) it.length (), it);
+	    for (auto & it : splits) buf.write ((int) it.length (), it);
 	    return buf.str ();
 	}
 
 	std::string Mangler::mangleRangeT (const Range & range) const {
 	    auto res = mangleType (range.getInners () [0], range.isMutable ());
-	    return format ("R%%", (uint) res.length (), res);	    
+	    return format ("R%%", (int) res.length (), res);	    
 	}
 
 	std::string Mangler::manglePointerT (const Pointer & ptr) const {
 	    auto res = mangleType (ptr.getInners () [0], ptr.isMutable ());
-	    return format ("P%%", (uint) res.length (), res);	    
+	    return format ("P%%", (int) res.length (), res);	    
 	}
 
 	std::string Mangler::mangleOptionT (const Option & o) const {
 	    auto res = mangleType (o.getInners () [0], o.isMutable ());
-	    return format ("O%%", (uint) res.length (), res);	    
+	    return format ("O%%", (int) res.length (), res);	    
 	}
 	
 	std::string Mangler::mangleClassPointerT (const ClassPtr & ptr) const {
 	    auto res = mangleType (ptr.getInners () [0], ptr.isMutable ());
-	    return format ("P%%", (uint) res.length (), res);	    
+	    return format ("P%%", (int) res.length (), res);	    
 	}
 
 	std::string Mangler::mangleFuncPtrT (const FuncPtr & ptr) const {
@@ -366,7 +366,7 @@ namespace semantic {
 	    for (auto & it : ptr.getInners ()) {		
 		buf.write (format ("%", mangleType (it, false)));
 	    }
-	    return format ("FP%%", (uint) buf.str ().length (), buf.str ());
+	    return format ("FP%%", (int) buf.str ().length (), buf.str ());
 	}
 
 	std::string Mangler::mangleDelegateT (const Delegate & ptr) const {
@@ -378,7 +378,7 @@ namespace semantic {
 		    buf.write (format ("%", mangleFrameProto (it.to <FrameProto> ())));
 		}
 	    }
-	    return format ("DG%%", (uint) buf.str ().length (), buf.str ());
+	    return format ("DG%%", (int) buf.str ().length (), buf.str ());
 	}
 	
 	std::string Mangler::mangleClosureT (const Closure &) const {
@@ -388,7 +388,7 @@ namespace semantic {
 	std::string Mangler::manglePath (const std::string & path) const {
 	    std::vector <std::string> splits = split (path, "::");
 	    OutBuffer buf;
-	    for (auto & it : splits) buf.write ((uint) it.length (), it);
+	    for (auto & it : splits) buf.write ((int) it.length (), it);
 	    return buf.str ();
 	}
 	
@@ -398,7 +398,7 @@ namespace semantic {
 	    size_t pos = 0;
 	    while ((pos = aux.find (delim)) != std::string::npos) {
 		result.push_back (aux.substr (0, pos));
-		aux = aux.substr ((uint) (pos + delim.length ()));
+		aux = aux.substr ((int) (pos + delim.length ()));
 	    }
 	    
 	    if (aux != "") result.push_back (aux);
