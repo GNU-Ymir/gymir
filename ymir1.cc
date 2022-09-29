@@ -80,6 +80,84 @@ struct GTY (()) language_function
     int dummy;
 };
 
+
+std::map <std::string, std::string> d_version_to_y_version = {
+  { "Windows", CoreNames::get (WINDOWS_VERSION) },
+  { "Win32", CoreNames::get (WIN32_VERSION) },
+  { "Win64", CoreNames::get (WIN64_VERSION) },
+  { "linux", CoreNames::get (LINUX_VERSION) },
+  { "OSX", CoreNames::get (OSX_VERSION) },
+  { "iOS", CoreNames::get (IOS_VERSION) },
+  { "TVOS", CoreNames::get (TVOS_VERSION) },
+  { "WatchOS", CoreNames::get (WATCHOS_VERSION) },
+  { "FreeBSD", CoreNames::get (FREEBSD_VERSION) },
+  { "OpenBSD", CoreNames::get (OPENBSD_VERSION) },
+  { "NetBSD", CoreNames::get (NETBSD_VERSION) },
+  { "DragonFlyBSD", CoreNames::get (DRAGONFLYBSD_VERSION) },
+  { "BSD", CoreNames::get (BSD_VERSION) },
+  { "Solaris", CoreNames::get (SOLARIS_VERSION) },
+  { "Posix", CoreNames::get (POSIX_VERSION) },
+  { "AIS", CoreNames::get (AIS_VERSION) },
+  { "Haiku", CoreNames::get (HAIKU_VERSION) },
+  { "SkyOS", CoreNames::get (SKYOS_VERSION) },
+  { "Hurd", CoreNames::get (GNU_HURD_VERSION) },
+  { "Android", CoreNames::get (ANDROID_VERSION) },
+  { "Emscripten", CoreNames::get (EMSCRIPTEN_VERSION) },
+  { "Playstation", CoreNames::get (PLAYSTATION_VERSION) },
+  { "Playstation4", CoreNames::get (PLAYSTATION4_VERSION) },
+  { "Cygwin", CoreNames::get (CYGWIN_VERSION) },
+  { "MinGW", CoreNames::get (MINGW_VERSION) },
+  { "FreeStanding", CoreNames::get (FREESTANDING_VERSION) },
+  { "X86", CoreNames::get (X86_VERSION) },
+  { "X86_64", CoreNames::get (X86_64_VERSION) },
+  { "ARM", CoreNames::get (ARM_VERSION) },
+  { "ARM_Thumb", CoreNames::get (ARM_THUMB_VERSION) },
+  { "ARM_SoftFloat", CoreNames::get (ARM_SOFTFLOAT_VERSION) },
+  { "ARM_HardFloat", CoreNames::get (ARM_HARDFLOAT_VERSION) },
+  { "AArch64", CoreNames::get (AARCH64_VERSION) },
+  { "AVR", CoreNames::get (AVR_VERSION) },
+  { "Epiphany", CoreNames::get (EPIPHANY_VERSION) },
+  { "PPC", CoreNames::get (PPC_VERSION) },
+  { "PPC_SoftFloat", CoreNames::get (PPC_SOFTFLOAT_VERSION) },
+  { "PPC_HardFloat", CoreNames::get (PPC_HARDFLOAT_VERSION) },
+  { "PPC64", CoreNames::get (PPC64_VERSION) },
+  { "IA64", CoreNames::get (IA64_VERSION) },
+  { "MIPS32", CoreNames::get (MIPS32_VERSION) },
+  { "MIPS64", CoreNames::get (MIPS64_VERSION) },
+  { "MIPS_O32", CoreNames::get (MIPS_O32_VERSION) },
+  { "MIPS_O64", CoreNames::get (MIPS_O64_VERSION) },
+  { "MIPS_N32", CoreNames::get (MIPS_N32_VERSION) },
+  { "MIPS_N64", CoreNames::get (MIPS_N64_VERSION) },
+  { "MIPS_EABI", CoreNames::get (MIPS_EABI_VERSION) },
+  { "MIPS_SoftFloat", CoreNames::get (MIPS_SOFTFLOAT_VERSION) },
+  { "MIPS_HardFloat", CoreNames::get (MIPS_HARDFLOAT_VERSION) },
+  { "MSP430", CoreNames::get (MSP430_VERSION) },
+  { "NVPTX", CoreNames::get (NVPTX_VERSION) },
+  { "NVPTX64", CoreNames::get (NVPTX64_VERSION) },
+  { "RISCV32", CoreNames::get (RISCV32_VERSION) },
+  { "RISCV64", CoreNames::get (RISCV64_VERSION) },
+  { "SPARC", CoreNames::get (SPARC_VERSION) },
+  { "SPARC_V8Plus", CoreNames::get (SPARC_V8PLUS_VERSION) },
+  { "SPARC_SoftFloat", CoreNames::get (SPARC_SOFTFLOAT_VERSION) },
+  { "SPARC_HardFloat", CoreNames::get (SPARC_HARDFLOAT_VERSION) },
+  { "SPARC64", CoreNames::get (SPARC64_VERSION) },
+  { "S390", CoreNames::get (S390_VERSION) },
+  { "SystemZ", CoreNames::get (SYSTEMZ_VERSION) },
+  { "HPPA", CoreNames::get (HPPA_VERSION) },
+  { "HPPA64", CoreNames::get (HPPA64_VERSION) },
+  { "SH", CoreNames::get (SH_VERSION) },
+  { "WebAssembly", CoreNames::get (WEBASSEMBLY_VERSION) },
+  { "WASI", CoreNames::get (WASI_VERSION) },
+  { "Alpha_SoftFloat", CoreNames::get (ALPHA_SOFTFLOAT_VERSION) },
+  { "Alpha_HardFloat", CoreNames::get (ALPHA_HARDFLOAT_VERSION) },
+  { "ELFv1", CoreNames::get (ELFV1_VERSION) },
+  { "ELFv2", CoreNames::get (ELFV2_VERSION) },
+  { "D_SoftFloat", CoreNames::get (Y_SOFTFLOAT_VERSION) },
+  { "D_HardFloat", CoreNames::get (Y_HARDFLOAT_VERSION) },
+  { "CRuntime_Glibc", CoreNames::get (GLIBC_VERSION) },
+};
+
+
 /**
  * Dlang target callback for target information in __traits(getTargetInfo)
  */
@@ -91,153 +169,10 @@ void d_add_target_info_handlers (const d_target_info_spec * handlers ATTRIBUTE_U
  * Thanks to dlang we can use their version system for our version system !
  */
 void d_add_builtin_version (const char* v) {
-  if (strcmp (v, "Windows") == 0) {
-    State::instance ().activateVersion (CoreNames::get (WINDOWS_VERSION));
-  } else if (strcmp (v, "Win32") == 0) {
-    State::instance ().activateVersion (CoreNames::get (WIN32_VERSION));
-  } else if (strcmp (v, "Win64") == 0) {
-    State::instance ().activateVersion (CoreNames::get (WIN64_VERSION));
-  } else if (strcmp (v, "linux") == 0) {
-    State::instance ().activateVersion (CoreNames::get (LINUX_VERSION));
-  } else if (strcmp (v, "OSX") == 0) {
-    State::instance ().activateVersion (CoreNames::get (OSX_VERSION));
-  } else if (strcmp (v, "iOS") == 0) {
-    State::instance ().activateVersion (CoreNames::get (IOS_VERSION));
-  } else if (strcmp (v, "TVOS") == 0) {
-    State::instance ().activateVersion (CoreNames::get (TVOS_VERSION));
-  } else if (strcmp (v, "WatchOS") == 0) {
-    State::instance ().activateVersion (CoreNames::get (WATCHOS_VERSION));
-  } else if (strcmp (v, "FreeBSD") == 0) {
-    State::instance ().activateVersion (CoreNames::get (FREEBSD_VERSION));
-  } else if (strcmp (v, "OpenBSD") == 0) {
-    State::instance ().activateVersion (CoreNames::get (OPENBSD_VERSION));
-  } else if (strcmp (v, "NetBSD") == 0) {
-    State::instance ().activateVersion (CoreNames::get (NETBSD_VERSION));
-  } else if (strcmp (v, "DragonFlyBSD") == 0) {
-    State::instance ().activateVersion (CoreNames::get (DRAGONFLYBSD_VERSION));
-  } else if (strcmp (v, "BSD") == 0) {
-    State::instance ().activateVersion (CoreNames::get (BSD_VERSION));
-  } else if (strcmp (v, "Solaris") == 0) {
-    State::instance ().activateVersion (CoreNames::get (SOLARIS_VERSION));
-  } else if (strcmp (v, "Posix") == 0) {
-    State::instance ().activateVersion (CoreNames::get (POSIX_VERSION));
-  } else if (strcmp (v, "AIS") == 0) {
-    State::instance ().activateVersion (CoreNames::get (AIS_VERSION));
-  } else if (strcmp (v, "Haiku") == 0) {
-    State::instance ().activateVersion (CoreNames::get (HAIKU_VERSION));
-  } else if (strcmp (v, "SkyOS") == 0) {
-    State::instance ().activateVersion (CoreNames::get (SKYOS_VERSION));
-  } else if (strcmp (v, "Hurd") == 0) {
-    State::instance ().activateVersion (CoreNames::get (GNU_HURD_VERSION));
-  } else if (strcmp (v, "Android") == 0) {
-    State::instance ().activateVersion (CoreNames::get (ANDROID_VERSION));
-  } else if (strcmp (v, "Emscripten") == 0) {
-    State::instance ().activateVersion (CoreNames::get (EMSCRIPTEN_VERSION));
-  } else if (strcmp (v, "Playstation") == 0) {
-    State::instance ().activateVersion (CoreNames::get (PLAYSTATION_VERSION));
-  } else if (strcmp (v, "Playstation4") == 0) {
-    State::instance ().activateVersion (CoreNames::get (PLAYSTATION4_VERSION));
-  } else if (strcmp (v, "Cygwin") == 0) {
-    State::instance ().activateVersion (CoreNames::get (CYGWIN_VERSION));
-  } else if (strcmp (v, "MinGW") == 0) {
-    State::instance ().activateVersion (CoreNames::get (MINGW_VERSION));
-  } else if (strcmp (v, "FreeStanding") == 0) {
-    State::instance ().activateVersion (CoreNames::get (FREESTANDING_VERSION));
-  } else if (strcmp (v, "X86") == 0) {
-    State::instance ().activateVersion (CoreNames::get (X86_VERSION));
-  } else if (strcmp (v, "X86_64") == 0) {
-    State::instance ().activateVersion (CoreNames::get (X86_64_VERSION));
-  } else if (strcmp (v, "ARM") == 0) {
-    State::instance ().activateVersion (CoreNames::get (ARM_VERSION));
-  } else if (strcmp (v, "ARM_Thumb") == 0) {
-    State::instance ().activateVersion (CoreNames::get (ARM_THUMB_VERSION));
-  } else if (strcmp (v, "ARM_SoftFloat") == 0) {
-    State::instance ().activateVersion (CoreNames::get (ARM_SOFTFLOAT_VERSION));
-  } else if (strcmp (v, "ARM_HardFloat") == 0) {
-    State::instance ().activateVersion (CoreNames::get (ARM_HARDFLOAT_VERSION));
-  } else if (strcmp (v, "AArch64") == 0) {
-    State::instance ().activateVersion (CoreNames::get (AARCH64_VERSION));
-  } else if (strcmp (v, "AVR") == 0) {
-    State::instance ().activateVersion (CoreNames::get (AVR_VERSION));
-  } else if (strcmp (v, "Epiphany") == 0) {
-    State::instance ().activateVersion (CoreNames::get (EPIPHANY_VERSION));
-  } else if (strcmp (v, "PPC") == 0) {
-    State::instance ().activateVersion (CoreNames::get (PPC_VERSION));
-  } else if (strcmp (v, "PPC_SoftFloat") == 0) {
-    State::instance ().activateVersion (CoreNames::get (PPC_SOFTFLOAT_VERSION));
-  } else if (strcmp (v, "PPC_HardFloat") == 0) {
-    State::instance ().activateVersion (CoreNames::get (PPC_HARDFLOAT_VERSION));
-  } else if (strcmp (v, "PPC64") == 0) {
-    State::instance ().activateVersion (CoreNames::get (PPC64_VERSION));
-  } else if (strcmp (v, "IA64") == 0) {
-    State::instance ().activateVersion (CoreNames::get (IA64_VERSION));
-  } else if (strcmp (v, "MIPS32") == 0) {
-    State::instance ().activateVersion (CoreNames::get (MIPS32_VERSION));
-  } else if (strcmp (v, "MIPS64") == 0) {
-    State::instance ().activateVersion (CoreNames::get (MIPS64_VERSION));
-  } else if (strcmp (v, "MIPS_O32") == 0) {
-    State::instance ().activateVersion (CoreNames::get (MIPS_O32_VERSION));
-  } else if (strcmp (v, "MIPS_O64") == 0) {
-    State::instance ().activateVersion (CoreNames::get (MIPS_O64_VERSION));
-      } else if (strcmp (v, "MIPS_N32") == 0) {
-    State::instance ().activateVersion (CoreNames::get (MIPS_N32_VERSION));
-  } else if (strcmp (v, "MIPS_N64") == 0) {
-    State::instance ().activateVersion (CoreNames::get (MIPS_N64_VERSION));
-  } else if (strcmp (v, "MIPS_EABI") == 0) {
-    State::instance ().activateVersion (CoreNames::get (MIPS_EABI_VERSION));
-  } else if (strcmp (v, "MIPS_SoftFloat") == 0) {
-    State::instance ().activateVersion (CoreNames::get (MIPS_SOFTFLOAT_VERSION));
-  } else if (strcmp (v, "MIPS_HardFloat") == 0) {
-    State::instance ().activateVersion (CoreNames::get (MIPS_HARDFLOAT_VERSION));
-  } else if (strcmp (v, "MSP430") == 0) {
-    State::instance ().activateVersion (CoreNames::get (MSP430_VERSION));
-  } else if (strcmp (v, "NVPTX") == 0) {
-    State::instance ().activateVersion (CoreNames::get (NVPTX_VERSION));
-  } else if (strcmp (v, "NVPTX64") == 0) {
-    State::instance ().activateVersion (CoreNames::get (NVPTX64_VERSION));
-  } else if (strcmp (v, "RISCV32") == 0) {
-    State::instance ().activateVersion (CoreNames::get (RISCV32_VERSION));
-  } else if (strcmp (v, "RISCV64") == 0) {
-    State::instance ().activateVersion (CoreNames::get (RISCV64_VERSION));
-  } else if (strcmp (v, "SPARC") == 0) {
-    State::instance ().activateVersion (CoreNames::get (SPARC_VERSION));
-  } else if (strcmp (v, "SPARC_V8Plus") == 0) {
-    State::instance ().activateVersion (CoreNames::get (SPARC_V8PLUS_VERSION));
-  } else if (strcmp (v, "SPARC_SoftFloat") == 0) {
-    State::instance ().activateVersion (CoreNames::get (SPARC_SOFTFLOAT_VERSION));
-  } else if (strcmp (v, "SPARC_HardFloat") == 0) {
-    State::instance ().activateVersion (CoreNames::get (SPARC_HARDFLOAT_VERSION));
-  } else if (strcmp (v, "SPARC64") == 0) {
-    State::instance ().activateVersion (CoreNames::get (SPARC64_VERSION));
-  } else if (strcmp (v, "S390") == 0) {
-    State::instance ().activateVersion (CoreNames::get (S390_VERSION));
-  } else if (strcmp (v, "SystemZ") == 0) {
-    State::instance ().activateVersion (CoreNames::get (SYSTEMZ_VERSION));
-  } else if (strcmp (v, "HPPA") == 0) {
-    State::instance ().activateVersion (CoreNames::get (HPPA_VERSION));
-  } else if (strcmp (v, "HPPA64") == 0) {
-    State::instance ().activateVersion (CoreNames::get (HPPA64_VERSION));   
-  } else if (strcmp (v, "SH") == 0) {
-    State::instance ().activateVersion (CoreNames::get (SH_VERSION));
-  } else if (strcmp (v, "WebAssembly") == 0) {
-    State::instance ().activateVersion (CoreNames::get (WEBASSEMBLY_VERSION));
-  } else if (strcmp (v, "WASI") == 0) {
-    State::instance ().activateVersion (CoreNames::get (WASI_VERSION));
-  } else if (strcmp (v, "Alpha_SoftFloat") == 0) {
-    State::instance ().activateVersion (CoreNames::get (ALPHA_SOFTFLOAT_VERSION));
-  } else if (strcmp (v, "Alpha_HardFloat") == 0) {
-    State::instance ().activateVersion (CoreNames::get (ALPHA_HARDFLOAT_VERSION));
-  } else if (strcmp (v, "ELFv1") == 0) {
-    State::instance ().activateVersion (CoreNames::get (ELFV1_VERSION));
-  } else if (strcmp (v, "ELFv2") == 0) {
-    State::instance ().activateVersion (CoreNames::get (ELFV2_VERSION));
-  } else if (strcmp (v, "D_SoftFloat") == 0) {
-    State::instance ().activateVersion (CoreNames::get (Y_SOFTFLOAT_VERSION));
-  } else if (strcmp (v, "D_HardFloat") == 0) {
-    State::instance ().activateVersion (CoreNames::get (Y_HARDFLOAT_VERSION));
-  } else if (strcmp (v, "CRuntime_Glibc") == 0) {
-    State::instance ().activateVersion (CoreNames::get (GLIBC_VERSION));
-  } // else { ignore it }
+  auto it = d_version_to_y_version.find (std::string (v));
+  if (it != d_version_to_y_version.end ()) {
+    State::instance ().activateVersion (it-> second);
+  }
 }
 
 
@@ -311,8 +246,6 @@ ymir_langhook_init (void)
     /* Emit all target-specific version identifiers.  */
     targetdm.d_cpu_versions ();
     targetdm.d_os_versions ();
-
-    println (State::instance ().getActiveVersions ());
     
     return true;
 }
