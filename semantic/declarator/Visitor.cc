@@ -598,7 +598,7 @@ namespace semantic {
 	
 	void Visitor::importAllCoreFiles () {
 	    auto & dir = State::instance ().getCorePath ();
-	    static std::map <std::string, std::string> entries;
+	    static std::map <std::string, std::string> entries;	    
 	    if (entries.empty ()) {
 		entries = std::move (dirEntries (dir, "core"));
 		for (auto & it : entries) {

@@ -19,7 +19,8 @@ namespace lexing {
     Lexer::Lexer () :
 	line (0),
 	column (0),
-	enableComment (false),
+	lineStart (0),
+	enableComment (true),
 	_tokenizer (Token::members ()),
 	current (-1),
 	file (lexing::File::empty ()),       
@@ -36,6 +37,7 @@ namespace lexing {
     ) :
 	line (1),
 	column (1),
+	lineStart (0),
 	enableComment (true),
 	_tokenizer (Token::members ()),	
 	current (-1),
@@ -269,7 +271,7 @@ namespace lexing {
     }
     
     bool Lexer::isComment (const Word& elem, std::string & retour, std::string & ignore) const {
-	auto end_comm = this-> comments.find (elem.getStr ());
+	auto end_comm = this-> comments.find (elem.getStr ());	
 	if (end_comm == this-> comments.end ()) return false;
 	else {
 	    retour = end_comm-> second.first;
@@ -300,17 +302,18 @@ namespace lexing {
     
     std::list <Word> Lexer::readLine () {
 	if (this-> file.isEof ()) return {};
-	auto where = this-> file.tell ();
-	auto line_start = where;
+	// auto where = this-> file.tell ();
+	// auto line_start = where;
 	auto line  = std::move (this-> file.readln ());
 	if (line == "") return {};
-
+	
 	ulong start = 0;
 	std::list <Word> result;
+	ulong where = this-> lineStart;
 	while (start < line.length ()) {
 	    auto len = this-> _tokenizer.next (start, line);
 	    auto it = std::move (line.substr (start, len));
-	    result.push_back (Word::init (it, this-> file, this-> line, this-> column, line_start, this-> isFromString, this-> start, where));
+	    result.push_back (Word::init (it, this-> file, this-> line, this-> column, this-> lineStart, this-> isFromString, this-> start, where));
 	    start += len;
 	    where = where + len;
 	    if (it  == "\n") {
@@ -321,6 +324,7 @@ namespace lexing {
 	    }	    
 	}
 	
+	this-> lineStart += line.length ();
 	return result;
     }
 

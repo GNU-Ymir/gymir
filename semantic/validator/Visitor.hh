@@ -212,7 +212,7 @@ namespace semantic {
 	    /**
 	     * Validate a pre solution symbol (a template solution that has not been replaced yet)
 	     */
-	    semantic::Symbol validateTemplatePreSolution (const semantic::Symbol & sol, const generator::Generator & gen, bool validate = true, bool inModule = false);
+	    semantic::Symbol validateTemplatePreSolution (const semantic::Symbol & sol, const generator::Generator & gen, bool validate = true, bool inModule = false, bool isWeak = true);
 
 	    /**
 	     * Validate a template, if the parameters are inferable without specialization

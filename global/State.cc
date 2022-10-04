@@ -61,6 +61,14 @@ namespace global {
     void State::activateIncludeTesting (bool act) {
 	this-> _includeTest = act;
     }
+
+    void State::activateReflection (bool act) {
+	this-> _enableReflect = act;
+    }
+
+    bool State::isEnableReflect () const {
+	return this-> _enableReflect;
+    }
     
     bool State::isIncludeTesting () const {
 	return this-> _includeTest;

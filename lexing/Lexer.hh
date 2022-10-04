@@ -203,7 +203,8 @@ namespace lexing {
     protected:
 
 	static const int maxColumnHint = 80;
-	ulong line, column;    
+	ulong line, column;
+	ulong lineStart;
 	bool enableComment, disposed;
 	std::string filename;
 	

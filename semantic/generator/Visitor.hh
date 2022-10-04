@@ -7,6 +7,18 @@ namespace semantic {
 
     namespace generator {
 
+	enum class ReflectType : int {
+	    FUNCTION = 0,
+	    VTABLE = 1
+	};
+
+	struct ReflectContent {
+	    ReflectType type;
+	    lexing::Word loc;
+	    generic::Tree treeNode;
+	};
+	
+	
 	/**
 	 * \struct Visitor
 	 * This last visitor is the final visitor
@@ -60,6 +72,11 @@ namespace semantic {
 	     * The value of global vars needing a static initialization
 	     */
 	    std::map <uint, std::pair <generator::Generator, generator::Generator> > _globalInitialiser;
+
+	    /**
+	     * List of symbols to add in the reflect tree
+	     */
+	    std::map <std::string, ReflectContent> _globalReflect;
 	    
 	    std::list <generic::Tree> _loopLabels;
 
@@ -151,6 +168,11 @@ namespace semantic {
 	     * \brief Create the vtable of a classref
 	     */
 	    generic::Tree generateVtable (const Generator & classType);
+
+	    /**
+	     * \brief Create the reflection array for the current module 
+	     */
+	    generic::Tree generateReflectArray (const std::string & name);
 	    
 	    /**
 	     * \brief Generate the declaration of a param var

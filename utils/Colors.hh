@@ -20,12 +20,17 @@
 // )
 
 struct Colors {
-    static const std::string PURPLE;
-    static const std::string BLUE;
-    static const std::string YELLOW;
-    static const std::string RED;
-    static const std::string GREEN;
-    static const std::string BOLD;
-    static const std::string UNDERLINE;
-    static const std::string RESET;    
+  static const std::string PURPLE;
+  static const std::string BLUE;
+  static const std::string YELLOW;
+  static const std::string RED;
+  static const std::string GREEN;
+  static const std::string BOLD;
+  static const std::string UNDERLINE;
+  static const std::string RESET;
+  static const std::string STRAIGHT_LINE;
+  static const std::string CROSS_LINE;
+  static const std::string CORNER_LINE;
+  static const std::string BOTTOM_LINE;
+  static const std::string COL_LINE;
 };

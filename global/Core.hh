@@ -69,6 +69,7 @@ namespace global {
 		       UNARY_ASSIGN_OP_OVERRIDE,
 		       UNARY_OP_OVERRIDE,
 		       RUN_TEST_FUNC,
+		       REGISTER_REFLECT_FUNC,
 		       GET_TEST_ERRORS_CODE,
 		       GNU_VERSION,
 		       YMIR_VERSION,
@@ -149,6 +150,7 @@ namespace global {
 		       Y_SOFTFLOAT_VERSION,
 		       Y_HARDFLOAT_VERSION,
 		       GLIBC_VERSION,
+		       REFLECT_VERSION,
 		       );
   
 }

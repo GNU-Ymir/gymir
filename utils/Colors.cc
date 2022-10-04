@@ -20,6 +20,7 @@
 //     RESET = "[0m"
 // )
 
+#ifdef __linux__
 const std::string Colors::PURPLE = "[1;35m";
 const std::string Colors::BLUE = "[1;36m";
 const std::string Colors::YELLOW = "[1;33m";
@@ -28,4 +29,25 @@ const std::string Colors::GREEN = "[1;32m";
 const std::string Colors::BOLD = "[1;50m";
 const std::string Colors::UNDERLINE = "[4m";
 const std::string Colors::RESET = "[0m";
+const std::string Colors::STRAIGHT_LINE = "┃";
+const std::string Colors::CROSS_LINE = "╋";
+const std::string Colors::CORNER_LINE = "┗";
+const std::string Colors::BOTTOM_LINE = "━";
+const std::string Colors::COL_LINE = "┻";
+
+#else
+const std::string Colors::PURPLE = "[1;35m";
+const std::string Colors::BLUE = "[1;36m";
+const std::string Colors::YELLOW = "[1;33m";
+const std::string Colors::RED = "[1;31m";
+const std::string Colors::GREEN = "[1;32m";
+const std::string Colors::BOLD = "";
+const std::string Colors::UNDERLINE = "";
+const std::string Colors::RESET = "[0m";
+const std::string Colors::STRAIGHT_LINE = "|";
+const std::string Colors::CROSS_LINE = "+";
+const std::string Colors::CORNER_LINE = "\\";
+const std::string Colors::BOTTOM_LINE = "_";
+const std::string Colors::COL_LINE = "+";
+#endif
 

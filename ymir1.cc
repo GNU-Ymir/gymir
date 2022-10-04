@@ -265,6 +265,14 @@ ymir_init_options (unsigned int argc ATTRIBUTE_UNUSED, cl_decoded_option * decod
 	    break;
 	case OPT_v : global::State::instance ().activateVerbose (true); break;
 	case OPT_nostdinc : global::State::instance ().activateStandalone (true); break;
+	case OPT_funittest : 
+	    global::State::instance ().activateIncludeTesting (true);
+	    global::State::instance ().activateVersion (global::CoreNames::get (global::UNITTEST_VERSION));
+	    break;
+	case OPT_fno_reflect : 
+	    global::State::instance ().activateReflection (false);
+	    global::State::instance ().activateVersion (global::CoreNames::get (global::REFLECT_VERSION));
+	    break;
 	}
     }
     
@@ -324,6 +332,9 @@ ymir_langhook_handle_option (size_t scode, const char *arg, HOST_WIDE_INT value 
     } else if (code == OPT_funittest) {
 	global::State::instance ().activateIncludeTesting (true);
 	global::State::instance ().activateVersion (global::CoreNames::get (global::UNITTEST_VERSION));
+    } else if (code == OPT_fno_reflect) {	
+	global::State::instance ().activateReflection (false);
+	global::State::instance ().activateVersion (global::CoreNames::get (global::REFLECT_VERSION));
     } else if (code == OPT_fversion_) {
 	global::State::instance ().activateVersion (arg);
     } else if (code == OPT_imultilib) {

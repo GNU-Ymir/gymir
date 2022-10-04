@@ -41,6 +41,8 @@ namespace global {
 	bool _isTrusted = true;
 
 	bool _includeTest = false;
+
+	bool _enableReflect = true;
 	
 	bool _isDumpDependency = false;
 
@@ -134,7 +136,11 @@ namespace global {
 	 * \brief If act, the compiler include testing
 	 */
 	void activateIncludeTesting (bool act);
-	
+
+	/**
+	 * If act, the compiler include reflection symbols
+	 */
+	void activateReflection (bool act);
 	
 	/**
 	 * \brief tell if the debug mode is active (option -g or -ggdb)
@@ -200,6 +206,11 @@ namespace global {
 	 * \brief true if the option -funittest is active
 	 */
 	bool isIncludeTesting () const;
+
+	/**
+	 * \brief true if the option --enable-reflect is active
+	 */
+	bool isEnableReflect () const;
 	
 	/**
 	 * \brief Set the prefix path dir

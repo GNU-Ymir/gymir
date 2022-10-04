@@ -37,7 +37,7 @@ namespace semantic {
 	}
 
 	void Visitor::finalize (const std::string & moduleName) {
-	    if (this-> _globalInitialiser.size () != 0 || this-> _globalTests.size () != 0) {
+	    if (this-> _globalInitialiser.size () != 0 || this-> _globalTests.size () != 0 || (this-> _globalReflect.size () != 0 && global::State::instance ().isEnableReflect ())) {
 		generateGlobalInitFrame (moduleName);
 	    }
 
@@ -478,6 +478,54 @@ namespace semantic {
 	    return decl;	    
 	}
 
+	Tree Visitor::generateReflectArray (const std::string & name) {
+	    std::vector<Tree> params;
+	    std::vector<Tree> inner;
+	    inner.push_back (Tree::intType (32, false));
+	    inner.push_back (Tree::pointerType (Tree::voidType ()));
+	    inner.push_back (Tree::pointerType (Tree::charType (8)));
+	    inner.push_back (Tree::pointerType (Tree::charType (8)));
+	    inner.push_back (Tree::intType (32, false));
+	    
+	    auto tupleType = Tree::tupleType ({}, inner);
+	    std::map <std::string, generic::Tree> globalFileName;
+	    
+	    for (auto & it : this-> _globalReflect) {
+		std::vector <Tree> tupleValue;
+		tupleValue.push_back (Tree::buildIntCst (lexing::Word::eof (), (unsigned long) (it.second.type), Tree::intType (32, false)));
+		tupleValue.push_back (it.second.treeNode);
+		tupleValue.push_back (Tree::buildStringLiteral (lexing::Word::eof (), it.first.c_str (), it.first.length () + 1, 8));
+		auto nameT = globalFileName.find (it.second.loc.getFilename ());
+		if (nameT != globalFileName.end ()) {
+		    tupleValue.push_back (nameT-> second);
+		} else {
+		    Tree filename = Tree::buildStringLiteral (it.second.loc, it.second.loc.getFilename ().c_str (), it.second.loc.getFilename ().length () + 1, 8);
+		    globalFileName.emplace (it.second.loc.getFilename (), filename);
+		    tupleValue.push_back (filename);
+		}
+
+		tupleValue.push_back (Tree::buildIntCst (lexing::Word::eof (), (unsigned long) it.second.loc.getLine (), Tree::intType (32, false)));				
+		params.push_back (Tree::constructField (lexing::Word::eof (), tupleType, {}, tupleValue));
+	    }
+	    
+	    auto reflectType = Tree::staticArray (tupleType, params.size ());
+	    auto reflectValue = Tree::constructIndexed (lexing::Word::eof (), reflectType, params);
+
+	    Tree decl = Tree::varDecl (lexing::Word::eof (), name, reflectType);
+	    decl.setDeclInitial (reflectValue);
+	    decl.isStatic (true);
+	    decl.isUsed (true);
+	    decl.isExternal (false);
+	    decl.isPreserved (true);
+	    decl.isPublic (true);
+	    decl.isWeak (false);
+	    decl.setDeclContext (getGlobalContext ());
+
+	    vec_safe_push (__global_declarations__, decl.getTree ());
+	    
+	    return decl;
+	}
+	
 	Tree Visitor::generateVtable (const Generator & classType) {
 	    static std::map <std::string, generic::Tree> __globalConstant__;
 	    auto name = Mangler::init ().mangleVtable (classType.to<ClassRef> ());
@@ -512,6 +560,9 @@ namespace semantic {
 
 	    vec_safe_push (__global_declarations__, decl.getTree ());
 	    __globalConstant__.emplace (name, decl);
+
+	    auto vtableAddr = Tree::buildAddress (classType.getLocation (), decl, Tree::pointerType (Tree::pointerType (Tree::voidType ())));
+	    this-> _globalReflect.emplace (name, ReflectContent { ReflectType::VTABLE, classType.getLocation (), vtableAddr });
 	    
 	    return decl;
 	}
@@ -674,6 +725,22 @@ namespace semantic {
 		list.append (Tree::affect (stackVarDeclChain.back (), getCurrentContext (), it.second.first.getLocation (), decl-> second, value.getValue ()));
 	    }
 
+	    if (global::State::instance ().isEnableReflect ()) {		
+		auto name = "__Y_GLOBAL_REFLECT__" + Mangler::init ().manglePath (moduleName);
+		auto reflectArray = this-> generateReflectArray (name);
+		auto reflectArrayPointer = Tree::buildAddress (lexing::Word::eof (), reflectArray, Tree::pointerType (Tree::voidType ()));
+		auto sizeCst = Tree::buildIntCst (lexing::Word::eof (), (unsigned long) this-> _globalReflect.size (), Tree::intType (0, false));
+		auto mangledModuleName = Mangler::init ().manglePath (moduleName);
+		auto moduleNameStr = Tree::buildStringLiteral (lexing::Word::eof (), mangledModuleName.c_str (), mangledModuleName.length () + 1, 8);
+		auto register_reflect_fn = global::CoreNames::get (REGISTER_REFLECT_FUNC);
+		
+		list.append (Tree::buildCall (
+				 lexing::Word::eof (),
+				 ret, register_reflect_fn, { moduleNameStr, sizeCst, reflectArrayPointer }
+				 )
+		    );		
+	    }
+	    	    
 	    for (auto & it : this-> _globalTests) {
 		auto run_test_fn = global::CoreNames::get (RUN_TEST_FUNC);
 		auto test_fn = Tree::buildFrameProto (lexing::Word::eof (), ret, it.second, {});
@@ -770,6 +837,10 @@ namespace semantic {
 		Tree::finalizeFunction (fn_decl);
 
 		__definedFrame__.emplace (asmName);
+		if (!frame.isWeak ()) {
+		    auto fnAddr = Tree::init (frame.getLocation ().getLocation (), build1 (ADDR_EXPR, Tree::pointerType (Tree::init (BUILTINS_LOCATION, fntype.getTree ())).getTree (), fn_decl.getTree ()));		    
+		    this-> _globalReflect.emplace (asmName, ReflectContent { ReflectType::FUNCTION, frame.getLocation (), fnAddr });
+		}
 		
 		setCurrentContext (Tree::empty ());
 		quitFrame ();

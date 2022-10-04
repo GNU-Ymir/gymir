@@ -109,7 +109,7 @@ namespace Ymir {
 	void addLineEof (OutBuffer & buf, const Word & word) {
 	    std::string leftLine = center (format ("%", word.getLine ()), 3, ' ');
 	    auto padd = center ("", leftLine.length (), ' ');
-	    buf.write (format ("\n% --> %:(%,%)%\n%% ┃ %\n",
+	    buf.write (format ("\n% --> %:(%,%)%\n%% % %\n",
 			       Colors::BOLD,
 			       word.getFilename (),
 			       word.getLine (),
@@ -117,6 +117,7 @@ namespace Ymir {
 			       Colors::RESET,
 			       Colors::BOLD,
 			       padd,
+			       Colors::STRAIGHT_LINE,
 			       Colors::RESET
 			   ));
 
@@ -147,8 +148,8 @@ namespace Ymir {
 		auto wordStr = shorten (substr (line, column - 1, column + wordLength - 1));
 		auto between = shorten (substr (line, column + wordLength - 1, line.length ()));
 		column = begin.length () + 1;
-		buf.write (format ("%% ┃ %%%%(y)%%",
-				   Colors::BOLD, leftLine, Colors::RESET,
+		buf.write (format ("%% % %%%%(y)%%",
+				   Colors::BOLD, leftLine, Colors::STRAIGHT_LINE, Colors::RESET,
 				   begin,
 				   Colors::UNDERLINE,
 				   wordStr,
@@ -157,7 +158,7 @@ namespace Ymir {
 			       ));
 
 		if (line [line.length () - 1] != '\n') buf.write ('\n');
-		buf.write (format ("%% ╋ %", Colors::BOLD, padd, Colors::RESET));
+		buf.write (format ("%% % %", Colors::BOLD, padd, Colors::CROSS_LINE, Colors::RESET));
 		for (ulong it = 0 ; it < column - 1 ; it++) {
 		    if (line [it] == '\t') buf.write ('\t');
 		    else buf.write (' ');
@@ -197,8 +198,8 @@ namespace Ymir {
 	    
 	    for (auto it : Ymir::r (0, lines.size ())) {
 		if (lines [it].length() != 0) {
-		    auto l = format ("%% ┃ %%\n", Colors::BOLD, padd, Colors::RESET, lines [it]);
-		    buf.write (l);
+		  auto l = format ("%% % %%\n", Colors::BOLD, padd, Colors::STRAIGHT_LINE, Colors::RESET, lines [it]);
+		  buf.write (l);
 		}
 	    }	    
 	}
@@ -222,8 +223,8 @@ namespace Ymir {
 		auto between =  shorten (substr (line, column + word.length () - 1, line.length ()));
 		
 		column = begin.length () + 1;
-		buf.write (format ("%% ┃ %%%%(y)%%",
-				   Colors::BOLD, leftLine, Colors::RESET,
+		buf.write (format ("%% % %%%%(y)%%",
+				   Colors::BOLD, leftLine, Colors::STRAIGHT_LINE, Colors::RESET,
 				   begin,
 				   Colors::UNDERLINE,
 				   wordStr,
@@ -275,8 +276,8 @@ namespace Ymir {
 		auto wordStr = shorten (substr (line, column - 1, column + word.length () - 1));
 		auto between = shorten (substr (line, column + word.length () - 1, column2 - 1));
 		auto wordStr2 = shorten (substr (line, column2 - 1, column2 + end.length () - 1));
-		buf.write (format ("%% ┃ %%%%(y)%%%%(y)%%",
-				   Colors::BOLD, leftLine, Colors::RESET,
+		buf.write (format ("%% % %%%%(y)%%%%(y)%%",				   
+				   Colors::BOLD, leftLine, Colors::STRAIGHT_LINE, Colors::RESET,
 				   line.substr (0, column - 1),
 				   Colors::UNDERLINE,
 				   wordStr,
@@ -289,7 +290,7 @@ namespace Ymir {
 		));
 		
 		if (line [line.length () - 1] != '\n') buf.write ('\n');
-		buf.write (format ("%% ╋ %", Colors::BOLD, padd, Colors::RESET));
+		buf.write (format ("%% % %", Colors::BOLD, padd, Colors::CROSS_LINE, Colors::RESET));
 		for (ulong it = 0 ; it < column - 1 ; it++) {
 		    if (line [it] == '\t') buf.write ('\t');
 		    else buf.write (' ');
@@ -404,12 +405,12 @@ namespace Ymir {
 		    auto leftLine = center (format ("%", this-> begin.getLine ()), 3, ' ');
 		    auto padd = center ("", leftLine.length (), ' ');
 		    auto leftLine2 = center (format ("%", max_padd), 3, ' ');
-		    auto padd2 = center ("", leftLine2.length (), "━");
+		    auto padd2 = center ("", leftLine2.length (), Colors::BOTTOM_LINE.c_str ());
 		
 		    if (notOneLine) {
-			buf.write (format ("%% ┗━%━┻━ %\n", Colors::BOLD, padd, padd2, Colors::RESET));
+		      buf.write (format ("%% %%%%%% %\n", Colors::BOLD, padd, Colors::CORNER_LINE, Colors::BOTTOM_LINE, padd2, Colors::BOTTOM_LINE, Colors::COL_LINE, Colors::BOTTOM_LINE, Colors::RESET));
 		    } else {
-			buf.write (format ("%% ┗━%━━ %\n", Colors::BOLD, padd, padd2, Colors::RESET));
+		      buf.write (format ("%% %%%%% %\n", Colors::BOLD, padd, Colors::CORNER_LINE, Colors::BOTTOM_LINE, padd2, Colors::BOTTOM_LINE, Colors::BOTTOM_LINE, Colors::RESET));
 		    }
 		}
 	    } else buf.write (noteBuf.str ());

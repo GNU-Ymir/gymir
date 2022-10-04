@@ -63,6 +63,7 @@ namespace global {
 			  UNARY_ASSIGN_OP_OVERRIDE = "opUnaryAssign",
 			  UNARY_OP_OVERRIDE	     = "opUnary",
 			  RUN_TEST_FUNC            = "_yrt_run_tests",
+			  REGISTER_REFLECT_FUNC    = "_yrt_reflect_register_symbol_table",
 			  GET_TEST_ERRORS_CODE     = "_yrt_get_test_code",
 			  GNU_VERSION                      = "GNU",
 			  YMIR_VERSION             = "Ymir_Version1",
@@ -143,5 +144,6 @@ namespace global {
 			  Y_SOFTFLOAT_VERSION = "Ymir_SoftFloat",
 			  Y_HARDFLOAT_VERSION = "Ymir_HardFloat",
 			  GLIBC_VERSION = "CRuntime_GlibC",
+			  REFLECT_VERSION = "reflect_active",
 			  );
 }

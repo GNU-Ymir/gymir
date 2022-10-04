@@ -26,7 +26,7 @@ namespace semantic {
 		auto sol = visitor.applyMapperOnTemplate (sym.getName (), sym, mapper, score);
 		match (sol) {
 		    s_of_u (TemplatePreSolution) {
-			this-> validateTemplatePreSolution (sol, Generator::empty (), true, true);
+			this-> validateTemplatePreSolution (sol, Generator::empty (), true, true, false);
 		    } 
 		}
 	    }
@@ -54,11 +54,13 @@ namespace semantic {
 	    }
 	}
 
-	semantic::Symbol Visitor::validateTemplatePreSolution (const semantic::Symbol & sol, const Generator & gen, bool validate, bool inModule) {
+	semantic::Symbol Visitor::validateTemplatePreSolution (const semantic::Symbol & sol, const Generator & gen, bool validate, bool inModule, bool isWeak) {
 	    auto tmplVisitor = TemplateVisitor::init (*this);
 	    auto & preSol = sol.to <semantic::TemplatePreSolution> ();	    		    
 	    auto visit = declarator::Visitor::init ();
-	    visit.setWeak ();
+	    if (isWeak) {
+		visit.setWeak ();
+	    }
 	    visit.pushReferent (preSol.getTemplateReferent ());
 	    
 	    auto soluce = TemplateSolution::init (sol.getName (), sol.getComments (), preSol.getTemplateParams (), preSol.getMapping (), preSol.getNameOrder (), true);
