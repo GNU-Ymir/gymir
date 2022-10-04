@@ -841,7 +841,7 @@ namespace semantic {
 		    auto fnAddr = Tree::init (frame.getLocation ().getLocation (), build1 (ADDR_EXPR, Tree::pointerType (Tree::init (BUILTINS_LOCATION, fntype.getTree ())).getTree (), fn_decl.getTree ()));		    
 		    this-> _globalReflect.emplace (asmName, ReflectContent { ReflectType::FUNCTION, frame.getLocation (), fnAddr });
 		}
-		
+
 		setCurrentContext (Tree::empty ());
 		quitFrame ();
 	    }

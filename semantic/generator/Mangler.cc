@@ -52,7 +52,18 @@ namespace semantic {
 
 	std::string Mangler::mangleType (const Generator & gen, bool fatherMut) const {
 	    std::string result = "";
-	    match (gen) {
+	    
+	    {
+		match (gen) {
+		    s_of (Type, t) {
+			if (!t.getProxy ().isEmpty ()) {
+			    return this-> mangleType (t.getProxy (), fatherMut);
+			}
+		    } 
+		}
+	    }
+	    
+	    match (gen) {		
 		of (Array, ar) result = mangleArrayT (ar);
 		elof (Bool, b) result = mangleBoolT (b);
 		elof (Char, c) result = mangleCharT (c);

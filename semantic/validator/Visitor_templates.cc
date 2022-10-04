@@ -61,6 +61,7 @@ namespace semantic {
 	    if (isWeak) {
 		visit.setWeak ();
 	    }
+	    
 	    visit.pushReferent (preSol.getTemplateReferent ());
 	    
 	    auto soluce = TemplateSolution::init (sol.getName (), sol.getComments (), preSol.getTemplateParams (), preSol.getMapping (), preSol.getNameOrder (), true);
@@ -329,7 +330,6 @@ namespace semantic {
 			}
 		    }
 		}
-
 		
 		if (loc_scores.size () != 0) {
 		    errors = {};
