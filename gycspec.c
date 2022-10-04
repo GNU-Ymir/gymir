@@ -12,10 +12,6 @@
 #include <algorithm>
 #include <string>
 
-#ifndef LIBYRUNTIME
-#define LIBYRUNTIME "gyruntime"
-#endif
-
 #ifndef LIBYMIDGARD
 #define LIBYMIDGARD "gymidgard"
 #endif
@@ -29,7 +25,11 @@
 #endif
 
 #ifndef LIBPTHREAD
+#ifdef _WIN32
+#define LIBPTHREAD "winpthread"
+#else
 #define LIBPTHREAD "pthread"
+#endif
 #endif
 
 typedef unsigned int uint;
@@ -53,7 +53,7 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
     bool yr_file_found = false;
     std::vector <int> toRemove;
     std::vector <std::string> includes;
-
+    
     for (i = 0 ; i < argc ; i++) {
 	const char * arg = decoded_options [i].arg;
 	if (decoded_options [i].opt_index == OPT_l) {
@@ -70,7 +70,7 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
     }
     
     if (yr_file_found) {
-	num_args = argc + need_gc + need_pthread + (need_libs * 4) + need_m + includes.size () - toRemove.size ();
+	num_args = argc + ((need_gc + need_pthread + need_libs + need_m)) + includes.size () - toRemove.size ();
 	new_decoded_options = XNEWVEC (cl_decoded_option, num_args);
 	i = 0;
 
@@ -78,6 +78,12 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 	    if (std::find (toRemove.begin (), toRemove.end (), i) == toRemove.end ())
 		new_decoded_options [i] = decoded_options [i];
 	    i ++;
+	}
+	
+	if (need_libs) {
+	    generate_option (OPT_l, LIBYMIDGARD, 1, CL_DRIVER, &new_decoded_options [i]);
+	    added_libraries ++;
+	    i++;
 	}
 
 	if (need_m) {
@@ -94,24 +100,6 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 
 	if (need_pthread) {
 	    generate_option (OPT_l, LIBPTHREAD, 1, CL_DRIVER, &new_decoded_options [i]);
-	    added_libraries ++;
-	    i++;
-	}
-	
-	if (need_libs) {
-	    generate_option (OPT_l, LIBYRUNTIME, 1, CL_DRIVER, &new_decoded_options [i]);
-	    added_libraries ++;
-	    i++;
-    
-	    generate_option (OPT_l, LIBYMIDGARD, 1, CL_DRIVER, &new_decoded_options [i]);
-	    added_libraries ++;
-	    i++;
-
-	    generate_option (OPT_l, LIBYRUNTIME, 1, CL_DRIVER, &new_decoded_options [i]);
-	    added_libraries ++;
-	    i++;    
-	    
-	    generate_option (OPT_l, LIBYMIDGARD, 1, CL_DRIVER, &new_decoded_options [i]);
 	    added_libraries ++;
 	    i++;
 	}
