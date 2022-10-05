@@ -162,12 +162,12 @@ namespace semantic {
 	     * \brief Generate the type info for a class
 	     * \brief This will be happened at the end of the vtable
 	     */
-	    generic::Tree generateTypeInfoClass (const Generator & classType);
+	    generic::Tree generateTypeInfoClass (const Generator & classType, bool inModule = false);
 	    
 	    /**
 	     * \brief Create the vtable of a classref
 	     */
-	    generic::Tree generateVtable (const Generator & classType);
+	    generic::Tree generateVtable (const Generator & classType, bool inModule = false);
 
 	    /**
 	     * \brief Create the reflection array for the current module 

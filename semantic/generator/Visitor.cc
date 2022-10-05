@@ -66,7 +66,7 @@ namespace semantic {
 		}
 
 		s_of (Class, cl) {
-		    generateVtable (cl.getClassRef ());
+		    generateVtable (cl.getClassRef (), true);
 		    return;
 		}
 
@@ -396,14 +396,18 @@ namespace semantic {
 	    return decl;
 	}
 
-	Tree Visitor::generateTypeInfoClass (const Generator & classType) {
-	    static std::map <std::string, generic::Tree> __globalConstant__;
+	Tree Visitor::generateTypeInfoClass (const Generator & classType, bool inModule) {
+	    static std::map <std::string, generic::Tree> __globalConstant__;	    
 	    auto name = Mangler::init ().mangleTypeInfo (classType.to <ClassRef> ());
-	    auto res = __globalConstant__.find (name);
-	    if (res != __globalConstant__.end ()) return res-> second;
+	    if (!inModule) {
+		auto res = __globalConstant__.find (name);
+		if (res != __globalConstant__.end ()) return res-> second;
+	    }
 
 	    auto typeInfo = classType.to<ClassRef> ().getRef ().to<semantic::Class> ().getTypeInfo ();
-	    // auto gen = classType.to<ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
+	    auto sym = classType.to<ClassRef> ().getRef ();
+
+	    
 	    Tree ancestorSlice (Tree::empty ());
 
 	    if (!classType.to <ClassRef> ().getAncestor ().isEmpty ()) {
@@ -426,25 +430,14 @@ namespace semantic {
 			Tree::buildSizeCst (Integer::INIT),
 			Tree::buildIntCst (classType.getLocation (), Integer::INIT, Tree::pointerType (Tree::voidType ()))
 		    }
-		);
+		    );
 	    }
 
-	    auto declName = generateValue (typeInfo.to <StructCst> ().getParameters() [3]);
-	    // auto slcType = generateType (typeInfo.to <StructCst> ().getTypes () [3]);	    
-	    // auto slcName = Tree::constructField (
-	    // 	classType.getLocation (),
-	    // 	slcType,
-	    // 	{Slice::LEN_NAME, Slice::PTR_NAME},
-	    // 	{
-	    // 	    declName.getField (Slice::LEN_NAME),
-	    // 		declName.getField (Slice::PTR_NAME)
-	    // 		}
-	    // );
-	    
+	    auto declName = generateValue (typeInfo.to <StructCst> ().getParameters() [3]);	    
 	    std::vector <Tree> params = {
-	    	castTo (typeInfo.to <StructCst> ().getTypes () [0], typeInfo.to <StructCst> ().getParameters() [0]),
+		castTo (typeInfo.to <StructCst> ().getTypes () [0], typeInfo.to <StructCst> ().getParameters() [0]),
 		castTo (typeInfo.to <StructCst> ().getTypes () [1], typeInfo.to <StructCst> ().getParameters() [1]),
-	    	ancestorSlice,
+		ancestorSlice,
 		declName.getDeclInitial ()
 	    };
 
@@ -456,20 +449,25 @@ namespace semantic {
 	    };
 	    
 	    auto typeValue = Tree::constructField (
-	    	classType.getLocation (),
+		classType.getLocation (),
 		Tree::tupleType ({}, types),
-	    	{},
-	    	params
-	    );
-	    
+		{},
+		params
+		);
+
+		
 	    Tree decl = Tree::varDecl (classType.getLocation (), name, typeValue.getType ());
-	    decl.setDeclInitial (typeValue);
+
+	    if (inModule) {
+		decl.setDeclInitial (typeValue);
+	    }
+	    
 	    decl.isStatic (true);
 	    decl.isUsed (true);
-	    decl.isExternal (false);
+	    decl.isExternal (!inModule);
 	    decl.isPreserved (true);
 	    decl.isPublic (true);
-	    decl.isWeak (true);
+	    decl.isWeak (sym.isWeak ());
 	    decl.setDeclContext (getGlobalContext ());	 
 
 	    vec_safe_push (__global_declarations__, decl.getTree ());
@@ -526,43 +524,51 @@ namespace semantic {
 	    return decl;
 	}
 	
-	Tree Visitor::generateVtable (const Generator & classType) {
-	    static std::map <std::string, generic::Tree> __globalConstant__;
+	Tree Visitor::generateVtable (const Generator & classType, bool inModule) {
 	    auto name = Mangler::init ().mangleVtable (classType.to<ClassRef> ());
-	    auto res = __globalConstant__.find (name);
-	    if (res != __globalConstant__.end ()) return res-> second;
+	    static std::map <std::string, generic::Tree> __globalConstant__;
+	    if (!inModule) {
+		auto res = __globalConstant__.find (name);
+		if (res != __globalConstant__.end ()) return res-> second;
+	    }
 
-	    std::vector<Tree> params;
+	    auto sym = classType.to<ClassRef> ().getRef ();
 	    auto & classGen = classType.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
-	    params.push_back (Tree::buildAddress (classType.getLocation (), generateTypeInfoClass (classType), Tree::pointerType (Tree::voidType ())));
-	    params.push_back (generateValue (classGen.to <generator::Class> ().getDestructor ()));
-	    
-	    for (auto & it : classGen.to <generator::Class> ().getVtable ()) {
-		if (it.to <MethodProto> ().isEmptyFrame ()) {
-		    params.push_back (Tree::buildPtrCst (it.getLocation (), 0));
-		} else {
-		    params.push_back (generateValue (it));
-		}
-	    }	    
-	    
-	    auto vtableType = Tree::staticArray (Tree::pointerType (Tree::voidType ()), params.size ());
-	    auto vtableValue = Tree::constructIndexed (classType.getLocation (), vtableType, params);
-		
+	    auto vtableType = Tree::staticArray (Tree::pointerType (Tree::voidType ()), classGen.to <generator::Class> ().getVtable ().size () + 2);
 	    Tree decl = Tree::varDecl (classType.getLocation (), name, vtableType);
-	    decl.setDeclInitial (vtableValue);
+	    
+	    if (inModule) {
+		std::vector<Tree> params;
+		params.push_back (Tree::buildAddress (classType.getLocation (), generateTypeInfoClass (classType, inModule), Tree::pointerType (Tree::voidType ())));
+		params.push_back (generateValue (classGen.to <generator::Class> ().getDestructor ()));
+	    
+		for (auto & it : classGen.to <generator::Class> ().getVtable ()) {
+		    if (it.to <MethodProto> ().isEmptyFrame ()) {
+			params.push_back (Tree::buildPtrCst (it.getLocation (), 0));
+		    } else {
+			params.push_back (generateValue (it));
+		    }
+		}	    
+	    
+		auto vtableValue = Tree::constructIndexed (classType.getLocation (), vtableType, params);
+		decl.setDeclInitial (vtableValue);
+	    }
+		
 	    decl.isStatic (true);
 	    decl.isUsed (true);
-	    decl.isExternal (false);
+	    decl.isExternal (!inModule);
 	    decl.isPreserved (true);
 	    decl.isPublic (true);
-	    decl.isWeak (true);
+	    decl.isWeak (sym.isWeak ());
 	    decl.setDeclContext (getGlobalContext ());	 
 
 	    vec_safe_push (__global_declarations__, decl.getTree ());
 	    __globalConstant__.emplace (name, decl);
 
-	    auto vtableAddr = Tree::buildAddress (classType.getLocation (), decl, Tree::pointerType (Tree::pointerType (Tree::voidType ())));
-	    this-> _globalReflect.emplace (name, ReflectContent { ReflectType::VTABLE, classType.getLocation (), vtableAddr });
+	    if (inModule) {
+		auto vtableAddr = Tree::buildAddress (classType.getLocation (), decl, Tree::pointerType (Tree::pointerType (Tree::voidType ())));
+		this-> _globalReflect.emplace (name, ReflectContent { ReflectType::VTABLE, classType.getLocation (), vtableAddr });
+	    }
 	    
 	    return decl;
 	}
@@ -2153,7 +2159,7 @@ namespace semantic {
 	    TreeStmtList lst (TreeStmtList::init ());
 	    return lst.toTree ();
 	}
-	
+
 	generic::Tree Visitor::generateExitScope (const ExitScope & scope) {
 	    TreeStmtList all (TreeStmtList::init ());
 	    auto r_jmp = Tree::varDecl (scope.getLocation (), "#buf", generateType (scope.getJmpbufType ()));
