@@ -8,7 +8,6 @@ namespace semantic {
 	ExitScope::ExitScope () :
 	    Value (),
 	    _who (Generator::empty ()),
-	    _jmpBuf (Generator::empty ()),
 	    _catchingVar (Generator::empty ()),
 	    _catchingInfoType (Generator::empty ()),
 	    _catchingAction (Generator::empty ())
@@ -16,7 +15,6 @@ namespace semantic {
 
 	ExitScope::ExitScope (const lexing::Word & loc,
 			      const Generator & type,
-			      const Generator & jmpBuf,
 			      const Generator & who,
 			      const std::vector <Generator> & exit,
 			      const std::vector <Generator> & failure,
@@ -25,7 +23,6 @@ namespace semantic {
 			      const Generator & catchingAction) :
 	    Value (loc, type),
 	    _who (who),
-	    _jmpBuf (jmpBuf),
 	    _catchingVar (catchingVar),
 	    _catchingInfoType (catchingInfo),
 	    _catchingAction (catchingAction),
@@ -79,7 +76,6 @@ namespace semantic {
 	
 	Generator ExitScope::init (const lexing::Word & loc,
 				   const Generator & type,
-				   const Generator & jmpBuf,
 				   const Generator & who,
 				   const std::vector <Generator> & exit,
 				   const std::vector <Generator> & failure,
@@ -87,7 +83,7 @@ namespace semantic {
 				   const Generator & catchingInfo,
 				   const Generator & catchingAction)
 	{	    
-	    return Generator {new (NO_GC) ExitScope (loc, type, jmpBuf, who, exit, failure, catchingVar, catchingInfo, catchingAction)};
+	    return Generator {new (NO_GC) ExitScope (loc, type, who, exit, failure, catchingVar, catchingInfo, catchingAction)};
 	}
     
 	Generator ExitScope::clone () const {
@@ -117,10 +113,6 @@ namespace semantic {
 
 	const std::vector <Generator> & ExitScope::getFailure () const {
 	    return this-> _failure;
-	}
-
-	const Generator & ExitScope::getJmpbufType () const {
-	    return this-> _jmpBuf;
 	}
 
 	const Generator & ExitScope::getCatchingVar () const {

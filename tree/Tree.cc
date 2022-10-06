@@ -394,7 +394,10 @@ namespace generic {
 
 	tree fndecl_type = build_function_type_array (type.getTree (), fndecl_type_params.size (), fndecl_type_params.data ());
 	tree fndecl = build_fn_decl (name.c_str (), fndecl_type);
+	TREE_NOTHROW (fndecl) = 0;
+	
 	tree fn = build1 (ADDR_EXPR, Tree::pointerType (Tree::init (BUILTINS_LOCATION, fndecl_type)).getTree (), fndecl);
+	TREE_NOTHROW (fn) = 0;
 
 	return Tree::init (
 	    loc.getLocation (),
@@ -411,7 +414,12 @@ namespace generic {
 	tree fndecl_type = build_function_type_array (type.getTree (), fndecl_type_params.size (), fndecl_type_params.data ());
 
 	tree fndecl = build_fn_decl (name.c_str (), fndecl_type);
-	return Tree::init (loc.getLocation (), build1 (ADDR_EXPR, Tree::pointerType (Tree::init (BUILTINS_LOCATION, fndecl_type)).getTree (), fndecl));
+	TREE_NOTHROW (fndecl) = 0;
+
+	auto fn = build1 (ADDR_EXPR, Tree::pointerType (Tree::init (BUILTINS_LOCATION, fndecl_type)).getTree (), fndecl);
+	TREE_NOTHROW (fn) = 0;
+	
+	return Tree::init (loc.getLocation (), fn);
     }
 
     

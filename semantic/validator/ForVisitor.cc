@@ -890,9 +890,8 @@ namespace semantic {
 			    {}, false
 			    );
 			auto exit = this-> _context.validateValue (call);
-			auto jmp_buf_type = this-> _context.validateType (syntax::Var::init (lexing::Word::init (loc, global::CoreNames::get (JMP_BUF_TYPE))));
 		    
-			loop = ExitScope::init (loc, loop.to <Value> ().getType (), jmp_buf_type, loop, {exit}, {}, Generator::empty (), Generator::empty (), Generator::empty ());
+			loop = ExitScope::init (loc, loop.to <Value> ().getType (), loop, {exit}, {}, Generator::empty (), Generator::empty (), Generator::empty ());
 			loop = Block::init (loc, loop.to <Value> ().getType (), {val, loop});
 		    } catch (Error::ErrorList&){
 			loop = Block::init (loc, loop_type, {val, loop});;

@@ -157,8 +157,7 @@ namespace semantic {
 	    
 	    // if (this-> _context.isInTrusted ()) {
 		auto bl = this-> _context.validateValue (prg.getContent ()[0]);
-		auto jmp_buf_type = this-> _context.validateType (syntax::Var::init (lexing::Word::init (prg.getLocation (), global::CoreNames::get (global::JMP_BUF_TYPE))));	
-		auto ex = ExitScope::init (bl.getLocation (), bl.to <Value> ().getType (), jmp_buf_type, bl, {}, {
+		auto ex = ExitScope::init (bl.getLocation (), bl.to <Value> ().getType (), bl, {}, {
 			Panic::init (bl.getLocation ())
 		    }, Generator::empty (), Generator::empty (), Generator::empty ());
 		ex.setThrowers ({});

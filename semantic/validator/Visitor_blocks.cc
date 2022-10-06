@@ -70,19 +70,11 @@ namespace semantic {
 	    	    
 	    if (errors.size () != 0) throw Error::ErrorList {errors};
 	   	    
-	    if (onSuccess.size () != 0) ret = SuccessScope::init (valueLoc, type, ret, onSuccess); // if there is no catcher (failure, exit or catch), no need add a catcher
-	    if (onExit.size () != 0 || onFailure.size () != 0 || !catchVar.isEmpty ()) { // Otherwise an exit scope, ensure that a list of code is executed no matter what happens
-		auto jmp_buf_type = validateType (syntax::Var::init (lexing::Word::init (valueLoc, global::CoreNames::get (JMP_BUF_TYPE))));		
-		if (!catchAction.isEmpty () && (onExit.size () != 0 || onFailure.size () != 0)) {
-		    auto catching = ExitScope::init (valueLoc, type, jmp_buf_type, ret, {}, {}, catchVar, catchInfo, catchAction);
-		    return ExitScope::init (valueLoc, type, jmp_buf_type, catching, onExit, onFailure, Generator::empty (), Generator::empty (), Generator::empty ());
-		} else {
-		    auto jmp_buf_type = validateType (syntax::Var::init (lexing::Word::init (valueLoc, global::CoreNames::get (JMP_BUF_TYPE))));		
-		    auto ex = ExitScope::init (valueLoc, type, jmp_buf_type, ret, onExit, onFailure, catchVar, catchInfo, catchAction);
-		    return ex;
-		}
+	    if (onSuccess.size () != 0) ret = SuccessScope::init (valueLoc, type, ret, onSuccess); 
+	    if (onExit.size () != 0 || onFailure.size () != 0 || !catchVar.isEmpty ()) { // an exit scope, ensure that a list of code is executed no matter what happens
+		return ExitScope::init (valueLoc, type, ret, onExit, onFailure, catchVar, catchInfo, catchAction);
 	    }
-	    return ret;
+	    return ret; // if there is no catcher (failure, exit or catch), no need add a catcher
 	}
 
 	void Visitor::validateInnerBlock (const syntax::Block & block, std::vector <Generator> & values, Generator & type, lexing::Word & valueLoc, bool & returner, lexing::Word & rtLoc, bool & breaker, lexing::Word & brLoc, std::list <Error::ErrorMsg> & errors) {
@@ -118,8 +110,7 @@ namespace semantic {
 	    } catch (Error::ErrorList list) {  
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 	    	    
-	}
-	
+	}       
 	
 	void Visitor::validateCatcher (const syntax::Block & block, Generator & varDecl, Generator & typeInfo, Generator & action, generator::Generator & typeBlock, const std::vector <Generator> & throwsTypes, std::list <Ymir::Error::ErrorMsg> & errors) {
 	    auto catcher = block.getCatcher ();

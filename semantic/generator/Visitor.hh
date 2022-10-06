@@ -28,28 +28,12 @@ namespace semantic {
 	 */
 	class Visitor {
 
-	    struct ReturnWithinCatch {
-
-		const static ulong RETURN;
-		const static ulong BREAK;
-		const static ulong THROW;
-		const static ulong NONE;
-		
-		generic::Tree label;
-		generic::Tree test;
-		generic::Tree var;
-		generic::Tree jmp_var;
-	    };
-
 	    
 	    /** The list of var decl for each blocks */
 	    std::vector <generic::TreeChain> stackVarDeclChain;
 
 	    /** The list of block currently entered */
 	    std::vector <generic::BlockChain> stackBlockChain;	    	    
-
-	    /** The list of jumps; */
-	    std::list <std::vector <ReturnWithinCatch> > exceptionDeclChain;
 
 	    std::list <std::string> blockNames;
 	    
@@ -162,12 +146,12 @@ namespace semantic {
 	     * \brief Generate the type info for a class
 	     * \brief This will be happened at the end of the vtable
 	     */
-	    generic::Tree generateTypeInfoClass (const Generator & classType);
+	    generic::Tree generateTypeInfoClass (const Generator & classType, bool inModule = false);
 	    
 	    /**
 	     * \brief Create the vtable of a classref
 	     */
-	    generic::Tree generateVtable (const Generator & classType);
+	    generic::Tree generateVtable (const Generator & classType, bool inModule = false);
 
 	    /**
 	     * \brief Create the reflection array for the current module 
@@ -291,23 +275,23 @@ namespace semantic {
 	     */
 	    generic::Tree generateExitScope (const ExitScope & scope);
 
-	    /**
-	     * Used for break statements
-	     */
-	    generic::Tree popLastException (const lexing::Word & loc);
+
+	    
 	    
 	    /**
 	     * \brief Generate the catching part of an exit scope
 	     * \param var the var containing the value of the scope
 	     */
-	    generic::Tree generateCatching (const ExitScope & scope, generic::Tree var, ReturnWithinCatch exc_return);
+	    generic::Tree generateCatching (const ExitScope & scope, generic::Tree tryScope, generic::Tree var);
 
 	    /**
-	     * \brief The test at the end of an exit scope to make sure return, break and throws are correctly executed
+	     * \brief generate the try part of an exit scope
+	     * \returns: failureVar the var to set to tree if there is a failure var, and failure happend
+	     * \returns: the try scope
 	     */
-	    generic::Tree generateEndOfExit (const lexing::Word & loc, generic::Tree test, generic::Tree value);
-	    
-	    /**
+	    generic::Tree generateTryScope (const ExitScope & scope, generic::Tree resultVar, generic::Tree failureVar);
+
+/**
 	     * \brief Transform an success scope into gimple
 	     */
 	    generic::Tree generateSuccessScope (const SuccessScope & scope);	   
@@ -492,10 +476,6 @@ namespace semantic {
 	     */
 	    generic::Tree generateReturn (const lexing::Word & location, generic::Tree value);
 
-	    /**
-	     * \return the position (test, label, etc) of the last catcher (test is empty, if there is non)
-	     */
-	    ReturnWithinCatch getLastCatcherPosition ();
 	    
 	    /**
 	     * \brief Transform a range value into gimple

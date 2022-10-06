@@ -1065,12 +1065,10 @@ namespace semantic {
 	    bool needFinalReturn = false;
 	    Generator body = this-> validateBody (func.getName (), func.getRealName ().getValue (), function.getBody (), throwers, retType, needFinalReturn, errors);
 	    
-	    if (!ancDtorProto.isEmpty () && !ancDtorProto.is <NullValue> ()) {
-		auto jmp_buf_type = this-> _context.validateType (syntax::Var::init (lexing::Word::init (__params[0].getLocation (), global::CoreNames::get (global::JMP_BUF_TYPE))));
-				
+	    if (!ancDtorProto.isEmpty () && !ancDtorProto.is <NullValue> ()) {				
 		auto self = this-> _context.validateValue (syntax::Var::init (lexing::Word::init (__params [0].getLocation (), Keys::SELF)));
 		auto ancCall = Call::init (func.getName (), Void::init (func.getName ()), ancDtorProto, {classType}, {self}, {});
-		body = ExitScope::init (func.getName (), Void::init (func.getName ()), jmp_buf_type, body, {ancCall}, {}, Generator::empty (), Generator::empty (), Generator::empty ()); 
+		body = ExitScope::init (func.getName (), Void::init (func.getName ()), body, {ancCall}, {}, Generator::empty (), Generator::empty (), Generator::empty ()); 
 	    }		    
 	    
 	    try {
