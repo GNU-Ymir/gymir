@@ -1081,7 +1081,8 @@ tree convert (tree type, tree expr) {
 	return error_mark_node;
     if (TREE_CODE (TREE_TYPE (expr)) == VOID_TYPE)
 	{
-	    debug_tree (expr);
+	    // debug_tree (expr);
+	    // print_generic_stmt (stdout, expr);
 	    Ymir::Error::halt  ("%(r) conversion to non-scalar type requested", "Critical");
 	    return error_mark_node;
 	}

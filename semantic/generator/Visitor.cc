@@ -2166,20 +2166,16 @@ namespace semantic {
 				       scope.getLocation (), catchVar, libCall));
 
 	    auto catchValue = generateValue (scope.getCatchingAction ());
-	    if (!varScope.isEmpty ()) {
+	    // if the catching action does not throw or panic, and the try{}catch have a value we have to affect it
+	    if (!varScope.isEmpty () && !scope.getCatchingAction ().to<Value> ().getType ().is<Void> ()) {
 	      TreeStmtList innerList (TreeStmtList::init ());
-	      innerList.append (catchValue.getList ());
+	      innerList.append (catchValue.getList ());	      
 	      innerList.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), scope.getLocation (), varScope, catchValue.getValue ()));
 	      catchValue = innerList.toTree ();
 	    }
 
 	    list.append (catchValue);
 	    auto end = quitBlock (scope.getLocation (), list.toTree (), scope.getLocation ().toString ()).bind_expr;
-	    
-	    auto catchExpr = Tree::build (CATCH_EXPR, scope.getCatchingAction ().getLocation (),
-					  Tree::voidType (),
-					  catchType,
-					  end);
 	    
 	    TreeStmtList catchers (TreeStmtList::init ());
 	    catchers.append (end);	    	    

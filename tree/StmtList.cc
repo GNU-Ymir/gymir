@@ -46,21 +46,15 @@ namespace generic {
     void TreeStmtList::append (const Tree & t) {
 	if (!t.isEmpty ()) {
 	    this-> _empty = false;
-	    if (TREE_CODE (t.getTree ()) == COMPOUND_EXPR) {
-	      this-> append (TREE_OPERAND (t.getTree (), 0));
-	      this-> append (TREE_OPERAND (t.getTree (), 1));
-	    } else {
-	      this-> append (t.getTree ());
-	    }
+	    append_to_statement_list (t.getTree (), &(this-> _list));
 	}
     }
 
   void TreeStmtList::append (tree t) {
-    if (TREE_CODE (t) == CLEANUP_POINT_EXPR) {
-      TREE_TYPE (t) = void_type_node;
+    if (t != NULL) {
+      this-> _empty = false;
+      append_to_statement_list (t, &this-> _list);
     }
-
-    append_to_statement_list (t, &this-> _list);
   }
 
     bool TreeStmtList::isEmpty () const {
