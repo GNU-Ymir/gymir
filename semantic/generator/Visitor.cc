@@ -1979,7 +1979,6 @@ namespace semantic {
 	    list.append (value.getList ());
 	    value = value.getValue ();
 	    
-	    auto info = generateValue (thr.getTypeInfo ());
 	    auto file = thr.getLocation ().getFilename ();
 	    auto res = __global__.find (file);
 	    Tree lit (Tree::empty ());
@@ -2005,7 +2004,7 @@ namespace semantic {
 			     thr.getLocation (),
 			     Tree::voidType (),
 			     global::CoreNames::get (THROW),
-			     {lit, func, line, info, value}
+			     {lit, func, line, value}
 			     )
 		);
 	    
@@ -2111,7 +2110,7 @@ namespace semantic {
 		tryContent = generateCatching (scope, tryContent, var);
 	    }
 
-	    if (scope.getFailure ().size () != 0 &&
+	    if (scope.getFailure ().size () != 0 ||
 		scope.getExit ().size () != 0) { // this is not only catching	    
 		enterBlock (scope.getLocation ().toString ());
 		TreeStmtList exitList (TreeStmtList::init ());
@@ -2134,7 +2133,7 @@ namespace semantic {
 		}
 		
 		auto exitContent = quitBlock (scope.getLocation (), exitList.toTree (), scope.getLocation ().toString ());
-		tryContent = Tree::init (scope.getLocation ().getLocation (), build2 (TRY_FINALLY_EXPR, void_type_node, tryContent.getTree (), exitContent.bind_expr.getTree ()));	    
+		tryContent = Tree::init (scope.getLocation ().getLocation (), build2 (TRY_FINALLY_EXPR, void_type_node, tryContent.getTree (), exitContent.bind_expr.getTree ()));
 	    }
 
 	    all.append (tryContent);
@@ -2174,11 +2173,17 @@ namespace semantic {
 	      catchValue = innerList.toTree ();
 	    }
 
+	    
 	    list.append (catchValue);
 	    auto end = quitBlock (scope.getLocation (), list.toTree (), scope.getLocation ().toString ()).bind_expr;
+
+	    auto catchExpr = Tree::init (BUILTINS_LOCATION, build2 (CATCH_EXPR, void_type_node,
+										 catchType.getTree (), end.getTree ()));
+
 	    
 	    TreeStmtList catchers (TreeStmtList::init ());
-	    catchers.append (end);	    	    
+	    catchers.append (catchExpr);
+								    
 	    
 	    auto ret = Tree::init (scope.getLocation ().getLocation (),
 	    			   build2 (TRY_CATCH_EXPR, void_type_node, tryScope.getTree (), catchers.toTree ().getTree ()));

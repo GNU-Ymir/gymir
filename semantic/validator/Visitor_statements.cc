@@ -617,7 +617,7 @@ namespace semantic {
 	    optionType = Type::init (optionType.to <Type> (), true);		    
 	    auto throwsType = inner.getThrowers ();
 	    inner = OptionValue::init (tr.getLocation (), optionType, inner, true);
-	    
+
 	    if (throwsType.size () != 0) {
 		auto loc = tr.getLocation ();
 		auto varDecl = generator::VarDecl::init (lexing::Word::init (loc, "#catch"), "#catch", errType, Generator::empty (), false);

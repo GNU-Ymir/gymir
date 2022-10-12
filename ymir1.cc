@@ -21,6 +21,7 @@
 #include <ymir/global/State.hh>
 #include <ymir/global/Core.hh>
 #include <ymir/utils/Path.hh>
+#include <ymir/tree/Tree.hh>
 
 // We use the dlang target hooks to get the target versions
 #include <ymir/../d/d-target.h>
@@ -540,7 +541,7 @@ ymir_eh_personality (void) {
 
 static tree
 ymir_build_eh_runtime_type (tree type) {
-    gcc_unreachable ();
+  return generic::Tree::buildPtrCst (lexing::Word::eof (), 0).getTree ();
 }
 
 
