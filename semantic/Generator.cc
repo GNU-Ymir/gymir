@@ -4,7 +4,7 @@ namespace semantic {
     namespace generator {
 	
 	Generator Generator::__empty__ (Generator::empty ());
-	uint IGenerator::__lastId__ = 0;
+	uint32_t IGenerator::__lastId__ = 0;
 	std::vector <Generator> Generator::__nothrowers__;
 	
 	IGenerator::IGenerator () :
@@ -34,12 +34,12 @@ namespace semantic {
 	    return this-> _name;
 	}
 
-	uint IGenerator::getUniqId () const {
+	uint32_t IGenerator::getUniqId () const {
 	    Ymir::Error::halt ("%(r) Asking uniq id of none Var", "Critical");
 	    return this-> _uniqId;
 	}
 
-	void IGenerator::setUniqId (uint)  {
+	void IGenerator::setUniqId (uint32_t)  {
 	    Ymir::Error::halt ("%(r) Setting uniq id of none Var", "Critical");
 	}
 	
@@ -47,7 +47,7 @@ namespace semantic {
 	    __lastId__ = 0;
 	}
 
-	uint IGenerator::getLastId () {
+	uint32_t IGenerator::getLastId () {
 	    auto ret = __lastId__;
 	    __lastId__ += 1;
 	    return ret;
@@ -115,7 +115,7 @@ namespace semantic {
 	    IGenerator::resetIdCount ();
 	}
 
-	uint Generator::getLastId () {
+	uint32_t Generator::getLastId () {
 	    return IGenerator::getLastId ();
 	}
 	
@@ -124,13 +124,13 @@ namespace semantic {
 	    return this-> _value-> prettyString ();
 	}
 
-	uint Generator::getUniqId () const {
+	uint32_t Generator::getUniqId () const {
 	    if (this-> _value == nullptr)
 		Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	    return this-> _value-> getUniqId ();	    
 	}
        
-	void Generator::setUniqId (uint id) {
+	void Generator::setUniqId (uint32_t id) {
 	    if (this-> _value == nullptr)
 		Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	    return this-> _value-> setUniqId (id);	    

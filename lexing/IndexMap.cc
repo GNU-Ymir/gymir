@@ -24,12 +24,12 @@ namespace lexing {
 	this-> _heads.emplace (token [0], node);       
     }
     
-    ulong IndexMap::next (const std::string & content) const {
+    uint64_t IndexMap::next (const std::string & content) const {
 	return this-> next (0, content);
     }
 
-    ulong IndexMap::next (ulong start, const std::string & content) const {
-	for (ulong i = start ; i < content.length () ; i++) {
+    uint64_t IndexMap::next (uint64_t start, const std::string & content) const {
+	for (uint64_t i = start ; i < content.length () ; i++) {
 	    auto fnd = this-> _heads.find (content [i]);
 	    if (fnd != this-> _heads.end () && i == start) {
 		auto len = fnd-> second-> getLength (start + 1, content);
@@ -44,7 +44,7 @@ namespace lexing {
 
     std::list <std::string> IndexMap::tokenize (const std::string & str) const {
 	std::list <std::string> result;	
-	ulong start = 0;
+	uint64_t start = 0;
 	while (start < str.length ()) {
 	    auto len = this-> next (start, str);	
 	    result.push_back (str.substr (start, len));
@@ -73,7 +73,7 @@ namespace lexing {
 	return this-> _key;
     }
 
-    void Node::insert (ulong start, const std::string & token) {
+    void Node::insert (uint64_t start, const std::string & token) {
 	if (token.length () == start) {
 	    this-> _isToken = true;
 	    return;
@@ -92,7 +92,7 @@ namespace lexing {
 	this-> _heads.emplace (token [start], node);
     }
 
-    ulong Node::getLength (ulong start, const std::string & content) const {	
+    uint64_t Node::getLength (uint64_t start, const std::string & content) const {	
 	if (start == content.length ()) {
 	    if (this-> _isToken) return 1;
 	    else return 0;

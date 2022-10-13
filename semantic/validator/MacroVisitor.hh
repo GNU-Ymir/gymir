@@ -120,7 +120,7 @@ namespace semantic {
 	     * \param current, the rest of the content of the macro when the multiplier has finished
 	     * \param skips, the skipable token (when no other possibily is available)
 	     */
-	    Mapper validateMacroMult (const syntax::MacroMult & mult, const std::string & content, ulong & current, const syntax::Expression &  skips);
+	    Mapper validateMacroMult (const syntax::MacroMult & mult, const std::string & content, uint64_t & current, const syntax::Expression &  skips);
 
 	    /**
 	     * Validate a list of macro expression
@@ -129,7 +129,7 @@ namespace semantic {
 	     * \param current, the rest of the content of the macro when the multiplier has finished
 	     * \param skips, the skipable token (when no other possibily is available)
 	     */
-	    Mapper validateMacroList (const syntax::MacroMult & mult, const std::string & content, ulong & current, const syntax::Expression &  skips);
+	    Mapper validateMacroList (const syntax::MacroMult & mult, const std::string & content, uint64_t & current, const syntax::Expression &  skips);
 
 	    /**
 	     * Validate a list of macro repeat expression
@@ -138,7 +138,7 @@ namespace semantic {
 	     * \param current, the rest of the content of the macro when the multiplier has finished
 	     * \param skips, the skipable token (when no other possibily is available)
 	     */
-	    std::vector <Mapper> validateMacroRepeat (const syntax::MacroMult & mult, const std::string & content, ulong & current, const syntax::Expression &  skips);
+	    std::vector <Mapper> validateMacroRepeat (const syntax::MacroMult & mult, const std::string & content, uint64_t & current, const syntax::Expression &  skips);
 
 	    /**
 	     * Validate a list of macro repeat expression
@@ -147,7 +147,7 @@ namespace semantic {
 	     * \param current, the rest of the content of the macro when the multiplier has finished
 	     * \param skips, the skipable token (when no other possibily is available)
 	     */
-	    std::vector<Mapper> validateMacroOneOrMore (const syntax::MacroMult & mult, const std::string & content, ulong & current, const syntax::Expression &  skips);
+	    std::vector<Mapper> validateMacroOneOrMore (const syntax::MacroMult & mult, const std::string & content, uint64_t & current, const syntax::Expression &  skips);
 
 	    /**
 	     * Validate a list of macro repeat expression
@@ -156,7 +156,7 @@ namespace semantic {
 	     * \param current, the rest of the content of the macro when the multiplier has finished
 	     * \param skips, the skipable token (when no other possibily is available)
 	     */	     
-	    Mapper validateMacroOneOrNone (const syntax::MacroMult & mult, const std::string & content, ulong & current, const syntax::Expression &  skips);
+	    Mapper validateMacroOneOrNone (const syntax::MacroMult & mult, const std::string & content, uint64_t & current, const syntax::Expression &  skips);
 
 	    /**
 	     * Validate a or expression
@@ -165,7 +165,7 @@ namespace semantic {
 	     * \param current, the rest of the content of the macro when the multiplier has finished 
 	     * \param skips, the skipable token (when no other possibily is available)
 	     */
-	    Mapper validateMacroOr (const syntax::MacroOr & mult, const std::string & content, ulong & current, const syntax::Expression &  skips);
+	    Mapper validateMacroOr (const syntax::MacroOr & mult, const std::string & content, uint64_t & current, const syntax::Expression &  skips);
 
 	    /**
 	     * Validate a macro var
@@ -174,7 +174,7 @@ namespace semantic {
 	     * \param current, the rest of the content of the macro when the multiplier has finished (cursor)
 	     * \param skips, the skipable token (when no other possibily is available)	     
 	     */
-	    Mapper validateMacroVar (const syntax::MacroVar & mult, const std::string & content, ulong & current, const syntax::Expression &  skips);
+	    Mapper validateMacroVar (const syntax::MacroVar & mult, const std::string & content, uint64_t & current, const syntax::Expression &  skips);
 
 	    /**
 	     * Validate a simple macro token
@@ -182,18 +182,18 @@ namespace semantic {
 	     * \param current, the rest of the content of the macro when the multiplier has finished 	     
 	     * \param skips, the skipable token (when no other possibily is available)
 	     */
-	    Mapper validateMacroToken (const syntax::MacroToken & mult, const std::string & content, ulong & current, const syntax::Expression &  skips);
+	    Mapper validateMacroToken (const syntax::MacroToken & mult, const std::string & content, uint64_t & current, const syntax::Expression &  skips);
 
 	    /**
 	     * Validate a macro rule 
 	     * A rule is a part of a MacroRef, it contains macros expression and a content
 	     */
-	    Mapper validateRule (const syntax::Expression & expr, const std::string & content, ulong & current, const syntax::Expression &  skips);
+	    Mapper validateRule (const syntax::Expression & expr, const std::string & content, uint64_t & current, const syntax::Expression &  skips);
 
 	    /**
 	     * Validate a knwon rule
 	     */
-	    Mapper validateKnownRules (const syntax::Expression & expr, const std::string & content, ulong & current);
+	    Mapper validateKnownRules (const syntax::Expression & expr, const std::string & content, uint64_t & current);
 	    
 	    /**
 	     * Validate the content of the skips
@@ -240,12 +240,12 @@ namespace semantic {
 	    /**
 	     * Compute the real line in the source file to print a valid error location
 	     */
-	    void computeLine (ulong & line, ulong & col, ulong & seek, ulong current, const lexing::Word & relative);
+	    void computeLine (uint64_t & line, uint64_t & col, uint64_t & seek, uint64_t current, const lexing::Word & relative);
 
 	    /**
 	     * Compute the real line in the source file to print a valid error location 
 	     */
-	    void computeLinePure (ulong & line, ulong & col, ulong & seek, const lexing::Word & start, const lexing::Word & relative);
+	    void computeLinePure (uint64_t & line, uint64_t & col, uint64_t & seek, const lexing::Word & start, const lexing::Word & relative);
 	    
 	    /**
 	     * Transform a string containing already escaped tokens into a string with escaped blank (\n, \r, ...)

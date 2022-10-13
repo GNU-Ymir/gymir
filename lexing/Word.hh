@@ -34,30 +34,30 @@ namespace lexing {
 	std::string locFile;
 
 	/// The line where the word is located
-	ulong line;
+	uint64_t line;
 
 	/// The column where the word is located
-	ulong column;
+	uint64_t column;
 
 	/** the cursor in file*/
-	ulong seek;
+	uint64_t seek;
 
-	ulong self_seek;
+	uint64_t self_seek;
 	
 	/// The length of the word (may differ with str.length ())
-	long length = -1;
+	int64_t length = -1;
 
 	/// is from a string or a file
 	bool isFromString = false;
 	
 	lexing::File file;
 
-	ulong start = 0;
+	uint64_t start = 0;
 
 	/**
 	 * Create a word with all field initialized
 	 */
-	IWord (const std::string & str, const std::string & locFile, ulong line, ulong col, ulong seek, long len, bool isFromString, const lexing::File & file, ulong start, ulong self_seek);
+	IWord (const std::string & str, const std::string & locFile, uint64_t line, uint64_t col, uint64_t seek, int64_t len, bool isFromString, const lexing::File & file, uint64_t start, uint64_t self_seek);
 	
 	
 	friend Word;
@@ -100,12 +100,12 @@ namespace lexing {
 	/**
 	 * Create a new word
 	 */
-	static Word init (const std::string & str, const lexing::File & file, ulong line, ulong col, ulong seek);
+	static Word init (const std::string & str, const lexing::File & file, uint64_t line, uint64_t col, uint64_t seek);
 
 	/**
 	 * Create a new from string
 	 */
-	static Word init (const std::string & str, const lexing::File & file, ulong line, ulong col, ulong seek, bool isFromString, ulong start, ulong self_seek);
+	static Word init (const std::string & str, const lexing::File & file, uint64_t line, uint64_t col, uint64_t seek, bool isFromString, uint64_t start, uint64_t self_seek);
 	
 
 	/**
@@ -116,7 +116,7 @@ namespace lexing {
 	/**
 	 * Create a copy of other with a different string content, and length
 	 */
-	static Word init (const Word & other, const std::string & str, ulong length);
+	static Word init (const Word & other, const std::string & str, uint64_t length);
 	
 	/**
 	 * Get the location of the word for GCC internals
@@ -131,27 +131,27 @@ namespace lexing {
 	/**
 	 * Get the length of the word
 	 */
-	long length () const;
+	int64_t length () const;
 
 	/**
 	 * @return: the column location of the word
 	 */
-	ulong getColumn () const;
+	uint64_t getColumn () const;
 	
 	/**
 	 * @return: the line location of the word
 	 */
-	ulong getLine () const;
+	uint64_t getLine () const;
 
 	/**
 	 * @return: the cursor position of the line containing the word in the file
 	 */
-	ulong getSeek () const;
+	uint64_t getSeek () const;
 
 	/**
 	 * @return the cursor position of the word in the file
 	 */
-	ulong getSelfSeek () const;
+	uint64_t getSelfSeek () const;
 	
 	/**
 	 * Get the file that created the word
@@ -161,7 +161,7 @@ namespace lexing {
 	/**
 	 * Get the start line of the file containing the word
 	 */
-	ulong getStart () const;
+	uint64_t getStart () const;
 	
 	/**
 	 * Get the name of the file that created the word

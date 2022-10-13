@@ -30,7 +30,7 @@ namespace semantic {
 	const std::string MacroVisitor::__CHAR__ = "__char";
 	const std::string MacroVisitor::__RULE_INDEX__ = "__index";
 
-	std::string some (const std::string & text, ulong current) {
+	std::string some (const std::string & text, uint64_t current) {
 	    auto len = text.length () - current;
 	    if (len < 10) return text.substr (current, 10);
 	    else return text.substr (current, 4) + "[...]" + text.substr (text.length () - 4, 4);
@@ -172,7 +172,7 @@ namespace semantic {
 	    this-> _call = expression.getLocation ();
 	    this-> _content = content;
 	    
-	    ulong current = 0;
+	    uint64_t current = 0;
 	    Mapper mapper (false);
 	    std::list <Ymir::Error::ErrorMsg> errors;
 	    
@@ -197,7 +197,7 @@ namespace semantic {
 	    
 	    if (mapper.succeed) {
 		if (current != content.length ()) {
-		    ulong line = 0, col = 0, seek = 0;
+		    uint64_t line = 0, col = 0, seek = 0;
 		    computeLine (line, col, seek, current, this-> _call);
 		    lexing::Word word = lexing::Word::init (content.substr (current, 1), this-> _call.getFile (), line, col, seek);
 		    
@@ -222,7 +222,7 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 	
-	MacroVisitor::Mapper MacroVisitor::validateMacroMult (const syntax::MacroMult & mult, const std::string & content, ulong & current, const Expression & skips) {
+	MacroVisitor::Mapper MacroVisitor::validateMacroMult (const syntax::MacroMult & mult, const std::string & content, uint64_t & current, const Expression & skips) {
 	    if (mult.getMult ().isEof () || mult.getMult () == "") {
 		return validateMacroList (mult, content, current, skips);
 	    } else if (mult.getMult () == Token::INTEG) {
@@ -246,7 +246,7 @@ namespace semantic {
 	}
 
 
-	MacroVisitor::Mapper MacroVisitor::validateMacroList (const syntax::MacroMult & mult, const std::string & content, ulong & current, const Expression & skips) {
+	MacroVisitor::Mapper MacroVisitor::validateMacroList (const syntax::MacroMult & mult, const std::string & content, uint64_t & current, const Expression & skips) {
 	    Mapper mapper (true);
 	    
 	    for (auto & it : mult.getContent ()) {
@@ -254,7 +254,7 @@ namespace semantic {
 		    validateMacroRepeat (skips.to <MacroMult> (), content, current, Expression::empty ());
 		
 		Mapper local_mapper (false);
-		ulong current_2 = current;
+		uint64_t current_2 = current;
 		
 		match (it) {
 		    of (MacroMult, mult) local_mapper = validateMacroMult (mult, content, current_2, skips);		
@@ -276,7 +276,7 @@ namespace semantic {
 	    return mapper;
 	}
 	
-	std::vector <MacroVisitor::Mapper> MacroVisitor::validateMacroRepeat (const syntax::MacroMult & mult, const std::string & content, ulong & current, const Expression & skips) {
+	std::vector <MacroVisitor::Mapper> MacroVisitor::validateMacroRepeat (const syntax::MacroMult & mult, const std::string & content, uint64_t & current, const Expression & skips) {
 	    std::vector <Mapper> values;
 	    
 	    while (true) {
@@ -295,7 +295,7 @@ namespace semantic {
 	    return values;
 	}
 	
-	std::vector<MacroVisitor::Mapper> MacroVisitor::validateMacroOneOrMore (const syntax::MacroMult & mult, const std::string & content, ulong & current, const Expression & skips) {
+	std::vector<MacroVisitor::Mapper> MacroVisitor::validateMacroOneOrMore (const syntax::MacroMult & mult, const std::string & content, uint64_t & current, const Expression & skips) {
 	    std::vector <Mapper> values;
 	    
 	    while (true) {
@@ -315,7 +315,7 @@ namespace semantic {
 	    return values;
 	}
 	
-	MacroVisitor::Mapper MacroVisitor::validateMacroOneOrNone (const syntax::MacroMult & mult, const std::string & content, ulong & current, const Expression & skips) {
+	MacroVisitor::Mapper MacroVisitor::validateMacroOneOrNone (const syntax::MacroMult & mult, const std::string & content, uint64_t & current, const Expression & skips) {
 	    try {
 		auto current_2 = current;
 		auto local_mapper = validateMacroList (mult, content, current_2, skips);
@@ -328,8 +328,8 @@ namespace semantic {
 	    }           
 	}		
 	
-	MacroVisitor::Mapper MacroVisitor::validateMacroOr (const syntax::MacroOr & mult, const std::string & content, ulong & current, const Expression & skips) {	    
-	    ulong current_left = current;
+	MacroVisitor::Mapper MacroVisitor::validateMacroOr (const syntax::MacroOr & mult, const std::string & content, uint64_t & current, const Expression & skips) {	    
+	    uint64_t current_left = current;
 	    Mapper mapper (false);
 	    std::list <Ymir::Error::ErrorMsg> errors;
 	    try {
@@ -371,7 +371,7 @@ namespace semantic {
 	    
 	}
 	
-	MacroVisitor::Mapper MacroVisitor::validateMacroVar (const syntax::MacroVar & var, const std::string & content, ulong & current, const Expression & skips) {
+	MacroVisitor::Mapper MacroVisitor::validateMacroVar (const syntax::MacroVar & var, const std::string & content, uint64_t & current, const Expression & skips) {
 	    auto rule = var.getContent ();
 	    Mapper mapper (false);
 	    
@@ -416,7 +416,7 @@ namespace semantic {
 	    return Mapper (false);
 	}
 
-	MacroVisitor::Mapper MacroVisitor::validateRule (const syntax::Expression & expr, const std::string & content, ulong & current, const Expression &) {
+	MacroVisitor::Mapper MacroVisitor::validateRule (const syntax::Expression & expr, const std::string & content, uint64_t & current, const Expression &) {
 	    Mapper mapper (false);
 	    if (expr.is <syntax::Var> ()) {	       
 		if (std::find (this-> _known_rules.begin (), this-> _known_rules.end (), expr.to <syntax::Var> ().getName ().getStr ()) != this-> _known_rules.end ()) {
@@ -496,7 +496,7 @@ namespace semantic {
 	    return mapper;
 	}
 
-	MacroVisitor::Mapper MacroVisitor::validateKnownRules (const syntax::Expression & expr, const std::string & content, ulong & current) {
+	MacroVisitor::Mapper MacroVisitor::validateKnownRules (const syntax::Expression & expr, const std::string & content, uint64_t & current) {
 	    std::list <Ymir::Error::ErrorMsg> errors;
 	    auto name = expr.to <syntax::Var> ().getName ().getStr ();
 	    if (name == MacroVisitor::__ANY__ || name == MacroVisitor::__CHAR__) {
@@ -511,7 +511,7 @@ namespace semantic {
 			return Mapper (true, "\\\'");
 		    return Mapper (true, content.substr (current-1, 1));
 		} else {
-		    ulong line = 0, col = 0, seek = 0;
+		    uint64_t line = 0, col = 0, seek = 0;
 		    computeLine (line, col, seek, current, this-> _call);
 		    
 		    lexing::Word word = lexing::Word::init ("", this-> _call.getFile (), line, col, seek);
@@ -600,12 +600,12 @@ namespace semantic {
 	    return MacroMult::init (ret.getLocation (), ret.getLocation (), {ret}, lexing::Word::init (ret.getLocation (), Token::STAR));
 	}
 		
-	MacroVisitor::Mapper MacroVisitor::validateMacroToken (const syntax::MacroToken & mult, const std::string & content, ulong & current, const Expression &) {
+	MacroVisitor::Mapper MacroVisitor::validateMacroToken (const syntax::MacroToken & mult, const std::string & content, uint64_t & current, const Expression &) {
 	    auto sem_str = this-> _context.validateString (mult.getContent ().to <syntax::String> (), true);
 	    auto ch_str = sem_str.to <Aliaser> ().getWho ().to <StringValue> ().getValue ();
 	    Ymir::OutBuffer buf;
 	    
-	    ulong i = 0;	    
+	    uint64_t i = 0;	    
 	    for (auto & it : ch_str) {
 		i += 1;
 		if (it != '\0' && i < ch_str.size ())
@@ -618,7 +618,7 @@ namespace semantic {
 	    if (len > (content.length () - current)) {
 		std::string wstr;
 		if (current < content.length ()) wstr = content.substr (current);
-		ulong line = 0, col = 0, seek = 0;
+		uint64_t line = 0, col = 0, seek = 0;
 		computeLine (line, col, seek, current, this-> _call);
 		lexing::Word word = lexing::Word::init (wstr, this-> _call.getFile (), line, col, seek);
 		
@@ -634,7 +634,7 @@ namespace semantic {
 
 	    for (auto it : Ymir::r(0, len)) {
 		if (str [it] != content [it+current]) {
-		    ulong line = 0, col = 0, seek = 0;
+		    uint64_t line = 0, col = 0, seek = 0;
 		    computeLine (line, col, seek, current, this-> _call);
 		    
 		    lexing::Word word = lexing::Word::init (content.substr (current, len), this-> _call.getFile (), line, col, seek);
@@ -656,7 +656,7 @@ namespace semantic {
 	    return Mapper (true, ret, {});
 	}
 
-	void MacroVisitor::computeLinePure (ulong & line, ulong & column, ulong & seek, const lexing::Word & start, const lexing::Word & relative) {
+	void MacroVisitor::computeLinePure (uint64_t & line, uint64_t & column, uint64_t & seek, const lexing::Word & start, const lexing::Word & relative) {
 	    line = start.getLine () + relative.getLine ();
 	    if (relative.getLine () == 0)
 		column = start.getColumn () + relative.getColumn ();
@@ -664,7 +664,7 @@ namespace semantic {
 	    seek = start.getSeek () + relative.getSeek ();
 	}
 	
-	void MacroVisitor::computeLine (ulong & line, ulong & column, ulong & seek, ulong current, const lexing::Word & relative) {
+	void MacroVisitor::computeLine (uint64_t & line, uint64_t & column, uint64_t & seek, uint64_t current, const lexing::Word & relative) {
 	    line = relative.getLine ();
 	    column = relative.getColumn () + relative.length ();
 	    seek = relative.getSeek ();
@@ -909,7 +909,7 @@ namespace semantic {
 			    } else if (right == Keys::LEN) {
 				std::vector <Mapper> ret;
 				Ymir::OutBuffer buf;
-				buf.write ((uint) left.size (), Keys::USIZE);
+				buf.write ((uint32_t) left.size (), Keys::USIZE);
 				ret.push_back (Mapper (true, buf.str ()));
 				return ret;
 			    } else {
@@ -934,7 +934,7 @@ namespace semantic {
 			    }
 			    auto size = value.to <Fixed> ().getUI ().u;
 			    if (size >= left.size ()) {
-				Ymir::Error::occur (value.getLocation (), ExternalError::OVERFLOW_ARITY, (uint) size, (uint) left.size ());
+				Ymir::Error::occur (value.getLocation (), ExternalError::OVERFLOW_ARITY, (uint32_t) size, (uint32_t) left.size ());
 			    }
 			    return {left [size]};
 			} else {

@@ -11,11 +11,11 @@ namespace semantic {
 	    
 	    bool _isMutable;
 
-	    int _nbConsume;
+	    int32_t _nbConsume;
 
 	    bool _isSelf;
 
-	    uint _varRefId;
+	    uint32_t _varRefId;
 	    
 	private :
 
@@ -23,7 +23,7 @@ namespace semantic {
 	    
 	    ProtoVar ();
 
-	    ProtoVar (const lexing::Word & location, const Generator & type, const Generator & value, bool isMutable, int nb_consume, bool is_self);
+	    ProtoVar (const lexing::Word & location, const Generator & type, const Generator & value, bool isMutable, int32_t nb_consume, bool is_self);
 
 	public :
 
@@ -32,7 +32,7 @@ namespace semantic {
 	     * \param location the location of the param var (for debug info)
 	     * \param type the type of the var
 	     */
-	    static Generator init (const lexing::Word & location, const Generator & type, const Generator & value, bool isMutable, int nb_consume, bool is_self);
+	    static Generator init (const lexing::Word & location, const Generator & type, const Generator & value, bool isMutable, int32_t nb_consume, bool is_self);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -57,7 +57,7 @@ namespace semantic {
 	    /**
 	     * \return the number of arguments this proto var consume (for variadic templates)
 	     */
-	    int getNbConsume () const;
+	    int32_t getNbConsume () const;
 
 	    /**
 	     * this protovar define a self class var
@@ -67,7 +67,7 @@ namespace semantic {
 	    /**
 	     * \brief Override the getuniqid, the ref id of a var decl must be copied, all the varref will refer to it
 	     */
-	    uint getUniqId () const override;
+	    uint32_t getUniqId () const override;
 	    
 	    std::string prettyString () const override;
 	};

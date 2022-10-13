@@ -16,7 +16,7 @@ namespace semantic {
 	    this-> isComplex (true);
 	}
 
-	Array::Array (const lexing::Word & loc, const Generator & inner, uint size) :
+	Array::Array (const lexing::Word & loc, const Generator & inner, uint32_t size) :
 	    Type (loc, loc.getStr ()),
 	    _size (size)
 	{
@@ -24,7 +24,7 @@ namespace semantic {
 	    this-> setInners ({Type::init (inner.to<Type> (), inner.to <Type> ().isMutable (), false)});
 	}
 
-	Generator Array::init (const lexing::Word & loc, const Generator & inner, uint size) {
+	Generator Array::init (const lexing::Word & loc, const Generator & inner, uint32_t size) {
 	    return Generator {new (NO_GC) Array (loc, inner, size)};
 	}
 
@@ -46,11 +46,11 @@ namespace semantic {
 
 	std::string Array::typeName () const {
 	    Ymir::OutBuffer buf;
-	    buf.write ("[", this-> getInners () [0].to<Type> ().computeTypeName (this-> isMutable (), true, true), " ; ", (int) this-> _size, "]");
+	    buf.write ("[", this-> getInners () [0].to<Type> ().computeTypeName (this-> isMutable (), true, true), " ; ", (int32_t) this-> _size, "]");
 	    return buf.str ();
 	}	
 
-	uint Array::getSize () const {
+	uint32_t Array::getSize () const {
 	    return this-> _size;
 	}
 	

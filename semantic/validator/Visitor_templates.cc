@@ -69,7 +69,7 @@ namespace semantic {
 	    
 	    Symbol glob (Symbol::empty ());
 	    auto already = tmplVisitor.getTemplateSolution (visit.getReferent (), soluce);
-	    if (already.isEmpty ()) {
+	    if (already.isEmpty () || !isWeak) {
 		auto final_syntax = tmplVisitor.replaceAll (preSol.getDeclaration (), preSol.getMapping (), preSol.getTemplateReferent ());
 		visit.pushReferent (soluce);
 		visit.visit (final_syntax, false);
@@ -77,7 +77,9 @@ namespace semantic {
 		glob.setReferent (visit.getReferent ());
 		
 		visit.getReferent ().insertTemplate (glob);
-	    } else glob = already;
+	    } else {
+		glob = already;
+	    }
 
 	    if (validate) {
 		if (gen.isEmpty ()) {

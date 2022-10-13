@@ -36,8 +36,8 @@ namespace semantic {
 		elof_u (Slice) 
 		    return validateSlice (expression, value);		    
 		
-		elof_u (Range)
-		    return validateRange (expression, value);		    
+		elof_u (Range) 
+		    return validateRange (expression, value);		
 
 		elof_u (Tuple)
 		    return validateTuple (expression, value);		    
@@ -191,7 +191,7 @@ namespace semantic {
 		    value.getLocation (),
 		    ExternalError::NOT_ITERABLE_WITH,
 		    value.to <Value> ().getType ().to <Type> ().getTypeName (),
-		    (uint) vars.size ()
+		    (uint32_t) vars.size ()
 		);
 		return Generator::empty ();
 	    } else if (vars.size () == 1) {
@@ -268,7 +268,7 @@ namespace semantic {
 		    value.getLocation (),
 		    ExternalError::NOT_ITERABLE_WITH,
 		    value.to <Value> ().getType ().to <Type> ().getTypeName (),
-		    (uint) vars.size ()
+		    (uint32_t) vars.size ()
 		);
 		return Generator::empty ();
 	    }
@@ -478,10 +478,10 @@ namespace semantic {
 	    
 	    std::vector <Generator> innerValues;
 	    if (l.to <Value> ().getType ().to <Integer> ().isSigned ()) {
-		long l_i = l.to<Fixed> ().getUI ().u;
-		long r_i = r.to<Fixed> ().getUI ().u;
-		long s_i = s.to <Fixed> ().getUI ().i;
-		for (long i = l_i;; i += s_i) {
+		int64_t l_i = l.to<Fixed> ().getUI ().u;
+		int64_t r_i = r.to<Fixed> ().getUI ().u;
+		int64_t s_i = s.to <Fixed> ().getUI ().i;
+		for (int64_t i = l_i;; i += s_i) {
 		    if (s_i < 0) {
 			if (isFull) {
 			    if (i < r_i) break;
@@ -534,10 +534,10 @@ namespace semantic {
 		    }
 		}
 	    } else {
-		ulong l_i = l.to<Fixed> ().getUI ().u;
-		ulong r_i = r.to<Fixed> ().getUI ().u;
-		long s_i = s.to <Fixed> ().getUI ().i;
-		for (ulong i = l_i;; i += s_i) {
+		uint64_t l_i = l.to<Fixed> ().getUI ().u;
+		uint64_t r_i = r.to<Fixed> ().getUI ().u;
+		int64_t s_i = s.to <Fixed> ().getUI ().i;
+		for (uint64_t i = l_i;; i += s_i) {
 		    
 		    if (s_i < 0) {
 			if (isFull) {
@@ -618,7 +618,7 @@ namespace semantic {
 		    tuple.getLocation (),
 		    ExternalError::NOT_ITERABLE_WITH,
 		    tuple.to <Value> ().getType ().to <Type> ().getTypeName (),
-		    (uint) vars.size ()
+		    (uint32_t) vars.size ()
 		);
 		return Generator::empty ();
 	    } else {
@@ -890,9 +890,8 @@ namespace semantic {
 			    {}, false
 			    );
 			auto exit = this-> _context.validateValue (call);
-			auto jmp_buf_type = this-> _context.validateType (syntax::Var::init (lexing::Word::init (loc, global::CoreNames::get (JMP_BUF_TYPE))));
 		    
-			loop = ExitScope::init (loc, loop.to <Value> ().getType (), jmp_buf_type, loop, {exit}, {}, Generator::empty (), Generator::empty (), Generator::empty ());
+			loop = ExitScope::init (loc, loop.to <Value> ().getType (), loop, {exit}, {}, Generator::empty (), Generator::empty (), Generator::empty ());
 			loop = Block::init (loc, loop.to <Value> ().getType (), {val, loop});
 		    } catch (Error::ErrorList&){
 			loop = Block::init (loc, loop_type, {val, loop});;

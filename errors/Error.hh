@@ -35,7 +35,7 @@ namespace Ymir {
     // std::string format (const char* left, T... params) {
     // 	OutBuffer buf;
     // 	buf.writef (left, params...);
-    // 	static int all = 0;
+    // 	static int32_t all = 0;
     // 	all += clock () - t;
     // 	println (((float) all) / CLOCKS_PER_SEC);
     // 	return buf.str ();
@@ -70,9 +70,9 @@ namespace Ymir {
 	    
 	    void addNote (const ErrorMsg & note);
 	    
-	    void computeMessage (Ymir::OutBuffer & buf, unsigned long depth, unsigned long max_depth, bool writtenSub = false, bool windable = false) const;
+	    void computeMessage (Ymir::OutBuffer & buf, uint64_t depth, uint64_t max_depth, bool writtenSub = false, bool windable = false) const;
 
-	    unsigned long computeMaxDepth () const;
+	    uint64_t computeMaxDepth () const;
 	    
 	    bool isEmpty () const;
 

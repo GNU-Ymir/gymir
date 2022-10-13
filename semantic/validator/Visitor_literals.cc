@@ -63,7 +63,7 @@ namespace semantic {
 		    return aux;
 		}
 		
-		static ulong convertU (const lexing::Word & loc, const Integer & type, int base) { 
+		static uint64_t convertU (const lexing::Word & loc, const Integer & type, int base) { 
 		    char * temp = nullptr; errno = 0; // errno !!
 		    auto val = removeUnder (loc.getStr ());
 		    if (val.length () > 2 && val [0] == '0' && val [1] == Keys::LX[0]) {
@@ -74,7 +74,7 @@ namespace semantic {
 			base = 8;
 		    }
 		    
-		    ulong value = std::strtoul (val.c_str (), &temp, base);
+		    uint64_t value = std::strtoul (val.c_str (), &temp, base);
 		    bool overflow = false;
 		    if (temp == val.c_str () || *temp != '\0' ||
 			((value == 0 || value == ULONG_MAX) && errno == ERANGE)) {
@@ -87,7 +87,7 @@ namespace semantic {
 		    return value;
 		}
 		
-		static long convertS (const lexing::Word & loc, const Integer & type, int base) {
+		static int64_t convertS (const lexing::Word & loc, const Integer & type, int base) {
 		    char * temp = nullptr; errno = 0; // errno !!
 		    auto val = removeUnder (loc.getStr ());
 		    if (val.length () > 2 && val [0] == '0' && val [1] == Keys::LX[0]) {			
@@ -98,7 +98,7 @@ namespace semantic {
 			base = 8;
 		    }
 
-		    ulong value = std::strtol (val.c_str (), &temp, base);
+		    uint64_t value = std::strtol (val.c_str (), &temp, base);
 		    bool overflow = false;
 		    if (temp == val.c_str () || *temp != '\0' ||
 			((value == 0 || value == ULONG_MAX) && errno == ERANGE)) {
@@ -111,7 +111,7 @@ namespace semantic {
 		    return value;
 		}
 
-		static ulong getMaxU (const Integer & type) {
+		static uint64_t getMaxU (const Integer & type) {
 		    switch (type.getSize ()) {
 		    case 8 : return UCHAR_MAX;
 		    case 16 : return USHRT_MAX;
@@ -123,7 +123,7 @@ namespace semantic {
 		    return 0;
 		}
 		
-		static ulong getMaxS (const Integer & type) {
+		static uint64_t getMaxS (const Integer & type) {
 		    switch (type.getSize ()) {
 		    case 8 : return SCHAR_MAX;
 		    case 16 : return SHRT_MAX;
@@ -191,7 +191,7 @@ namespace semantic {
 
 	    auto visitor = UtfVisitor::init (*this);
 	    
-	    uint value = visitor.convertChar (c.getLocation (), c.getSequence (), type.to<Char> ().getSize ());	   
+	    uint32_t value = visitor.convertChar (c.getLocation (), c.getSequence (), type.to<Char> ().getSize ());	   
 	    return CharValue::init (c.getLocation (), type, value);
 	}
 
@@ -458,7 +458,7 @@ namespace semantic {
 	    throw Error::ErrorList {errors};
 	    
 	    auto proto = LambdaProto::init (function.getLocation (), frameName, retType, paramsProto, function.getContent (), function.isRefClosure (), function.isMoveClosure (), syms);
-	    proto = LambdaProto::init (proto.to<LambdaProto>(), format ("%%%", this-> _referent.back ().getMangledName (), (uint) name.length (), name), Frame::ManglingStyle::Y);	    
+	    proto = LambdaProto::init (proto.to<LambdaProto>(), format ("%%%", this-> _referent.back ().getMangledName (), (uint32_t) name.length (), name), Frame::ManglingStyle::Y);	    
 
 	    if (!uncomplete) {
 		return validateLambdaProto (proto.to <LambdaProto> (), paramTypes);
@@ -482,7 +482,7 @@ namespace semantic {
 		try {
 		    for (auto it : Ymir::r (0, proto.getParameters ().size ())) {
 			auto var = proto.getParameters ()[it].to <ProtoVar> ();
-			if (it >= (long) types.size () || types [it].isEmpty ()) {
+			if (it >= (int64_t) types.size () || types [it].isEmpty ()) {
 			    Ymir::Error::occur (var.getLocation (), ExternalError::UNKNOWN_LAMBDA_TYPE, var.prettyString ());
 			} else {
 			    bool isMutable = types [it].to <Type> ().isMutable ();
@@ -502,7 +502,7 @@ namespace semantic {
 		} 		    
 	    }
 	    
-	    uint refId = 0;
+	    uint32_t refId = 0;
 	    {
 		try {		    
 		    this-> setCurrentFuncType (retType);
@@ -584,7 +584,7 @@ namespace semantic {
 	    }
 	}
 
-	Generator Visitor::validateClosureValue (const Generator & closureType, bool isRefClosure, uint closureIndex) {
+	Generator Visitor::validateClosureValue (const Generator & closureType, bool isRefClosure, uint32_t closureIndex) {
 	    std::vector <Generator> innerTypes;
 	    std::vector <Generator> innerValues;
 	    auto loc = closureType.getLocation ();

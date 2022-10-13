@@ -13,7 +13,7 @@ namespace semantic {
 	class CharValue : public Value {	    
 	private :
 	    
-	    uint _value;
+	    uint32_t _value;
 	    
 	protected : 
 
@@ -21,11 +21,11 @@ namespace semantic {
 
 	    CharValue ();
 
-	    CharValue (const lexing::Word & loc, const Generator & type, uint value);	    	    
+	    CharValue (const lexing::Word & loc, const Generator & type, uint32_t value);	    	    
 	    
 	public :
 
-	    static Generator init (const lexing::Word & loc, const Generator & type, uint value);
+	    static Generator init (const lexing::Word & loc, const Generator & type, uint32_t value);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -40,7 +40,7 @@ namespace semantic {
 	    /**
 	     * \return the value of the float const 
 	     */
-	    uint getValue () const;
+	    uint32_t getValue () const;
 
 	    std::string prettyString () const override;
 	    

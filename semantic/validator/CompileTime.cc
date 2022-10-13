@@ -170,7 +170,7 @@ namespace semantic {
 
 
 		auto inner = slc.getType ().to <Type> ().getInners ()[0];
-		uint size = inner.to <Char> ().getSize ();
+		uint32_t size = inner.to <Char> ().getSize ();
 		auto len = res.size () / (size / 8);
 
 		auto type = Array::init (slc.getLocation (), inner, len);
@@ -212,7 +212,7 @@ namespace semantic {
 	    return array.to<ArrayValue> ().getContent ()[index.to<Fixed> ().getUI ().u];
 	}
 
-	ulong getMaxU (const Integer & type) {
+	uint64_t getMaxU (const Integer & type) {
 	    switch (type.getSize ()) {
 	    case 8 : return UCHAR_MAX;
 	    case 16 : return USHRT_MAX;
@@ -224,7 +224,7 @@ namespace semantic {
 	    return 0;
 	}
 		
-	ulong getMaxS (const Integer & type) {
+	uint64_t getMaxS (const Integer & type) {
 	    switch (type.getSize ()) {
 	    case 8 : return SCHAR_MAX;
 	    case 16 : return SHRT_MAX;
@@ -236,11 +236,11 @@ namespace semantic {
 	    return 0;
 	}
 	
-	ulong getMinU (const Integer &) {
+	uint64_t getMinU (const Integer &) {
 	    return 0;
 	}
 		
-	ulong getMinS (const Integer & type) {
+	uint64_t getMinS (const Integer & type) {
 	    switch (type.getSize ()) {
 	    case 8 : return SCHAR_MIN;
 	    case 16 : return SHRT_MIN;
@@ -307,18 +307,18 @@ namespace semantic {
 		bool isSigned = binInt.getType ().to <Integer> ().isSigned ();
 		std::string type = binInt.getType ().to <Integer> ().typeName ();
 		
-		long maxI = getMaxS (binInt.getType ().to <Integer> ());
-		ulong maxU = getMaxU (binInt.getType ().to <Integer> ());
+		int64_t maxI = getMaxS (binInt.getType ().to <Integer> ());
+		uint64_t maxU = getMaxU (binInt.getType ().to <Integer> ());
 		
-		long minI = getMinS (binInt.getType ().to <Integer> ());
-		ulong minU = getMinU (binInt.getType ().to <Integer> ());
+		int64_t minI = getMinS (binInt.getType ().to <Integer> ());
+		uint64_t minU = getMinU (binInt.getType ().to <Integer> ());
 		
 		Fixed::UI result;
 		
 		if (isSigned) {
-		    result.i = applyBinInt<long> (binInt.getOperator (), left.i, right.i);
+		    result.i = applyBinInt<int64_t> (binInt.getOperator (), left.i, right.i);
 		} else
-		    result.u = applyBinInt<ulong> (binInt.getOperator (), left.u, right.u);
+		    result.u = applyBinInt<uint64_t> (binInt.getOperator (), left.u, right.u);
 		
 		if (isSigned && (result.i > maxI || result.i < minI))
 		    Ymir::Error::occur (binInt.getLocation (), ExternalError::OVERFLOW_, type, result.i);
@@ -330,9 +330,9 @@ namespace semantic {
 		bool isSigned = binInt.getLeft ().to <Value> ().getType ().to<Integer> ().isSigned ();
 		bool res;
 		if (isSigned) {
-		    res = applyBinIntBool<long> (binInt.getOperator (), left.i, right.i);
+		    res = applyBinIntBool<int64_t> (binInt.getOperator (), left.i, right.i);
 		} else
-		    res = applyBinIntBool<ulong> (binInt.getOperator (), left.u, right.u);
+		    res = applyBinIntBool<uint64_t> (binInt.getOperator (), left.u, right.u);
 
 		return BoolValue::init (binInt.getLocation (), Bool::init (binInt.getLocation ()), res);
 	    }
@@ -362,17 +362,17 @@ namespace semantic {
 		bool isSigned = unaInt.getType ().to <Integer> ().isSigned ();
 		std::string type = unaInt.getType ().to <Integer> ().typeName ();
 		
-		long maxI = getMaxS (unaInt.getType ().to <Integer> ());
-		ulong maxU = getMaxU (unaInt.getType ().to <Integer> ());
+		int64_t maxI = getMaxS (unaInt.getType ().to <Integer> ());
+		uint64_t maxU = getMaxU (unaInt.getType ().to <Integer> ());
 
-		long minI = getMinS (unaInt.getType ().to <Integer> ());
-		ulong minU = getMinU (unaInt.getType ().to <Integer> ());
+		int64_t minI = getMinS (unaInt.getType ().to <Integer> ());
+		uint64_t minU = getMinU (unaInt.getType ().to <Integer> ());
 		
 		Fixed::UI result;
 		if (isSigned) {
-		    result.i = applyUnaInt <long> (unaInt.getOperator (), elem.i);
+		    result.i = applyUnaInt <int64_t> (unaInt.getOperator (), elem.i);
 		} else
-		    result.u = applyUnaInt <ulong> (unaInt.getOperator (), elem.u);
+		    result.u = applyUnaInt <uint64_t> (unaInt.getOperator (), elem.u);
 
 				
 		if (isSigned && (result.i > maxI || result.i < minI))
@@ -584,11 +584,13 @@ namespace semantic {
 	}
 
 	int strcmp (const std::vector <char> & left, const std::vector <char> & right) {	    
-	    uint i = 0;
+	    uint32_t i = 0;
 	    while (i < left.size () && i < right.size ()) {
 		if (left [i] != right [i]) break;
 		else i += 1;
 	    }
+	    
+	    if (i == left.size () && i == right.size ()) return 0;	    
 	    return (int) left [i] - (int) right [i];
 	}
 	
@@ -600,18 +602,20 @@ namespace semantic {
 	    
 	    if (left.is <StringValue> () && right.is<StringValue> ()) {
 		auto size = left.to <StringValue> ().getType ().to <Type> ().getInners ()[0].to <Char> ().getSize ();
-		auto v = 0;
+		int8_t v = 0;
 		if (size == 32) {
 		    auto & lft = left.to <StringValue> ().getValue ();
-		    auto & rgt = right.to <StringValue> ().getValue ();		
-		    v = strcmp (UtfVisitor::utf32_to_utf8 (lft), UtfVisitor::utf32_to_utf8 (rgt));
+		    auto & rgt = right.to <StringValue> ().getValue ();
+		    auto u8 = UtfVisitor::utf32_to_utf8 (lft);
+		    auto u8r = UtfVisitor::utf32_to_utf8 (rgt);
+		    v = strcmp (u8, u8r);
 		} else {
 		    auto & lft = left.to <StringValue> ().getValue ();
 		    auto & rgt = right.to <StringValue> ().getValue ();		
 		    v = strcmp (lft, rgt);
 		}		
 
-		auto b = applyBinIntBool<int> (slc.getOperator (), v, 0);
+		auto b = applyBinIntBool<int8_t> (slc.getOperator (), v, 0);
 		return BoolValue::init (slc.getLocation (), Bool::init (slc.getLocation ()), b);
 	    }
 

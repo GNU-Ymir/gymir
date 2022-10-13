@@ -8,7 +8,7 @@ namespace semantic {
 	    _str (Generator::empty ())
 	{}
 
-	VtableAccess::VtableAccess (const lexing::Word & loc, const Generator & type, const Generator & str, uint field, const std::string & name) :
+	VtableAccess::VtableAccess (const lexing::Word & loc, const Generator & type, const Generator & str, uint32_t field, const std::string & name) :
 	    Value (loc, type),
 	    _str (str),
 	    _field (field),
@@ -17,7 +17,7 @@ namespace semantic {
 	    this-> setThrowers (this-> _str.getThrowers ());
 	}
 
-	Generator VtableAccess::init (const lexing::Word & loc, const Generator & type, const Generator & str, uint field, const std::string & name) {
+	Generator VtableAccess::init (const lexing::Word & loc, const Generator & type, const Generator & str, uint32_t field, const std::string & name) {
 	    return Generator {new (NO_GC) VtableAccess (loc, type, str, field, name)};
 	}
 	
@@ -35,7 +35,7 @@ namespace semantic {
 	    return this-> _str;
 	}
 
-	uint VtableAccess::getField () const {
+	uint32_t VtableAccess::getField () const {
 	    return this-> _field;
 	}
 

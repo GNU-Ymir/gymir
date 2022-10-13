@@ -33,7 +33,7 @@ namespace semantic {
 	     * \param content the content of the char literal
 	     * \param size the type of the char (8, 16, 32)
 	     */
-	    uint convertChar (const lexing::Word & loc, const lexing::Word & content, int size);
+	    uint32_t convertChar (const lexing::Word & loc, const lexing::Word & content, int32_t size);
 
 
 	    /**
@@ -42,7 +42,7 @@ namespace semantic {
 	     * \param content the content of the string literal
 	     * \param size the type of the inner content (8, 16, 32)
 	     */
-	    std::vector<char> convertString (const lexing::Word& loc, const lexing::Word & content, int size, int & len, bool error = true);
+	    std::vector<char> convertString (const lexing::Word& loc, const lexing::Word & content, int32_t size, int32_t & len, bool error = true);
 
 	    /**
 	     * \brief Convert a string literal to an unicode string
@@ -50,7 +50,7 @@ namespace semantic {
 	     * \param content the content of the string literal
 	     * \param size the type of the inner content (8, 16, 32)
 	     */
-	    std::vector<char> convertString (const lexing::Word& loc, const std::string & content, int size, int & len, bool error = true);
+	    std::vector<char> convertString (const lexing::Word& loc, const std::string & content, int32_t size, int32_t & len, bool error = true);
 
 	    /**
 	     * Transform a utf32 string into a utf8 string
@@ -60,18 +60,18 @@ namespace semantic {
 	    /**
 	     * Transform a utf8 string into a utf32 string
 	     */
-	    std::vector <uint> utf8_to_utf32 (const std::string& text);
+	    std::vector <uint32_t> utf8_to_utf32 (const std::string& text);
 	    
 	private :
 
 	    size_t utf8_codepoint_size (uint8_t text);
 	    
 
-	    static void getUnicodeChar (int & nb, uint code, char chars[5]);
+	    static void getUnicodeChar (int32_t & nb, uint32_t code, char chars[5]);
 
-	    void escapeUnicode (const lexing::Word & loc, int & it, const std::string & content, Ymir::OutBuffer & buf, const std::string & size);
+	    void escapeUnicode (const lexing::Word & loc, int32_t & it, const std::string & content, Ymir::OutBuffer & buf, const std::string & size);
 
-	    std::vector<char> toString (const std::vector <uint> & content);
+	    std::vector<char> toString (const std::vector <uint32_t> & content);
 	    
 	    std::string escapeChar (const lexing::Word & loc, const std::string & content, const std::string & size, bool error);	    
 	    

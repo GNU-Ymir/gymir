@@ -12,7 +12,7 @@ namespace lexing {
 
     Word Word::__empty__ = Word {new (NO_GC) IWord ("", "", 0, 0, 0, 0, false, lexing::File::empty (), 0, 0)};
 
-    IWord::IWord (const std::string & str, const std::string & locFile, ulong line, ulong col, ulong seek, long len, bool isFromString, const lexing::File & file, ulong start, ulong self_seek) :	
+    IWord::IWord (const std::string & str, const std::string & locFile, uint64_t line, uint64_t col, uint64_t seek, int64_t len, bool isFromString, const lexing::File & file, uint64_t start, uint64_t self_seek) :	
 	str (str),
 	locFile (locFile),
 	line (line),
@@ -37,12 +37,12 @@ namespace lexing {
 	return __empty__;
     }
 
-    Word Word::init (const std::string & str, const lexing::File & file, ulong line, ulong col, ulong seek) {
+    Word Word::init (const std::string & str, const lexing::File & file, uint64_t line, uint64_t col, uint64_t seek) {
 	return Word {new (NO_GC) IWord (str, "", line, col, seek, -1, false, file, 0, seek)};
     }
 
 
-    Word Word::init (const std::string & str, const lexing::File & file, ulong line, ulong col, ulong seek, bool isFromString, ulong start, ulong self_seek) {
+    Word Word::init (const std::string & str, const lexing::File & file, uint64_t line, uint64_t col, uint64_t seek, bool isFromString, uint64_t start, uint64_t self_seek) {
 	return Word {new (NO_GC) IWord (str, "", line, col, seek, -1, isFromString, file, start, self_seek)};
     }
     
@@ -50,7 +50,7 @@ namespace lexing {
 	return Word {new (NO_GC) IWord (str, other._value-> locFile, other._value-> line, other._value-> column, other._value-> seek, other._value-> length, other._value-> isFromString, other._value-> file, other._value-> start, other._value-> self_seek)};	
     }
     
-    Word Word::init (const lexing::Word & other, const std::string & str, ulong length) {
+    Word Word::init (const lexing::Word & other, const std::string & str, uint64_t length) {
 	return Word {new (NO_GC) IWord (str, other._value-> locFile, other._value-> line, other._value-> column, other._value-> seek, length, other._value-> isFromString, other._value-> file, other._value-> start, other._value-> self_seek)};	
     }
     
@@ -83,24 +83,24 @@ namespace lexing {
 	return this-> _value-> str;
     }
 
-    long Word::length () const  {	
+    int64_t Word::length () const  {	
 	if (this-> _value-> length == -1) return this-> _value-> str.length ();
 	return this-> _value-> length;
     }
     
-    ulong Word::getColumn () const {	
+    uint64_t Word::getColumn () const {	
 	return this-> _value-> column;	
     }
 
-    ulong Word::getLine () const {	
+    uint64_t Word::getLine () const {	
 	return this-> _value-> line;
     }
 
-    ulong Word::getSeek () const {	
+    uint64_t Word::getSeek () const {	
 	return this-> _value-> seek;
     }
 
-    ulong Word::getSelfSeek () const {
+    uint64_t Word::getSelfSeek () const {
 	return this-> _value-> self_seek;
     }
     
@@ -120,7 +120,7 @@ namespace lexing {
 	return this-> _value-> file;
     }
 
-    ulong Word::getStart () const {	
+    uint64_t Word::getStart () const {	
 	return this-> _value-> start;
     }
 

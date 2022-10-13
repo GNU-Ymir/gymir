@@ -9,7 +9,7 @@ namespace semantic {
 	    "u8", "u16", "u32", "u64", "usize"
 	};
 
-	long Integer::INIT = 0;
+	int64_t Integer::INIT = 0;
 
 	std::string Integer::MIN_NAME = "min";
 

@@ -187,9 +187,8 @@ namespace semantic {
 	    if (errors.size () != 0)
 	    throw Error::ErrorList {errors};
 	    
-	    auto jmp_buf_type = validateType (syntax::Var::init (lexing::Word::init (wh.getLocation (), global::CoreNames::get (JMP_BUF_TYPE))));
 	    for (auto it : Ymir::r (exits.size (), 0)) {
-		ret = ExitScope::init (wh.getLocation (), ret.to <Value> ().getType (), jmp_buf_type, ret, {exits [it - 1]}, {}, Generator::empty (), Generator::empty (), Generator::empty ());
+		ret = ExitScope::init (wh.getLocation (), ret.to <Value> ().getType (), ret, {exits [it - 1]}, {}, Generator::empty (), Generator::empty (), Generator::empty ());
 		ret = Block::init (wh.getLocation (), ret.to<Value> ().getType (), {varDecls [it - 1], ret});		
 	    }
 	    
@@ -221,8 +220,8 @@ namespace semantic {
 					 inner
 				     }
 		    );
-		auto jmp_buf_type = validateType (syntax::Var::init (lexing::Word::init (atom.getLocation (), global::CoreNames::get (JMP_BUF_TYPE))));
-		auto exit = ExitScope::init (atom.getLocation (), inner.to <Value> ().getType (), jmp_buf_type, inner, {
+		
+		auto exit = ExitScope::init (atom.getLocation (), inner.to <Value> ().getType (), inner, {
 			AtomicUnlocker::init (atom.getLocation (), Addresser::init (atom.getLocation (), ptrType, vRef), false)
 			    }, {}, Generator::empty (), Generator::empty (), Generator::empty ()
 		    );
@@ -241,8 +240,8 @@ namespace semantic {
 				     }
 		    );
 
-		auto jmp_buf_type = validateType (syntax::Var::init (lexing::Word::init (atom.getLocation (), global::CoreNames::get (JMP_BUF_TYPE))));
-		auto exit = ExitScope::init (atom.getLocation (), inner.to <Value> ().getType (), jmp_buf_type, inner, {
+
+		auto exit = ExitScope::init (atom.getLocation (), inner.to <Value> ().getType (), inner, {
 			AtomicUnlocker::init (atom.getLocation (), value, true)
 			    }, {}, Generator::empty (), Generator::empty (), Generator::empty ()
 		    );
@@ -487,8 +486,8 @@ namespace semantic {
 			|| (!decl.isVariadic () && lst.getParameters ().size () != decl.getParameters ().size ())) {
 			Ymir::Error::occur (decl.getLocation (),
 					    ExternalError::MISMATCH_ARITY,
-					    (uint) decl.getParameters ().size (),
-					    (uint) lst.getParameters ().size ());			    
+					    (uint32_t) decl.getParameters ().size (),
+					    (uint32_t) lst.getParameters ().size ());			    
 		    }
 
 		    std::vector <Generator> values;
@@ -528,7 +527,7 @@ namespace semantic {
 		    if (decl.getParameters ().size () != 1) {
 			Ymir::Error::occur (decl.getLocation (),
 					    ExternalError::OVERFLOW_ARITY,
-					    (uint) decl.getParameters ().size (),
+					    (uint32_t) decl.getParameters ().size (),
 					    1);
 		    }
 		    auto varDecl = decl.getParameters () [0].to<syntax::VarDecl> ();
@@ -618,10 +617,8 @@ namespace semantic {
 	    optionType = Type::init (optionType.to <Type> (), true);		    
 	    auto throwsType = inner.getThrowers ();
 	    inner = OptionValue::init (tr.getLocation (), optionType, inner, true);
-	    
-	    if (throwsType.size () != 0) {
-		auto jmp_buf_type = validateType (syntax::Var::init (lexing::Word::init (tr.getLocation (), global::CoreNames::get (JMP_BUF_TYPE))));
 
+	    if (throwsType.size () != 0) {
 		auto loc = tr.getLocation ();
 		auto varDecl = generator::VarDecl::init (lexing::Word::init (loc, "#catch"), "#catch", errType, Generator::empty (), false);
 		auto typeInfo = validateTypeInfo (loc, errType);
@@ -629,7 +626,7 @@ namespace semantic {
 
 		auto outer = OptionValue::init (tr.getLocation (), optionType, vref, false);
 
-		auto ret = ExitScope::init (tr.getLocation (), optionType, jmp_buf_type, inner, {}, {}, varDecl, typeInfo, outer);		
+		auto ret = ExitScope::init (tr.getLocation (), optionType, inner, {}, {}, varDecl, typeInfo, outer);		
 		if (optionType.to <Type> ().needExplicitAlias ()) {
 		    ret = Aliaser::init (tr.getLocation (), optionType, ret);
 		}

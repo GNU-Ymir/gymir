@@ -56,7 +56,7 @@ namespace lexing {
     }
 
     
-    Lexer Lexer::initFromString (const lexing::File & file, const std::string & filename, const std::vector <std::string> &skips, const std::map <std::string, std::pair <std::string, std::string> > &comments, ulong start) {
+    Lexer Lexer::initFromString (const lexing::File & file, const std::string & filename, const std::vector <std::string> &skips, const std::map <std::string, std::pair <std::string, std::string> > &comments, uint64_t start) {
 	auto lex = Lexer (filename.c_str (), file, skips, comments);
 	
 	lex.isFromString = true;
@@ -94,14 +94,14 @@ namespace lexing {
     }
 
     Lexer& Lexer::next (Word &word) {
-	if (this-> current >= (long) (this-> reads.size ()) - 1) {
+	if (this-> current >= (int64_t) (this-> reads.size ()) - 1) {
 	    return this-> get (word);
 	    return *this;
 	} else {
 	    do {
 		this-> current ++;
 		word = this-> reads [this-> current];
-	    } while (isSkip (word) && this-> current < (long) (this-> reads.size ()) - 1);
+	    } while (isSkip (word) && this-> current < (int64_t) (this-> reads.size ()) - 1);
 	    if (isSkip (word)) {
 		this-> get (word);
 	    }
@@ -110,14 +110,14 @@ namespace lexing {
     }
 
     Lexer& Lexer::nextWithDocs (std::string & docs, Word &word) {
-	if (this-> current >= (long) (this-> reads.size ()) - 1) {
+	if (this-> current >= (int64_t) (this-> reads.size ()) - 1) {
 	    return this-> getWithDocs (docs, word);
 	} else {
 	    do {
 		this-> current ++;
 		word = this-> reads [this-> current];
 		docs = this-> docs [this-> current];
-	    } while (isSkip (word) && this-> current < (long) (this-> reads.size ()) - 1);
+	    } while (isSkip (word) && this-> current < (int64_t) (this-> reads.size ()) - 1);
 	    if (isSkip (word)) return this-> getWithDocs (docs, word);	    
 	    return *this;
 	}
@@ -137,7 +137,7 @@ namespace lexing {
 
     std::string join (const std::vector <std::string> &elems) {
 	OutBuffer buf;
-	int i = 0;
+	int32_t i = 0;
 	for (auto it : elems) {
 	    buf.write ("'", it, "'", (i == (int) elems.size () - 1 ? "" : " "));
 	    i++;
@@ -183,17 +183,17 @@ namespace lexing {
 	return this-> __eof__;
     }
     
-    Lexer& Lexer::rewind (ulong nb) {
+    Lexer& Lexer::rewind (uint64_t nb) {
 	this-> current -= nb;
 	if (this-> current < -1) this-> current = -1;
 	return *this;
     }
 
-    ulong Lexer::tell () const {
+    uint64_t Lexer::tell () const {
 	return this-> current;
     }
 
-    void Lexer::seek (ulong where) {
+    void Lexer::seek (uint64_t where) {
 	this-> current = where;
     }
 
@@ -307,9 +307,9 @@ namespace lexing {
 	auto line  = std::move (this-> file.readln ());
 	if (line == "") return {};
 	
-	ulong start = 0;
+	uint64_t start = 0;
 	std::list <Word> result;
-	ulong where = this-> lineStart;
+	uint64_t where = this-> lineStart;
 	while (start < line.length ()) {
 	    auto len = this-> _tokenizer.next (start, line);
 	    auto it = std::move (line.substr (start, len));
@@ -330,7 +330,7 @@ namespace lexing {
 
     std::string Lexer::formatRestOfFile () {
 	auto tell = this-> file.tell ();
-	if (this-> current < (long) (this-> reads.size ()) - 1) {
+	if (this-> current < (int64_t) (this-> reads.size ()) - 1) {
 	    if (this-> reads [this-> current + 1].isEof ()) return "";
 	    this-> file.seek (this-> reads [this-> current + 1].getSeek ());
 	} 

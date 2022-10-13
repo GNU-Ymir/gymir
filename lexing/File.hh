@@ -26,9 +26,9 @@ namespace lexing {
 	
 	virtual bool isEof () const = 0;
 
-	virtual ulong tell () const = 0;
+	virtual uint64_t tell () const = 0;
 
-	virtual void seek (ulong i) = 0;
+	virtual void seek (uint64_t i) = 0;
 	
 	virtual std::string readln () = 0;
 
@@ -67,11 +67,11 @@ namespace lexing {
 	
 	bool isEof () const;
 
-	ulong tell () const;
+	uint64_t tell () const;
 
 	std::string readln ();
 
-	void seek (ulong);
+	void seek (uint64_t);
 
 	std::string readAll ();
 
@@ -142,9 +142,9 @@ namespace lexing {
 	
 	bool isEof () const override;
 
-	ulong tell () const override;
+	uint64_t tell () const override;
 
-	void seek (ulong i) override;
+	void seek (uint64_t i) override;
 	
 	std::string readln () override;
 
@@ -164,7 +164,7 @@ namespace lexing {
     private :
 
 	std::string _content;
-	unsigned long _cursor;
+	uint64_t _cursor;
 	
 	static std::string __filename__;
 	
@@ -184,9 +184,9 @@ namespace lexing {
 
 	bool isEof () const override;
 
-	ulong tell () const override;
+	uint64_t tell () const override;
 
-	void seek (ulong i) override;
+	void seek (uint64_t i) override;
 	
 	std::string readln () override;
 

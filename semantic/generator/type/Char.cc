@@ -7,18 +7,18 @@ namespace semantic {
 	// c16 are currently not supported TODO
 	std::vector <std::string> Char::NAMES = {"c8", "c32", "char"};
 	
-	uint Char::INIT = 0;
+	uint32_t Char::INIT = 0;
 	
 	Char::Char () :
 	    Type ()		  
 	{}
 
-	Char::Char (const lexing::Word & loc, int size) :
+	Char::Char (const lexing::Word & loc, int32_t size) :
 	    Type (loc, loc.getStr ()),
 	    _size (size)
 	{}
 
-	Generator Char::init (const lexing::Word & loc, int size) {
+	Generator Char::init (const lexing::Word & loc, int32_t size) {
 	    return Generator {new (NO_GC) Char (loc, size)};
 	}
 
@@ -42,7 +42,7 @@ namespace semantic {
 	    return "char";
 	}	
     
-	int Char::getSize () const {
+	int32_t Char::getSize () const {
 	    return this-> _size;
 	}
 	

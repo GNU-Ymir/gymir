@@ -47,11 +47,11 @@ namespace semantic {
 	    return this-> _isSelf;
 	}
 
-	uint ParamVar::getUniqId () const {
+	uint32_t ParamVar::getUniqId () const {
 	    return _varRefId;
 	}
 
-	void ParamVar::setUniqId (uint id) {
+	void ParamVar::setUniqId (uint32_t id) {
 	    this-> _varRefId = id;
 	}
 	

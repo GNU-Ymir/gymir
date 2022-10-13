@@ -32,7 +32,7 @@ namespace semantic {
 	}
 
 
-	ArrayAlloc::ArrayAlloc (const lexing::Word & loc, const Generator & type, const Generator & value, const Generator & size, ulong len) :
+	ArrayAlloc::ArrayAlloc (const lexing::Word & loc, const Generator & type, const Generator & value, const Generator & size, uint64_t len) :
 	    Value (loc, type),
 	    _value (value),
 	    _size (size),
@@ -51,7 +51,7 @@ namespace semantic {
 	    return Generator {new (NO_GC) ArrayAlloc (loc, type, value, size, len)};
 	}
 
-	Generator ArrayAlloc::init (const lexing::Word & loc,  const Generator & type, const Generator & value, const Generator & size, ulong len) {
+	Generator ArrayAlloc::init (const lexing::Word & loc,  const Generator & type, const Generator & value, const Generator & size, uint64_t len) {
 	    return Generator {new (NO_GC) ArrayAlloc (loc, type, value, size, len)};
 	}
     
@@ -68,7 +68,7 @@ namespace semantic {
 		return bin._value.equals (this-> _value) && bin._staticLen == this-> _staticLen && bin._size.equals (this-> _size);
 	}
 
-	ulong ArrayAlloc::getStaticLen () const {
+	uint64_t ArrayAlloc::getStaticLen () const {
 	    if (this-> _isDynamic) {
 		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    }

@@ -29,13 +29,13 @@ namespace lexing {
 	/**
 	 * Insert sub char for possible token
 	 */
-	void insert (ulong start, const std::string & tok);
+	void insert (uint64_t start, const std::string & tok);
 
 	/**
 	 * \return the length of the token present at the begining of the content
 	 * \start the index of the cursor (assuming that content [start - 1] == this-> _key
 	 */
-	ulong getLength (ulong start, const std::string & content) const;
+	uint64_t getLength (uint64_t start, const std::string & content) const;
 
 	/**
 	 * Simply return the key of this node
@@ -71,13 +71,13 @@ namespace lexing {
 	/**
 	 * Get the length of the next word in the string 
 	 */
-	ulong next (const std::string & str) const;
+	uint64_t next (const std::string & str) const;
 
 	/**
 	 * Get the length of the next word in the string 
 	 * \start the location of the cursor (reading str from there)
 	 */
-	ulong next (ulong start, const std::string & str) const;
+	uint64_t next (uint64_t start, const std::string & str) const;
 
 	/**
 	 * Tokenize a string with the tokens that are registered inside the map

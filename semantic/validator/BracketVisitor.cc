@@ -133,19 +133,19 @@ namespace semantic {
 	Generator BracketVisitor::validateStringLiteral (const syntax::MultOperator & expression, const Generator & left, const std::vector <Generator> & right) {
 	    auto loc = expression.getLocation ();
 
-	    ulong len = left.to <StringValue> ().getLen ();
+	    uint64_t len = left.to <StringValue> ().getLen ();
 	    auto innerType = left.to <Value> ().getType ().to <Type> ().getInners () [0];
 	    if (right.size () == 1 && right [0].to <Value> ().getType ().is <Integer> ()) {		
 		bool realFailure = false;
 		try { // If we can know at compile time, there is no reason to add a OUT_OF_ARRAY_EXCEPTION
 		    auto x = this-> _context.retreiveValue (right [0]);
 		    if (x.is <Fixed> () && x.to <Fixed> ().getUI ().u < len) {
-			uint size = innerType.to <Char> ().getSize ();
+			uint32_t size = innerType.to <Char> ().getSize ();
 			if (size == 8) {
 			    char value = *((char*) (left.to<StringValue> ().getValue ().data () + (x.to <Fixed> ().getUI ().u * (size / 8))));			
-			    return CharValue::init (loc, innerType, (uint) value);
+			    return CharValue::init (loc, innerType, (uint32_t) value);
 			} else {			
-			    uint value = *((uint*) (left.to<StringValue> ().getValue ().data () + (x.to <Fixed> ().getUI ().u * (size / 8))));			
+			    uint32_t value = *((uint32_t*) (left.to<StringValue> ().getValue ().data () + (x.to <Fixed> ().getUI ().u * (size / 8))));			
 			    return CharValue::init (loc, innerType, value);
 			}
 		    } else {
@@ -163,11 +163,11 @@ namespace semantic {
 		    if (x.is <RangeValue> () && x.to<RangeValue> ().getLeft ().is <Fixed> ()) {
 			auto & rng = x.to <RangeValue> ();
 			if (rng.getLeft ().to <Fixed> ().getUI ().u < rng.getRight ().to <Fixed> ().getUI ().u && rng.getRight ().to <Fixed> ().getUI ().u <= len) {
-			    uint size = innerType.to <Char> ().getSize ();
+			    uint32_t size = innerType.to <Char> ().getSize ();
 			    std::vector <char> value (left.to<StringValue> ().getValue ().begin () + (rng.getLeft ().to <Fixed> ().getUI ().u * (size / 8)),
 						     left.to<StringValue> ().getValue ().begin () + (rng.getRight ().to <Fixed> ().getUI ().u * (size / 8))
 				);
-			    for (uint i = 0 ; i < size / 8; i++) {
+			    for (uint32_t i = 0 ; i < size / 8; i++) {
 			    	value.push_back ('\0');
 			    }
 			    

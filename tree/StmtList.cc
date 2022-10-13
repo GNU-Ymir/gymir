@@ -50,6 +50,13 @@ namespace generic {
 	}
     }
 
+  void TreeStmtList::append (tree t) {
+    if (t != NULL) {
+      this-> _empty = false;
+      append_to_statement_list (t, &this-> _list);
+    }
+  }
+
     bool TreeStmtList::isEmpty () const {
 	return this-> _empty;
     }

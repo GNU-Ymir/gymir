@@ -21,6 +21,7 @@
 #include <ymir/global/State.hh>
 #include <ymir/global/Core.hh>
 #include <ymir/utils/Path.hh>
+#include <ymir/tree/Tree.hh>
 
 // We use the dlang target hooks to get the target versions
 #include <ymir/../d/d-target.h>
@@ -229,6 +230,8 @@ ymir_langhook_init (void)
     ymir_init_builtins ();
     build_common_builtin_nodes ();
 
+    using_eh_for_cleanups ();
+	
     global::State::instance ().activateVersion (global::CoreNames::get (global::GNU_VERSION));
     global::State::instance ().activateVersion (global::CoreNames::get (global::YMIR_VERSION));
 
@@ -250,6 +253,15 @@ ymir_langhook_init (void)
     return true;
 }
 
+
+static bool
+ymir_post_options (const char ** fn)
+{
+  global_options.x_flag_reorder_blocks_and_partition = 0;
+  global_options.x_flag_exceptions = 1;
+
+  return false;
+}
 
 static void
 ymir_init_options (unsigned int argc ATTRIBUTE_UNUSED, cl_decoded_option * decoded_options ATTRIBUTE_UNUSED)
@@ -516,6 +528,23 @@ ymir_langhook_getdecls (void)
     return NULL;
 }
 
+static GTY(()) tree ymir_eh_personality_decl;
+
+static tree
+ymir_eh_personality (void) {
+    if (!ymir_eh_personality_decl) {
+	ymir_eh_personality_decl = build_personality_function ("gyc");	
+    }
+
+    return ymir_eh_personality_decl;
+}
+
+static tree
+ymir_build_eh_runtime_type (tree type) {
+  return generic::Tree::buildPtrCst (lexing::Word::eof (), 0).getTree ();
+}
+
+
 #undef LANG_HOOKS_NAME
 #undef LANG_HOOKS_INIT
 #undef LANG_HOOKS_INIT_OPTIONS
@@ -529,6 +558,9 @@ ymir_langhook_getdecls (void)
 #undef LANG_HOOKS_GETDECLS
 #undef LANG_HOOKS_HANDLE_OPTION
 #undef LANG_HOOKS_OPTION_LANG_MASK
+#undef LANG_HOOKS_EH_PERSONALITY
+#undef LANG_HOOKS_EH_RUNTIME_TYPE
+#undef LANG_HOOKS_POST_OPTIONS
 
 #define LANG_HOOKS_NAME "Ymir" 
 #define LANG_HOOKS_INIT ymir_langhook_init 
@@ -543,7 +575,9 @@ ymir_langhook_getdecls (void)
 #define LANG_HOOKS_GLOBAL_BINDINGS_P ymir_langhook_global_bindings_p
 #define LANG_HOOKS_PUSHDECL ymir_langhook_pushdecl
 #define LANG_HOOKS_GETDECLS ymir_langhook_getdecls
-
+#define LANG_HOOKS_EH_PERSONALITY	    ymir_eh_personality
+#define LANG_HOOKS_EH_RUNTIME_TYPE	    ymir_build_eh_runtime_type
+#define LANG_HOOKS_POST_OPTIONS		    ymir_post_options
 
 struct lang_hooks lang_hooks = LANG_HOOKS_INITIALIZER;
  

@@ -83,8 +83,8 @@ namespace semantic {
 	return this-> _isPublic;
     }
 
-    void ISymbol::setWeak () {
-	this-> _isWeak = true;
+    void ISymbol::setWeak (bool b) {
+	this-> _isWeak = b;
     }
 
     bool ISymbol::isWeak () const {
@@ -302,9 +302,9 @@ namespace semantic {
 	}
     }
     
-    void Symbol::setWeak () {
+    void Symbol::setWeak (bool b) {
 	if (this-> _value != nullptr)
-	    this-> _value-> setWeak ();
+	    this-> _value-> setWeak (b);
 	else {
 	    // We cannot use a symbol outside of any scope
 	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);

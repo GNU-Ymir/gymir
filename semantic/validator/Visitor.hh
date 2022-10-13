@@ -50,9 +50,9 @@ namespace semantic {
 		LIMIT_TEMPLATE_RECUR = 300
 	    };
 
-	    static int __CALL_NB_RECURS__;
+	    static int32_t __CALL_NB_RECURS__;
 
-	    static int __TEMPLATE_NB_RECURS__;
+	    static int32_t __TEMPLATE_NB_RECURS__;
 	    
 	    static bool __LAST__;
 
@@ -560,7 +560,7 @@ namespace semantic {
 	    /**
 	     * Validate an fixed const integer value
 	     */
-	    generator::Generator validateFixed (const syntax::Fixed & fixed, int base = 0);
+	    generator::Generator validateFixed (const syntax::Fixed & fixed, int32_t base = 0);
 	    
 	    /**
 	     * Validate a const bool value
@@ -610,7 +610,7 @@ namespace semantic {
 	     * Create the closure value, that will be passed in the delegate value
 	     * A closure value is a copy or a ref to all the enclosed variable in a tuple value that is then copied to heap
 	     */
-	    generator::Generator validateClosureValue (const generator::Generator & closureType, bool isrefClosure, uint closureIndex);
+	    generator::Generator validateClosureValue (const generator::Generator & closureType, bool isrefClosure, uint32_t closureIndex);
 
 	    /**
 	     * Validate a null value
@@ -1142,7 +1142,7 @@ namespace semantic {
 	    /**
 	     * Enter a new closure
 	     */
-	    void enterClosure (bool isRefClosure, uint refId, uint index);
+	    void enterClosure (bool isRefClosure, uint32_t refId, uint32_t index);
 
 	    /**
 	     * Quit a closure

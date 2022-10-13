@@ -11,7 +11,7 @@ namespace semantic {
 	    this-> isLocal (false);
 	}
 
-	ProtoVar::ProtoVar (const lexing::Word & location, const Generator & type, const Generator & value, bool isMutable, int nb_consume, bool isSelf) :
+	ProtoVar::ProtoVar (const lexing::Word & location, const Generator & type, const Generator & value, bool isMutable, int32_t nb_consume, bool isSelf) :
 	    Value (location, type),
 	    _value (value),
 	    _isMutable (isMutable),
@@ -26,7 +26,7 @@ namespace semantic {
 	    VarDecl::__lastId__ += 1;
 	}
 
-	Generator ProtoVar::init (const lexing::Word & location, const Generator & type, const Generator & value, bool isMutable, int nb_consume, bool isSelf) {
+	Generator ProtoVar::init (const lexing::Word & location, const Generator & type, const Generator & value, bool isMutable, int32_t nb_consume, bool isSelf) {
 	    return Generator {new (NO_GC) ProtoVar (location, type, value, isMutable, nb_consume, isSelf)};
 	}
 
@@ -52,7 +52,7 @@ namespace semantic {
 	    return this-> _value;
 	}
 
-	int ProtoVar::getNbConsume () const {
+	int32_t ProtoVar::getNbConsume () const {
 	    return this-> _nbConsume;
 	}
 
@@ -60,7 +60,7 @@ namespace semantic {
 	    return this-> _isSelf;
 	}
 
-	uint ProtoVar::getUniqId () const {
+	uint32_t ProtoVar::getUniqId () const {
 	    return _varRefId;
 	}
 	

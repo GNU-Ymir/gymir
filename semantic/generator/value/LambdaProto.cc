@@ -16,7 +16,7 @@ namespace semantic {
 	{
 	}
 
-	LambdaProto::LambdaProto (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params, const syntax::Expression & content, bool isRefClosure, bool isMoveClosure, uint index) :
+	LambdaProto::LambdaProto (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params, const syntax::Expression & content, bool isRefClosure, bool isMoveClosure, uint32_t index) :
 	    Value (loc, LambdaType::init (loc, type, getTypes (params))),
 	    _params (params),
 	    _type (type),
@@ -39,7 +39,7 @@ namespace semantic {
 	    return types;
 	}
 	
-	Generator LambdaProto::init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params, const syntax::Expression & content, bool isRefClosure, bool isMoveClosure, uint index) {
+	Generator LambdaProto::init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params, const syntax::Expression & content, bool isRefClosure, bool isMoveClosure, uint32_t index) {
 	    return Generator {new (NO_GC) LambdaProto (loc, name, type, params, content, isRefClosure, isMoveClosure, index)};
 	}
 
@@ -116,7 +116,7 @@ namespace semantic {
 	    return this-> _isMoveClosure;	    
 	}
 
-	uint LambdaProto::getClosureIndex () const {
+	uint32_t LambdaProto::getClosureIndex () const {
 	    return this-> _index;
 	}
 	

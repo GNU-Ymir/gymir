@@ -157,8 +157,7 @@ namespace semantic {
 	    
 	    // if (this-> _context.isInTrusted ()) {
 		auto bl = this-> _context.validateValue (prg.getContent ()[0]);
-		auto jmp_buf_type = this-> _context.validateType (syntax::Var::init (lexing::Word::init (prg.getLocation (), global::CoreNames::get (global::JMP_BUF_TYPE))));	
-		auto ex = ExitScope::init (bl.getLocation (), bl.to <Value> ().getType (), jmp_buf_type, bl, {}, {
+		auto ex = ExitScope::init (bl.getLocation (), bl.to <Value> ().getType (), bl, {}, {
 			Panic::init (bl.getLocation ())
 		    }, Generator::empty (), Generator::empty (), Generator::empty ());
 		ex.setThrowers ({});
@@ -443,7 +442,7 @@ namespace semantic {
 	    std::list <Ymir::Error::ErrorMsg> errors;
 	    auto type = Integer::init (expression.getLocation (), 0, false);
 
-	    ulong i = 0;
+	    uint64_t i = 0;
 	    for (auto & field_type ATTRIBUTE_UNUSED : tl.to <Type> ().getInners ()) {			    
 		params.push_back (FieldOffsetIndex::init (expression.getLocation (), type, tl, i));
 		i += 1;
@@ -909,7 +908,7 @@ namespace semantic {
 	    auto & tu_inners = tl.to <Tuple> ().getInners ();
 	    if (index_val >= tu_inners.size ()) {
 		auto note = Ymir::Error::createNote (prg.getLocation ());
-		Ymir::Error::occurAndNote (name.getLocation (), note, ExternalError::OVERFLOW_ARITY, index_val, (uint) tu_inners.size ());
+		Ymir::Error::occurAndNote (name.getLocation (), note, ExternalError::OVERFLOW_ARITY, index_val, (uint32_t) tu_inners.size ());
 	    }
 	    
 	    auto type = tu_inners [index_val];

@@ -32,7 +32,7 @@ namespace semantic {
 	    this-> _loopSaved.pop_back ();
 	}
 	
-	void Visitor::enterClosure (bool isRef, uint refId, uint index) {
+	void Visitor::enterClosure (bool isRef, uint32_t refId, uint32_t index) {
 	    insert_or_assign (this-> _symbols.back ()[0], "#{CLOSURE}", BoolValue::init (lexing::Word::eof (), Bool::init (lexing::Word::eof ()), isRef));
 	    this-> _usedSyms.back ()[0].insert ("#{CLOSURE}");
 

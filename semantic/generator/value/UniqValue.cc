@@ -10,7 +10,7 @@ namespace semantic {
 	    _value (Generator::empty ())
 	{}
 
-	UniqValue::UniqValue (const lexing::Word & location, const Generator & type, const Generator & value, uint refId) :
+	UniqValue::UniqValue (const lexing::Word & location, const Generator & type, const Generator & value, uint32_t refId) :
 	    Value (location, type),
 	    _value (value),
 	    _refId (refId)	    
@@ -20,7 +20,7 @@ namespace semantic {
 	}
 	
 	Generator UniqValue::init (const lexing::Word & location, const Generator & type, const Generator & value) {
-	    int id = VarDecl::__lastId__;
+	    int32_t id = VarDecl::__lastId__;
 	    VarDecl::__lastId__ += 1;
 	    return Generator {new (NO_GC) UniqValue (location, type, value, id)};
 	}
@@ -40,7 +40,7 @@ namespace semantic {
 	    return this-> _value;
 	}
 
-	uint UniqValue::getRefId () const {
+	uint32_t UniqValue::getRefId () const {
 	    return this-> _refId;
 	}
 	

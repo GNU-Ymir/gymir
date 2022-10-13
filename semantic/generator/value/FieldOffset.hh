@@ -54,7 +54,7 @@ namespace semantic {
 
 	    Generator _str;
 	    
-	    ulong _field;
+	    uint64_t _field;
 
 	private : 
 
@@ -62,14 +62,14 @@ namespace semantic {
 
 	    FieldOffsetIndex ();
 
-	    FieldOffsetIndex (const lexing::Word & loc, const Generator & type, const Generator & str, ulong index);
+	    FieldOffsetIndex (const lexing::Word & loc, const Generator & type, const Generator & str, uint64_t index);
 
 	public:
 
 	    /**
 	     * \brief Generate a tuple access
 	     */
-	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & tuple, ulong index);
+	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & tuple, uint64_t index);
 	    
 	    Generator clone () const override;
 
@@ -77,7 +77,7 @@ namespace semantic {
 
 	    const Generator & getTuple () const;
 
-	    ulong getField () const;
+	    uint64_t getField () const;
 	    
 	    std::string prettyString () const override;	    
 	    

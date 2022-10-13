@@ -10,7 +10,7 @@ namespace semantic {
 	    this-> isLvalue (true);
 	}
 
-	TupleAccess::TupleAccess (const lexing::Word & loc, const Generator & type, const Generator & tuple, uint index) :
+	TupleAccess::TupleAccess (const lexing::Word & loc, const Generator & type, const Generator & tuple, uint32_t index) :
 	    Value (loc, type),
 	    _tuple (tuple),
 	    _index (index)
@@ -20,7 +20,7 @@ namespace semantic {
 	}
 
 
-	Generator TupleAccess::init (const lexing::Word & loc, const Generator & type, const Generator & tuple, uint index) {
+	Generator TupleAccess::init (const lexing::Word & loc, const Generator & type, const Generator & tuple, uint32_t index) {
 	    return Generator {new (NO_GC) TupleAccess (loc, type, tuple, index)};
 	}
 	
@@ -38,7 +38,7 @@ namespace semantic {
 	    return this-> _tuple;
 	}
 
-	uint TupleAccess::getIndex () const {
+	uint32_t TupleAccess::getIndex () const {
 	    return this-> _index;
 	}
 

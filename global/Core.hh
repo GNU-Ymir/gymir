@@ -62,6 +62,7 @@ namespace global {
 		       SLICE_CONCAT,
 		       STD_MODULE,
 		       THROW,
+		       BEGIN_CATCH,
 		       TYPE_IDS,
 		       TYPE_INFO,
 		       TYPE_INFO_EQUAL,

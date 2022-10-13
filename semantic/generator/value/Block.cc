@@ -52,7 +52,7 @@ namespace semantic {
 
 	std::string Block::prettyString () const {
 	    Ymir::OutBuffer buf ("{");
-	    ulong i = 0;
+	    uint64_t i = 0;
 	    for (auto & it : this-> _content) {
 		buf.write (Ymir::entab ("\n" + it.prettyString ()));
 		i += 1;

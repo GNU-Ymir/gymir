@@ -11,13 +11,13 @@ namespace semantic {
 	    static std::vector <std::string> NAMES;
 
 	    /// Value of char are encoded in uint to prevent truncation
-	    static uint INIT;
+	    static uint32_t INIT;
 	    
 	private : 
 
 	    /** The precision of this float type (8/16/32/0) */
 	    /** 0 means the biggest representable char */
-	    int _size; 
+	    int32_t _size; 
 
 	private :
 
@@ -25,11 +25,11 @@ namespace semantic {
 
 	    Char ();	    
 
-	    Char (const lexing::Word & loc, int size);
+	    Char (const lexing::Word & loc, int32_t size);
 	    
 	public :
 
-	    static Generator init (const lexing::Word & loc, int size);
+	    static Generator init (const lexing::Word & loc, int32_t size);
 
 	    Generator clone () const override;
 
@@ -40,7 +40,7 @@ namespace semantic {
 	    
 	    std::string typeName () const override;
 
-	    int getSize () const;
+	    int32_t getSize () const;
 	    
 	};
        

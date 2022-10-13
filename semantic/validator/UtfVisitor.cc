@@ -39,15 +39,15 @@ namespace semantic {
 	    return 4;
 	}
 
-	std::vector <uint> UtfVisitor::utf8_to_utf32(const std::string & text) {
-	    std::vector <uint> res;
+	std::vector <uint32_t> UtfVisitor::utf8_to_utf32(const std::string & text) {
+	    std::vector <uint32_t> res;
 	    size_t i = 0;
 
 	    for (size_t n = 0; i < text.length (); n++) {
 		size_t byte_count = utf8_codepoint_size(text[i]);
 			
-		uint a = 0, b = 0, c = 0, d = 0;
-		uint a_mask, b_mask, c_mask, d_mask;
+		uint32_t a = 0, b = 0, c = 0, d = 0;
+		uint32_t a_mask, b_mask, c_mask, d_mask;
 		a_mask = b_mask = c_mask = d_mask = 0b00111111;
 			
 		switch(byte_count) {
@@ -70,10 +70,10 @@ namespace semantic {
 		} break;
 		}
 			
-		uint b0 = a & a_mask;
-		uint b1 = b & b_mask;
-		uint b2 = c & c_mask;
-		uint b3 = d & d_mask;
+		uint32_t b0 = a & a_mask;
+		uint32_t b1 = b & b_mask;
+		uint32_t b2 = c & c_mask;
+		uint32_t b3 = d & d_mask;
 		res.push_back ((b0 << 18) | (b1 << 12) | (b2 << 6) | b3);
 
 		i += byte_count;
@@ -82,7 +82,7 @@ namespace semantic {
 	    return res;
 	}
 
-	void UtfVisitor::getUnicodeChar(int & nb, unsigned int code, char chars[5]) {
+	void UtfVisitor::getUnicodeChar(int32_t & nb, uint32_t code, char chars[5]) {
 	    if (code <= 0x7F) {
 		chars[0] = (code & 0x7F); chars[1] = '\0';
 		nb = 1;
@@ -113,7 +113,7 @@ namespace semantic {
 	    }
 	}
 		
-	void UtfVisitor::escapeUnicode (const lexing::Word & loc, int & it, const std::string & content, OutBuffer & buf, const std::string & size) {
+	void UtfVisitor::escapeUnicode (const lexing::Word & loc, int32_t & it, const std::string & content, OutBuffer & buf, const std::string & size) {
 	    auto fst = content.substr (it).find_first_of ('{');
 	    auto scd = content.substr (it).find_first_of ('}');
 	    if (fst == std::string::npos || scd == std::string::npos)  {		
@@ -132,12 +132,12 @@ namespace semantic {
 		    
 	    auto fixed = syntax::Fixed::init (lexing::Word::init (loc, inner), lexing::Word::init (loc, size));
 	    auto gen = this-> _context.validateFixed (fixed.to<syntax::Fixed> (), 16);
-	    auto ui = (uint) gen.to <semantic::generator::Fixed> ().getUI ().u;
+	    auto ui = (uint32_t) gen.to <semantic::generator::Fixed> ().getUI ().u;
 
 	    char chars[5];
-	    int nb = 0;
+	    int32_t nb = 0;
 	    getUnicodeChar (nb, ui, chars);
-	    for (int i = 0 ; i < nb; i++)			
+	    for (int32_t i = 0 ; i < nb; i++)			
 		buf.write (chars[i]);
 
 	    it = it + scd;
@@ -146,11 +146,11 @@ namespace semantic {
 	
 	std::string UtfVisitor::escapeChar (const lexing::Word & loc, const std::string & content, const std::string & size, bool error) {
 	    OutBuffer buf;
-	    int it = 0;
+	    int32_t it = 0;
 	    static std::vector <char> escape = {'a', 'b', 'f', 'n', 'r', 't', 'v', '\\', '\'', '\"', '"', '?'};
-	    static std::vector <uint> values = {7, 8, 12, 10, 13, 9, 11, 92, 39, 34, 63};
+	    static std::vector <uint32_t> values = {7, 8, 12, 10, 13, 9, 11, 92, 39, 34, 63};
 
-	    int col = 0, line = 0;
+	    int32_t col = 0, line = 0;
 	    while (it < (int) content.size ()) {
 		if (content [it] == '\n') {
 		    line += 1;
@@ -204,7 +204,7 @@ namespace semantic {
 	    return buf.str ();
 	}
 
-	std::vector<char> UtfVisitor::toString (const std::vector <uint> & content) {
+	std::vector<char> UtfVisitor::toString (const std::vector <uint32_t> & content) {
 	    std::vector<char> buf;
 	    for (auto const it : content) {
 		const char * c = (const char*) (&it); // To remove the warning
@@ -220,17 +220,17 @@ namespace semantic {
 	    return buf;
 	}
 	
-	uint UtfVisitor::convertChar (const lexing::Word & loc, const lexing::Word & content, int size) {
+	uint32_t UtfVisitor::convertChar (const lexing::Word & loc, const lexing::Word & content, int32_t size) {
 	    auto str =  escapeChar (loc, content.getStr (), size == 32 ? Keys::U32 : Keys::U8, true);
 	    if (size == 32) {
-		std::vector <uint> utf_32 = utf8_to_utf32 (str);			
+		std::vector <uint32_t> utf_32 = utf8_to_utf32 (str);			
 		if (utf_32.size () != 1) {		    
-		    Ymir::Error::occur (loc, ExternalError::MALFORMED_CHAR, "c32", (uint) utf_32.size ());
+		    Ymir::Error::occur (loc, ExternalError::MALFORMED_CHAR, "c32", (uint32_t) utf_32.size ());
 		}
 		return utf_32 [0];
 	    } else if (size == 8) {
 		if (str.length () != 1)
-		    Ymir::Error::occur (loc, ExternalError::MALFORMED_CHAR, "c8", (uint) str.length ());
+		    Ymir::Error::occur (loc, ExternalError::MALFORMED_CHAR, "c8", (uint32_t) str.length ());
 		return str [0] & 0b01111111;
 	    }
 		    
@@ -238,14 +238,14 @@ namespace semantic {
 	    return 0;
 	}
 
-	std::vector <char> UtfVisitor::convertString (const lexing::Word & loc, const lexing::Word & content, int size, int & len, bool error) {
+	std::vector <char> UtfVisitor::convertString (const lexing::Word & loc, const lexing::Word & content, int32_t size, int32_t & len, bool error) {
 	    return convertString (loc, content.getStr (), size, len, error);
 	}
 
-	std::vector <char> UtfVisitor::convertString (const lexing::Word & loc, const std::string & content, int size, int & len, bool error) {
+	std::vector <char> UtfVisitor::convertString (const lexing::Word & loc, const std::string & content, int32_t size, int32_t & len, bool error) {
 	    auto str = escapeChar (loc, content, size == 32 ? Keys::U32 : Keys::U8, error);
 	    if (size == 32) {
-		std::vector <uint> utf_32 = utf8_to_utf32 (str);
+		std::vector <uint32_t> utf_32 = utf8_to_utf32 (str);
 		auto ret = toString (utf_32);
 		len = (utf_32.size () + 1);
 		return ret;
@@ -263,10 +263,10 @@ namespace semantic {
 
 	std::vector <char> UtfVisitor::utf32_to_utf8 (const std::vector <char> & utf32) {
 	    std::vector <char> res;
-	    auto content = (const uint*) (utf32.data ());
+	    auto content = (const uint32_t*) (utf32.data ());
 	    for (auto it : Ymir::r (0, utf32.size () / 4)) {
 		auto code = content [it];
-		int nb;
+		int32_t nb;
 		char chars [5];
 		getUnicodeChar (nb, code, chars);
 		for (auto j : Ymir::r (0, nb))

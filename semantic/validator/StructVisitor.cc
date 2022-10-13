@@ -37,6 +37,8 @@ namespace semantic {
 		    return Generator::empty ();
 		}
 	    }
+
+	    return Generator::empty ();
 	}
 
 	void StructVisitor::validateStructContent (const semantic::Symbol & str) {

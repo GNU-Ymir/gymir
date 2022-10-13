@@ -20,7 +20,7 @@ namespace semantic {
 	    /** The len of the array (if dynamic) */
 	    Generator _len;
 
-	    ulong _staticLen;
+	    uint64_t _staticLen;
 
 	    bool _isDynamic;
 
@@ -32,7 +32,7 @@ namespace semantic {
 
 	    ArrayAlloc (const lexing::Word & loc, const Generator & type, const Generator & value, const Generator & size, const Generator & len);
 
-	    ArrayAlloc (const lexing::Word & loc, const Generator & type, const Generator & value, const Generator & size, ulong len);
+	    ArrayAlloc (const lexing::Word & loc, const Generator & type, const Generator & value, const Generator & size, uint64_t len);
 
 	public :
 
@@ -44,7 +44,7 @@ namespace semantic {
 	    /**
 	     * \brief Generate a new static ArrayAlloc 
 	     */
-	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & value, const Generator & size, ulong len);
+	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & value, const Generator & size, uint64_t len);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -60,7 +60,7 @@ namespace semantic {
 	     * \warning crash if it is not static
 	     * \return the len of the ArrayAllocation if it is static
 	     */
-	    ulong getStaticLen () const;
+	    uint64_t getStaticLen () const;
 
 	    /**
 	     * \return Tell if the allocation is dynamic

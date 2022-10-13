@@ -42,7 +42,7 @@ namespace semantic {
 	    return this-> _value;
 	}
 		
-	uint GlobalVar::getUniqId () const {
+	uint32_t GlobalVar::getUniqId () const {
 	    return _varRefId;
 	}
 

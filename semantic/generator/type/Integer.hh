@@ -10,7 +10,7 @@ namespace semantic {
 
 	    static std::vector <std::string> NAMES;
 
-	    static long INIT;
+	    static int64_t INIT;
 
 	    static std::string INIT_NAME;
 

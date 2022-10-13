@@ -1,4 +1,5 @@
 #pragma once
+#include <stdint.h>
 
 namespace Ymir {
     
@@ -8,14 +9,14 @@ namespace Ymir {
      */
     class rIterator {
     
-	long curr;
+	int64_t curr;
 	bool rev;
 	
     public:
 
-	rIterator (long, bool);
+	rIterator (int64_t, bool);
 	
-	long operator* ();
+	int64_t operator* ();
 	void operator++ ();
 	bool operator!= (const rIterator&);
     
@@ -26,8 +27,8 @@ namespace Ymir {
      * implemented in utils/Range.cc
      */
     class Range {
-	long _beg;
-	long _end;
+	int64_t _beg;
+	int64_t _end;
 
     public:
 
@@ -35,21 +36,21 @@ namespace Ymir {
 	 * \param beg the value of the first element 
 	 * \param end the value of the end
 	 */
-	Range (long beg, long end);
+	Range (int64_t beg, int64_t end);
     
 	const rIterator begin () const;
 
 	const rIterator end () const ;
 
-	long fst ();
+	int64_t fst ();
 
-	long scd ();
+	int64_t scd ();
     
     };
 
     /**
      * \return a range between beg and end
      */
-    Range r (long beg, long end);
+    Range r (int64_t beg, int64_t end);
     
 }

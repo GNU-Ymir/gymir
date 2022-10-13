@@ -40,15 +40,13 @@ namespace semantic {
 	    
 	    LambdaProto ();
 
-	    LambdaProto (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params, const syntax::Expression & content, bool isRefClosure, bool isMoveClosure, uint index);
+	    LambdaProto (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params, const syntax::Expression & content, bool isRefClosure, bool isMoveClosure, uint32_t index);
 
 	public :
 
 	    /**
-	     * \brief Generate a new Binary on int
-	     * \warning left and right operand must generate int typed values
 	     */
-	    static Generator init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params, const syntax::Expression & content, bool isRefClosure, bool isMoveClosure, uint index);
+	    static Generator init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params, const syntax::Expression & content, bool isRefClosure, bool isMoveClosure, uint32_t index);
 
 	    static Generator init (const LambdaProto & other, const std::string & mangleName, Frame::ManglingStyle style);
 	    
@@ -110,7 +108,7 @@ namespace semantic {
 	     * \return the index of the closure
 	     * \Cf generator::Closure
 	     */
-	    uint getClosureIndex () const;
+	    uint32_t getClosureIndex () const;
 	    
 	private :
 

@@ -14,7 +14,7 @@ namespace semantic {
 	    this-> isComplex (true);
 	}
 
-	Closure::Closure (const lexing::Word & loc, const std::vector <Generator> & inner, const std::vector<std::string> & names, uint index) :
+	Closure::Closure (const lexing::Word & loc, const std::vector <Generator> & inner, const std::vector<std::string> & names, uint32_t index) :
 	    Type (loc, loc.getStr ()),
 	    _names (names),
 	    _index (index)
@@ -23,7 +23,7 @@ namespace semantic {
 	    this-> setInners (inner);
 	}
 
-	Generator Closure::init (const lexing::Word & loc, const std::vector<Generator> & inner, const std::vector <std::string> & names, uint index) {
+	Generator Closure::init (const lexing::Word & loc, const std::vector<Generator> & inner, const std::vector <std::string> & names, uint32_t index) {
 	    return Generator {new (NO_GC) Closure (loc, inner, names, index)};
 	}
 
@@ -59,7 +59,7 @@ namespace semantic {
 	    return this-> _names;
 	}	
 
-	uint Closure::getIndex () const {
+	uint32_t Closure::getIndex () const {
 	    return this-> _index;
 	}
 	

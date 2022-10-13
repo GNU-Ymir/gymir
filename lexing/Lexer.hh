@@ -39,7 +39,7 @@ namespace lexing {
 	 * Create a lexer that read from a string instead of a file	
 	 * \param line, the init line (string content are generally from macros, and the macro is in a file, thus we need to ) 
 	 */
-	static Lexer initFromString (const lexing::File & file, const std::string & filename, const std::vector<std::string> &skips, const std::map <std::string, std::pair <std::string, std::string> > &comments, ulong line);
+	static Lexer initFromString (const lexing::File & file, const std::string & filename, const std::vector<std::string> &skips, const std::map <std::string, std::pair <std::string, std::string> > &comments, uint64_t line);
 
 	
 	/**
@@ -122,18 +122,18 @@ namespace lexing {
 	 * \warning (does not include the skiped words)
 	 * \param nb the number of word to rewind
 	 */
-	virtual Lexer& rewind (ulong nb = 1);
+	virtual Lexer& rewind (uint64_t nb = 1);
 
 	/**
 	 * \return the index of the current word
 	 */
-	ulong tell () const;
+	uint64_t tell () const;
 
 	/**
 	 * \brief Move to a specific word index 
 	 * \param loc the index of the word that will be the current one
 	 */
-	void seek (ulong loc);
+	void seek (uint64_t loc);
 
 	/**
 	 * \return an empty word with file information (filename)
@@ -192,19 +192,19 @@ namespace lexing {
 	/**
 	 * \return the minimal value between a and b
 	 */
-	ulong min (ulong a, ulong b);
+	uint64_t min (uint64_t a, uint64_t b);
 
 	/**
 	 * \brief construct a new word from line informations
 	 */
-	Word constructWord (ulong beg, ulong _max, const std::string &line,
-			    ulong where);
+	Word constructWord (uint64_t beg, uint64_t _max, const std::string &line,
+			    uint64_t where);
 	
     protected:
 
-	static const int maxColumnHint = 80;
-	ulong line, column;
-	ulong lineStart;
+	static const int32_t maxColumnHint = 80;
+	uint64_t line, column;
+	uint64_t lineStart;
 	bool enableComment, disposed;
 	std::string filename;
 	
@@ -215,13 +215,13 @@ namespace lexing {
 
 	lexing::IndexMap _tokenizer;
 	
-	long current;
+	int64_t current;
 	lexing::File file;
 
 	const struct line_map * line_map;
 
 	bool isFromString = false;
-	ulong start = 0;
+	uint64_t start = 0;
 	
 	Word _fileLocus;
 	Word __eof__;

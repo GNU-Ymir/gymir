@@ -15,8 +15,8 @@ namespace semantic {
 	public :
 	    
 	    union UI {
-		ulong u;		
-		long i;
+		uint64_t u;		
+		int64_t i;
 	    };
 	    
 	private :
@@ -57,25 +57,25 @@ namespace semantic {
 	 * \brief Create a Fixed generator, of type usize
 	 * \param value the content of the constant
 	 */
-	Generator ufixed (ulong value);
+	Generator ufixed (uint64_t value);
 
 	/**
 	 * \brief Create a fixed generator of type isize
 	 * \param value the content of the constant
 	 */
-	Generator ifixed (long value);
+	Generator ifixed (int64_t value);
 
 	/**
 	 * \brief Create a Fixed generator, of type usize
 	 * \param value the content of the constant
 	 */
-	Generator ufixed (const lexing::Word & location, ulong value);
+	Generator ufixed (const lexing::Word & location, uint64_t value);
 
 	/**
 	 * \brief Create a fixed generator of type isize
 	 * \param value the content of the constant
 	 */
-	Generator ifixed (const lexing::Word & location, long value);
+	Generator ifixed (const lexing::Word & location, int64_t value);
     
     }
 

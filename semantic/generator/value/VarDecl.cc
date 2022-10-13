@@ -4,7 +4,7 @@
 namespace semantic {
     namespace generator {
 
-	uint VarDecl::__lastId__ = 0;
+	uint32_t VarDecl::__lastId__ = 0;
 
 	VarDecl::VarDecl () :
 	    Value (lexing::Word::eof (), Generator::empty ()),
@@ -56,7 +56,7 @@ namespace semantic {
 	    return this-> _isMutable;
 	}
 
-	uint VarDecl::getUniqId () const {
+	uint32_t VarDecl::getUniqId () const {
 	    return _varRefId;
 	}
 	

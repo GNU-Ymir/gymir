@@ -6,7 +6,7 @@ namespace semantic {
 
     namespace generator {
 
-	std::string shorten (const std::string & str, ulong max = 100) {
+	std::string shorten (const std::string & str, uint64_t max = 100) {
 	    if (str.length () < max) return str;
 	    else {
 		return str.substr (0, max/2 - 3) + "[...]" + str.substr (str.length () - max/2 + 2);
@@ -16,13 +16,13 @@ namespace semantic {
 	    Value ()
 	{}
 
-	StringValue::StringValue (const lexing::Word & loc, const Generator & type, const std::vector <char> &  value, ulong len) :
+	StringValue::StringValue (const lexing::Word & loc, const Generator & type, const std::vector <char> &  value, uint64_t len) :
 	    Value (loc, type),
 	    _value (value),
 	    _len (len)
 	{}
        
-	Generator StringValue::init (const lexing::Word & loc, const Generator & type, const std::vector<char> &  value, ulong len) {
+	Generator StringValue::init (const lexing::Word & loc, const Generator & type, const std::vector<char> &  value, uint64_t len) {
 	    return Generator {new (NO_GC) StringValue (loc, type, value, len)};
 	}
 
@@ -37,7 +37,7 @@ namespace semantic {
 		&& this-> _value == floatValue._value;
 	}
 
-	ulong StringValue::getLen  () const {
+	uint64_t StringValue::getLen  () const {
 	    return this-> _len;
 	}
 	

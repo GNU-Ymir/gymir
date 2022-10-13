@@ -36,6 +36,10 @@
 #define LIBBFD "bfd"
 #endif
 
+#ifndef LIBUNITTEST
+#define LIBUNITTEST "gymidgard-tests"
+#endif
+
 typedef unsigned int uint;
 
 void
@@ -51,7 +55,10 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
     int added_libraries = *in_added_libraries;
     bool need_gc = *in_decoded_options_count != 1;
     bool need_pthread = *in_decoded_options_count != 1;
-    bool need_libs = true, need_m = true, need_bfd = true;
+    bool need_libs = true, need_unittest = false;
+#ifdef __linux__
+    bool need_m = true, need_bfd = true;
+#endif
     /* bool need_midgard = *in_decoded_options_count != 1; */
     /* bool need_runtime = *in_decoded_options_count != 1; */
     bool yr_file_found = false;
@@ -63,8 +70,8 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 	if (decoded_options [i].opt_index == OPT_l) {
 	    if (arg != NULL && (strcmp (arg, LIBGC) == 0)) need_gc = false;
 	    if (arg != NULL && (strcmp (arg, LIBPTHREAD) == 0)) need_pthread = false;
-	    if (arg != NULL && (strcmp (arg, LIBM) == 0)) need_m = false;
 #ifdef __linux__
+	    if (arg != NULL && (strcmp (arg, LIBM) == 0)) need_m = false;
 	    if (arg != NULL && (strcmp (arg, LIBBFD) == 0)) need_bfd = false;
 #endif
 	} else if (decoded_options [i].opt_index == OPT_SPECIAL_input_file) {
@@ -73,14 +80,16 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 	    need_gc = false;
 	    need_libs = false;
 	    need_pthread = false;
-	}	    	
+	} else if (decoded_options [i].opt_index == OPT_funittest) {
+	    need_unittest = true;
+	}
     }
     
     if (yr_file_found) {
 #ifdef __linux__
-	num_args = argc + ((need_gc + need_pthread + need_libs + need_m + need_bfd)) + includes.size () - toRemove.size ();
+	num_args = argc + ((need_gc + need_pthread + need_libs + need_m + need_bfd + need_unittest)) + includes.size () - toRemove.size ();
 #else
-	num_args = argc + ((need_gc + need_pthread + need_libs + need_m)) + includes.size () - toRemove.size ();
+	num_args = argc + ((need_gc + need_pthread + need_libs + need_unittest)) + includes.size () - toRemove.size ();
 #endif
 	new_decoded_options = XNEWVEC (cl_decoded_option, num_args);
 	i = 0;
@@ -97,8 +106,8 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 	    i++;
 	}
 
-	if (need_m) {
-	    generate_option (OPT_l, LIBM, 1, CL_DRIVER, &new_decoded_options [i]);
+	if (need_unittest) {
+	    generate_option (OPT_l, LIBUNITTEST, 1, CL_DRIVER, &new_decoded_options [i]);
 	    added_libraries ++;
 	    i++;
 	}
@@ -116,6 +125,12 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 	}
 
 #ifdef __linux__
+	if (need_m) {
+	    generate_option (OPT_l, LIBM, 1, CL_DRIVER, &new_decoded_options [i]);
+	    added_libraries ++;
+	    i++;
+	}
+	
 	if (need_bfd) {
 	  generate_option (OPT_l, LIBBFD, 1, CL_DRIVER, &new_decoded_options [i]);
 	  added_libraries ++;

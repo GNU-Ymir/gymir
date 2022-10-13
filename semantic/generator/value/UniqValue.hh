@@ -9,7 +9,7 @@ namespace semantic {
 
 	    Generator _value;
 
-	    uint _refId;	   
+	    uint32_t _refId;	   
 
 	private :
 
@@ -17,7 +17,7 @@ namespace semantic {
 	    
 	    UniqValue ();
 
-	    UniqValue (const lexing::Word & location, const Generator & type, const Generator & value, uint refId);
+	    UniqValue (const lexing::Word & location, const Generator & type, const Generator & value, uint32_t refId);
 
 	public :
 
@@ -46,7 +46,7 @@ namespace semantic {
 	    /**
 	     * \brief Get the ref id of the uniq value
 	     */
-	    uint getRefId () const;
+	    uint32_t getRefId () const;
 	    
 	    /**
 	     * 

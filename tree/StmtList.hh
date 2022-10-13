@@ -4,27 +4,29 @@
 
 namespace generic {
 
-    struct TreeStmtList {
+  struct TreeStmtList {
 
 	
-	tree _list;
+    tree _list;
 
-	bool _empty;
+    bool _empty;
 	
-    private : 
+  private : 
 
-	TreeStmtList ();
+    TreeStmtList ();
 	
-    public :
+  public :
 
-	static TreeStmtList init ();
+    static TreeStmtList init ();
 
-	void append (const Tree & tree);
+    void append (const Tree & tree);
 
-	Tree toTree () const;
+    void append (tree t);
 
-	bool isEmpty () const;
+    Tree toTree () const;
+
+    bool isEmpty () const;
 	
-    };        
+  };        
 
 }

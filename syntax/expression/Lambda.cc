@@ -2,7 +2,7 @@
 
 namespace syntax {
 
-    ulong Lambda::__lastId__ = 0;
+    uint64_t Lambda::__lastId__ = 0;
     
     Lambda::Lambda () :
 	IExpression (lexing::Word::eof ()),
@@ -39,7 +39,7 @@ namespace syntax {
 	return Expression {lmbd};
     }
 
-    void Lambda::treePrint (Ymir::OutBuffer & stream, int i) const {
+    void Lambda::treePrint (Ymir::OutBuffer & stream, int32_t i) const {
 	stream.writefln ("%*<Lambda>", i, '\t');
 	this-> _proto.treePrint (stream, i + 1);
 	this-> _content.treePrint (stream, i + 1);
@@ -61,7 +61,7 @@ namespace syntax {
 	return this-> _isRefClosure;
     }
     
-    ulong Lambda::getUniqId () const {
+    uint64_t Lambda::getUniqId () const {
 	return this-> _uniqId;
     }
     

@@ -41,9 +41,9 @@ namespace semantic {
 	    
 	    
 	    /** The id of the generator */
-	    uint _uniqId; 
+	    uint32_t _uniqId; 
 
-	    static uint __lastId__;
+	    static uint32_t __lastId__;
 	    
 	private :
 
@@ -85,13 +85,13 @@ namespace semantic {
 	    /**
 	     * \return the id of the generator
 	     */
-	    virtual uint getUniqId () const;
+	    virtual uint32_t getUniqId () const;
 
 	    /**
 	     * \brief Change the id of the generator
 	     * \brief This in principal is only used when we need to refer to VarDecl for which the type is not totally knwon yet (\ie Lambda closure)
 	     */
-	    virtual void setUniqId (uint id);
+	    virtual void setUniqId (uint32_t id);
 	    
 	    /**
 	     * \brief Reset the count of uniq ids
@@ -101,7 +101,7 @@ namespace semantic {
 	    /**
 	     * \return a uniq id
 	     */
-	    static uint getLastId (); 
+	    static uint32_t getLastId (); 
 	    
 	    /**
 	     * \return a formatted string representing the generator in Ymir like syntax
@@ -173,12 +173,12 @@ namespace semantic {
 	    /**
 	     * Proxy function for generator
 	     */
-	    uint getUniqId () const;
+	    uint32_t getUniqId () const;
 
 	    /**
 	     * Proxy function for generator
 	     */
-	    void setUniqId (uint id);
+	    void setUniqId (uint32_t id);
 	    
 	    /**
 	     * Proxy function for generator
@@ -189,7 +189,7 @@ namespace semantic {
 	    /**
 	     * Proxy function for generator
 	     */
-	    static uint getLastId ();
+	    static uint32_t getLastId ();
 	    
 	    /**
 	     * Proxy function for generator

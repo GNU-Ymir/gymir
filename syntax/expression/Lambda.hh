@@ -15,9 +15,9 @@ namespace syntax {
 	/** The content of the function */
 	Expression _content;
 
-	static ulong __lastId__;
+	static uint64_t __lastId__;
 	
-	ulong _uniqId;
+	uint64_t _uniqId;
 
 	bool _isRefClosure = false;
 
@@ -39,7 +39,7 @@ namespace syntax {
 
 	static Expression moveClosure (const syntax::Expression & lmbd);	
 	
-	void treePrint (Ymir::OutBuffer & stream, int i) const override;
+	void treePrint (Ymir::OutBuffer & stream, int32_t i) const override;
 
 	const Function::Prototype & getPrototype () const;
 
@@ -49,7 +49,7 @@ namespace syntax {
 
 	bool isMoveClosure () const;
 
-	ulong getUniqId () const;
+	uint64_t getUniqId () const;
 
 	std::string prettyString () const override;
 	

@@ -144,7 +144,7 @@ namespace semantic {
 	/**
 	 * \brief Does this sym has been validated by template resolution?
 	 */
-	void setWeak ();
+	void setWeak (bool b = true);
 
 	/**
 	 * \return Does this sym has been validated by template resolution
@@ -372,7 +372,7 @@ namespace semantic {
 	/**
 	 * Proxy function for symbol
 	 */
-	void setWeak ();
+	void setWeak (bool b = true);
 
 	/**
 	 * Proxy function for symbol

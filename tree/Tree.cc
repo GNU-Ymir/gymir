@@ -75,7 +75,7 @@ namespace generic {
 	return Tree::init (UNKNOWN_LOCATION, y_u8_type);
     }
 
-    Tree Tree::intType (int size, bool isSigned) {
+    Tree Tree::intType (int32_t size, bool isSigned) {
 	if (isSigned) {
 	    switch (size) {
 	    case 8 : return Tree::init (UNKNOWN_LOCATION, y_i8_type);
@@ -99,7 +99,7 @@ namespace generic {
 	return Tree::init (UNKNOWN_LOCATION, y_usize_type);
     }
     
-    Tree Tree::floatType (int size) {
+    Tree Tree::floatType (int32_t size) {
 	switch (size) {
 	case 32: return Tree::init (UNKNOWN_LOCATION, y_f32_type);
 	case 64: return Tree::init (UNKNOWN_LOCATION, y_f64_type);
@@ -107,7 +107,7 @@ namespace generic {
 	}
     }
 
-    Tree Tree::charType (int size) {
+    Tree Tree::charType (int32_t size) {
 	switch (size) {
 	case 8 : return Tree::init (UNKNOWN_LOCATION, y_c8_type);
 	case 16 : return Tree::init (UNKNOWN_LOCATION, y_c16_type);
@@ -116,7 +116,7 @@ namespace generic {
 	}
     }
 
-    Tree Tree::staticArray (const Tree & inner, int size) {
+    Tree Tree::staticArray (const Tree & inner, int32_t size) {
 	auto len = build_int_cst_type (y_usize_type, size - 1);
 	auto begin = build_int_cst_type (y_usize_type, 0);
 	auto range = Tree::init (UNKNOWN_LOCATION, build_range_type (y_i32_type, fold (begin), fold (len)));
@@ -147,11 +147,11 @@ namespace generic {
 	else record_type = make_node (RECORD_TYPE);
 
 	auto size = 0;
-	for (uint i = 0 ; i < types.size () ; i++) {
+	for (uint32_t i = 0 ; i < types.size () ; i++) {
 	    tree ident;
 	    if (i >= attrs.size ()) {
 		Ymir::OutBuffer buf;
-		buf.write ("_", (uint) (i - attrs.size ()));
+		buf.write ("_", (uint64_t) (i - attrs.size ()));
 		ident = get_identifier (buf.str ().c_str ());
 	    } else ident = get_identifier (attrs [i].c_str ());
 	    
@@ -192,11 +192,11 @@ namespace generic {
 	tree field_last = NULL_TREE, field_begin = NULL_TREE;
 	tree record_type = make_node (RECORD_TYPE);
 	
-	for (uint i = 0 ; i < common.size () ; i++) {
+	for (uint32_t i = 0 ; i < common.size () ; i++) {
 	    tree ident;
 	    if (i >= attrs.size ()) {
 		Ymir::OutBuffer buf;
-		buf.write ("_", (uint) (i - attrs.size ()));
+		buf.write ("_", (uint64_t) (i - attrs.size ()));
 		ident = get_identifier (buf.str ().c_str ());
 	    } else ident = get_identifier (attrs [i].c_str ());
 	    
@@ -210,11 +210,11 @@ namespace generic {
 	}
 
 	tree offset;
-	for (uint i = 0 ; i < unions.size () ; i++) {
+	for (uint32_t i = 0 ; i < unions.size () ; i++) {
 	    tree ident;
 	    if (i + common.size () >= attrs.size ()) {
 		Ymir::OutBuffer buf;
-		buf.write ("_", (uint) (i - attrs.size ()));
+		buf.write ("_", (uint64_t) (i - attrs.size ()));
 		ident = get_identifier (buf.str ().c_str ());
 	    } else ident = get_identifier (attrs [common.size () + i].c_str ());
 	    
@@ -394,7 +394,12 @@ namespace generic {
 
 	tree fndecl_type = build_function_type_array (type.getTree (), fndecl_type_params.size (), fndecl_type_params.data ());
 	tree fndecl = build_fn_decl (name.c_str (), fndecl_type);
+	TREE_NOTHROW (fndecl) = 0;
+	TREE_PUBLIC (fndecl) = 0;
+	TREE_STATIC (fndecl) = 1;
+	
 	tree fn = build1 (ADDR_EXPR, Tree::pointerType (Tree::init (BUILTINS_LOCATION, fndecl_type)).getTree (), fndecl);
+	TREE_NOTHROW (fn) = 0;
 
 	return Tree::init (
 	    loc.getLocation (),
@@ -411,7 +416,14 @@ namespace generic {
 	tree fndecl_type = build_function_type_array (type.getTree (), fndecl_type_params.size (), fndecl_type_params.data ());
 
 	tree fndecl = build_fn_decl (name.c_str (), fndecl_type);
-	return Tree::init (loc.getLocation (), build1 (ADDR_EXPR, Tree::pointerType (Tree::init (BUILTINS_LOCATION, fndecl_type)).getTree (), fndecl));
+	TREE_NOTHROW (fndecl) = 0;
+	TREE_PUBLIC (fndecl) = 0;
+	TREE_STATIC (fndecl) = 1;
+	
+	auto fn = build1 (ADDR_EXPR, Tree::pointerType (Tree::init (BUILTINS_LOCATION, fndecl_type)).getTree (), fndecl);
+	TREE_NOTHROW (fn) = 0;
+	
+	return Tree::init (loc.getLocation (), fn);
     }
 
     
@@ -450,16 +462,16 @@ namespace generic {
     }
 
     Tree Tree::binaryPtrTest (const lexing::Word & loc, tree_code code, const Tree & type, const Tree & left, const Tree & right) {
-	auto ulong_type = Tree::intType (64, false);
+	auto uint64_t_type = Tree::intType (64, false);
 
 	return Tree::build (code, loc, type,
 			    Tree::init (
 				loc.getLocation (),
-				convert (ulong_type.getTree (), left.getTree ())
+				convert (uint64_t_type.getTree (), left.getTree ())
 			    ),
 			    Tree::init (
 				loc.getLocation (),
-				convert (ulong_type.getTree (), right.getTree ())
+				convert (uint64_t_type.getTree (), right.getTree ())
 			    )
 	);
     }
@@ -501,7 +513,7 @@ namespace generic {
 	return Tree::init (loc.getLocation (), build_constructor (type.getTree (), elms));
     }
 
-    Tree Tree::constructIndexed0 (const lexing::Word & loc, const Tree & type, const Tree & value, uint size) {
+    Tree Tree::constructIndexed0 (const lexing::Word & loc, const Tree & type, const Tree & value, uint32_t size) {
 	vec <constructor_elt, va_gc> * elms = NULL;
 	for (auto it : Ymir::r (0, size)) {
 	    CONSTRUCTOR_APPEND_ELT (elms, size_int (it), value.getTree ());
@@ -515,7 +527,7 @@ namespace generic {
 	for (auto it : Ymir::r (0, values.size ())) {
 	    if (it >= (int) names.size ()) {
 		Ymir::OutBuffer buf;
-		buf.write ("_", (uint) (it - names.size ()));
+		buf.write ("_", (uint64_t) (it - names.size ()));
 		CONSTRUCTOR_APPEND_ELT (elms, type.getField (buf.str ()).getTree (), values [it].getTree ());
 	    } else 
 		CONSTRUCTOR_APPEND_ELT (elms, type.getField (names [it]).getTree (), values [it].getTree ());
@@ -555,7 +567,7 @@ namespace generic {
     }    
 
     Tree Tree::makeLabel (const lexing::Word & loc, const Tree & context, const std::string & name) {
-	static int __last_label_id__ = 0;	
+	static int32_t __last_label_id__ = 0;	
 	Ymir::OutBuffer buf;
 	buf.write (name, '[', __last_label_id__, ']');
 	__last_label_id__ += 1;
@@ -583,7 +595,7 @@ namespace generic {
 	);
     }
 
-    Tree Tree::buildPtrCst (const lexing::Word & loc, ulong value) {
+    Tree Tree::buildPtrCst (const lexing::Word & loc, uint64_t value) {
 	auto cst = Tree::buildIntCst (loc, value, Tree::intType (64, false)).getTree ();
 	return Tree::init (
 	    loc.getLocation (), 
@@ -591,19 +603,19 @@ namespace generic {
 	);
     }
     
-    Tree Tree::buildIntCst (const lexing::Word & loc, ulong value, const Tree & type) {
+    Tree Tree::buildIntCst (const lexing::Word & loc, uint64_t value, const Tree & type) {
 	return Tree::init (loc.getLocation (), build_int_cst_type (type.getTree (), value));
     }
     
-    Tree Tree::buildIntCst (const lexing::Word & loc, long value, const Tree & type) {
+    Tree Tree::buildIntCst (const lexing::Word & loc, int64_t value, const Tree & type) {
 	return Tree::init (loc.getLocation (), build_int_cst_type (type.getTree (), value));
     }
 
-    Tree Tree::buildStringLiteral (const lexing::Word & loc, const char * lit, ulong len, int size) {
+    Tree Tree::buildStringLiteral (const lexing::Word & loc, const char * lit, uint64_t len, int32_t size) {
 	return Tree::init (loc.getLocation (), build_string_literal (len * (size / 8), lit));
     }
     
-    Tree Tree::buildSizeCst (ulong value) {
+    Tree Tree::buildSizeCst (uint64_t value) {
 	return Tree::init (UNKNOWN_LOCATION, build_int_cst_type (y_u64_type, value));
     }
     
@@ -629,10 +641,10 @@ namespace generic {
     }
 
     Tree Tree::buildBoolCst (const lexing::Word & loc, bool value) {
-	return Tree::init (loc.getLocation (), build_int_cst_type (y_u8_type, (ulong) value));
+	return Tree::init (loc.getLocation (), build_int_cst_type (y_u8_type, (uint64_t) value));
     }
     
-    Tree Tree::buildCharCst (const lexing::Word & loc, uint value, const Tree & type) {
+    Tree Tree::buildCharCst (const lexing::Word & loc, uint32_t value, const Tree & type) {
 	return Tree::init (loc.getLocation (), build_int_cst_type (type.getTree (), value));
     }
 
@@ -864,7 +876,7 @@ namespace generic {
 	TREE_TYPE (this-> _t) = type._t;
     }
     
-    uint Tree::getSize () const {
+    uint32_t Tree::getSize () const {
 	if (this-> _t == NULL_TREE)
 	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	return TREE_INT_CST_LOW (TYPE_SIZE_UNIT (this-> _t));
@@ -885,7 +897,7 @@ namespace generic {
 	
     }
 
-    Tree Tree::getStringSize (int inner) const {	
+    Tree Tree::getStringSize (int32_t inner) const {	
 	auto t = getOperand (0).getOperand (0);
 	return Tree::init (BUILTINS_LOCATION,
 			   convert (
@@ -921,7 +933,7 @@ namespace generic {
 	return this-> getTreeCode () == COMPOUND_EXPR;
     }
     
-    Tree Tree::getOperand (int i) const {
+    Tree Tree::getOperand (int32_t i) const {
 	if (this-> _t == NULL_TREE)
 	    Ymir::Error::halt (Ymir::ExternalError::NULL_PTR);
 	return Tree::init (this-> _loc, TREE_OPERAND (this-> _t, i));
@@ -961,7 +973,7 @@ namespace generic {
 	return this-> getTreeCode () == VOID_TYPE;
     }
     
-    Tree Tree::buildPointerUnref (int index) const {
+    Tree Tree::buildPointerUnref (int32_t index) const {
 	auto inner = TREE_TYPE (this-> getType ().getTree ());
 	auto element_size = TYPE_SIZE_UNIT (inner);
 	tree it = build_int_cst_type (y_u64_type, index);	
@@ -974,7 +986,7 @@ namespace generic {
     }
 
 
-    Tree Tree::buildPointerUnref (Tree type, int index) const {
+    Tree Tree::buildPointerUnref (Tree type, int32_t index) const {
 	auto ptrType = pointerType (type);
 	auto inner = type.getTree ();
 	auto element_size = TYPE_SIZE_UNIT (inner);
@@ -1073,7 +1085,8 @@ tree convert (tree type, tree expr) {
 	return error_mark_node;
     if (TREE_CODE (TREE_TYPE (expr)) == VOID_TYPE)
 	{
-	    debug_tree (expr);
+	    // debug_tree (expr);
+	    // print_generic_stmt (stdout, expr);
 	    Ymir::Error::halt  ("%(r) conversion to non-scalar type requested", "Critical");
 	    return error_mark_node;
 	}

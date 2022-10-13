@@ -8,12 +8,12 @@ namespace semantic {
 	    Value ()
 	{}
 
-	CharValue::CharValue (const lexing::Word & loc, const Generator & type, uint value) :
+	CharValue::CharValue (const lexing::Word & loc, const Generator & type, uint32_t value) :
 	    Value (loc, type),
 	    _value (value)
 	{}
        
-	Generator CharValue::init (const lexing::Word & loc, const Generator & type, uint value) {
+	Generator CharValue::init (const lexing::Word & loc, const Generator & type, uint32_t value) {
 	    return Generator {new (NO_GC) CharValue (loc, type, value)};
 	}
 
@@ -28,7 +28,7 @@ namespace semantic {
 		&& this-> _value == floatValue._value;
 	}
 
-	uint CharValue::getValue () const {
+	uint32_t CharValue::getValue () const {
 	    return this-> _value;
 	}
 

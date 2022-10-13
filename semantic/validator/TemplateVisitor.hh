@@ -52,7 +52,7 @@ namespace semantic {
 		    return end_;
 		}
 		
-		uint size () const {
+		uint32_t size () const {
 		    return end_ - begin_;
 		}
 		
@@ -74,16 +74,16 @@ namespace semantic {
 	     */
 	    struct Mapper {
 		bool succeed;
-		uint score;
+		uint32_t score;
 		std::map <std::string, syntax::Expression> mapping;
 		std::vector <std::string> nameOrder;
 
-		Mapper (bool succ, uint score) {
+		Mapper (bool succ, uint32_t score) {
 		    this-> succeed = succ;
 		    this-> score = score;
 		}
 
-		Mapper (bool succ, uint score, const std::map <std::string, syntax::Expression> & mapping, const std::vector <std::string> & names) {
+		Mapper (bool succ, uint32_t score, const std::map <std::string, syntax::Expression> & mapping, const std::vector <std::string> & names) {
 		    this-> succeed = succ;
 		    this-> score = score;
 		    this-> mapping = mapping;

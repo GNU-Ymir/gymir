@@ -15,8 +15,6 @@ namespace semantic {
 
 	    Generator _who;
 
-	    Generator _jmpBuf;
-
 	    Generator _catchingVar;
 
 	    Generator _catchingInfoType;
@@ -33,7 +31,7 @@ namespace semantic {
 	    
 	    ExitScope ();
 
-	    ExitScope (const lexing::Word & loc, const Generator & type, const Generator & jmpBufType, const Generator & who, const std::vector<Generator> & exit, const std::vector<Generator> & failure, const Generator & catchingVar, const Generator & catchingInfo, const Generator & catchingAction);
+	    ExitScope (const lexing::Word & loc, const Generator & type, const Generator & who, const std::vector<Generator> & exit, const std::vector<Generator> & failure, const Generator & catchingVar, const Generator & catchingInfo, const Generator & catchingAction);
 
 	public :
 
@@ -41,7 +39,7 @@ namespace semantic {
 	     * \brief Generate a new Binary on int
 	     * \warning left and right operand must generate int typed values
 	     */
-	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & who, const Generator& jmpBufType, const std::vector <Generator> & exit, const std::vector<Generator> & failure, const Generator & catchingVar, const Generator & catchingInfo, const Generator & catchingAction);
+	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & who, const std::vector <Generator> & exit, const std::vector<Generator> & failure, const Generator & catchingVar, const Generator & catchingInfo, const Generator & catchingAction);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -83,10 +81,6 @@ namespace semantic {
 	     */
 	    const Generator & getCatchingAction () const;
 
-	    /**
-	     * \return the jump_buf type
-	     */
-	    const Generator & getJmpbufType () const;
 	    
 	    std::string prettyString () const override;
 	    

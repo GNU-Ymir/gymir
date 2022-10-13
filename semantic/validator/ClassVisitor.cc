@@ -67,6 +67,8 @@ namespace semantic {
 		    return Generator::empty ();
 		}
 	    }
+	    
+	    return Generator::empty ();
 	}
 
 	void ClassVisitor::validateClassContent (const semantic::Symbol & cls, bool inModule) {

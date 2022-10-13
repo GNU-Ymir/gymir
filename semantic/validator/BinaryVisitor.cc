@@ -1265,6 +1265,7 @@ namespace semantic {
 			auto itype = Integer::init (expression.getLocation (), i_.getSize (), true);
 			auto hVal = Fixed::init (expression.getLocation (), itype, hui);
 			auto lVal = Fixed::init (expression.getLocation (), itype, lui);
+			// auto lVal = UnaryInt::init (expression.getLocation (), Unary::Operator::MINUS, itype, hVal);
 
 			auto bin = BinaryInt::init (expression.getLocation (),
 						    Binary::Operator::INF,

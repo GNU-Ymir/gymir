@@ -53,7 +53,7 @@ namespace semantic {
 	    this-> isLvalue (true);
 	}
 
-	FieldOffsetIndex::FieldOffsetIndex (const lexing::Word & loc, const Generator & type, const Generator & str, ulong field) :
+	FieldOffsetIndex::FieldOffsetIndex (const lexing::Word & loc, const Generator & type, const Generator & str, uint64_t field) :
 	    Value (loc, type),
 	    _str (str),
 	    _field (field)
@@ -63,7 +63,7 @@ namespace semantic {
 	}
 
 
-	Generator FieldOffsetIndex::init (const lexing::Word & loc, const Generator & type, const Generator & str, ulong field) {
+	Generator FieldOffsetIndex::init (const lexing::Word & loc, const Generator & type, const Generator & str, uint64_t field) {
 	    return Generator {new (NO_GC) FieldOffsetIndex (loc, type, str, field)};
 	}
 	
@@ -81,7 +81,7 @@ namespace semantic {
 	    return this-> _str;
 	}
 
-	ulong FieldOffsetIndex::getField () const {
+	uint64_t FieldOffsetIndex::getField () const {
 	    return this-> _field;
 	}
 

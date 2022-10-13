@@ -15,7 +15,7 @@ namespace semantic {
 
 	    Generator _str;
 	    
-	    uint _field;
+	    uint32_t _field;
 
 	    std::string _name;
 
@@ -27,14 +27,14 @@ namespace semantic {
 
 	    VtableAccess ();
 
-	    VtableAccess (const lexing::Word & loc, const Generator & type, const Generator & cl, uint field, const std::string & name);
+	    VtableAccess (const lexing::Word & loc, const Generator & type, const Generator & cl, uint32_t field, const std::string & name);
 
 	public:
 
 	    /**
 	     * \brief Generate a tuple access
 	     */
-	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & cl, uint field, const std::string & name);
+	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & cl, uint32_t field, const std::string & name);
 	    
 	    Generator clone () const override;
 
@@ -43,7 +43,7 @@ namespace semantic {
 
 	    const Generator & getClass () const;
 
-	    uint getField () const;
+	    uint32_t getField () const;
 	    
 	    std::string prettyString () const override;	    
 	    

@@ -9,7 +9,7 @@ namespace semantic {
 	class Pointer : public Type {
 	public : 
 
-	    static ulong INIT;
+	    static uint64_t INIT;
 	    
 	    static std::string INIT_NAME;
 	    

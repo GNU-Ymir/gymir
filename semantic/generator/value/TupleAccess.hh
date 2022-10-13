@@ -15,7 +15,7 @@ namespace semantic {
 
 	    Generator _tuple;
 	    
-	    uint _index;
+	    uint32_t _index;
 
 	private : 
 
@@ -23,14 +23,14 @@ namespace semantic {
 
 	    TupleAccess ();
 
-	    TupleAccess (const lexing::Word & loc, const Generator & type, const Generator & tuple, uint index);
+	    TupleAccess (const lexing::Word & loc, const Generator & type, const Generator & tuple, uint32_t index);
 
 	public:
 
 	    /**
 	     * \brief Generate a tuple access
 	     */
-	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & tuple, uint index);
+	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & tuple, uint32_t index);
 	    
 	    Generator clone () const override;
 
@@ -38,7 +38,7 @@ namespace semantic {
 
 	    const Generator & getTuple () const;
 
-	    uint getIndex () const;
+	    uint32_t getIndex () const;
 
 	    std::string prettyString () const override;	    
 	    

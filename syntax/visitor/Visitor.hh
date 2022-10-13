@@ -496,7 +496,7 @@ namespace syntax {
 	 \endverbatim
 	 * \param priority, the priority of the expression (used to get the set of operators usable at this instant)	 
 	 */
-	Expression visitExpression (uint priority = 0);
+	Expression visitExpression (uint32_t priority = 0);
 
 
 	/**
@@ -504,7 +504,7 @@ namespace syntax {
 	 * \param left the left operand (already read)
 	 * \param the priority of the operation
 	 */
-	Expression visitExpression (const Expression & left, uint priority = 0);
+	Expression visitExpression (const Expression & left, uint32_t priority = 0);
 	
 	/**
 	 * \brief Visit an operand (which has higher priority than every expression of visitExpression)

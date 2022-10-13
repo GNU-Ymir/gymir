@@ -12,7 +12,7 @@
 #include <ymir/global/State.hh>
 #include <ymir/global/Core.hh>
 #include <ymir/utils/types.hh>
-
+#include <stdint.h>
 
 
 namespace lexing {
@@ -31,8 +31,6 @@ namespace semantic {
     class Symbol;
 }
 
-
-
 namespace Ymir {
 
     /**
@@ -44,8 +42,8 @@ namespace Ymir {
     private :
 	
 	std::vector<char> current;
-	ulong len = 0;
-	ulong capacity = 0;
+	uint64_t len = 0;
+	uint64_t capacity = 0;
 	std::vector <std::string> _currentColor;
 	std::vector <std::string> _entabing;
 	bool _willEntab = false;
@@ -238,13 +236,13 @@ namespace Ymir {
 	
 	void write_ (const std::string&);
 
-	void write_ (uint);
+	void write_ (uint32_t);
 	
 	void write_ (int);
 	
-	void write_ (long);
+	void write_ (int64_t);
 
-	void write_ (ulong);
+	void write_ (uint64_t);
 	
 	void write_ (float);
 	
@@ -268,7 +266,7 @@ namespace Ymir {
 
     private:
 
-	void resize (ulong len);
+	void resize (uint64_t len);
 
 	
     };

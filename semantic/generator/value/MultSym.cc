@@ -52,13 +52,13 @@ namespace semantic {
 	    if (this-> _gens.size () != 1) {
 		Ymir::OutBuffer buf;
 		buf.write ("{");
-		for (auto it : Ymir::r (0, std::min ((uint) this-> _gens.size (), (uint) 3))) {
+		for (auto it : Ymir::r (0, std::min ((uint32_t) this-> _gens.size (), (uint32_t) 3))) {
 		    if (it != 0) buf.write (", ");
 		    if (it == 2 && this-> _gens.size () > 3) buf.write ("..., ");
 		    buf.write (validator::CallVisitor::prettyName (this-> _gens [it]));
 		}
 		
-		buf.writef ("} x %", (uint) this-> _gens.size ());
+		buf.writef ("} x %", (uint32_t) this-> _gens.size ());
 		return buf.str ();
 	    } else {
 		return this-> _gens [0].prettyString ();

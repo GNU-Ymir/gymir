@@ -19,7 +19,7 @@ namespace semantic {
 	     */
 	    bool _isMutable;
 	    
-	    uint _varRefId;
+	    uint32_t _varRefId;
 
 	    std::string _externalLanguage;
 
@@ -68,7 +68,7 @@ namespace semantic {
 	    /**
 	     * \brief Override the getuniqid, the ref id of a var decl must be copied, all the varref will refer to it
 	     */
-	    uint getUniqId () const override;
+	    uint32_t getUniqId () const override;
 
 	    /**
 	     * \return the external language (if the var has been declared external)

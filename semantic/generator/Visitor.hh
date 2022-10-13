@@ -7,7 +7,7 @@ namespace semantic {
 
     namespace generator {
 
-	enum class ReflectType : int {
+	enum class ReflectType : int32_t {
 	    FUNCTION = 0,
 	    VTABLE = 1
 	};
@@ -28,28 +28,12 @@ namespace semantic {
 	 */
 	class Visitor {
 
-	    struct ReturnWithinCatch {
-
-		const static ulong RETURN;
-		const static ulong BREAK;
-		const static ulong THROW;
-		const static ulong NONE;
-		
-		generic::Tree label;
-		generic::Tree test;
-		generic::Tree var;
-		generic::Tree jmp_var;
-	    };
-
 	    
 	    /** The list of var decl for each blocks */
 	    std::vector <generic::TreeChain> stackVarDeclChain;
 
 	    /** The list of block currently entered */
 	    std::vector <generic::BlockChain> stackBlockChain;	    	    
-
-	    /** The list of jumps; */
-	    std::list <std::vector <ReturnWithinCatch> > exceptionDeclChain;
 
 	    std::list <std::string> blockNames;
 	    
@@ -60,10 +44,10 @@ namespace semantic {
 	    generic::Tree _currentContext;
 
 	    /** The declaration of the local var for each frame */
-	    std::vector <std::map <uint, generic::Tree> > _declarators;
+	    std::vector <std::map <uint32_t, generic::Tree> > _declarators;
 
 	    /** The declaration of the global var */
-	    std::map <uint, generic::Tree> _globalDeclarators;
+	    std::map <uint32_t, generic::Tree> _globalDeclarators;
 
 	    /** The test to call */
 	    std::vector <std::pair <std::string, std::string> > _globalTests;
@@ -71,7 +55,7 @@ namespace semantic {
 	    /**
 	     * The value of global vars needing a static initialization
 	     */
-	    std::map <uint, std::pair <generator::Generator, generator::Generator> > _globalInitialiser;
+	    std::map <uint32_t, std::pair <generator::Generator, generator::Generator> > _globalInitialiser;
 
 	    /**
 	     * List of symbols to add in the reflect tree
@@ -291,23 +275,23 @@ namespace semantic {
 	     */
 	    generic::Tree generateExitScope (const ExitScope & scope);
 
-	    /**
-	     * Used for break statements
-	     */
-	    generic::Tree popLastException (const lexing::Word & loc);
+
+	    
 	    
 	    /**
 	     * \brief Generate the catching part of an exit scope
 	     * \param var the var containing the value of the scope
 	     */
-	    generic::Tree generateCatching (const ExitScope & scope, generic::Tree var, ReturnWithinCatch exc_return);
+	    generic::Tree generateCatching (const ExitScope & scope, generic::Tree tryScope, generic::Tree var);
 
 	    /**
-	     * \brief The test at the end of an exit scope to make sure return, break and throws are correctly executed
+	     * \brief generate the try part of an exit scope
+	     * \returns: failureVar the var to set to tree if there is a failure var, and failure happend
+	     * \returns: the try scope
 	     */
-	    generic::Tree generateEndOfExit (const lexing::Word & loc, generic::Tree test, generic::Tree value);
-	    
-	    /**
+	    generic::Tree generateTryScope (const ExitScope & scope, generic::Tree resultVar, generic::Tree failureVar);
+
+/**
 	     * \brief Transform an success scope into gimple
 	     */
 	    generic::Tree generateSuccessScope (const SuccessScope & scope);	   
@@ -492,10 +476,6 @@ namespace semantic {
 	     */
 	    generic::Tree generateReturn (const lexing::Word & location, generic::Tree value);
 
-	    /**
-	     * \return the position (test, label, etc) of the last catcher (test is empty, if there is non)
-	     */
-	    ReturnWithinCatch getLastCatcherPosition ();
 	    
 	    /**
 	     * \brief Transform a range value into gimple
@@ -629,23 +609,23 @@ namespace semantic {
 	    /**
 	     * \brief Add a new vardecl for future var referencing 
 	     */
-	    void insertDeclarator (uint id, const generic::Tree & decl);
+	    void insertDeclarator (uint32_t id, const generic::Tree & decl);
 
 	    /**
 	     * \brief Add a new vardecl for future var ref in the global context
 	     */
-	    void insertGlobalDeclarator (uint id, const generic::Tree & decl);
+	    void insertGlobalDeclarator (uint32_t id, const generic::Tree & decl);
 	    
 	    /**
 	     * \brief Get a var declarator
 	     * \warning make the compiler crash if the id does not exist
 	     */
-	    generic::Tree getDeclarator (uint id);
+	    generic::Tree getDeclarator (uint32_t id);
 	    	    
 	    /**
 	     * \brief Get a var declarator or empty if not exist
 	     */
-	    generic::Tree getDeclaratorOrEmpty (uint id);
+	    generic::Tree getDeclaratorOrEmpty (uint32_t id);
 	    
 	    /**
 	     * \brief transform the value of value into type

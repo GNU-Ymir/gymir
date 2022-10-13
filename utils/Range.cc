@@ -2,12 +2,12 @@
 
 namespace Ymir {
 
-    rIterator::rIterator (long curr, bool rev) :
+    rIterator::rIterator (int64_t curr, bool rev) :
 	curr (curr),
 	rev (rev)
     {}
 
-    long rIterator::operator* () {
+    int64_t rIterator::operator* () {
 	return this-> curr;
     }
 
@@ -20,7 +20,7 @@ namespace Ymir {
 	return ot.curr != this-> curr;
     }
 
-    Range::Range (long beg, long end) :
+    Range::Range (int64_t beg, int64_t end) :
 	_beg (beg),
 	_end (end)
     {}
@@ -34,15 +34,15 @@ namespace Ymir {
 	return rIterator (_end, false);
     }
 
-    long Range::fst () {
+    int64_t Range::fst () {
 	return _beg;
     }
     
-    long Range::scd () {
+    int64_t Range::scd () {
 	return _end;
     }
    
-    Range r (long beg, long end) {
+    Range r (int64_t beg, int64_t end) {
 	return {beg, end};
     }
     

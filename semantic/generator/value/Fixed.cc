@@ -41,7 +41,7 @@ namespace semantic {
 		return Ymir::format ("%", this-> _value.u);
 	}
 	
-	Generator ufixed (ulong value) {
+	Generator ufixed (uint64_t value) {
 	    Fixed::UI ui; ui.u = value;
 	    auto loc = lexing::Word::eof ();
 	    return Fixed::init (
@@ -51,7 +51,7 @@ namespace semantic {
 	    );
 	}
 
-	Generator ifixed (long value) {
+	Generator ifixed (int64_t value) {
 	    Fixed::UI ui; ui.i = value;
 	    auto loc = lexing::Word::eof ();
 	    return Fixed::init (
@@ -61,7 +61,7 @@ namespace semantic {
 	    );
 	}	
 
-	Generator ufixed (const lexing::Word & loc, ulong value) {
+	Generator ufixed (const lexing::Word & loc, uint64_t value) {
 	    Fixed::UI ui; ui.u = value;
 	    return Fixed::init (
 		loc,
@@ -70,7 +70,7 @@ namespace semantic {
 	    );
 	}
 
-	Generator ifixed (const lexing::Word & loc, long value) {
+	Generator ifixed (const lexing::Word & loc, int64_t value) {
 	    Fixed::UI ui; ui.i = value;
 	    return Fixed::init (
 		loc,

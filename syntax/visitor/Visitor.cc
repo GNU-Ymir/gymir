@@ -1205,7 +1205,7 @@ namespace syntax {
 	return {};
     }
 
-    Expression Visitor::visitExpression (uint priority) {
+    Expression Visitor::visitExpression (uint32_t priority) {
 	if (priority == this-> _operators.size ()) return visitOperand0 ();
 	else {
 	    auto left = visitExpression (priority + 1);
@@ -1213,7 +1213,7 @@ namespace syntax {
 	}
     }
     
-    Expression Visitor::visitExpression (const Expression & left, uint priority) {
+    Expression Visitor::visitExpression (const Expression & left, uint32_t priority) {
 	auto token = this-> _lex.next ();
 	if (token.is (this-> _operators [priority])) {
 	    Expression ctype (Expression::empty ());	    
@@ -2072,21 +2072,21 @@ namespace syntax {
 
     bool Visitor::verifNumeric (const lexing::Word & loc, const std::string & value) {
 	if (value.length () > 2 && value [0] == '0' && value [1] == Keys::LX [0]) {
-	    for (uint i = 2 ; i < value.length (); i++) {
+	    for (uint32_t i = 2 ; i < value.length (); i++) {
 		if ((value [i] < '0' || value [i] > '9') && (value [i] < 'A' || value [i] > 'F') && (value [i] < 'a' || value [i] > 'f') && value [i] != Keys::UNDER [0]) {
 		    Error::occur (loc, ExternalError::SYNTAX_ERROR_AT_SIMPLE, loc.getStr ());
 		}
 	    }
 	    return true;
 	} else if (value.length () > 2 && value [0] == '0' && value [1] == 'o') {
-	    for (uint i = 2 ; i < value.length (); i++) {
+	    for (uint32_t i = 2 ; i < value.length (); i++) {
 		if ((value [i] < '0' || value [i] > '7') && value [i] != Keys::UNDER [0]) {
 		    Error::occur (loc, ExternalError::SYNTAX_ERROR_AT_SIMPLE, loc.getStr ());
 		}
 	    }
 	    return true;
 	} else {
-	    for (uint i = 0 ; i < value.length (); i++) {
+	    for (uint32_t i = 0 ; i < value.length (); i++) {
 		if ((value [i] < '0' || value [i] > '9') && value [i] != Keys::UNDER [0]) {
 		    Error::occur (loc, ExternalError::SYNTAX_ERROR_AT_SIMPLE, loc.getStr ());
 		}
@@ -2127,7 +2127,7 @@ namespace syntax {
 	    }
 	
 	    auto value = after.getStr ();
-	    for (uint i = 0 ; i < value.length (); i++) {
+	    for (uint32_t i = 0 ; i < value.length (); i++) {
 		if ((value [i] < '0' || value [i] > '9') && value [i] != Keys::UNDER [0]) {
 		    if (begin.isEof ())
 			Error::occur (after, ExternalError::SYNTAX_ERROR_AT_SIMPLE, after.getStr ());

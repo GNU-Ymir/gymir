@@ -25,7 +25,7 @@ namespace documentation {
 
 	    static JsonValue init (const std::string & text);
 	    
-	    static JsonValue init (ulong text);
+	    static JsonValue init (uint64_t text);
 
 	    JsonValue clone () const override;
 

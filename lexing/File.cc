@@ -45,7 +45,7 @@ namespace lexing {
 	}
     }
 
-    ulong RealFile::tell () const {
+    uint64_t RealFile::tell () const {
 	if (this-> _ptr != nullptr) {
 	    return ftell (this-> _ptr);
 	} else {
@@ -54,7 +54,7 @@ namespace lexing {
 	} 
     }
     
-    void RealFile::seek (ulong i) {
+    void RealFile::seek (uint64_t i) {
 	if (this-> _ptr != nullptr) {
 	    fseek (this-> _ptr, i, SEEK_SET);
 	} else {
@@ -96,7 +96,7 @@ namespace lexing {
 	    auto size = fread (buf, 1, length, this-> _ptr);
 	    buf [size] = '\0';
 	    std::string ret = std::string (buf);
-	    delete buf;
+	    delete [] buf;
 	    return ret;
 	} else {
 	    Ymir::Error::halt ("%(r) Reading in closed file", "Critical");
@@ -150,11 +150,11 @@ namespace lexing {
 	return this-> _cursor >= this-> _content.length ();
     }
 
-    ulong StringFile::tell () const {
+    uint64_t StringFile::tell () const {
 	return this-> _cursor;
     }
     
-    void StringFile::seek (ulong i) {
+    void StringFile::seek (uint64_t i) {
 	this-> _cursor = i;
     }
 	
@@ -168,14 +168,14 @@ namespace lexing {
 	
 	if (start < this-> _content.length ()) {
 	    char * buf = new char [this-> _cursor - start + 1];
-	    for (unsigned long i = start ; i < this-> _cursor ; i++) {
+	    for (uint64_t i = start ; i < this-> _cursor ; i++) {
 		buf [i - start] = this-> _content [i];
 	    }
 	    
 	    buf[this-> _cursor - start] = '\0';	    
 	    std::string ret (buf);
 	    
-	    delete buf;
+	    delete [] buf;
 	    return ret;
 	}
 	
@@ -193,7 +193,7 @@ namespace lexing {
 	}
 	
 	std::string ret = std::string (buf);
-	delete buf;
+	delete [] buf;
 
 	return ret;
     }    
@@ -236,7 +236,7 @@ namespace lexing {
 	}
     }
 
-    ulong File::tell () const {
+    uint64_t File::tell () const {
 	if (this-> _value == nullptr) {
 	    return 0;
 	} else {
@@ -252,7 +252,7 @@ namespace lexing {
 	}
     }
 
-    void File::seek (ulong i) {
+    void File::seek (uint64_t i) {
 	if (this-> _value != nullptr) {
 	    return this-> _value-> seek (i);
 	}

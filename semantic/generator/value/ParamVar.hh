@@ -11,7 +11,7 @@ namespace semantic {
 
 	    bool _isSelf;
 
-	    uint _varRefId;
+	    uint32_t _varRefId;
 	    
 	private :
 
@@ -53,12 +53,12 @@ namespace semantic {
 	    /**
 	     * \brief Override the getuniqid, the ref id of a var decl must be copied, all the varref will refer to it
 	     */
-	    uint getUniqId () const override;
+	    uint32_t getUniqId () const override;
 
 	    /**
 	     * Change the ref id of the var ref (used in closure)
 	     */
-	    void setUniqId (uint varRefId) override;
+	    void setUniqId (uint32_t varRefId) override;
 	    
 	    std::string prettyString () const override;
 	};

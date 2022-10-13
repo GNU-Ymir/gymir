@@ -25,9 +25,9 @@ namespace semantic {
 
 	    bool _isMutable;
 
-	    static uint __lastId__;
+	    static uint32_t __lastId__;
 
-	    uint _varRefId;
+	    uint32_t _varRefId;
 
 	    friend ParamVar;
 	    friend ProtoVar;
@@ -83,7 +83,7 @@ namespace semantic {
 	    /**
 	     * \brief Override the getuniqid, the ref id of a var decl must be copied, all the varref will refer to it
 	     */
-	    uint getUniqId () const override;
+	    uint32_t getUniqId () const override;
 	    
 	    std::string prettyString () const override;
 	};

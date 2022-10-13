@@ -11,7 +11,7 @@ namespace semantic {
 
 	std::string Pointer::INIT_NAME = "init";
 
-	ulong Pointer::INIT = 0;
+	uint64_t Pointer::INIT = 0;
 	
 	Pointer::Pointer () :
 	    Type ()

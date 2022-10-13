@@ -11,7 +11,7 @@ using namespace lexing;
 namespace Ymir {
     namespace Error {
 
-	unsigned long MAX_ERROR_DEPTH = 4;	
+	uint64_t MAX_ERROR_DEPTH = 4;	
 	
 	void ErrorList::print () const {
 	    Ymir::OutBuffer buf;
@@ -27,13 +27,13 @@ namespace Ymir {
 	    fprintf (stderr, "%s\n", this-> msg.c_str ());	    
 	}
 	
-	std::string substr (const std::string& x, ulong beg, ulong end) {
+	std::string substr (const std::string& x, uint64_t beg, uint64_t end) {
 	    if (end - beg > x.length ()) return "";
 	    if (beg > x.length ()) return "";
 	    return x.substr (beg, end - beg);
 	}
 
-	std::string shorten (const std::string & str, ulong max = 100) {
+	std::string shorten (const std::string & str, uint64_t max = 100) {
 	    if (str.length () < max) return str;
 	    else {
 		return str.substr (0, max/2 - 3) + "[...]" + str.substr (str.length () - max/2 + 2);
@@ -63,7 +63,7 @@ namespace Ymir {
 	}
 
 	
-	ulong computeMid (std::string& mid, const std::string& word, const std::string& line, ulong begin, ulong end) {
+	uint64_t computeMid (std::string& mid, const std::string& word, const std::string& line, uint64_t begin, uint64_t end) {
 	    auto end2 = begin;
 	    for (auto it = 0 ; it < (int) (word.size () < end - begin) ? word.size () : end - begin; it ++) {
 		if (word [it] != line [begin + it]) break;
@@ -74,7 +74,7 @@ namespace Ymir {
 	    return end2;
 	}	
     
-	std::string center (const std::string &toCenter, ulong nb, char concat) {
+	std::string center (const std::string &toCenter, uint64_t nb, char concat) {
 	    OutBuffer buf;
 	    nb = nb - toCenter.length ();
 	    
@@ -85,7 +85,7 @@ namespace Ymir {
 	    return buf.str ();
 	}
 
-	std::string center (const std::string &toCenter, ulong nb, const char * concat) {
+	std::string center (const std::string &toCenter, uint64_t nb, const char * concat) {
 	    OutBuffer buf;
 	    nb = nb - toCenter.length ();
 	    
@@ -96,7 +96,7 @@ namespace Ymir {
 	    return buf.str ();
 	}
 
-	std::string rightJustify (const std::string &toJustify, ulong nb, char concat) {
+	std::string rightJustify (const std::string &toJustify, uint64_t nb, char concat) {
 	    nb = nb - toJustify.length ();
 	    OutBuffer buf;
 	    for (int i = 0 ; i < (int) nb; i++)
@@ -159,7 +159,7 @@ namespace Ymir {
 
 		if (line [line.length () - 1] != '\n') buf.write ('\n');
 		buf.write (format ("%% % %", Colors::BOLD, padd, Colors::CROSS_LINE, Colors::RESET));
-		for (ulong it = 0 ; it < column - 1 ; it++) {
+		for (uint64_t it = 0 ; it < column - 1 ; it++) {
 		    if (line [it] == '\t') buf.write ('\t');
 		    else buf.write (' ');
 		}
@@ -234,7 +234,7 @@ namespace Ymir {
 
 		if (line [line.length () - 1] != '\n') buf.write ('\n');
 		buf.write (format ("%%...%", Colors::BOLD, padd, Colors::RESET));
-		for (ulong it = 0 ; it < column - 1 ; it++) {
+		for (uint64_t it = 0 ; it < column - 1 ; it++) {
 		    if (line [it] == '\t') buf.write ('\t');
 		    else buf.write (' ');
 		}
@@ -291,14 +291,14 @@ namespace Ymir {
 		
 		if (line [line.length () - 1] != '\n') buf.write ('\n');
 		buf.write (format ("%% % %", Colors::BOLD, padd, Colors::CROSS_LINE, Colors::RESET));
-		for (ulong it = 0 ; it < column - 1 ; it++) {
+		for (uint64_t it = 0 ; it < column - 1 ; it++) {
 		    if (line [it] == '\t') buf.write ('\t');
 		    else buf.write (' ');
 		}
 
 		column2 = column + between.length () + wordStr.length () - 1;
 		buf.write (rightJustify ("", wordStr.length (), '^'));
-		for (ulong it = column + wordStr.length () - 1 ; it < column2 ; it++) {
+		for (uint64_t it = column + wordStr.length () - 1 ; it < column2 ; it++) {
 		    if (line [it] == '\t') buf.write ('\t');
 		    else buf.write (' ');
 		}
@@ -353,8 +353,8 @@ namespace Ymir {
 	    this-> windable = is;
 	}
 	
-	unsigned long ErrorMsg::computeMaxDepth () const {
-	    unsigned long depth = 0;
+	uint64_t ErrorMsg::computeMaxDepth () const {
+	    uint64_t depth = 0;
 	    for (auto & it : this-> notes) {
 		if (!it.isEmpty ()) {
 		    auto nDepth = it.computeMaxDepth ();
@@ -364,12 +364,12 @@ namespace Ymir {
 	    return depth;
 	}
 		
-	void ErrorMsg::computeMessage (Ymir::OutBuffer & buf, unsigned long depth, unsigned long max_depth, bool writtenSub, bool windable) const {
+	void ErrorMsg::computeMessage (Ymir::OutBuffer & buf, uint64_t depth, uint64_t max_depth, bool writtenSub, bool windable) const {
 	    windable = windable || this-> windable;
 	    Ymir::OutBuffer noteBuf;
 	    bool notOneLine = false, addedNote = false;
-	    unsigned long int max_padd = 0;
-	    unsigned long jt = 1;
+	    uint64_t max_padd = 0;
+	    uint64_t jt = 1;
 	    auto enpadding = depth < (Error::MAX_ERROR_DEPTH) || global::State::instance ().isVerboseActive () || max_depth - depth < Error::MAX_ERROR_DEPTH;
 	    auto writeSub = !enpadding && depth == Error::MAX_ERROR_DEPTH && !global::State::instance ().isVerboseActive () && this-> notes.size () != 0 && !writtenSub;
 	    for (auto & it : this-> notes) {

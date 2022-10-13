@@ -16,7 +16,7 @@ namespace documentation {
 	    return JsonValue {new (NO_GC) JsonString (val)};
 	}
 
-	JsonValue JsonString::init (ulong val) {
+	JsonValue JsonString::init (uint64_t val) {
 	    return JsonValue {new (NO_GC) JsonString (Ymir::format ("%", val))};
 	}
 	

@@ -12,7 +12,7 @@ namespace semantic {
 	 */
 	class Array : public Type {
 	    
-	    uint _size;	   
+	    uint32_t _size;	   
 	    
 	private :	    
 	    
@@ -20,7 +20,7 @@ namespace semantic {
 
 	    Array ();	    
 
-	    Array (const lexing::Word & loc, const Generator & innerType, uint size);
+	    Array (const lexing::Word & loc, const Generator & innerType, uint32_t size);
 	    
 	public :
 
@@ -32,7 +32,7 @@ namespace semantic {
 	    
 	public : 
 	    
-	    static Generator init (const lexing::Word & loc, const Generator & innerType, uint size);
+	    static Generator init (const lexing::Word & loc, const Generator & innerType, uint32_t size);
 
 	    Generator clone () const override;
 
@@ -49,7 +49,7 @@ namespace semantic {
 	    /**
 	     * \return is this a static array type ?
 	     */
-	    uint getSize () const;
+	    uint32_t getSize () const;
 	    
 	};
        

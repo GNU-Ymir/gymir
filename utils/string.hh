@@ -6,7 +6,7 @@ namespace Ymir {
     // trim from start
     static inline std::string ltrim(const std::string &s) {
 	if (s.length () == 0) return s;
-	ulong i = 0;
+	uint64_t i = 0;
 	while (i < s.length () && (s [i] == ' ' || s [i] == '\n' || s [i] == '\r')) {
 	    i += 1;
 	}		
@@ -17,7 +17,7 @@ namespace Ymir {
     // trim from end
     static inline std::string rtrim(const std::string &s) {
 	if (s.length () == 0) return s;
-	ulong i = s.length () ;
+	uint64_t i = s.length () ;
 	while (i > 0 && (s [i - 1] == ' ' || s [i - 1] == '\n' || s[i - 1] == '\r')) {
 	    i -= 1;
 	}
@@ -73,7 +73,7 @@ namespace Ymir {
 
     struct str_slice {
 	const char * data;
-	ulong len;		
+	uint64_t len;		
     };
     
 }

@@ -15,7 +15,7 @@ namespace semantic {
 	    
 	    std::vector <char> _value;
 	    
-	    ulong _len;
+	    uint64_t _len;
 
 	protected : 
 
@@ -23,11 +23,11 @@ namespace semantic {
 
 	    StringValue ();
 
-	    StringValue (const lexing::Word & loc, const Generator & type, const std::vector<char> & value, ulong len);	    	    
+	    StringValue (const lexing::Word & loc, const Generator & type, const std::vector<char> & value, uint64_t len);	    	    
 	    
 	public :
 
-	    static Generator init (const lexing::Word & loc, const Generator & type, const std::vector<char> & value, ulong len);
+	    static Generator init (const lexing::Word & loc, const Generator & type, const std::vector<char> & value, uint64_t len);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -42,7 +42,7 @@ namespace semantic {
 	    /**
 	     * \brief Return the len of the string
 	     */
-	    ulong getLen () const;
+	    uint64_t getLen () const;
 	    
 	    /**
 	     * \return the value of the float const 
