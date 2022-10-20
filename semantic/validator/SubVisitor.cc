@@ -3,6 +3,8 @@
 #include <ymir/syntax/expression/Var.hh>
 #include <ymir/semantic/generator/value/ModuleAccess.hh>
 #include <ymir/syntax/declaration/Class.hh>
+#include <ymir/semantic/validator/CompileTime.hh>
+#include <ymir/global/State.hh>
 #include <cfloat>
 #include <climits>
 
@@ -442,7 +444,7 @@ namespace semantic {
 	    
 	    return Generator::empty ();
 	}
-
+	
 	Generator SubVisitor::validateInteger (const syntax::Binary & expression, const generator::Generator & i) {
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
 	    auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
@@ -455,38 +457,17 @@ namespace semantic {
 	    } else if (name == Integer::MAX_NAME) {
 		Fixed::UI value;
 		if (i.to <Integer> ().isSigned ()) {		    
-		    switch (i.to<Integer> ().getSize ()) {
-		    case 8 : value.i = SCHAR_MAX; break;
-		    case 16 : value.i = SHRT_MAX; break;
-		    case 32 : value.i = INT_MAX; break;
-		    case 64 : value.i = LONG_MAX; break;
-		    default :
-			value.i = LONG_MAX; break;
-		    }
+		    value.i = CompileTime::maxILimit (i.to<Integer> ().getSize ());
 		} else {
-		    switch (i.to<Integer> ().getSize ()) {
-		    case 8 : value.u = UCHAR_MAX; break;
-		    case 16 : value.u = USHRT_MAX; break;
-		    case 32 : value.u = UINT_MAX; break;
-		    case 64 : value.u = ULONG_MAX; break;
-		    default :
-			value.u = ULONG_MAX; break;
-		    }
+		    value.u = CompileTime::maxULimit (i.to<Integer> ().getSize ());
 		}
 		return Fixed::init (i.getLocation (), i, value);
 	    } else if (name == Integer::MIN_NAME) {
 		Fixed::UI value;
-		if (i.to <Integer> ().isSigned ()) {		    
-		    switch (i.to<Integer> ().getSize ()) {
-		    case 8 : value.i = SCHAR_MIN; break;
-		    case 16 : value.i = SHRT_MIN; break;
-		    case 32 : value.i = INT_MIN; break;
-		    case 64 : value.i = LONG_MIN; break;
-		    default :
-			value.i = LONG_MIN; break;
-		    }
+		if (i.to <Integer> ().isSigned ()) {
+		    value.i = CompileTime::minILimit (i.to<Integer> ().getSize ());
 		} else {
-		    value.u = 0;
+		    value.u = CompileTime::minULimit (i.to<Integer> ().getSize ());
 		}
 		return Fixed::init (i.getLocation (), i, value);
 	    }

@@ -212,46 +212,52 @@ namespace semantic {
 	    return array.to<ArrayValue> ().getContent ()[index.to<Fixed> ().getUI ().u];
 	}
 
-	uint64_t getMaxU (const Integer & type) {
-	    switch (type.getSize ()) {
-	    case 8 : return UCHAR_MAX;
-	    case 16 : return USHRT_MAX;
-	    case 32 : return UINT_MAX;
-	    case 64 : return ULONG_MAX;
-	    default : return ULONG_MAX;
+	
+	int64_t CompileTime::maxILimit (uint32_t size) {
+	    switch (size) {
+	    case 8: return 0x7F;
+	    case 16: return 0x7FFF;
+	    case 32: return 0x7FFFFFFF;
+	    case 64: return 0x7FFFFFFFFFFFFFFF;
+	    case 0: return maxILimit (global::State::instance ().getSizeType ());
+	    default:
+		Ymir::Error::halt ("", "");
+		return 0;
 	    }
-	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-	    return 0;
 	}
-		
-	uint64_t getMaxS (const Integer & type) {
-	    switch (type.getSize ()) {
-	    case 8 : return SCHAR_MAX;
-	    case 16 : return SHRT_MAX;
-	    case 32 : return INT_MAX;
-	    case 64 : return LONG_MAX;
-	    default : return LONG_MAX;
+
+	uint64_t CompileTime::maxULimit (uint32_t size) {
+	    switch (size) {
+	    case 8: return 0xFF;
+	    case 16: return 0xFFFF;
+	    case 32: return 0xFFFFFFFF;
+	    case 64: return 0xFFFFFFFFFFFFFFFF;
+	    case 0: return maxULimit (global::State::instance ().getSizeType ());
+	    default:
+		Ymir::Error::halt ("", "");
+		return 0;
 	    }
-	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+	}
+
+	int64_t CompileTime::minILimit (uint32_t size) {
+	    switch (size) {
+	    case 8: return -0x80;
+	    case 16: return 0x8000;
+	    case 32: return -0x80000000;
+	    case 64: return -0x8000000000000000;
+	    case 0: return minILimit (global::State::instance ().getSizeType ());
+	    default:
+		Ymir::Error::halt ("", "");
+		return 0;
+	    }
+	}
+
+
+	uint64_t CompileTime::minULimit (uint32_t size) {
 	    return 0;
 	}
 	
-	uint64_t getMinU (const Integer &) {
-	    return 0;
-	}
-		
-	uint64_t getMinS (const Integer & type) {
-	    switch (type.getSize ()) {
-	    case 8 : return SCHAR_MIN;
-	    case 16 : return SHRT_MIN;
-	    case 32 : return INT_MIN;
-	    case 64 : return LONG_MIN;
-	    default : return LONG_MIN;
-	    }
-	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-	    return 0;
-	}
-
+	
 	template <typename T>
 	T applyBinInt (Binary::Operator op, T left, T right) {
 	    switch (op) {
@@ -307,11 +313,11 @@ namespace semantic {
 		bool isSigned = binInt.getType ().to <Integer> ().isSigned ();
 		std::string type = binInt.getType ().to <Integer> ().typeName ();
 		
-		int64_t maxI = getMaxS (binInt.getType ().to <Integer> ());
-		uint64_t maxU = getMaxU (binInt.getType ().to <Integer> ());
+		int64_t maxI = CompileTime::maxILimit (binInt.getType ().to <Integer> ().getSize ());
+		uint64_t maxU = CompileTime::maxULimit (binInt.getType ().to <Integer> ().getSize ());
 		
-		int64_t minI = getMinS (binInt.getType ().to <Integer> ());
-		uint64_t minU = getMinU (binInt.getType ().to <Integer> ());
+		int64_t minI = CompileTime::minILimit (binInt.getType ().to <Integer> ().getSize ());
+		uint64_t minU = CompileTime::minULimit (binInt.getType ().to <Integer> ().getSize ());
 		
 		Fixed::UI result;
 		
@@ -362,11 +368,11 @@ namespace semantic {
 		bool isSigned = unaInt.getType ().to <Integer> ().isSigned ();
 		std::string type = unaInt.getType ().to <Integer> ().typeName ();
 		
-		int64_t maxI = getMaxS (unaInt.getType ().to <Integer> ());
-		uint64_t maxU = getMaxU (unaInt.getType ().to <Integer> ());
+		int64_t maxI = CompileTime::maxILimit (unaInt.getType ().to <Integer> ().getSize ());
+		uint64_t maxU = CompileTime::maxULimit (unaInt.getType ().to <Integer> ().getSize ());
 
-		int64_t minI = getMinS (unaInt.getType ().to <Integer> ());
-		uint64_t minU = getMinU (unaInt.getType ().to <Integer> ());
+		int64_t minI = CompileTime::minILimit (unaInt.getType ().to <Integer> ().getSize ());
+		uint64_t minU = CompileTime::minULimit (unaInt.getType ().to <Integer> ().getSize ());
 		
 		Fixed::UI result;
 		if (isSigned) {

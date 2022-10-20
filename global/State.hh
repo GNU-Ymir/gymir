@@ -63,6 +63,9 @@ namespace global {
 	
 	// -MP
 	bool _depPhony;
+
+	// The number of byte of the size type (arch dependent)
+	uint32_t _sizeOfSize;
 	
     private :
 
@@ -211,6 +214,16 @@ namespace global {
 	 * \brief true if the option --enable-reflect is active
 	 */
 	bool isEnableReflect () const;
+
+	/**
+	 * \brief Change the size of the size type
+	 */
+	void setSizeType (uint32_t size);
+
+	/**
+	 * \brief Get the size of the size type
+	 */
+	uint32_t getSizeType () const;	
 	
 	/**
 	 * \brief Set the prefix path dir

@@ -69,6 +69,14 @@ namespace global {
     bool State::isEnableReflect () const {
 	return this-> _enableReflect;
     }
+
+    void State::setSizeType (uint32_t size) {
+	this-> _sizeOfSize = size;
+    }
+
+    uint32_t State::getSizeType () const {
+	return this-> _sizeOfSize;
+    }    
     
     bool State::isIncludeTesting () const {
 	return this-> _includeTest;

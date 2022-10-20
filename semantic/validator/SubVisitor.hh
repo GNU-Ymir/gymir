@@ -72,6 +72,8 @@ namespace semantic {
 	    generator::Generator validateBool (const syntax::Binary & expression, const generator::Generator & b);
 	    generator::Generator validateChar (const syntax::Binary & expression, const generator::Generator & c);
 	    generator::Generator validateFloat (const syntax::Binary & expression, const generator::Generator & f);
+
+
 	    generator::Generator validateInteger (const syntax::Binary & expression, const generator::Generator & i);
 	    generator::Generator validatePointer (const syntax::Binary & expression, const generator::Generator & p);
 	    generator::Generator validateSlice (const syntax::Binary & expression, const generator::Generator & s);

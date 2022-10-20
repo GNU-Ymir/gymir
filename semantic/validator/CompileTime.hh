@@ -174,6 +174,27 @@ namespace semantic {
 	     * \brief execute a slice compare value
 	     */	    
 	    generator::Generator executeSliceCompare (const generator::SliceCompare & slc);
+
+	    /**
+	     * \returns: the maximum representable number using nb bits unsigned (0 means maximum size for the targeted arch)
+	     */
+	    static uint64_t maxULimit (uint32_t nb) ;
+	    
+	    /**
+	     * \returns: the maximum representable number using nb bits signed (0 means maximum size for the targeted arch)
+	     */
+	    static int64_t maxILimit (uint32_t nb);
+
+	    /**
+	     * \returns: the minmal representable number using nb bits signed (0 means maximum size for the targeted arch)
+	     */
+	    static int64_t minILimit (uint32_t nb);
+
+	    /**
+	     * \returns: the minmal representable number using nb bits unsigned (0 means maximum size for the targeted arch)
+	     */
+	    static uint64_t minULimit (uint32_t nb);
+	    
 	    
 	};
 	

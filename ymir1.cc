@@ -198,7 +198,10 @@ ymir_init_builtins () {
     machine_mode type_mode = TYPE_MODE (size_type_node);
     size_type_node = lang_hooks.types.type_for_mode (type_mode, 1);
     y_usize_type = lang_hooks.types.type_for_mode (type_mode, 1);
-    y_isize_type = lang_hooks.types.type_for_mode (type_mode, 0);    
+    y_isize_type = lang_hooks.types.type_for_mode (type_mode, 0);
+    uint32_t size = TREE_INT_CST_LOW (TYPE_SIZE_UNIT (y_usize_type));
+
+    global::State::instance ().setSizeType (size * 8);
   }
 
   y_c8_type = make_unsigned_type (8);

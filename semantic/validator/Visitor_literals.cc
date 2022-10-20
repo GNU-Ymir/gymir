@@ -74,15 +74,19 @@ namespace semantic {
 			base = 8;
 		    }
 		    
-		    uint64_t value = std::strtoul (val.c_str (), &temp, base);
+		    uint64_t value = std::strtoull (val.c_str (), &temp, base);
 		    bool overflow = false;
+		    uint64_t maxU = CompileTime::maxULimit (type.getSize ());
+		    uint64_t maxAll = CompileTime::maxULimit (64);
+		    
 		    if (temp == val.c_str () || *temp != '\0' ||
-			((value == 0 || value == ULONG_MAX) && errno == ERANGE)) {
+			((value == 0 || value == maxAll) && errno == ERANGE)) {
 			overflow = true;
 		    }
 		    
-		    if (overflow || (value > getMaxU (type) && getMaxU (type) != 0))
-		    Error::occur (loc, ExternalError::OVERFLOW_, type.getTypeName (), val);
+		    if (overflow || (value > maxU && maxU != 0)) {
+			Error::occur (loc, ExternalError::OVERFLOW_, type.getTypeName (), val);
+		    }
 		    
 		    return value;
 		}
@@ -98,43 +102,22 @@ namespace semantic {
 			base = 8;
 		    }
 
-		    uint64_t value = std::strtol (val.c_str (), &temp, base);
+		    uint64_t value = std::strtoll (val.c_str (), &temp, base);
 		    bool overflow = false;
+		    uint64_t maxI = CompileTime::maxULimit (type.getSize ());
+		    uint64_t maxAll = CompileTime::maxULimit (64);
+		    
 		    if (temp == val.c_str () || *temp != '\0' ||
-			((value == 0 || value == ULONG_MAX) && errno == ERANGE)) {
+			((value == 0 || value == maxAll) && errno == ERANGE)) {
 			overflow = true;
 		    }
 		    
-		    if (overflow || (value > getMaxS (type) && getMaxS (type) != 0))
-		    Error::occur (loc, ExternalError::OVERFLOW_, type.getTypeName (), val);
+		    if (overflow || (value > maxI && maxI != 0)) {
+			Error::occur (loc, ExternalError::OVERFLOW_, type.getTypeName (), val);
+		    }
 		    
 		    return value;
-		}
-
-		static uint64_t getMaxU (const Integer & type) {
-		    switch (type.getSize ()) {
-		    case 8 : return UCHAR_MAX;
-		    case 16 : return USHRT_MAX;
-		    case 32 : return UINT_MAX;
-		    case 64 : return ULONG_MAX;
-		    case 0 : return 0;
-		    }
-		    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-		    return 0;
-		}
-		
-		static uint64_t getMaxS (const Integer & type) {
-		    switch (type.getSize ()) {
-		    case 8 : return SCHAR_MAX;
-		    case 16 : return SHRT_MAX;
-		    case 32 : return INT_MAX;
-		    case 64 : return LONG_MAX;
-		    case 0 : return 0;
-		    }
-		    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-		    return 0;
-		}
-		
+		}		
 	    };
 
 	    Generator type (Generator::empty ());

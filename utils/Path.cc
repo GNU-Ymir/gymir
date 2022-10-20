@@ -14,10 +14,18 @@ namespace Ymir {
 	do {
 	    pos = aux.find (sep);
 	    if (pos != std::string::npos) {
-		this-> _files.push_back (aux.substr (0, pos));
+		auto add = aux.substr (0, pos);
+		if (add == ".." && this-> _files.size () != 0) {
+		    this-> _files.pop_back ();
+		} else if (add != "..") this-> _files.push_back (add);
 		aux = aux.substr (pos + sep.size ());
-	    } else if (aux.length () != 0)
-		this-> _files.push_back (aux);
+	    } else if (aux.length () != 0) {
+		if (aux == ".." && this-> _files.size () != 0) {
+		    this-> _files.pop_back ();
+		} else if (aux != "..") {
+		    this-> _files.push_back (aux);
+		}
+	    }
 	} while (pos != std::string::npos);
     }
 
