@@ -241,10 +241,10 @@ namespace semantic {
 
 	int64_t CompileTime::minILimit (uint32_t size) {
 	    switch (size) {
-	    case 8: return -0x80;
-	    case 16: return 0x8000;
-	    case 32: return -0x80000000;
-	    case 64: return -0x8000000000000000;
+	    case 8: return -((int64_t) 0x80);
+	    case 16: return -((int64_t) 0x8000);
+	    case 32: return -((int64_t) 0x80000000);
+	    case 64: return -((int64_t) 0x8000000000000000);
 	    case 0: return minILimit (global::State::instance ().getSizeType ());
 	    default:
 		Ymir::Error::halt ("", "");
@@ -325,7 +325,7 @@ namespace semantic {
 		    result.i = applyBinInt<int64_t> (binInt.getOperator (), left.i, right.i);
 		} else
 		    result.u = applyBinInt<uint64_t> (binInt.getOperator (), left.u, right.u);
-		
+
 		if (isSigned && (result.i > maxI || result.i < minI))
 		    Ymir::Error::occur (binInt.getLocation (), ExternalError::OVERFLOW_, type, result.i);
 		else if (!isSigned && (result.u > maxU || result.u < minU))
