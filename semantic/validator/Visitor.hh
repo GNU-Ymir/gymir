@@ -786,8 +786,9 @@ namespace semantic {
 	     * @param loc the location of the reference to those symbols
 	     * @param multSym the list of symbols
 	     * @param fromTemplate allow from template frame prototype
+	     * @param crashIfZero crash the compiler is 0 generator but no error
 	     */
-	    generator::Generator validateMultSym (const lexing::Word & loc, const std::vector <Symbol> & multSym);
+	    generator::Generator validateMultSym (const lexing::Word & loc, const std::vector <Symbol> & multSym, bool crashIfZero = true);
 
 	    /**
 	     * Transform global extern symbol into valid generators

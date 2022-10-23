@@ -31,8 +31,8 @@ namespace semantic {
 		    }
 		    Error::occurAndNote (var.getLocation (), notes, ExternalError::UNDEF_VAR, var.getName ().getStr ());
 		}
-
-		auto ret = validateMultSym (var.getLocation (), sym);
+		
+		auto ret = validateMultSym (var.getLocation (), sym, false);
 		if (ret.is <MultSym> () && ret.to <MultSym> ().getGenerators ().size () == 0) {
 		    Error::occur (var.getLocation (), ExternalError::UNDEF_VAR, var.getName ().getStr ());
 		} else return ret;		
@@ -56,7 +56,7 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 	
-	Generator Visitor::validateMultSym (const lexing::Word & loc, const std::vector <Symbol> & multSym) {	    
+	Generator Visitor::validateMultSym (const lexing::Word & loc, const std::vector <Symbol> & multSym, bool crashIfZero) {	    
 	    std::vector <Generator> gens;
 	    for (auto & sym : multSym) {
 		pushReferent (sym, "validateMultSym");
@@ -172,9 +172,12 @@ namespace semantic {
 	    if (gens.size () == 1) return gens [0];
 	    else {
 		if (gens.size () == 0) {
-		    for (auto & it : multSym) println (it.getRealName (), " ", it.getName ());
+		    if (crashIfZero) {
+			for (auto & it : multSym) println (it.getRealName (), " ", it.getName ());
+		    }
 		}
-		return MultSym::init (loc, gens);
+		
+		return MultSym::init (loc, gens, crashIfZero);
 	    }
 	}
 

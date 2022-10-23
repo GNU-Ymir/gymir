@@ -20,14 +20,14 @@ namespace semantic {
 	    
 	    MultSym ();
 
-	    MultSym (const lexing::Word & loc, const std::vector <Generator> & gens);
+	    MultSym (const lexing::Word & loc, const std::vector <Generator> & gens, bool crashIfZero);
 
 	public :
 
 	    /**
 	     * \brief Generate a new multSym
 	     */
-	    static Generator init (const lexing::Word & loc, const std::vector <Generator> & gens);
+	    static Generator init (const lexing::Word & loc, const std::vector <Generator> & gens, bool crashIfZero = true);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern

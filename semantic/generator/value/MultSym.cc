@@ -13,7 +13,7 @@ namespace semantic {
 	    Value ()
 	{}
 
-	MultSym::MultSym (const lexing::Word & loc, const std::vector <Generator> & gens) :
+	MultSym::MultSym (const lexing::Word & loc, const std::vector <Generator> & gens, bool crashIfZero) :
 	    Value (loc, NoneType::init (loc)),
 	    _gens (gens)
 	{
@@ -23,11 +23,12 @@ namespace semantic {
 		    Ymir::Error::halt ("", "");
 		}
 	    }
-	    if (this-> _gens.size () == 0) Ymir::Error::halt ("", "");
+	    
+	    if (crashIfZero && this-> _gens.size () == 0) Ymir::Error::halt ("", "");
 	}	
 	
-	Generator MultSym::init (const lexing::Word & loc, const std::vector <Generator> & gens) {
-	    return Generator {new (NO_GC) MultSym (loc, gens)};
+	Generator MultSym::init (const lexing::Word & loc, const std::vector <Generator> & gens, bool crashIfZero) {
+	    return Generator {new (NO_GC) MultSym (loc, gens, crashIfZero)};
 	}
     
 	Generator MultSym::clone () const {
