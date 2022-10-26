@@ -26,6 +26,8 @@
 // We use the dlang target hooks to get the target versions
 #include <ymir/../d/d-target.h>
 
+#define MODULE_VERSION (BUILDING_GCC_MAJOR * 10000U + BUILDING_GCC_MINOR)
+
 /* The context to be used for global declarations.  */
 GTY(()) tree __global_context__;
 
@@ -159,12 +161,14 @@ std::map <std::string, std::string> d_version_to_y_version = {
 };
 
 
+#if MODULE_VERSION >= 110000
 /**
  * Dlang target callback for target information in __traits(getTargetInfo)
  */
 void d_add_target_info_handlers (const d_target_info_spec * handlers ATTRIBUTE_UNUSED) {
   // we have no use to that for the moment
 }
+#endif
 
 /**
  * Thanks to dlang we can use their version system for our version system !
@@ -243,11 +247,13 @@ ymir_langhook_init (void)
     } else {
       global::State::instance ().activateVersion (global::CoreNames::get (global::LITTLE_ENDIAN_VERSION));
     }
-    
+
+#if MODULE_VERSION >= 110000    
     /* Initialize target info tables, the keys required by the language are added
        last, so that the OS and CPU handlers can override.  */
     targetdm.d_register_cpu_target_info ();
     targetdm.d_register_os_target_info ();
+#endif
     
     /* Emit all target-specific version identifiers.  */
     targetdm.d_cpu_versions ();
@@ -258,7 +264,7 @@ ymir_langhook_init (void)
 
 
 static bool
-ymir_post_options (const char ** fn)
+ymir_post_options (const char ** fn ATTRIBUTE_UNUSED)
 {
   global_options.x_flag_reorder_blocks_and_partition = 0;
   global_options.x_flag_exceptions = 1;
@@ -543,7 +549,7 @@ ymir_eh_personality (void) {
 }
 
 static tree
-ymir_build_eh_runtime_type (tree type) {
+ymir_build_eh_runtime_type (tree type ATTRIBUTE_UNUSED) {
   return generic::Tree::buildPtrCst (lexing::Word::eof (), 0).getTree ();
 }
 
