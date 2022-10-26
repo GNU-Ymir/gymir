@@ -40,6 +40,7 @@ tree __current_function_ctx__ = NULL_TREE;
 /** Ymir types */
 tree y_global_trees[YTI_MAX];
 
+
 using namespace global;
 
 /* Language-dependent contents of a type.  */
@@ -390,6 +391,8 @@ ymir_langhook_handle_option (size_t scode, const char *arg, HOST_WIDE_INT value 
 
 	case OPT_MT:
 	    global::State::instance ().addDepTarget (arg, false);
+	    break;
+	case OPT_nomidgardlib :
 	    break;
 	default :
 	    return false;

@@ -75,7 +75,7 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 	    if (arg != NULL && (strcmp (arg, LIBBFD) == 0)) need_bfd = false;
 #endif
 	} else if (decoded_options [i].opt_index == OPT_SPECIAL_input_file) {
-	    yr_file_found = true;
+	    yr_file_found = true;	    
 	} else if (decoded_options [i].opt_index == OPT_nomidgardlib) {
 	    need_gc = false;
 	    need_libs = false;

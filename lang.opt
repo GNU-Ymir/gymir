@@ -23,26 +23,26 @@ Language
 YMIR
 
 nomidgardlib
-Driver
+YMIR Driver
 
 nostdinc
 YMIR
 ; Documented in C
 
 -dependencies
-D Alias(M)
+YMIR Alias(M)
 ; Documented in C
 
 -user-dependencies
-D Alias(MM)
+YMIR Alias(MM)
 ; Documented in C
 
 -write-dependencies
-D Separate Alias(MD)
+YMIR Separate Alias(MD)
 ; Documented in C
 
 -write-user-dependencies
-D Separate Alias(MMD)
+YMIR Separate Alias(MMD)
 ; Documented in C
 
 M
