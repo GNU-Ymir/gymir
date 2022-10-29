@@ -1,5 +1,5 @@
 {".yr", "@ymir", 0, 1, 0},
-{"@ymir", "ymir1 %i %(cc1_options) %I %{nostdinc*} %(fno-reflect*) %{i*} %{I*} %{J*} \
+{"@ymir", "ymir1 %i %(cc1_options) %I %{nomidgardlib*} %{nostdinc*} %(fno-reflect*) %{i*} %{I*} %{J*} \
     %{H} %{Hd*} %{Hf*} \
     %{M} %{MM} %{MF*} %{MG} %{MP} %{MQ*} %{MT*} \
     %{Xf*} \
