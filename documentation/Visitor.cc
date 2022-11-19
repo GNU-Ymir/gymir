@@ -357,7 +357,7 @@ namespace documentation {
 	    param ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getLocation ().getStr ());
 	    param ["type"] = dumpType (it.to <syntax::VarDecl> ().getType ());
 	    param ["ref"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::REF) ? "true" : "false");
-	    param ["mut"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT)? "true" : "false");
+	    param ["mut"] = JsonString::init ((it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT) || it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::DMUT)) ? "true" : "false");
 	    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ())
 		param ["value"] = JsonString::init (it.to <syntax::VarDecl> ().getValue ().prettyString ());
 	    params.push_back (JsonDict::init (param));
@@ -398,7 +398,7 @@ namespace documentation {
 	this-> dumpStandard (gv, pub, prot, val);
 	auto & vdecl = gv.getContent ().to <syntax::VarDecl> ();
 	
-	val ["mut"] = JsonString::init (vdecl.hasDecorator (syntax::Decorator::MUT)? "true" : "false");
+	val ["mut"] = JsonString::init ((vdecl.hasDecorator (syntax::Decorator::MUT) || vdecl.hasDecorator (syntax::Decorator::DMUT)) ? "true" : "false");
 	val ["var_type"] = dumpType (vdecl.getType ());
 		
 	if (!vdecl.getValue ().isEmpty ()){
@@ -480,7 +480,7 @@ namespace documentation {
 	    std::map <std::string, JsonValue> field;
 	    field ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getName ().getStr ());
 	    field ["type"] = dumpType (it.to <syntax::VarDecl> ().getType ());
-	    field ["mut"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT) ? "true" : "false");
+	    field ["mut"] = JsonString::init ((it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT) || it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::DMUT)) ? "true" : "false");
 	    field ["doc"] = JsonString::init (field_coms [i]);
 	    i += 1;
 	    
@@ -671,7 +671,7 @@ namespace documentation {
 		    std::map <std::string, JsonValue> param;
 		    param ["name"] = JsonString::init (de.getName ().getStr ());
 		    param ["type"] = dumpType (de.getType ());
-		    param ["mut"] = JsonString::init (de.hasDecorator (syntax::Decorator::MUT) ? "true" : "false");
+		    param ["mut"] = JsonString::init ((de.hasDecorator (syntax::Decorator::MUT) || de.hasDecorator (syntax::Decorator::DMUT)) ? "true" : "false");
 		    param ["doc"] = JsonString::init (wrap.getComments ());
 				    	
 		    if (prv)
@@ -687,7 +687,7 @@ namespace documentation {
 			std::map <std::string, JsonValue> param;
 			param ["name"] = JsonString::init (de.getName ().getStr ());
 			param ["type"] = dumpType (de.getType ());
-			param ["mut"] = JsonString::init (de.hasDecorator (syntax::Decorator::MUT) ? "true" : "false");
+			param ["mut"] = JsonString::init ((de.hasDecorator (syntax::Decorator::MUT) || de.hasDecorator (syntax::Decorator::DMUT)) ? "true" : "false");
 			param ["doc"] = JsonString::init (wrap.getComments ());
 				    	
 			if (prv)
@@ -841,7 +841,7 @@ namespace documentation {
 	    param ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getLocation ().getStr ());
 	    param ["type"] = dumpType (it.to <syntax::VarDecl> ().getType ());
 	    param ["ref"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::REF)? "true" : "false");
-	    param ["mut"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT)? "true" : "false");
+	    param ["mut"] = JsonString::init ((it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT) || it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::DMUT)) ? "true" : "false");
 	    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ())
 		param ["value"] = JsonString::init (it.to <syntax::VarDecl> ().getValue ().prettyString ());
 	    params.push_back (JsonDict::init (param));
