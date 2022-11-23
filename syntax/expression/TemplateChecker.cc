@@ -53,7 +53,7 @@ namespace syntax {
 	    innerCall.writef ("%", x.prettyString ());
 	}
 
-	stream.writef ("template!(%)(%)", innerCall.str (), inner.str ());
+	stream.writef ("is!{%}{%}", innerCall.str (), inner.str ());
 	return stream.str ();
     }
 }

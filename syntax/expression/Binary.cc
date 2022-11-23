@@ -39,7 +39,11 @@ namespace syntax {
     }
 
     std::string Binary::prettyString () const {
-	return Ymir::format ("(% % %)", this-> _left.prettyString (), this-> getLocation ().getStr (), this-> _right.prettyString ());
+	if (this-> getLocation ().getStr() == "::") {
+	    return Ymir::format ("%%%", this-> _left.prettyString (), this-> getLocation ().getStr (), this-> _right.prettyString ());
+	} else {
+	    return Ymir::format ("(% % %)", this-> _left.prettyString (), this-> getLocation ().getStr (), this-> _right.prettyString ());
+	}
     }
     
 }

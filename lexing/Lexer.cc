@@ -207,20 +207,27 @@ namespace lexing {
 		std::string com, ign;
 		bool line_break = false;
 		while (isComment (word, com, ign) && this-> enableComment) {
+		    std::string beg_com = word.getStr ();
+		    int nb_close = 1;
 		    do {
 			word = this-> __eof__;
 			getWord (word);
-			if (word.getStr () != com && !word.isEof ()) {
-			    if (global::State::instance ().isDocDumpingActive ())  {
+			if (word.getStr () == beg_com || (beg_com == Token::LCOMM4 && word.getStr () == Token::LCOMM3) || ((beg_com == Token::LCOMM3 && word.getStr () == Token::LCOMM4))) nb_close += 1;
+			else if (word.getStr () == com) nb_close -= 1;
+			
+			if (nb_close >= 1 && !word.isEof ()) {
+			    if (global::State::instance ().isDocDumpingActive () && beg_com != Token::LCOMM5)  {
 				if (word.getStr () == Token::RETURN) {
 				    buf.write ("\\n"); line_break = true;
+				} else if (word.getStr () == Token::ANTI) {
+				    buf.write ("\\\\");
 				} else if (!line_break || (word.getStr () != ign && line_break)) {
 				    line_break = line_break ? word.getStr () == Token::SPACE : false;
 				    buf.write (word.getStr ());
 				}
 			    }
 			}
-		    } while (word.getStr () != com && !word.isEof ());
+		    } while (nb_close > 0 && !word.isEof ());
 		    getWord (word);
 		}
 	    }
@@ -243,21 +250,28 @@ namespace lexing {
 		std::string com, ign;
 		bool line_break = false;
 		while (isComment (word, com, ign) && this-> enableComment) {
+		    std::string beg_com = word.getStr ();
+		    int nb_close = 1;
 		    do {
 			word = this-> __eof__;
 			getWord (word);
-			if (word.getStr () != com && !word.isEof ()) {
-			    if (global::State::instance ().isDocDumpingActive ()) {
+			if (word.getStr () == beg_com || (beg_com == Token::LCOMM4 && word.getStr () == Token::LCOMM3) || ((beg_com == Token::LCOMM3 && word.getStr () == Token::LCOMM4))) nb_close += 1;
+			else if (word.getStr () == com) nb_close -= 1;
+			
+			if (nb_close >= 1 && !word.isEof ()) {
+			    if (global::State::instance ().isDocDumpingActive () && beg_com != Token::LCOMM5) {
 				if (word.getStr () == Token::RETURN) {
 				    buf.write ("\\n");
 				    line_break = true;
+				} else if (word.getStr () == Token::ANTI) {
+				    buf.write ("\\\\");				    
 				} else if ((line_break && word.getStr () != ign) || !line_break) {
 				    line_break = line_break ? word.getStr () == Token::SPACE : false;
 				    buf.write (word.getStr ());
 				}
 			    }
 			}
-		    } while (word.getStr () != com && !word.isEof ());
+		    } while (nb_close > 0 && !word.isEof ());
 		    getWord (word);
 		}
 	    }

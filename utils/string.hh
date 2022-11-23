@@ -71,6 +71,27 @@ namespace Ymir {
 	return buf.str ();
     }
 
+    static inline std::string replace (const std::string & str, const std::string & b, const std::string & c) {
+	OutBuffer stream;
+	uint64_t i = 0;
+	while (i < str.length ()) {
+	    if (i + b.length () <= str.length ()) {
+		if (str.substr (i, b.length ()) == b) {
+		    stream.write (c);
+		    i += b.length ();
+		} else {
+		    stream.write (str[i]);
+		    i += 1;
+		}
+	    } else {
+		stream.write (str.substr (i));
+		break;	    
+	    }	    
+	}
+
+	return stream.str ();
+    }
+
     struct str_slice {
 	const char * data;
 	uint64_t len;		

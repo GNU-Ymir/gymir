@@ -27,7 +27,7 @@ namespace syntax {
     }
 
     std::string String::prettyString () const {
-	return this-> _sequence.getStr ();
+	return "\"" + this-> _sequence.getStr () + "\"";
     }
     
 }

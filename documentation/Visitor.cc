@@ -322,8 +322,10 @@ namespace documentation {
 	    param ["mut"] = JsonString::init (it.to <generator::ProtoVar> ().isMutable ()? "true" : "false");
 	    param ["ref"] = JsonString::init (it.to <generator::Value> ().getType ().to <Type> ().isRef () ? "true" : "false");
 	    
-	    if (!it.to <generator::ProtoVar> ().getValue ().isEmpty ())
-		param ["value"] = JsonString::init (it.to<generator::ProtoVar> ().getValue ().prettyString ());
+	    if (!it.to <generator::ProtoVar> ().getValue ().isEmpty ()) {
+		param ["value"] = JsonString::init (Ymir::replace (it.to<generator::ProtoVar> ().getValue ().prettyString (), "\\", "\\\\"));
+	    }
+	    
 	    params.push_back (JsonDict::init (param));
 	}
 	val ["params"] = JsonArray::init (params);
@@ -358,8 +360,9 @@ namespace documentation {
 	    param ["type"] = dumpType (it.to <syntax::VarDecl> ().getType ());
 	    param ["ref"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::REF) ? "true" : "false");
 	    param ["mut"] = JsonString::init ((it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT) || it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::DMUT)) ? "true" : "false");
-	    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ())
-		param ["value"] = JsonString::init (it.to <syntax::VarDecl> ().getValue ().prettyString ());
+	    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ()) {
+		param ["value"] = JsonString::init (Ymir::replace (it.to <syntax::VarDecl> ().getValue ().prettyString (), "\\", "\\\\"));
+	    }
 	    params.push_back (JsonDict::init (param));
 	}
 	
@@ -386,7 +389,7 @@ namespace documentation {
 	val ["var_type"] = dumpType (gen.to <generator::GlobalVar> ().getType ());
 		
 	if (!gen.to <generator::GlobalVar> ().getValue ().isEmpty ()){
-	    val ["value"] = JsonString::init (gen.to <generator::GlobalVar> ().getValue ().prettyString ());
+	    val ["value"] = JsonString::init (Ymir::replace (gen.to <generator::GlobalVar> ().getValue ().prettyString (), "\\", "\\\\"));
 	}
 	
 	return JsonDict::init (val);
@@ -402,7 +405,7 @@ namespace documentation {
 	val ["var_type"] = dumpType (vdecl.getType ());
 		
 	if (!vdecl.getValue ().isEmpty ()){
-	    val ["value"] = JsonString::init (vdecl.getValue ().prettyString ());
+	    val ["value"] = JsonString::init (Ymir::replace (vdecl.getValue ().prettyString (), "\\", "\\\\"));
 	}
 
 	return JsonDict::init (val);
@@ -414,7 +417,7 @@ namespace documentation {
 	val ["type"] = JsonString::init ("aka");
 	this-> dumpStandard (al, val);
 	
-	val ["value"] = JsonString::init (gen.prettyString ());
+	val ["value"] = JsonString::init (Ymir::replace (gen.prettyString (), "\\", "\\\\"));
 	return JsonDict::init (val);
     }
 
@@ -423,7 +426,7 @@ namespace documentation {
 	val ["type"] = JsonString::init ("aka");
 	this-> dumpStandard (al, pub, prot, val);
 	
-	val ["value"] = JsonString::init (al.getValue ().prettyString ());
+	val ["value"] = JsonString::init (Ymir::replace (al.getValue ().prettyString (), "\\", "\\\\"));
 	return JsonDict::init (val);
     }
 
@@ -452,8 +455,9 @@ namespace documentation {
 	    
 	    i += 1;
 	    
-	    if (!it.to <generator::VarDecl> ().getVarValue ().isEmpty ())
-		field ["value"] = JsonString::init (it.to<generator::VarDecl> ().getVarValue ().prettyString ());
+	    if (!it.to <generator::VarDecl> ().getVarValue ().isEmpty ()) {
+		field ["value"] = JsonString::init (Ymir::replace (it.to<generator::VarDecl> ().getVarValue ().prettyString (), "\\", "\\\\"));
+	    }
 	    childs.push_back (JsonDict::init (field));
 	}
 	
@@ -484,8 +488,9 @@ namespace documentation {
 	    field ["doc"] = JsonString::init (field_coms [i]);
 	    i += 1;
 	    
-	    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ())
-		field ["value"] = JsonString::init (it.to<syntax::VarDecl> ().getValue ().prettyString ());
+	    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ()) {
+		field ["value"] = JsonString::init (Ymir::replace (it.to<syntax::VarDecl> ().getValue ().prettyString (), "\\", "\\\\"));
+	    }
 	    childs.push_back (JsonDict::init (field));
 	}
 	
@@ -513,7 +518,7 @@ namespace documentation {
 	    i += 1;
 	    
 	    if (!it.to <generator::VarDecl> ().getVarValue ().isEmpty ())
-		param ["value"] = JsonString::init (it.to<generator::VarDecl> ().getVarValue ().prettyString ());
+	    param ["value"] = JsonString::init (Ymir::replace (it.to<generator::VarDecl> ().getVarValue ().prettyString (), "\\", "\\\\"));
 	    childs.push_back (JsonDict::init (param));
         }
 	
@@ -537,8 +542,9 @@ namespace documentation {
 	    param ["doc"] = JsonString::init (field_coms [i]);
 	    i += 1;
 	    
-	    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ())
-		param ["value"] = JsonString::init (it.to<syntax::VarDecl> ().getValue ().prettyString ());
+	    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ()) {
+		param ["value"] = JsonString::init (Ymir::replace (it.to<syntax::VarDecl> ().getValue ().prettyString (), "\\", "\\\\"));
+	    }
 	    childs.push_back (JsonDict::init (param));
 	}
 	
@@ -577,8 +583,9 @@ namespace documentation {
 		field ["protection"] = JsonString::init ("prot");
 	    else field ["protection"] = JsonString::init ("pub");
 		
-	    if (!it.to <generator::VarDecl> ().getVarValue ().isEmpty ())
-		field ["value"] = JsonString::init (it.to<generator::VarDecl> ().getVarValue ().prettyString ());
+	    if (!it.to <generator::VarDecl> ().getVarValue ().isEmpty ()) {
+		field ["value"] = JsonString::init (Ymir::replace (it.to<generator::VarDecl> ().getVarValue ().prettyString (), "\\", "\\\\"));
+	    }
 	    
 	    fields.push_back (JsonDict::init (field));
 	}
@@ -618,8 +625,9 @@ namespace documentation {
 		    param ["type"] = dumpType (it.to <generator::Value> ().getType ());
 		    param ["ref"] = JsonString::init (it.to <generator::ProtoVar> ().getType ().to<Type> ().isRef ()? "true" : "false");
 		    param ["mut"] = JsonString::init (it.to <generator::ProtoVar> ().isMutable ()? "true" : "false");
-		    if (!it.to <generator::ProtoVar> ().getValue ().isEmpty ())
-			param ["value"] = JsonString::init (it.to<generator::ProtoVar> ().getValue ().prettyString ());
+		    if (!it.to <generator::ProtoVar> ().getValue ().isEmpty ()) {
+			param ["value"] = JsonString::init (Ymir::replace (it.to<generator::ProtoVar> ().getValue ().prettyString (), "\\", "\\\\"));
+		    }
 
 
 		    params.push_back (JsonDict::init (param));
@@ -803,8 +811,9 @@ namespace documentation {
 	    param ["ref"] = JsonString::init (it.to <generator::ProtoVar> ().getType ().to<Type> ().isRef () ? "true" : "false");
 	    param ["mut"] = JsonString::init (it.to <generator::ProtoVar> ().isMutable ()? "true" : "false");
 	    
-	    if (!it.to <generator::ProtoVar> ().getValue ().isEmpty ())
-		param ["value"] = JsonString::init (it.to<generator::ProtoVar> ().getValue ().prettyString ());
+	    if (!it.to <generator::ProtoVar> ().getValue ().isEmpty ()) {
+		param ["value"] = JsonString::init (Ymir::replace (it.to<generator::ProtoVar> ().getValue ().prettyString (), "\\", "\\\\"));
+	    }
 	    params.push_back (JsonDict::init (param));
 	}
 	val ["params"] = JsonArray::init (params);
@@ -842,8 +851,9 @@ namespace documentation {
 	    param ["type"] = dumpType (it.to <syntax::VarDecl> ().getType ());
 	    param ["ref"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::REF)? "true" : "false");
 	    param ["mut"] = JsonString::init ((it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT) || it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::DMUT)) ? "true" : "false");
-	    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ())
-		param ["value"] = JsonString::init (it.to <syntax::VarDecl> ().getValue ().prettyString ());
+	    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ()) {
+		param ["value"] = JsonString::init (Ymir::replace (it.to <syntax::VarDecl> ().getValue ().prettyString (), "\\", "\\\\"));
+	    }
 	    params.push_back (JsonDict::init (param));
 	}
 
