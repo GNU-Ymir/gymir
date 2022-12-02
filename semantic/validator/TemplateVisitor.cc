@@ -1631,7 +1631,7 @@ namespace semantic {
 	 * ================================================================================
 	 */
 
-	Expression TemplateVisitor::findExpression (const std::string & name, const array_view <Expression> & params) const {
+	Expression TemplateVisitor::findExpression (const std::string & name, const array_view <Expression> & params) {
 	    for (auto & it : params) {
 		match (it) {
 		    of (Var, var) {
@@ -1664,7 +1664,7 @@ namespace semantic {
 	    return Expression::empty ();
 	}
 
-	Expression TemplateVisitor::findExpressionValue (const std::string & name, const array_view <Expression> & params) const {
+	Expression TemplateVisitor::findExpressionValue (const std::string & name, const array_view <Expression> & params) {
 	    for (auto & it : params) {
 		match (it) {
 		    of (syntax::VarDecl, var) {

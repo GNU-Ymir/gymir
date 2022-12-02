@@ -1200,10 +1200,10 @@ namespace semantic {
 			auto hVal = Fixed::init (expression.getLocation (), itype, hui);
 			auto lVal = Fixed::init (expression.getLocation (), itype, lui);
 
-			auto bin = BinaryInt::init (expression.getLocation (),
-						    Binary::Operator::INF,
-						    Bool::init (expression.getLocation ()),
-						    lVref, rVref);
+			auto bin = BinaryChar::init (expression.getLocation (),
+						     Binary::Operator::INF,
+						     Bool::init (expression.getLocation ()),
+						     lVref, rVref);
 			
 			auto step = Conditional::init (expression.getLocation (), itype, bin, hVal, lVal);
 

@@ -4,6 +4,7 @@
 #include <ymir/utils/Match.hh>
 #include <ymir/semantic/generator/Mangler.hh>
 #include <ymir/semantic/generator/Type.hh>
+#include <ymir/semantic/validator/TemplateVisitor.hh>
 
 namespace semantic {
 
@@ -121,9 +122,19 @@ namespace semantic {
 	buf.writef ("%", this-> getName ().getStr ());
 	int i = 0;
 	buf.write ("(");
+
 	for (auto & it : _nameOrder) {
 	    if (i != 0)
 		buf.write (",");
+	    auto expr = semantic::validator::TemplateVisitor::findExpression (it, this-> _templs);
+	    if (expr.is<syntax::OfVar> ()) {
+		match (expr.to<syntax::OfVar> ().getType ()) {
+		    of (syntax::DecoratedExpression, dc) {
+			if (dc.hasDecorator (syntax::Decorator::MUT)) buf.write ("m_");
+			else if (dc.hasDecorator (syntax::Decorator::DMUT)) buf.write ("dm_");
+		    } fo;
+		}
+	    }
 	    buf.write (this-> _params.find (it)-> second.prettyString ()); // [] on map discard const qualifier ?!!
 	    i += 1;
 	}
@@ -149,6 +160,16 @@ namespace semantic {
 	for (auto & it : _nameOrder) {
 	    if (i != 0)
 		buf.write (",");
+
+	    auto expr = semantic::validator::TemplateVisitor::findExpression (it, this-> _templs);
+	    if (expr.is<syntax::OfVar> ()) {
+		match (expr.to<syntax::OfVar> ().getType ()) {
+		    of (syntax::DecoratedExpression, dc) {
+			if (dc.hasDecorator (syntax::Decorator::MUT)) buf.write ("m_");
+			else if (dc.hasDecorator (syntax::Decorator::DMUT)) buf.write ("dm_");
+		    } fo;
+		}
+	    }
 	    buf.write (this-> _params.find (it)-> first,"=> ",this-> _params.find (it)-> second.prettyString ()); // [] on map discard const qualifier ?!!
 	    i += 1;
 	}
@@ -163,14 +184,25 @@ namespace semantic {
 	buf.write (this-> getName ().getStr ());
 	generator::Mangler mangler = generator::Mangler::init ();
 	for (auto & it : _nameOrder) {
+	    std::string mutability = "";
+	    auto expr = semantic::validator::TemplateVisitor::findExpression (it, this-> _templs);
+	    if (expr.is<syntax::OfVar> ()) {
+		match (expr.to<syntax::OfVar> ().getType ()) {
+		    of (syntax::DecoratedExpression, dc) {
+			if (dc.hasDecorator (syntax::Decorator::MUT)) mutability = "m";
+			else if (dc.hasDecorator (syntax::Decorator::DMUT)) mutability = "dm";
+		    } fo;
+		}
+	    }
+	    
 	    auto second = this-> _params.find (it)-> second;
 	    if (second.is <generator::TemplateSyntaxWrapper> ()) {
 		match (second.to <generator::TemplateSyntaxWrapper> ().getContent ()) {
 		    of (generator::Type, t) {
 			auto aux = generator::Type::init (t, false, t.isRef ());
-			buf.write (Ymir::format ("N%", mangler.mangle (aux))); // [] on map discard const qualifier ?!!	    
+			buf.write (Ymir::format ("N%%", mutability, mangler.mangle (aux))); // [] on map discard const qualifier ?!!	    
 		    } elfo {
-			buf.write (Ymir::format ("N%", mangler.mangle (second.to <generator::TemplateSyntaxWrapper> ().getContent ()))); // [] on map discard const qualifier ?!!
+			buf.write (Ymir::format ("N%%", mutability, mangler.mangle (second.to <generator::TemplateSyntaxWrapper> ().getContent ()))); // [] on map discard const qualifier ?!!
 		    }
 		}
 	    } else {
@@ -179,9 +211,9 @@ namespace semantic {
 		    match (it) {
 			of (generator::Type, t) {
 			    auto aux = generator::Type::init (t, false, t.isRef ());
-			    innerBuf.writef ("N%", mangler.mangle (aux));
+			    innerBuf.writef ("N%%", mutability, mangler.mangle (aux));
 			} elfo {
-			    innerBuf.writef ("N%", mangler.mangle (it));
+			    innerBuf.writef ("N%%", mutability, mangler.mangle (it));
 			}
 		    }
 		}

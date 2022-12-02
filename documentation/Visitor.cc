@@ -319,6 +319,7 @@ namespace documentation {
 	    std::map <std::string, JsonValue> param;
 	    param ["name"] = JsonString::init (it.to <generator::ProtoVar> ().getLocation ().getStr ());
 	    param ["type"] = dumpType (it.to <generator::Value> ().getType ());
+	    param ["dmut"] = JsonString::init (it.to<generator::ProtoVar> ().getType ().to<Type> ().isDeeplyMutable () ? "true" : "false");
 	    param ["mut"] = JsonString::init (it.to <generator::ProtoVar> ().isMutable ()? "true" : "false");
 	    param ["ref"] = JsonString::init (it.to <generator::Value> ().getType ().to <Type> ().isRef () ? "true" : "false");
 	    
@@ -359,7 +360,8 @@ namespace documentation {
 	    param ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getLocation ().getStr ());
 	    param ["type"] = dumpType (it.to <syntax::VarDecl> ().getType ());
 	    param ["ref"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::REF) ? "true" : "false");
-	    param ["mut"] = JsonString::init ((it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT) || it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::DMUT)) ? "true" : "false");
+	    param ["dmut"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::DMUT) ? "true" : "false");
+	    param ["mut"] = JsonString::init ((it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT)) ? "true" : "false");
 	    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ()) {
 		param ["value"] = JsonString::init (Ymir::replace (it.to <syntax::VarDecl> ().getValue ().prettyString (), "\\", "\\\\"));
 	    }
@@ -384,7 +386,7 @@ namespace documentation {
 	val ["type"] = JsonString::init ("var");
 	this-> dumpStandard (decl, val);
 	auto gen = decl.getGenerator ();
-	
+
 	val ["mut"] = JsonString::init (gen.to <generator::GlobalVar> ().isMutable () ? "true" : "false");
 	val ["var_type"] = dumpType (gen.to <generator::GlobalVar> ().getType ());
 		
@@ -400,8 +402,9 @@ namespace documentation {
 	val ["type"] = JsonString::init ("var");
 	this-> dumpStandard (gv, pub, prot, val);
 	auto & vdecl = gv.getContent ().to <syntax::VarDecl> ();
-	
-	val ["mut"] = JsonString::init ((vdecl.hasDecorator (syntax::Decorator::MUT) || vdecl.hasDecorator (syntax::Decorator::DMUT)) ? "true" : "false");
+
+	val ["dmut"] =  JsonString::init (vdecl.hasDecorator (syntax::Decorator::DMUT) ? "true" : "false");
+	val ["mut"] = JsonString::init ((vdecl.hasDecorator (syntax::Decorator::MUT)) ? "true" : "false");
 	val ["var_type"] = dumpType (vdecl.getType ());
 		
 	if (!vdecl.getValue ().isEmpty ()){
@@ -450,6 +453,7 @@ namespace documentation {
 	    std::map <std::string, JsonValue> field;
 	    field ["name"] = JsonString::init (it.to <generator::VarDecl> ().getName ());
 	    field ["type"] = dumpType (it.to <generator::VarDecl> ().getVarType ());
+	    field ["dmut"] = JsonString::init (it.to <generator::VarDecl> ().getType ().to<generator::Type> ().isDeeplyMutable () ? "true" : "false");
 	    field ["mut"] = JsonString::init (it.to <generator::VarDecl> ().isMutable () ? "true" : "false");
 	    field ["doc"] = JsonString::init (field_coms [i]);
 	    
@@ -484,7 +488,8 @@ namespace documentation {
 	    std::map <std::string, JsonValue> field;
 	    field ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getName ().getStr ());
 	    field ["type"] = dumpType (it.to <syntax::VarDecl> ().getType ());
-	    field ["mut"] = JsonString::init ((it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT) || it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::DMUT)) ? "true" : "false");
+	    field ["dmut"] = JsonString::init (it.to<syntax::VarDecl> ().hasDecorator (syntax::Decorator::DMUT) ? "true" : "false");
+	    field ["mut"] = JsonString::init ((it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT)) ? "true" : "false");
 	    field ["doc"] = JsonString::init (field_coms [i]);
 	    i += 1;
 	    
@@ -574,6 +579,7 @@ namespace documentation {
 	    std::map <std::string, JsonValue> field;
 	    field ["name"] = JsonString::init (it.to <generator::VarDecl> ().getName ());
 	    field ["type"] = dumpType (it.to <generator::VarDecl> ().getVarType ());
+	    field ["dmut"] = JsonString::init (it.to<generator::VarDecl> ().getType ().to<Type> ().isDeeplyMutable () ? "true" : "false");
 	    field ["mut"] = JsonString::init (it.to <generator::VarDecl> ().isMutable () ? "true" : "false");
 	    field ["doc"] = JsonString::init (cl.getFieldComments (it.to <generator::VarDecl> ().getName ()));
 	    
@@ -624,6 +630,7 @@ namespace documentation {
 		    param ["name"] = JsonString::init (it.to <generator::ProtoVar> ().getLocation ().getStr ());
 		    param ["type"] = dumpType (it.to <generator::Value> ().getType ());
 		    param ["ref"] = JsonString::init (it.to <generator::ProtoVar> ().getType ().to<Type> ().isRef ()? "true" : "false");
+		    param ["dmut"] = JsonString::init (it.to<generator::Value> ().getType ().to<Type> ().isDeeplyMutable () ? "true" : "false");
 		    param ["mut"] = JsonString::init (it.to <generator::ProtoVar> ().isMutable ()? "true" : "false");
 		    if (!it.to <generator::ProtoVar> ().getValue ().isEmpty ()) {
 			param ["value"] = JsonString::init (Ymir::replace (it.to<generator::ProtoVar> ().getValue ().prettyString (), "\\", "\\\\"));
@@ -679,7 +686,8 @@ namespace documentation {
 		    std::map <std::string, JsonValue> param;
 		    param ["name"] = JsonString::init (de.getName ().getStr ());
 		    param ["type"] = dumpType (de.getType ());
-		    param ["mut"] = JsonString::init ((de.hasDecorator (syntax::Decorator::MUT) || de.hasDecorator (syntax::Decorator::DMUT)) ? "true" : "false");
+		    param ["dmut"] = JsonString::init (de.hasDecorator (syntax::Decorator::DMUT) ? "true" : "false");
+		    param ["mut"] = JsonString::init ((de.hasDecorator (syntax::Decorator::MUT)) ? "true" : "false");
 		    param ["doc"] = JsonString::init (wrap.getComments ());
 				    	
 		    if (prv)
@@ -695,7 +703,8 @@ namespace documentation {
 			std::map <std::string, JsonValue> param;
 			param ["name"] = JsonString::init (de.getName ().getStr ());
 			param ["type"] = dumpType (de.getType ());
-			param ["mut"] = JsonString::init ((de.hasDecorator (syntax::Decorator::MUT) || de.hasDecorator (syntax::Decorator::DMUT)) ? "true" : "false");
+			param ["dmut"] = JsonString::init (de.hasDecorator (syntax::Decorator::DMUT) ? "true" : "false");
+			param ["mut"] = JsonString::init ((de.hasDecorator (syntax::Decorator::MUT)) ? "true" : "false");
 			param ["doc"] = JsonString::init (wrap.getComments ());
 				    	
 			if (prv)
@@ -809,6 +818,7 @@ namespace documentation {
 	    param ["name"] = JsonString::init (it.to <generator::ProtoVar> ().getLocation ().getStr ());
 	    param ["type"] = dumpType (it.to <generator::Value> ().getType ());
 	    param ["ref"] = JsonString::init (it.to <generator::ProtoVar> ().getType ().to<Type> ().isRef () ? "true" : "false");
+	    param ["dmut"] = JsonString::init (it.to<generator::Value> ().getType ().to<Type> ().isDeeplyMutable () ? "true" : "false");
 	    param ["mut"] = JsonString::init (it.to <generator::ProtoVar> ().isMutable ()? "true" : "false");
 	    
 	    if (!it.to <generator::ProtoVar> ().getValue ().isEmpty ()) {
@@ -850,7 +860,8 @@ namespace documentation {
 	    param ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getLocation ().getStr ());
 	    param ["type"] = dumpType (it.to <syntax::VarDecl> ().getType ());
 	    param ["ref"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::REF)? "true" : "false");
-	    param ["mut"] = JsonString::init ((it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT) || it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::DMUT)) ? "true" : "false");
+	    param ["dmut"] = JsonString::init (it.to<syntax::VarDecl> ().hasDecorator (syntax::Decorator::DMUT) ? "true" : "false");
+	    param ["mut"] = JsonString::init ((it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT)) ? "true" : "false");
 	    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ()) {
 		param ["value"] = JsonString::init (Ymir::replace (it.to <syntax::VarDecl> ().getValue ().prettyString (), "\\", "\\\\"));
 	    }
@@ -900,7 +911,6 @@ namespace documentation {
 	    auto ch = this-> dumpUnvalidated (it);
 	    if (!ch.isEmpty ())
 		childs.push_back (ch);	    
-	    childs.push_back (ch);
 	}
 	
 	val ["childs"] = JsonArray::init (childs);

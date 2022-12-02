@@ -212,7 +212,7 @@ namespace lexing {
 		    do {
 			word = this-> __eof__;
 			getWord (word);
-			if (word.getStr () == beg_com || (beg_com == Token::LCOMM4 && word.getStr () == Token::LCOMM3) || ((beg_com == Token::LCOMM3 && word.getStr () == Token::LCOMM4))) nb_close += 1;
+			if ((beg_com == Token::LCOMM4 && word.getStr () == Token::LCOMM3) || ((beg_com == Token::LCOMM3 && word.getStr () == Token::LCOMM4))) nb_close += 1;
 			else if (word.getStr () == com) nb_close -= 1;
 			
 			if (nb_close >= 1 && !word.isEof ()) {
@@ -255,7 +255,7 @@ namespace lexing {
 		    do {
 			word = this-> __eof__;
 			getWord (word);
-			if (word.getStr () == beg_com || (beg_com == Token::LCOMM4 && word.getStr () == Token::LCOMM3) || ((beg_com == Token::LCOMM3 && word.getStr () == Token::LCOMM4))) nb_close += 1;
+			if ((beg_com == Token::LCOMM4 && word.getStr () == Token::LCOMM3) || ((beg_com == Token::LCOMM3 && word.getStr () == Token::LCOMM4))) nb_close += 1;
 			else if (word.getStr () == com) nb_close -= 1;
 			
 			if (nb_close >= 1 && !word.isEof ()) {

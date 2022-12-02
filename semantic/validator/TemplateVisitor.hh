@@ -302,14 +302,14 @@ namespace semantic {
 	     * \param name the name of the expression to find
 	     * \param params the template parameters (T : [R], R, ...)
 	     */
-	    syntax::Expression findExpression (const std::string & name, const array_view <syntax::Expression> & params) const;
+	    static syntax::Expression findExpression (const std::string & name, const array_view <syntax::Expression> & params);
 
 	    /**
 	     * \brief Find the expression named name in the list of params (direct access)
 	     * \param name the name of the expression to find
 	     * \param params the template parameters (T : [R], R, ...)
 	     */
-	    syntax::Expression findExpressionValue (const std::string & name, const array_view <syntax::Expression> & params) const;
+	    static syntax::Expression findExpressionValue (const std::string & name, const array_view <syntax::Expression> & params);
 
 	    /**
 	     * ================================================================================
