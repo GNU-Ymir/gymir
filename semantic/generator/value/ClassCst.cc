@@ -1,4 +1,8 @@
 #include <ymir/semantic/generator/value/ClassCst.hh>
+#include <ymir/utils/Match.hh>
+#include <ymir/semantic/generator/value/_.hh>
+#include <ymir/semantic/generator/type/_.hh>
+#include <ymir/utils/Path.hh>
 
 namespace semantic {
 
@@ -80,8 +84,25 @@ namespace semantic {
 	
 	std::string ClassCst::prettyString () const {
 	    std::vector <std::string> params;
-	    for (auto & it : this-> _params)
+	    for (auto & it : this-> _params) {
 		params.push_back (it.prettyString ());
+	    }
+	    
+	    match (this-> _frame) {
+		of (ConstructorProto, ctor) {
+		    auto name = ctor.getName ();
+
+		    Ymir::Path p (name, "::");
+		    if (p.fileName ().toString () != "self") {
+			return Ymir::format ("%::% (%)", p.baseName ().fileName ().toString (), p.fileName ().toString (), params);
+		    } else {
+			return Ymir::format ("%::new (%)", p.baseName ().fileName ().toString (), params);
+		    }
+		}
+
+		fo;
+	    }
+	    
 	    return Ymir::format ("% (%)", this-> _frame.prettyString (), params);
 	}
 	

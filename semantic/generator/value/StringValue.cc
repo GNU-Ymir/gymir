@@ -47,18 +47,22 @@ namespace semantic {
 
 	std::string StringValue::prettyString () const {
 	    Ymir::OutBuffer res;
+	    std::string fmt = "";
 	    std::vector <char> list;
 	    if (this-> getType ().to <Type> ().getInners ()[0].to <Char> ().getSize () == 32) {
 		list = validator::UtfVisitor::utf32_to_utf8 (this-> _value); // and ugly
-	    } else list = this-> _value;
+	    } else {
+		list = this-> _value;
+		fmt = "s8";
+	    }
 		
 	    for (auto & x : list) {
 		if (x != '\0') {
 		    res.write (x);
 		}			 
 	    }
-		
-	    return shorten (res.str ());
+	    
+	    return Ymir::format ("\"%\"%", shorten (res.str ()), fmt);
 	}
 
 

@@ -27,7 +27,11 @@ namespace syntax {
     }
 
     std::string String::prettyString () const {
-	return "\"" + this-> _sequence.getStr () + "\"";
+	if (this-> _suffix == "s8") {
+	    return Ymir::format ("\"%\"s8", this-> _sequence.getStr ());
+	} else {
+	    return Ymir::format ("\"%\"", this-> _sequence.getStr ());
+	}
     }
     
 }

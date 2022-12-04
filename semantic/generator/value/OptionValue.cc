@@ -1,4 +1,5 @@
 #include <ymir/semantic/generator/value/OptionValue.hh>
+#include <ymir/semantic/generator/value/NullValue.hh>
 
 namespace semantic {
 
@@ -46,7 +47,11 @@ namespace semantic {
 	    if (this-> _success) {
 		return Ymir::format ("Ok (%)", this-> _content.prettyString ());
 	    } else {
-		return Ymir::format ("Err (%)", this-> _content.prettyString ());
+		if (this-> _content.is<NullValue> ()) {
+		    return Ymir::format ("Err ()");
+		} else {
+		    return Ymir::format ("Err (%)", this-> _content.prettyString ());
+		}
 	    }
 	}
     }

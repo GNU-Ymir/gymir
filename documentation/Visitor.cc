@@ -615,6 +615,7 @@ namespace documentation {
 	std::vector <JsonValue> cstrs;
 	std::vector <JsonValue> methods;
 	std::vector <JsonValue> impls;
+	std::vector <JsonValue> templates;
 	
 	for (auto & it : cl.getAllInner ()) { // Dump constructors
 	    std::map <std::string, JsonValue> def;
@@ -668,12 +669,15 @@ namespace documentation {
 		auto proto = semantic::validator::FunctionVisitor::init (this-> _context).validateMethodProto (it.to <semantic::Function> (), cl.getGenerator ().to<generator::Class> ().getClassRef (), Generator::empty (), false);
 		auto m = this-> dumpMethodProto (proto.to <generator::MethodProto> (), prot, it.to <semantic::Function> ().isOver ());
 		if (!m.isEmpty ()) methods.push_back (m);	
+	    } else if (it.is<semantic::Template> ()) {
+		templates.push_back (this-> dumpTemplate (it.to<semantic::Template> ()));
 	    }
 	}	
 
 	val ["cstrs"] = JsonArray::init (cstrs);
 	val ["impls"] = JsonArray::init (impls);
 	val ["methods"] = JsonArray::init (methods);
+	val ["templates"] = JsonArray::init (templates);
 	return JsonDict::init (val);
     }
 

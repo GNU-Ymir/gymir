@@ -1,4 +1,6 @@
 #include <ymir/semantic/generator/value/Call.hh>
+#include <ymir/utils/Match.hh>
+#include <ymir/semantic/generator/value/_.hh>
 
 namespace semantic {
 
@@ -76,6 +78,39 @@ namespace semantic {
 	    std::vector <std::string> params;
 	    for (auto & it : this-> _params)
 		params.push_back (it.prettyString ());
+
+	    match (this-> _frame) {
+		of (ConstructorProto, ctor) {
+		    auto name = ctor.getName ();
+		    auto sym = ctor.getReturnType ();
+		    if (name != "self") {
+			return Ymir::format ("%::% (%)", sym.prettyString (), name, params);
+		    } else {
+			return Ymir::format ("%::new (%)", sym.prettyString (), params);
+		    }
+		}
+
+		elof (MethodProto, mth) {
+		    if (mth.isMutable ()) {
+			params.insert (params.begin (), "mut self");
+			return Ymir::format ("% (%)", mth.getName (), params);
+		    } else {
+			params.insert (params.begin (), "self");
+			return Ymir::format ("% (%)", mth.getName (), params);
+		    }
+		}
+		
+		elof (FrameProto, fr) {
+		    return Ymir::format ("% (%)", fr.getName (), params);
+		}
+
+		elof (LambdaProto, lmd) {
+		    return Ymir::format ("% (%)", lmd.getName (), params);
+		}
+
+		fo;
+	    }
+	    
 	    return Ymir::format ("% (%)", this-> _frame.prettyString (), params);
 	}
 

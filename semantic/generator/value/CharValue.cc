@@ -1,4 +1,6 @@
 #include <ymir/semantic/generator/value/CharValue.hh>
+#include <ymir/semantic/generator/type/Char.hh>
+#include <ymir/utils/Match.hh>
 
 namespace semantic {
 
@@ -32,8 +34,31 @@ namespace semantic {
 	    return this-> _value;
 	}
 
-	std::string CharValue::prettyString () const {
-	    return Ymir::format ("'%'", this-> _value);
+	std::string CharValue::prettyString () const {	    
+	    if (this-> _value < 255) {
+		std::string fmt = "";
+		match (this-> getType ()) {
+		    of (Char, ch) {
+			if (ch.getSize () == 8) fmt = "c8";
+		    } fo;
+		}
+
+		if (this-> _value == '\n') {
+		    return Ymir::format ("'\\n'%", fmt);
+		} else if (this-> _value == '\b') {
+		    return Ymir::format ("'\\b'%", fmt);
+		} else if (this-> _value == '\f') {
+		    return Ymir::format ("'\\f'%", fmt);
+		} else if (this-> _value == '\v') {
+		    return Ymir::format ("'\\v'%", fmt);
+		} else if (this-> _value == '\t') {
+		    return Ymir::format ("'\\t'%", fmt);
+		}
+
+		return Ymir::format ("'%'%", (char) this-> _value, fmt);
+	    } else {
+		return Ymir::format ("'\\u{%}'", this-> _value);
+	    }
 	}
 	
     }
