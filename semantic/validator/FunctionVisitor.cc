@@ -166,7 +166,7 @@ namespace semantic {
 	    if (!retType.is<Void> ()) {
 		auto realRetType = Integer::init (loc, 32, true); // do better 
 		try {
-		    this-> _context.verifyCompatibleType (params [0].getLocation (), loc, realRetType, retType);
+		    this-> _context.verifyCompatibleType (retType.getLocation (), loc, realRetType, retType);
 		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		}
