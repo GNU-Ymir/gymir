@@ -1932,14 +1932,16 @@ namespace semantic {
 	    auto ref = getDeclaratorOrEmpty (uniq.getRefId ());
 
 	    if (!ref.isEmpty ()) {
-		return ref;
+		return ref.toDirect ();
 	    }
 	    else {
-		auto type = generateType (uniq.getValue ().to <Value> ().getType ());
+		auto type = Tree::pointerType (generateType (uniq.getValue ().to <Value> ().getType ()));		
 		auto name = Ymir::format ("uniq_%", (int) uniq.getRefId ());
 		auto decl = Tree::varDecl (uniq.getLocation (), name, type);
 		TreeStmtList list = TreeStmtList::init ();
 		auto t = castTo (uniq.getValue ().to <Value> ().getType (), uniq.getValue ());
+		t = Tree::buildAddress (uniq.getLocation (), t, type);
+		
 		decl.setDeclContext (getCurrentContext ());
 		stackVarDeclChain [0].append (decl); // uniq variable must be accessed everywhere in the frame ?
 		// No the real reason is that they can be created from inner blocks, and refere to values of upper blocks
@@ -1967,7 +1969,7 @@ namespace semantic {
 
 		return Tree::compound (
 		    uniq.getLocation (),
-		    decl,
+		    decl.toDirect (),
 		    list.toTree ()
 		);
 	    }
@@ -2610,7 +2612,7 @@ namespace semantic {
 				value
 				}
 		    );
-		} else if (val.to <Value> ().getType ().is <Array> ()) {
+		} else if (val.to <Value> ().getType ().is <Array> ()) {		   
 		    if (val.to<Value> ().getType ().to <Array> ().getInners ()[0].is <Void> ()) {
 			ret = Tree::constructField (
 			    type.getLocation (),
