@@ -83,26 +83,31 @@ namespace semantic {
 	    
 	    bool isMutable = false, isRef = false, dmut = false, isPure = false;	    
 	    type = this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut, isPure);
-	    this-> _context.verifyMutabilityRefParam (var.getLocation (), type, ExternalError::MUTABLE_CONST_ITER);
-	    
+	    if ((isMutable || dmut) && !isRef) {
+		Ymir::Error::occur (var.getLocation (), ExternalError::MUTABLE_CONST_ITER);
+	    }
+
 	    auto value = Generator::empty ();
 	    auto loc = var.getLocation ();
 	    if (!isRef) {
 		value = value_;
 	    } else {
-	    	if (level < 2)
-	    	    Ymir::Error::occur (expression.getIter ().getLocation (),
-	    				ExternalError::DISCARD_CONST_LEVEL,
-	    				2, level
-	    	    );
 		
-	    	value = Aliaser::init (loc, type, value_);
+	    	if (level < type.to<Type> ().mutabilityLevel ())
+	    	    Ymir::Error::occur (
+			var.getLocation (), 
+			expression.getIter ().getLocation (),
+			ExternalError::DISCARD_CONST_LEVEL,
+			2, level
+	    	    );
+
+	    	value = Referencer::init (loc, type, value_);
 	    }
 	    
 	    this-> _context.verifyMemoryOwner (loc, type, value, true);	    
 	    
 	    auto ret = generator::VarDecl::init (loc, var.getName ().getStr (), type, value, isMutable);
-	    
+
 	    if (var.getName () != Keys::UNDER) {
 		this-> _context.insertLocal (var.getName ().getStr (), ret);
 	    }
@@ -136,14 +141,14 @@ namespace semantic {
 		this-> _context.verifyCompatibleType (decl.getLocation (), loc, type, Integer::init (loc, 0, false));
 	    } 
 
-	    auto var = generator::VarDecl::init (lexing::Word::init (loc, "iter"),
+	    auto var = generator::VarDecl::init (lexing::Word::init (loc, decl.getName ().getStr ()),
 						 decl.getName ().getStr (),
 						 type,
 						 zero,
 						 false
 	    );
 	    
-	    auto ref = VarRef::init (lexing::Word::init (loc, "iter"),
+	    auto ref = VarRef::init (lexing::Word::init (loc, decl.getName ().getStr ()),
 				     decl.getName ().getStr (),
 				     type, 
 				     var.getUniqId (),
@@ -228,11 +233,11 @@ namespace semantic {
 
 		auto innerType = array.to <Value> ().getType ().to <Slice> ().getInners () [0];
 		auto indexVal = SliceAccess::init (loc, innerType, array, iter);
-		    
+
 		// Can be passed by ref, iif it is a lvalue, and mutability level is > 2 (mut [mut T])
 		bool canBeRef = value.is <Aliaser> () || value.is<Referencer> () || value.to <Value> ().isLvalue ();
-		auto level = value.to <Value> ().getType ().to<Type> ().mutabilityLevel ();
-		    
+		auto level = value.to <Value> ().getType ().to<Type> ().getInners ()[0].to<Type> ().mutabilityLevel ();
+
 		innerValues.push_back (validateArrayByValueIterator (expression, array, val, indexVal, canBeRef ? level : 0));
 
 		innerValues.push_back (this-> validateLoopContent (expression));		    
