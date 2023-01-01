@@ -43,6 +43,14 @@ namespace semantic {
 	    ret.to <LambdaType> ().setMutable (is);
 	    return ret;
 	}
+
+	Generator LambdaType::toDeeplyMutable () const {
+	    return this-> createMutable (true);
+	}
+
+	Generator LambdaType::toMutable () const {
+	    return this-> createMutable (true);
+	}
 	
 	std::string LambdaType::typeName () const {
 	    Ymir::OutBuffer buf;

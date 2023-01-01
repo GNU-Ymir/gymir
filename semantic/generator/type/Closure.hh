@@ -76,6 +76,11 @@ namespace semantic {
 	     */
 	    bool isFake () const;
 
+
+	    Generator toMutable () const override;
+
+	    Generator toDeeplyMutable () const override;
+	    
 	protected:
 
 	    /**

@@ -30,6 +30,18 @@ namespace semantic {
 	std::string NoneType::typeName () const {
 	    return this-> _name;
 	}	
+
+	Generator NoneType::createMutable (bool) const {
+	    return this-> clone ();
+	}
+
+	Generator NoneType::toMutable () const {
+	    return this-> clone ();
+	}
+
+	Generator NoneType::toDeeplyMutable () const {
+	    return this-> clone ();
+	}
 	
     }
 }

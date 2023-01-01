@@ -247,7 +247,7 @@ namespace semantic {
 	     * Change the value of _isMutable, 
 	     * Warning different of isMutable (bool)
 	     */
-	    void setMutable (bool is);
+	    virtual void setMutable (bool is);
 
 	    /**
 	     * Used in the init function

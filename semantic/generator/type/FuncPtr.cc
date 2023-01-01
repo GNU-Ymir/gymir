@@ -1,4 +1,5 @@
 #include <ymir/semantic/generator/type/FuncPtr.hh>
+#include <ymir/semantic/generator/type/Void.hh>
 #include <ymir/utils/OutBuffer.hh>
 
 namespace semantic {
@@ -53,6 +54,14 @@ namespace semantic {
 	    auto ret = this-> clone ();
 	    ret.to <FuncPtr> ().setMutable (is);
 	    return ret;
+	}
+
+	Generator FuncPtr::toDeeplyMutable () const {
+	    return this-> createMutable (true);
+	}
+
+	Generator FuncPtr::toMutable () const {
+	    return this-> createMutable (true);
 	}
 	
 	std::string FuncPtr::typeName () const {

@@ -221,6 +221,12 @@ namespace Ymir {
 	    return ErrorMsg (loc, msg);
 	}
 
+	template <typename ... TArgs>
+	ErrorMsg makeWarnOneLine (const std::string & content, TArgs ... args) {
+	    auto msg = format ("%(y) : " + content, "Warning", args...);	    
+	    return ErrorMsg (msg);
+	}
+
 	/**
 	 * \brief Throw a warning error
 	 * \brief A program needs to compile with no warning and no error at all

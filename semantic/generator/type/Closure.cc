@@ -35,7 +35,15 @@ namespace semantic {
 	    auto ret = this-> clone ();
 	    ret.to <Closure> ().setMutable (is);
 	    return ret;
-	}	
+	}
+
+	Generator Closure::toMutable () const {
+	    return this-> createMutable (true);
+	}
+
+	Generator Closure::toDeeplyMutable () const {
+	    return this-> createMutable (true);
+	}
 		
 	bool Closure::equals (const Generator & gen) const {
 	    if (!gen.is<Closure> ()) return false;

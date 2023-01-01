@@ -40,6 +40,11 @@ namespace semantic {
 	     */
 	    std::string typeName () const override;
 
+
+	    Generator toDeeplyMutable () const override;
+
+	    Generator toMutable () const override;
+	    
 	protected :
 
 	    Generator createMutable (bool is) const override;

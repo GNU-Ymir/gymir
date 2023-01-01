@@ -33,6 +33,14 @@ namespace semantic {
 	     * \return the name of the type
 	     */
 	    std::string typeName () const override;
+	   
+	    void setMutable (bool) override;
+
+	    Generator createMutable (bool) const override;
+
+	    Generator toMutable () const override;
+	    
+	    Generator toDeeplyMutable () const override;
 	    
 	};
        

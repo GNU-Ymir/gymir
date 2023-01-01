@@ -1,6 +1,7 @@
 #include <ymir/semantic/generator/type/Delegate.hh>
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/semantic/generator/type/FuncPtr.hh>
+#include <ymir/semantic/generator/type/Void.hh>
 #include <ymir/errors/Error.hh>
 
 namespace semantic {
@@ -34,9 +35,11 @@ namespace semantic {
 	    if (!gen.is<Delegate> ()) return false;
 	    auto array = gen.to <Delegate> ();
 	    if (this-> getInners ().size () != array.getInners ().size ()) return false;
-	    for (auto it : Ymir::r (0, this-> getInners ().size ()))
-		if (!this-> getInners () [it].equals (array.getInners ()[it]))
+	    for (auto it : Ymir::r (0, this-> getInners ().size ())) {
+		if (!this-> getInners () [it].equals (array.getInners ()[it])) {
 		    return false;
+		}
+	    }
 	    return true;
 	}
 
@@ -44,6 +47,14 @@ namespace semantic {
 	    auto ret = this-> clone ();
 	    ret.to <Delegate> ().setMutable (is);
 	    return ret;
+	}
+
+	Generator Delegate::toMutable () const {
+	    return this-> createMutable (true);
+	}
+
+	Generator Delegate::toDeeplyMutable () const {
+	    return this-> createMutable (true);
 	}
 	
 	std::string Delegate::typeName () const {

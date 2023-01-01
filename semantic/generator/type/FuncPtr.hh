@@ -52,6 +52,11 @@ namespace semantic {
 	     */
 	    std::vector <Generator> getParamTypes () const;	    
 
+
+	    Generator toDeeplyMutable () const override;
+
+	    Generator toMutable () const override;
+	    
 	protected :
 
 	    /**

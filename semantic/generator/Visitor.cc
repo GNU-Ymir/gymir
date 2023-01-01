@@ -457,9 +457,14 @@ namespace semantic {
 	    decl.isUsed (true);
 	    decl.isExternal (!inModule);
 	    decl.isPreserved (true);
-	    decl.isPublic (!sym.isWeak ());
-	    decl.isWeak (false);
-	    //decl.isWeak (sym.isWeak ());
+	    if (global::State::instance ().isVersionActive (global::CoreNames::get (LINUX_VERSION))) {
+		decl.isWeak (sym.isWeak ());
+		decl.isPublic (true);
+	    } else {
+		decl.isPublic (!sym.isWeak ());
+		decl.isWeak (false);
+	    }
+	    
 	    decl.setDeclContext (getGlobalContext ());	 
 
 	    vec_safe_push (__global_declarations__, decl.getTree ());
@@ -550,15 +555,20 @@ namespace semantic {
 	    decl.isUsed (true);
 	    decl.isExternal (!inModule);
 	    decl.isPreserved (true);
-	    decl.isPublic (!sym.isWeak ());
-	    decl.isWeak (false);
-	    //decl.isWeak (sym.isWeak ());
+	    if (global::State::instance ().isVersionActive (global::CoreNames::get (LINUX_VERSION))) {
+		decl.isPublic (true);
+		decl.isWeak (sym.isWeak ());
+	    } else {
+		decl.isPublic (!sym.isWeak ());
+		decl.isWeak (false);
+	    }
+	    
 	    decl.setDeclContext (getGlobalContext ());	 
 
 	    vec_safe_push (__global_declarations__, decl.getTree ());
 	    __globalConstant__.emplace (name, decl);
 
-	    if (inModule) {
+	    if (inModule && !global::State::instance ().isVersionActive (global::CoreNames::get (LINUX_VERSION))) {
 		auto vtableAddr = Tree::buildAddress (classType.getLocation (), decl, Tree::pointerType (Tree::pointerType (Tree::voidType ())));
 		this-> _globalReflect.emplace (name, ReflectContent { ReflectType::VTABLE, classType.getLocation (), vtableAddr });
 	    }
@@ -724,7 +734,7 @@ namespace semantic {
 		list.append (Tree::affect (stackVarDeclChain.back (), getCurrentContext (), it.second.first.getLocation (), decl-> second, value.getValue ()));
 	    }
 
-	    if (global::State::instance ().isEnableReflect ()) {		
+	    if (global::State::instance ().isEnableReflect () && !global::State::instance ().isVersionActive (global::CoreNames::get (LINUX_VERSION))) {		
 		auto name = "__Y_GLOBAL_REFLECT__" + Mangler::init ().manglePath (moduleName);
 		auto reflectArray = this-> generateReflectArray (name);
 		auto reflectArrayPointer = Tree::buildAddress (lexing::Word::eof (), reflectArray, Tree::pointerType (Tree::voidType ()));
@@ -830,18 +840,24 @@ namespace semantic {
 
 		fn_decl.isExternal (false);
 		fn_decl.isPreserved (true);
-		//fn_decl.isWeak (frame.isWeak ());
+		if (global::State::instance ().isVersionActive (global::CoreNames::get (LINUX_VERSION))) {
+		    fn_decl.isWeak (frame.isWeak ());
+		    fn_decl.isPublic (true);
+		} else {
+		    fn_decl.isWeak (false);
+		    fn_decl.isPublic (!frame.isWeak ());
+		}
 		
-		fn_decl.isWeak (false);
-		fn_decl.isPublic (!frame.isWeak ());
 		fn_decl.isStatic (true);
 		
 		Tree::gimplifyFunction (fn_decl);
 		Tree::finalizeFunction (fn_decl);
 
 		__definedFrame__.emplace (asmName);
-		auto fnAddr = Tree::init (frame.getLocation ().getLocation (), build1 (ADDR_EXPR, Tree::pointerType (Tree::init (BUILTINS_LOCATION, fntype.getTree ())).getTree (), fn_decl.getTree ()));
-		this-> _globalReflect.emplace (asmName, ReflectContent { ReflectType::FUNCTION, frame.getLocation (), fnAddr });		
+		if (!global::State::instance ().isVersionActive (global::CoreNames::get (LINUX_VERSION))) {
+		    auto fnAddr = Tree::init (frame.getLocation ().getLocation (), build1 (ADDR_EXPR, Tree::pointerType (Tree::init (BUILTINS_LOCATION, fntype.getTree ())).getTree (), fn_decl.getTree ()));
+		    this-> _globalReflect.emplace (asmName, ReflectContent { ReflectType::FUNCTION, frame.getLocation (), fnAddr });
+		}
 
 		setCurrentContext (Tree::empty ());
 		quitFrame ();

@@ -196,6 +196,12 @@ namespace semantic {
 	    lexing::Word gotConstOrMut (lexing::Word::eof ());
 	    lexing::Word gotRef (lexing::Word::eof ());
 	    lexing::Word gotPure (lexing::Word::eof ());
+	    
+	    if (type.is<generator::Void> () && expr.getDecorators ().size () != 0) {
+		auto note = Ymir::Error::createNote (type.getLocation ());
+		Ymir::Error::occurAndNote (expr.getDecorators()[0].getLocation (), note, ExternalError::DECO_OUT_OF_CONTEXT, expr.getDecorators ()[0].getLocation ().getStr ());
+	    }
+	    
 	    for (auto & deco : expr.getDecorators ()) {
 		switch (deco.getValue ()) {
 		case syntax::Decorator::REF : {

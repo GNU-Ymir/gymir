@@ -17,7 +17,7 @@ namespace Ymir {
 	    Ymir::OutBuffer buf;
 	    for (auto it : this-> errors) {
 		it.computeMessage (buf, 0, it.computeMaxDepth ());
-		buf.writeln ("");
+		buf.writeln ("");		
 	    }
 	    
 	    fprintf (stderr, "%s\n", buf.str ().c_str ());

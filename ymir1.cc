@@ -23,6 +23,7 @@
 #include <ymir/utils/Path.hh>
 #include <ymir/tree/Tree.hh>
 
+
 // We use the dlang target hooks to get the target versions
 #include <ymir/../d/d-target.h>
 
@@ -178,6 +179,10 @@ void d_add_builtin_version (const char* v) {
   auto it = d_version_to_y_version.find (std::string (v));
   if (it != d_version_to_y_version.end ()) {
     State::instance ().activateVersion (it-> second);
+    if (it-> second == CoreNames::get (LINUX_VERSION) && !State::instance ().isEnableReflect ()) {
+	auto err = Ymir::Error::makeWarnOneLine ("option -fno-reflect have no effect on linux");
+	Ymir::Error::ErrorList {{err}}.print ();
+    }
   }
 }
 
@@ -291,7 +296,12 @@ ymir_init_options (unsigned int argc ATTRIBUTE_UNUSED, cl_decoded_option * decod
 	    global::State::instance ().activateIncludeTesting (true);
 	    global::State::instance ().activateVersion (global::CoreNames::get (global::UNITTEST_VERSION));
 	    break;
-	case OPT_fno_reflect : 
+	case OPT_fno_reflect :
+	    if (global::State::instance ().isVersionActive (global::CoreNames::get (LINUX_VERSION))) {
+		auto err = Ymir::Error::makeWarnOneLine ("option -fno-reflect have no effect on linux");
+		Ymir::Error::ErrorList {{err}}.print ();
+	    }
+	    
 	    global::State::instance ().activateReflection (false);
 	    global::State::instance ().activateVersion (global::CoreNames::get (global::REFLECT_VERSION));
 	    break;
