@@ -25,24 +25,11 @@ namespace semantic {
 	bool Void::equals (const Generator & gen) const {
 	    return gen.is<Void> ();
 	}
-
-	void Void::setMutable (bool) {}
-
-	Generator Void::createMutable (bool) const {
-	    return this-> clone ();
-	}
-
-	Generator Void::toMutable () const {
-	    return this-> clone ();
-	}
-
-	Generator Void::toDeeplyMutable () const {
-	    return this-> clone ();
-	}
 	
 	std::string Void::typeName () const {
 	    return "void";
 	}	
+
 	
     }
 }

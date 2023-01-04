@@ -2,6 +2,7 @@
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/semantic/generator/type/Array.hh>
 #include <ymir/semantic/generator/type/ClassRef.hh>
+#include <ymir/semantic/generator/type/Void.hh>
 #include <ymir/errors/Error.hh>
 
 namespace semantic {

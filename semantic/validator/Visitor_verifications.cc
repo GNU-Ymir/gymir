@@ -175,6 +175,7 @@ namespace semantic {
 	void Visitor::verifyImplicitAlias (const lexing::Word & loc, const Generator & type, const Generator & gen) {
 	    if (gen.is <UniqValue> ()) return verifyImplicitAlias (loc, type, gen.to<UniqValue> ().getValue ());
 	    if (!type.to <Type> ().needExplicitAlias ()) return; // No need to explicitly alias
+	    if (isVoidArrayType (type) || isVoidArrayType (gen.to<Value>().getType ())) return; // No need for explicit alias of void slices
 	    auto llevel = type.to <Type> ().mutabilityLevel ();
 
 	    if (type.to <Type> ().isPure ()) {
@@ -189,6 +190,7 @@ namespace semantic {
 	    }
 	    
 	    if (gen.is<Copier> () || gen.is <Aliaser> () || gen.is <Referencer> () || gen.is <DeepCopy> ()) return; // It is aliased or copied, that's ok
+
 	    auto max_level = 1;
 
 	    {
