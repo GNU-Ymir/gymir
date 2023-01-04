@@ -1863,11 +1863,15 @@ namespace semantic {
 			);
 		}
 		elof (syntax::Lambda, lmb) {
-		    return syntax::Lambda::init (
+		    auto ret = syntax::Lambda::init (
 			element.getLocation (),
 			replaceAll (lmb.getPrototype (), mapping),
 			replaceAll (lmb.getContent (), mapping)
 			);
+
+		    if (lmb.isMoveClosure ()) { return Lambda::moveClosure (ret); }
+		    if (lmb.isRefClosure ()) { return Lambda::refClosure (ret); }
+		    else return ret;
 		}
 		elof (syntax::List, lst) {
 		    std::vector <Expression> params;
