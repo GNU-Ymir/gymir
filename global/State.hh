@@ -240,33 +240,33 @@ namespace global {
 	/**
 	 * Option -M
 	 */
-	void activateDeps ();
+	void activateGCCDeps ();
 
 	/**
 	 * Option -MM
 	 */
-	void activateDepSkip ();
+	void activateGCCDepSkip ();
 	
 	/**
 	 * Set the dependency filename
 	 * Option -M[M]D
 	 */
-	void activateDepFilename ();
+	void activateGCCDepFilename ();
 
 	/**
 	 * Option -MF <arg>
 	 */
-	void setDepFilenameUser (const std::string & depFilename);
+	void setGCCDepFilenameUser (const std::string & depFilename);
 
 	/**
 	 * Add a dependency target
 	 */
-	void addDepTarget (const std::string & target, bool quoted);
+	void addGCCDepTarget (const std::string & target, bool quoted);
 
 	/**
 	 * Option -MP
 	 */
-	void setDepPhony (bool);
+	void setGCCDepPhony (bool);
 	
 	/**
 	 * Change the output directory (used for documentation dumping)

@@ -9,6 +9,7 @@
 #include "cppdefault.h"
 #include <stdio.h>
 #include <vector>
+#include <set>
 #include <algorithm>
 #include <string>
 
@@ -62,7 +63,6 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
     /* bool need_midgard = *in_decoded_options_count != 1; */
     /* bool need_runtime = *in_decoded_options_count != 1; */
     bool yr_file_found = false;
-    std::vector <int> toRemove;
     std::vector <std::string> includes;
     
     for (i = 0 ; i < argc ; i++) {
@@ -87,19 +87,19 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
     
     if (yr_file_found) {
 #ifdef __linux__
-	num_args = argc + ((need_gc + need_pthread + need_libs + need_m + need_bfd + need_unittest)) + includes.size () - toRemove.size ();
+	num_args = argc + ((need_gc + need_pthread + need_libs + need_m + need_bfd + need_unittest)) + includes.size ();
 #else
-	num_args = argc + ((need_gc + need_pthread + need_libs + need_unittest)) + includes.size () - toRemove.size ();
+	num_args = argc + ((need_gc + need_pthread + need_libs + need_unittest)) + includes.size ();
 #endif
 	new_decoded_options = XNEWVEC (cl_decoded_option, num_args);
-	i = 0;
 
+	i = 0;
+	int c = 0;
 	while (i < argc) {
-	    if (std::find (toRemove.begin (), toRemove.end (), i) == toRemove.end ())
-		new_decoded_options [i] = decoded_options [i];
+	    new_decoded_options [i] = decoded_options [i];
 	    i ++;
 	}
-	
+
 	if (need_libs) {
 	    generate_option (OPT_l, LIBYMIDGARD, 1, CL_DRIVER, &new_decoded_options [i]);
 	    added_libraries ++;

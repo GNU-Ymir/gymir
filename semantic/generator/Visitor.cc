@@ -1526,6 +1526,7 @@ namespace semantic {
 	    tree_code code = NEGATE_EXPR;
 	    switch (un.getOperator ()) {
 	    case Unary::Operator::MINUS : code = NEGATE_EXPR; break;
+	    case Unary::Operator::NOT_BYTE: code = BIT_NOT_EXPR; break;
 	    default :
 		Ymir::Error::halt ("%(r) - unhandeld case", "Critical");
 	    }

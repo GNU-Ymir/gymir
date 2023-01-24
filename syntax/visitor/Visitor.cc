@@ -122,7 +122,7 @@ namespace syntax {
 	    };
 	
 	    visit._operand_op = {
-		Token::MINUS, Token::AND, Token::STAR, Token::NOT
+		Token::MINUS, Token::AND, Token::STAR, Token::NOT, Token::TILDE
 	    };
 	
 	    visit._fixedSuffixes = {

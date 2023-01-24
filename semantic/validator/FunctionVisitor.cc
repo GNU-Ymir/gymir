@@ -242,12 +242,6 @@ namespace semantic {
 	    std::vector <Generator> paramTypes;
 	    for (auto & it : params) {
 		paramTypes.push_back (it.to <generator::ProtoVar> ().getType ());
-		bool isMut = false;
-		bool isRef = paramTypes.back ().to <Type> ().isRef ();
-		if (it.to <generator::ProtoVar> ().isMutable ()) isMut = true;
-		if (it.to <generator::ProtoVar> ().getType ().to <Type> ().isRef ()) isRef = true;
-		
-		paramTypes.back () = Type::init (paramTypes.back ().to <Type> (), isMut, isRef);
 	    }
 	    
 	    return FuncPtr::init (proto.getLocation (), ret, paramTypes);

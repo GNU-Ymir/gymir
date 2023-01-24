@@ -349,6 +349,7 @@ namespace semantic {
 	T applyUnaInt (Unary::Operator op, T elem) {
 	    switch (op) {
 	    case Unary::Operator::MINUS : return -elem;
+	    case Unary::Operator::NOT_BYTE : return ~elem;
 	    default :
 		Ymir::Error::halt ("%(r) - unhandeld case", "Critical");
 		return T ();
@@ -376,16 +377,27 @@ namespace semantic {
 		
 		Fixed::UI result;
 		if (isSigned) {
-		    result.i = applyUnaInt <int64_t> (unaInt.getOperator (), elem.i);
-		} else
-		    result.u = applyUnaInt <uint64_t> (unaInt.getOperator (), elem.u);
+		    switch (unaInt.getType ().to<Integer> ().getSize ()) {
+		    case 8 : result.i = applyUnaInt <int8_t> (unaInt.getOperator (), elem.i); break;
+		    case 16: result.i = applyUnaInt <int16_t> (unaInt.getOperator (), elem.i); break;
+		    case 32: result.i = applyUnaInt <int32_t> (unaInt.getOperator (), elem.i); break;
+		    default: result.i = applyUnaInt <int64_t> (unaInt.getOperator (), elem.i); break;
+		    }
+		} else {
+		    switch (unaInt.getType ().to<Integer> ().getSize ()) {
+		    case 8 : result.u = applyUnaInt <uint8_t> (unaInt.getOperator (), elem.u); break;
+		    case 16: result.u = applyUnaInt <uint16_t> (unaInt.getOperator (), elem.u); break;
+		    case 32: result.u = applyUnaInt <uint32_t> (unaInt.getOperator (), elem.u); break;
+		    default: result.u = applyUnaInt <uint64_t> (unaInt.getOperator (), elem.u); break;
+		    }
+		}
 
-				
-		if (isSigned && (result.i > maxI || result.i < minI))
+		if (isSigned && (result.i > maxI || result.i < minI)) {
 		    Ymir::Error::occur (unaInt.getLocation (), ExternalError::OVERFLOW_, type, result.i);
-		else if (!isSigned && (result.u > maxU || result.u < minU))
+		} else if (!isSigned && (result.u > maxU || result.u < minU)) {
 		    Ymir::Error::occur (unaInt.getLocation (), ExternalError::OVERFLOW_, type, result.u);
-
+		}		
+		
 		return Fixed::init (unaInt.getLocation (), unaInt.getType (), result);
 	    } else {
 		Ymir::Error::occur (

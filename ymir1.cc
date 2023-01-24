@@ -344,6 +344,7 @@ ymir_langhook_handle_option (size_t scode, const char *arg, HOST_WIDE_INT value 
                              const struct cl_option_handlers *handlers ATTRIBUTE_UNUSED)
 {
     opt_code code = (opt_code) scode;
+    
     if (code == OPT_I) {
 	// Add include dir
 	global::State::instance ().addIncludeDir (arg);    
@@ -374,33 +375,34 @@ ymir_langhook_handle_option (size_t scode, const char *arg, HOST_WIDE_INT value 
     } else {
 	switch (code) {
 	case OPT_MM :
-	    global::State::instance ().activateDepSkip ();
+	    global::State::instance ().activateGCCDepSkip ();
 	    // fall through
 	case OPT_M:
-	    global::State::instance ().activateDeps ();
+	    global::State::instance ().activateGCCDeps ();
 	    break;
+	    
 	case OPT_MMD:
-	    global::State::instance ().activateDepSkip ();
+	    global::State::instance ().activateGCCDepSkip ();
 	    // fall through
 	case OPT_MD:
-	    global::State::instance ().activateDeps ();
-	    global::State::instance ().activateDepFilename ();
-	    break;
+	    global::State::instance ().activateGCCDeps ();
+	    global::State::instance ().activateGCCDepFilename ();
+	    break;	        
 
-	case OPT_MF:
-	    global::State::instance ().setDepFilenameUser (arg);
+	case OPT_MF:	    
+	    global::State::instance ().setGCCDepFilenameUser (arg);
 	    break;
 
 	case OPT_MP :
-	    global::State::instance ().setDepPhony (true);
+	    global::State::instance ().setGCCDepPhony (true);
 	    break;
 	    
 	case OPT_MQ :
-	    global::State::instance ().addDepTarget (arg, true);
+	    global::State::instance ().addGCCDepTarget (arg, true);
 	    break;
 
 	case OPT_MT:
-	    global::State::instance ().addDepTarget (arg, false);
+	    global::State::instance ().addGCCDepTarget (arg, false);
 	    break;
 	case OPT_nomidgardlib :
 	    break;

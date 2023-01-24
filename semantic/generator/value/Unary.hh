@@ -21,6 +21,7 @@ namespace semantic {
 		MINUS, // - 
 		UNREF, // *
 		ADDR, // &
+		NOT_BYTE, // ~
 		LAST_OP
 	    };	    
 

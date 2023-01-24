@@ -108,7 +108,7 @@ namespace global {
 	}
     }
 
-    void State::activateDeps () {
+    void State::activateGCCDeps () {
 	this-> _deps = true;
     }
 
@@ -116,7 +116,7 @@ namespace global {
 	return this-> _deps;
     }
     
-    void State::activateDepSkip () {
+    void State::activateGCCDepSkip () {
 	this-> _depSkip = true;
     }
 
@@ -124,7 +124,7 @@ namespace global {
 	return this-> _depSkip;
     }
 	
-    void State::activateDepFilename () {
+    void State::activateGCCDepFilename () {
 	this-> _depFilename = true;
     }
 
@@ -132,7 +132,7 @@ namespace global {
 	return this-> _depFilename;
     }
 	    
-    void State::setDepFilenameUser (const std::string & depFilename) {
+    void State::setGCCDepFilenameUser (const std::string & depFilename) {
 	this-> _depFilenameUser = depFilename;
     }
 
@@ -140,7 +140,7 @@ namespace global {
 	return this-> _depFilenameUser;
     }
 
-    void State::addDepTarget (const std::string & target, bool quoted) {
+    void State::addGCCDepTarget (const std::string & target, bool quoted) {
 	if (!quoted) {
 	    this-> _depTargets.push_back (target);
 	    return;
@@ -179,7 +179,7 @@ namespace global {
 	return this-> _depTargets;
     }
     
-    void State::setDepPhony (bool phony) {
+    void State::setGCCDepPhony (bool phony) {
 	this-> _depPhony = phony;
     }
 

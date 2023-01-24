@@ -38,11 +38,11 @@ YMIR Alias(MM)
 ; Documented in C
 
 -write-dependencies
-YMIR Separate Alias(MD)
+YMIR NoDriverArg Separate Alias(MD)
 ; Documented in C
 
 -write-user-dependencies
-YMIR Separate Alias(MMD)
+YMIR NoDriverArg Separate Alias(MMD)
 ; Documented in C
 
 M
@@ -50,6 +50,10 @@ YMIR
 ; Documented in C
 
 MD
+YMIR Separate NoDriverArg
+; Documented in C
+
+MMD
 YMIR Separate NoDriverArg
 ; Documented in C
 
@@ -63,10 +67,6 @@ YMIR
 
 MM
 YMIR
-; Documented in C
-
-MMD
-YMIR Separate
 ; Documented in C
 
 MP

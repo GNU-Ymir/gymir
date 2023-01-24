@@ -96,6 +96,10 @@ namespace semantic {
 	    auto op = toOperator (un.getOperator ());
 	    if (op == Unary::Operator::MINUS)
 		return UnaryInt::init (un.getLocation (), op, operand.to <Value> ().getType (), operand);
+
+	    if (op == Unary::Operator::NOT_BYTE) {
+		return UnaryInt::init (un.getLocation (), op, operand.to<Value> ().getType (), operand);
+	    }	    
 	    
 	    error (un, operand);
 	    return Generator::empty ();
@@ -292,6 +296,7 @@ namespace semantic {
 		eq (Token::MINUS) return Unary::Operator::MINUS;
 		eq (Token::STAR) return Unary::Operator::UNREF;
 		eq (Token::AND) return Unary::Operator::ADDR;
+		eq (Token::TILDE) return Unary::Operator::NOT_BYTE;
 	    }	    
 
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");

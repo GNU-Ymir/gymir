@@ -122,7 +122,6 @@ namespace Ymir {
 		name = "a-" + Ymir::Path (module.getName ().getFilename ()).fileName ().toString () + ".d";
 	    }
 
-	    println (name);
 	    if (name != "") {
 		deps_stream = fopen (name.c_str (), "w");
 		if (!deps_stream) {
@@ -144,7 +143,7 @@ namespace Ymir {
 	for (auto & gen : validator.getGenerators ()) {
 	    generator.generate (gen);
 	}
-		
+
 	generator.finalize (module.getRealName ());
 	    
 	semantic::Symbol::purge ();
