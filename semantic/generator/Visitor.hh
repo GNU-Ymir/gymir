@@ -43,6 +43,9 @@ namespace semantic {
 	    /** The global context of the generation */
 	    generic::Tree _currentContext;
 
+	    /** List in which variable global to current function are pushed */
+	    generic::TreeStmtList _currentRootList = generic::TreeStmtList::init ();
+	    
 	    /** The declaration of the local var for each frame */
 	    std::vector <std::map <uint32_t, generic::Tree> > _declarators;
 
@@ -606,6 +609,17 @@ namespace semantic {
 	     */
 	    void setCurrentContext (const generic::Tree & tr);
 
+	    /**
+	     * Reset the root list of the function
+	     */
+	    void setCurrentRootList ();
+
+	    /**
+	     * @returns: the list on which global declaration of variable have to be pushed
+	     */
+	    generic::TreeStmtList & getCurrentRootList ();
+	       
+	    
 	    /**
 	     * \brief Add a new vardecl for future var referencing 
 	     */

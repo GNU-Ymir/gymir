@@ -819,18 +819,32 @@ namespace semantic {
 		enterBlock (frame.getLocation ().toString ());
 		auto resultDecl = Tree::resultDecl (frame.getLocation (), ret);
 		fn_decl.setResultDecl (resultDecl);	       
+
+		setCurrentRootList ();
 		
 		Tree value (Tree::empty ());
 		if (frame.needFinalReturn ()) {
 		    TreeStmtList list = TreeStmtList::init ();
 		    value = castTo (frame.getType (), frame.getContent ());
+		    
+		    list.append (getCurrentRootList ().toTree ());		    
 		    list.append (value.getList ());
 		    value = value.getValue ();
 
 		    list.append (Tree::returnStmt (frame.getLocation (), resultDecl, value));
 		    value = list.toTree ();
-		} else value = generateValue (frame.getType (), frame.getContent ());
-	    
+		} else {
+		    value = generateValue (frame.getType (), frame.getContent ());
+		    TreeStmtList list = TreeStmtList::init ();
+		    list.append (getCurrentRootList ().toTree ());
+		    
+		    list.append (value.getList ());
+		    list.append (value.getValue ());
+		    
+		    value = list.toTree ();
+		}
+
+		setCurrentRootList ();
 		auto fnTree = quitBlock (lexing::Word::eof (), value, frame.getLocation ().toString ());
 		auto fnBlock = fnTree.block;
 		fnBlock.setBlockSuperContext (fn_decl);	    
@@ -847,7 +861,7 @@ namespace semantic {
 		    fn_decl.isWeak (false);
 		    fn_decl.isPublic (!frame.isWeak ());
 		}
-		
+
 		fn_decl.isStatic (true);
 		
 		Tree::gimplifyFunction (fn_decl);
@@ -1955,11 +1969,17 @@ namespace semantic {
 		auto type = Tree::pointerType (generateType (uniq.getValue ().to <Value> ().getType ()));		
 		auto name = Ymir::format ("uniq_%", (int) uniq.getRefId ());
 		auto decl = Tree::varDecl (uniq.getLocation (), name, type);
+
+		auto typeContent = generateType (uniq.getValue ().to <Value> ().getType ());		
+		auto nameContent = Ymir::format ("uniq_c_%", (int) uniq.getRefId ());
+		auto declContent = Tree::varDecl (uniq.getLocation (), nameContent, typeContent);
+
 		TreeStmtList list = TreeStmtList::init ();
 		auto t = castTo (uniq.getValue ().to <Value> ().getType (), uniq.getValue ());
-		t = Tree::buildAddress (uniq.getLocation (), t, type);
 		
 		decl.setDeclContext (getCurrentContext ());
+		declContent.setDeclContext (getCurrentContext ());
+		stackVarDeclChain [0].append (declContent);
 		stackVarDeclChain [0].append (decl); // uniq variable must be accessed everywhere in the frame ?
 		// No the real reason is that they can be created from inner blocks, and refere to values of upper blocks
 		// We need to have access to them in upper blocks sometimes, but the best way would be to get the correct block location
@@ -1974,14 +1994,25 @@ namespace semantic {
 		
 		insertDeclarator (uniq.getRefId (), decl);
 
-		list.append (Tree::declExpr (uniq.getLocation (), decl));
-		list.append (decl);
+		getCurrentRootList ().append (Tree::declExpr (uniq.getLocation (), decl));
+		getCurrentRootList ().append (decl);
+
+		getCurrentRootList ().append (Tree::declExpr (uniq.getLocation (), declContent));
+		getCurrentRootList ().append (declContent);
 
 		list.append (t.getList ());
 		list.append (Tree::affect (
 				 this-> stackVarDeclChain.back (), this-> getCurrentContext (),
 				 uniq.getLocation (),
-				 decl, t.getValue ())
+				 declContent, t.getValue ()
+				 )
+		    );
+		
+		auto uniqContentAddr = Tree::buildAddress (uniq.getLocation (), declContent, type);
+		list.append (Tree::affect (
+				 this-> stackVarDeclChain.back (), this-> getCurrentContext (),
+				 uniq.getLocation (),
+				 decl, uniqContentAddr)
 		    );
 
 		return Tree::compound (
@@ -2801,7 +2832,15 @@ namespace semantic {
 	void Visitor::setCurrentContext (const Tree & tr) {
 	    this-> _currentContext = tr;
 	    __current_function_ctx__ = tr.getTree ();
-	}	
+	}
+
+	void Visitor::setCurrentRootList () {
+	    this-> _currentRootList = TreeStmtList::init ();
+	}
+
+	generic::TreeStmtList& Visitor::getCurrentRootList () {
+	    return this-> _currentRootList;
+	}
 	
 
 	std::string Visitor::identify (const Generator & gen) {
