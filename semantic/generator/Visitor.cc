@@ -1970,16 +1970,10 @@ namespace semantic {
 		auto name = Ymir::format ("uniq_%", (int) uniq.getRefId ());
 		auto decl = Tree::varDecl (uniq.getLocation (), name, type);
 
-		auto typeContent = generateType (uniq.getValue ().to <Value> ().getType ());		
-		auto nameContent = Ymir::format ("uniq_c_%", (int) uniq.getRefId ());
-		auto declContent = Tree::varDecl (uniq.getLocation (), nameContent, typeContent);
-
 		TreeStmtList list = TreeStmtList::init ();
 		auto t = castTo (uniq.getValue ().to <Value> ().getType (), uniq.getValue ());
 		
 		decl.setDeclContext (getCurrentContext ());
-		declContent.setDeclContext (getCurrentContext ());
-		stackVarDeclChain [0].append (declContent);
 		stackVarDeclChain [0].append (decl); // uniq variable must be accessed everywhere in the frame ?
 		// No the real reason is that they can be created from inner blocks, and refere to values of upper blocks
 		// We need to have access to them in upper blocks sometimes, but the best way would be to get the correct block location
@@ -1997,23 +1991,39 @@ namespace semantic {
 		getCurrentRootList ().append (Tree::declExpr (uniq.getLocation (), decl));
 		getCurrentRootList ().append (decl);
 
-		getCurrentRootList ().append (Tree::declExpr (uniq.getLocation (), declContent));
-		getCurrentRootList ().append (declContent);
-
 		list.append (t.getList ());
-		list.append (Tree::affect (
-				 this-> stackVarDeclChain.back (), this-> getCurrentContext (),
-				 uniq.getLocation (),
-				 declContent, t.getValue ()
-				 )
-		    );
+
+		if (TREE_CODE (t.getValue ().getTree ()) == VAR_DECL) {
+		    auto uniqContentAddr = Tree::buildAddress (uniq.getLocation (), t.getValue (), type);
+		    list.append (Tree::affect (
+				     this-> stackVarDeclChain.back (), this-> getCurrentContext (),
+				     uniq.getLocation (),
+				     decl, uniqContentAddr)
+			);
+
+		} else {
+		    auto typeContent = generateType (uniq.getValue ().to <Value> ().getType ());		
+		    auto nameContent = Ymir::format ("uniq_c_%", (int) uniq.getRefId ());
+		    auto declContent = Tree::varDecl (uniq.getLocation (), nameContent, typeContent);
+		    declContent.setDeclContext (getCurrentContext ());
+		    stackVarDeclChain [0].append (declContent);
+		    getCurrentRootList ().append (Tree::declExpr (uniq.getLocation (), declContent));
+		    getCurrentRootList ().append (declContent);
 		
-		auto uniqContentAddr = Tree::buildAddress (uniq.getLocation (), declContent, type);
-		list.append (Tree::affect (
-				 this-> stackVarDeclChain.back (), this-> getCurrentContext (),
-				 uniq.getLocation (),
-				 decl, uniqContentAddr)
-		    );
+		    list.append (Tree::affect (
+				     this-> stackVarDeclChain.back (), this-> getCurrentContext (),
+				     uniq.getLocation (),
+				     declContent, t.getValue ()
+				     )
+			);
+				
+		    auto uniqContentAddr = Tree::buildAddress (uniq.getLocation (), declContent, type);
+		    list.append (Tree::affect (
+				     this-> stackVarDeclChain.back (), this-> getCurrentContext (),
+				     uniq.getLocation (),
+				     decl, uniqContentAddr)
+			);
+		}
 
 		return Tree::compound (
 		    uniq.getLocation (),
