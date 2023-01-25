@@ -75,10 +75,15 @@ namespace semantic {
 	    auto sym = cls; // some cheating on c++ const, to store the generator inside the class symbol
 	    // and avoid validating multiple times the same class
 	    std::list <Error::ErrorMsg> errors;
-	    auto ancestor = this-> validateAncestor (cls);
 	    
-	    auto gen = generator::Class::init (cls.getName (), sym, ClassRef::init (cls.getName (), ancestor, sym));
 	    // To avoid recursive validation 
+	    auto gen = generator::Class::init (cls.getName (), sym, ClassRef::init (cls.getName (), Generator::empty (), sym));
+	    sym.to <semantic::Class> ().setGenerator (gen);
+	    
+	    auto ancestor = this-> validateAncestor (cls);
+
+	    // To avoid recursive validation 
+	    gen = generator::Class::init (cls.getName (), sym, ClassRef::init (cls.getName (), ancestor, sym));
 	    sym.to <semantic::Class> ().setGenerator (gen);
 
 	    __validation__.push_back (cls);
