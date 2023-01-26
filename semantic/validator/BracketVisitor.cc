@@ -44,15 +44,73 @@ namespace semantic {
 	    if (left.to <Value> ().getType ().is <Slice> ()) {
 		return validateSlice (expression, left, rights);
 	    }
+
+	    if (left.to <Value> ().getType ().is <Pointer> ()) {
+		return validatePointer (expression, left, rights);
+	    }
 	    
-	    if (left.to <Value> ().getType ().is<ClassPtr> ())
-	    return validateClass (expression, left, rights);
+	    if (left.to <Value> ().getType ().is<ClassPtr> ()) {
+		return validateClass (expression, left, rights);
+	    }
 	    
 	    BracketVisitor::error (expression, left, rights);
 	    return Generator::empty ();
 	}
 
+	/**
+	 * ======================================================================================================
+	 * ======================================================================================================
+	 * ==============================================     POINTER     =======================================
+	 * ======================================================================================================
+	 * ======================================================================================================
+	 */
 
+	Generator BracketVisitor::validatePointer (const syntax::MultOperator & expression, const Generator & left, const std::vector <Generator> & right) {
+	    if (right.size () == 1 && right [0].to <Value> ().getType ().is <Integer> ()) {
+		return validatePointerInteger (expression, left, right [0]);
+	    }
+
+	    BracketVisitor::error (expression, left, right);
+	    return Generator::empty ();
+	}
+
+	Generator BracketVisitor::validatePointerInteger (const syntax::MultOperator & expression, const Generator & left, const Generator & right) {
+	    auto loc = expression.getLocation ();
+	    auto innerType = left.to <Value> ().getType ().to <Type> ().getInners () [0];
+	   	    
+	    auto ptrFinal = this-> _context.validateValue (
+		syntax::Binary::init (
+		    lexing::Word::init (loc, Token::PLUS),
+		    TemplateSyntaxWrapper::init (loc, left),
+		    syntax::Binary::init (
+			lexing::Word::init (loc, Token::STAR),
+			TemplateSyntaxWrapper::init (loc,
+						     SizeOf::init (loc, Integer::init (loc, 0, false), innerType)),
+			TemplateSyntaxWrapper::init (loc,
+						     Cast::init (loc, Integer::init (loc, 0, false), right)),
+			syntax::Expression::empty ()
+			), syntax::Expression::empty ())
+		);
+		
+	    if (!left.to <Value> ().getType ().to <Type> ().isMutable ()) {
+		innerType = Type::init (innerType.to<Type> (), false);
+	    }
+
+	    auto ret = UnaryPointer::init (loc,
+					   Unary::Operator::UNREF,
+					   innerType,
+					   ptrFinal
+	    	);
+	    
+	    auto segFaultType = Generator::init (loc, this-> _context.getCache ().segFault.getValue ());
+	    
+	    auto thrs = ret.getThrowers ();
+	    thrs.push_back (segFaultType);
+	    ret.setThrowers (thrs);
+	    
+	    return ret;	    
+	}	
+	
 	/**
 	 * ======================================================================================================
 	 * ======================================================================================================

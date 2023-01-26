@@ -79,7 +79,12 @@ namespace semantic {
 	     */
 	    generator::Generator validateClass (const syntax::MultOperator & expression, const generator::Generator & left, const std::vector <generator::Generator> & rights);
 
+	    /**
+	     * \brief Validate an opIndex on a pointer operand
+	     */
+	    generator::Generator validatePointer (const syntax::MultOperator & expression, const generator::Generator & fst, const std::vector <generator::Generator> & rights);
 
+	    
 	    /**
 	     * Create the generator for the expression `throw OutOfArray::new ();` 
 	     */
@@ -172,7 +177,16 @@ namespace semantic {
 	     */
 	    generator::Generator validateRangeCheck (const syntax::MultOperator & expression, const generator::Generator & fst, const generator::Generator & scd, const generator::Generator & len);
 
+
+	    /**
+	     * \brief Validate the opIndex on a pointer operand, using just an integer value
+	     * \param expression the expression used for the access
+	     * \param left the left operand of opIndex
+	     * \param right the right operand of opIndex
+	     */
+	    generator::Generator validatePointerInteger (const syntax::MultOperator & expression, const generator::Generator & left, const generator::Generator & right);
 	    
+
 	};
 	
     }
