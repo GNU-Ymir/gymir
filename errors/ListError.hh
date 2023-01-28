@@ -81,6 +81,7 @@ namespace Ymir {
 	static const char*	INFINITE_CONSTRUCTION_LOOP;
 	static const char*	INHERIT_FINAL_CLASS;
 	static const char*	INHERIT_NO_CLASS;
+	static const char*      INHERIT_RECURSIVE;
 	static const char*	INSERT_NO_TABLE;
 	static const char*	INVALID_MACRO_EVAL;
 	static const char*	INVALID_MACRO_RULE;

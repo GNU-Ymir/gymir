@@ -80,13 +80,20 @@ namespace semantic {
 	    auto gen = generator::Class::init (cls.getName (), sym, ClassRef::init (cls.getName (), Generator::empty (), sym));
 	    sym.to <semantic::Class> ().setGenerator (gen);
 	    
-	    auto ancestor = this-> validateAncestor (cls);
-
+	    auto ancestor = this-> validateAncestor (cls);	    
+	    
 	    // To avoid recursive validation 
 	    gen = generator::Class::init (cls.getName (), sym, ClassRef::init (cls.getName (), ancestor, sym));
 	    sym.to <semantic::Class> ().setGenerator (gen);
 
+	    // Check that the current class is not the ancestor of the ancestor
+	    auto err = this-> checkRecursiveAncestor (gen.to <generator::Class> ());
+	    if (err.size () != 0) {
+		this-> throwErrors (sym, err);
+	    }
+	    
 	    __validation__.push_back (cls);
+	    
 	    if (__validation__.size () == 1) {
 		this-> validateCtes (cls); // this throws if an error occur anyway,
 		// we don't wan't to validate the class if an assertion failed
@@ -708,8 +715,49 @@ namespace semantic {
 	 */
 
 	generator::Generator ClassVisitor::validateAncestor (const semantic::Symbol & cls) {
+	    auto sym = cls;
+	    
 	    if (!cls.to <semantic::Class> ().getAncestor ().isEmpty ()) {
 		auto ancestor = this-> _context.validateValue (cls.to <semantic::Class> ().getAncestor (), true, false);
+		if (ancestor.is <generator::MultSym> ()) {
+		    std::vector <generator::Generator> uniqAncestor;
+		    std::vector <generator::Generator> recursiveAncestors;
+		    for (auto &it : ancestor.to <generator::MultSym> ().getGenerators ()) {
+			// If it is a class in validation it cannot be the ancestor, it means it needs the current class to be complete
+			if (it.is<generator::Class> () || it.is <generator::ClassRef> ()) {
+			    // Check ancestor recursivity, to remove them from potential ancestors
+			    auto save = sym.to<semantic::Class> ().getGenerator ();
+			    
+			    auto a = it;
+			    if (a.is <generator::Class> ()) a = a.to <generator::Class> ().getClassRef ();
+			    auto gen = generator::Class::init (cls.getName (), sym, ClassRef::init (cls.getName (), a, sym));
+			    sym.to <semantic::Class> ().setGenerator (gen);
+			   			    
+			    if (this-> checkRecursiveAncestor (gen.to <generator::Class> ()).size () != 0) {
+				recursiveAncestors.push_back (it);
+			    } else {
+				uniqAncestor.push_back (it);			    			    	
+			    }
+
+			    sym.to <semantic::Class> ().setGenerator (save);
+			}			
+		    }
+
+		    if (uniqAncestor.size () == 0) uniqAncestor = std::move (recursiveAncestors);
+		    
+		    if (uniqAncestor.size () > 1) {
+			auto note = Ymir::Error::createNote (uniqAncestor[0].getLocation ());
+			auto note2 = Ymir::Error::createNote (uniqAncestor[1].getLocation ());
+			Ymir::Error::occurAndNote (cls.to<semantic::Class> ().getAncestor ().getLocation (),
+						   {note, note2},
+						   ExternalError::SPECIALISATION_WORK_TYPE_BOTH);
+		    }
+
+		    if (uniqAncestor.size () == 1) {
+			ancestor = uniqAncestor [0];
+		    }
+		}
+				
 		if (ancestor.is <generator::Class> ()) ancestor = ancestor.to <generator::Class> ().getClassRef ();
 		if (!ancestor.is <ClassRef> ()) {
 		    Ymir::Error::occur (cls.to <semantic::Class> ().getAncestor ().getLocation (),
@@ -726,8 +774,44 @@ namespace semantic {
 		return ancestor;
 	    } return Generator::empty ();
 	}
+
+
+	std::list <Ymir::Error::ErrorMsg> ClassVisitor::checkRecursiveAncestor (const generator::Class & c) {
+	    std::vector <semantic::Symbol> syms;
+	    try {
+		this-> checkRecursiveAncestor (c, syms);
+	    } catch (Error::ErrorList & list) {
+		return list.errors;
+	    }
+ 
+	    return {};
+	}
+
+	void ClassVisitor::checkRecursiveAncestor (const generator::Class & c, std::vector<semantic::Symbol> & syms) {	    
+	    auto sym = c.getClassRef ().to <generator::ClassRef> ().getRef ();
+	    for (auto & it : syms) {
+		if (it.isSameRef (sym)) {
+		    Ymir::Error::occur (c.getLocation (),
+					ExternalError::INHERIT_RECURSIVE);
+		}
+	    }
+
+	    if (!c.getClassRef ().to <generator::ClassRef> ().getAncestor ().isEmpty ()) {
+		syms.push_back (sym);
+		try {
+		    auto ancestor = c.getClassRef ().to <generator::ClassRef> ().getAncestor ().to <generator::ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
+		    if (!ancestor.isEmpty ()) {
+			this-> checkRecursiveAncestor (ancestor.to <generator::Class> (), syms);
+		    }
+		} catch (Error::ErrorList list) {
+		    auto lst = list.errors;
+		    lst.back ().addNote (Ymir::Error::createNote (c.getLocation ()));
+		    throw Error::ErrorList {lst};
+		}
+	    }	    
+	}
 	
 
     }    
-
+    
 }

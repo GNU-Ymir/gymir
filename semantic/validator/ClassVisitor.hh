@@ -165,6 +165,18 @@ namespace semantic {
 	     */
 	    generator::Generator validateAncestor (const semantic::Symbol & cls);
 
+	    /**
+	     * Check that there is no recursion of ancestor for the class c (A over B over A)
+	     */
+	    std::list <Ymir::Error::ErrorMsg> checkRecursiveAncestor (const generator::Class & c);
+
+	    /**
+	     * Check that there is no recursion of ancestor for the class c (A over B over A)
+	     * @params:
+	     *     - syms: the list of ancestor already seen
+	     */
+	    void checkRecursiveAncestor (const generator::Class & c, std::vector <semantic::Symbol> & syms);
+	    
 
 	    /**
 	     * ================================================================================
@@ -183,9 +195,6 @@ namespace semantic {
 	     * Validate the content symbol of the class (constructors, and methods)
 	     */
 	    void validateInnerClass (const semantic::Symbol & cls, std::list <Ymir::Error::ErrorMsg> & errors);
-
-	    
-
 
 	};
 	

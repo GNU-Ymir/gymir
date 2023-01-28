@@ -62,6 +62,7 @@ namespace Ymir {
     const char*		ExternalError::INFINITE_CONSTRUCTION_LOOP	  = "infinite construction loop";
     const char*		ExternalError::INHERIT_FINAL_CLASS		  = "the base class %(y) is marked as final";
     const char*		ExternalError::INHERIT_NO_CLASS			  = "the base of a class must be a class, not a %(y)";
+    const char*		ExternalError::INHERIT_RECURSIVE		  = "recursive inheritence, the current class is an ancestor of its ancestor";
     const char*		ExternalError::INSERT_NO_TABLE			  = "insertion of a symbol in an entity that cannot be a referent";
     const char*		ExternalError::INVALID_MACRO_EVAL		  = "invalid macro evaluation % in %";
     const char*		ExternalError::INVALID_MACRO_RULE		  = "%(y) is not a macro rule";
