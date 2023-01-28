@@ -46,7 +46,6 @@ namespace Ymir {
     const char*		ExternalError::GLOBAL_VAR_DEPENDENCY		  = "the global var %(y) cannot be initialized from the value of %(y)";
     const char*		ExternalError::IMMUTABLE_LVALUE			  = "left operand of type %(y) is immutable";
     const char*		ExternalError::IMPLICIT_ALIAS			  = "implicit alias of type %(y) is not allowed, it will implicitly discard constant qualifier";
-    const char*         ExternalError::IMPLICIT_PURE                      = "implicit pure of type %(y) is not allowed, it will implicitly discard constant qualifier";
     const char*		ExternalError::IMPLICIT_OVERRIDE		  = "implicit override of method %(y) is not allowed";
     const char*		ExternalError::IMPLICIT_OVERRIDE_BY_TRAIT	  = "implicit override of method %(y) by trait implementation is not allowed";
     const char*		ExternalError::IMPLICIT_REFERENCE		  = "implicit referencing of type %(y) is not allowed";
@@ -54,7 +53,6 @@ namespace Ymir {
     const char*		ExternalError::IMPOSSIBLE_EXTERN		  = "impossible extern declaration";
     const char*		ExternalError::INCOMPATIBLE_TOKENS		  = "incompatible tokens : [%(y)] and [%(y)]";
     const char*		ExternalError::INCOMPATIBLE_TYPES		  = "incompatible types %(y) and %(y)";
-    const char*         ExternalError::INCOMPATIBLE_TYPES_RANGE           = "type %(y) cannot be used to construct a range";
     const char*		ExternalError::INCOMPATIBLE_VALUES		  = "incompatible values";
     const char*		ExternalError::INCOMPLETE_TEMPLATE		  = "the template %(y) is incomplete due to previous errors, use -v to show them";
     const char*		ExternalError::INCOMPLETE_TYPE			  = "the type %(y) is not complete";
@@ -74,8 +72,6 @@ namespace Ymir {
     const char*		ExternalError::IN_TEMPLATE_DEF			  = "in template specialization";
     const char*		ExternalError::IN_TRAIT_VALIDATION		  = "in trait validation";
     const char*		ExternalError::IS_TYPE				  = "cannot declare a variable named %(y), identifier is already used for a type";
-    const char*         ExternalError::LOCAL_FIELD_OFFSET_OUT_CLASS	  = "local_field_offsets cannot be used outside class context";
-    const char*	        ExternalError::LOCAL_TUPLEOF_OUT_CLASS		  = "local_tupleof cannot be used outside class context";
     const char*		ExternalError::LOCKED_CONTEXT			  = "the mutable element %(y) is locked in this iteration context";
     const char*		ExternalError::MACRO_MULT_NO_VAR		  = "macro multiple expression must be identified inside a var";
     const char*		ExternalError::MACRO_REST			  = "macro validation incomplete, there remains : [%(y)]";
@@ -111,6 +107,7 @@ namespace Ymir {
     const char*		ExternalError::NO_ALIAS_EXIST			  = "cannot alias type %(y)";
     const char*		ExternalError::NO_BODY_METHOD			  = "the method %(y) has no body";
     const char*		ExternalError::NO_COPY_EXIST			  = "no copy exists for type %(y)";
+    const char*		ExternalError::NO_PARAMETER_NAMED		  = "no parameter named %(y)";
     const char*		ExternalError::NO_SIZE_FORWARD_REF		  = "the field has no size because of forward reference";
     const char*		ExternalError::NO_SUCH_FILE			  = "%(y) no such file, or permission denied";
     const char*		ExternalError::NO_SUPER_FOR_CLASS		  = "cannot construct super for class %(y), it has no ancestor";
@@ -124,7 +121,6 @@ namespace Ymir {
     const char*		ExternalError::OVERRIDE_PRIVATE			  = "cannot override private method %(y)";
     const char*		ExternalError::PACKED_AND_UNION			  = "structures could not be packed and union at the same time";
     const char*		ExternalError::PARAMETER_NAME			  = "for parameter % of %";
-    const char*		ExternalError::NO_PARAMETER_NAMED		  = "no parameter named %(y)";
     const char*		ExternalError::PRIVATE_IN_THIS_CONTEXT		  = "%(B) : % is private within this context";
     const char*		ExternalError::PROTECTION_NO_IMPACT		  = "protection %(y) has no impact on %(y) declaration";
     const char*		ExternalError::REF_NO_EFFECT			  = "the creation of ref has no effect on the left operand";
@@ -174,7 +170,8 @@ namespace Ymir {
     const char*		ExternalError::UNDEF_TYPE			  = "undefined type %(y)";
     const char*		ExternalError::UNDEF_VAR			  = "undefined symbol %(y)";
     const char*		ExternalError::UNINIT_FIELD			  = "the field %(y) has no initial value";
-    const char*		ExternalError::UNION_CST_MULT			  = "the construction of an union requires only one parameter";
+    const char*		ExternalError::UNION_CST_MULT			  = "the construction of an union requires only one named parameter";
+    const char*		ExternalError::UNION_CST_NONE			  = "the construction of an union requires a named parameter";
     const char*		ExternalError::UNION_INIT_FIELD			  = "default field value of union has no sense";
     const char*		ExternalError::UNKNOWN_LAMBDA_TYPE		  = "lambda function is not complete, missing type for parameter %(y)";
     const char*		ExternalError::UNKNOWN_OPTION_NAME		  = "%(y) is not a valid option name";
@@ -199,5 +196,12 @@ namespace Ymir {
     const char*		ExternalError::VOID_VAR_VALUE			  = "cannot declare a var of type void from value %(y)";
     const char*		ExternalError::WRONG_IMPLEMENT			  = "the method %(y) was declared by trait %(y), not %(y)";
     const char*		ExternalError::WRONG_MODULE_NAME		  = "the module named %(y) must be placed in a file named %(y)";
+    const char*	        ExternalError::LOCAL_TUPLEOF_OUT_CLASS		  = "local_tupleof cannot be used outside class context";
+    const char*         ExternalError::IMPLICIT_PURE                      = "implicit pure of type %(y) is not allowed, it will implicitly discard constant qualifier";
+    const char*         ExternalError::INCOMPATIBLE_TYPES_RANGE           = "type %(y) cannot be used to construct a range";
+    const char*         ExternalError::LOCAL_FIELD_OFFSET_OUT_CLASS	  = "local_field_offsets cannot be used outside class context";
     const char*         ExternalError::SCOPE_MUST_BE_SAFE                 = "scope guard must be safe";
+    const char*         ExternalError::STRUCT_FIELD_NO_VALUE              = "field %(y) of struct %(y) has no default value";
+    const char*         ExternalError::STRUCT_NO_FIELD                    = "struct %(y) has no field named %(y)";
+    const char*         ExternalError::UNION_ONLY_NAMED                   = "only a named expression can be used to construct an union";
 }

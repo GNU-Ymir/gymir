@@ -377,11 +377,18 @@ namespace semantic {
 		
 	    for (auto it : str.getFields ()) {
 		auto param = findParameterStruct (rights, it.to<generator::VarDecl> ());
-		if (param.isEmpty ()) return Generator::empty ();
+		if (param.isEmpty ()) {
+		    errors.push_back (Ymir::Error::makeOccur (it.getLocation (), ExternalError::STRUCT_FIELD_NO_VALUE, str.prettyString (), it.getLocation ().getStr ()));  
+		}
+		
 		params.push_back (param);
 	    }
-		
-	    if (rights.size () != 0) return Generator::empty ();
+	    
+	    if (errors.size () != 0 || rights.size () != 0) {
+		this-> checkStructNamedGen (str, rights, errors);
+		return Generator::empty ();
+	    }
+	    
 	    for (auto it : Ymir::r (0, str.getFields ().size ())) {
 		try {
 		    this-> _context.verifyMemoryOwner (
@@ -397,7 +404,10 @@ namespace semantic {
 	    }
 	    
 
-	    if (errors.size () != 0) return Generator::empty ();
+	    if (errors.size () != 0) {
+		this-> checkStructNamedGen (str, rights, errors);
+		return Generator::empty ();
+	    }
 	    
 	    score = 0;
 	    auto structType = StructRef::init (str.getLocation (), str.getRef ());
@@ -406,39 +416,64 @@ namespace semantic {
 	    return StructCst::init (location, structType, str.clone (), types, params);
 	}
 
+
+	void CallVisitor::checkStructNamedGen (const generator::Struct & str, const std::vector<Generator> & rights, std::list<Ymir::Error::ErrorMsg> & errors) const {
+	    for (auto & it : rights) {
+		if (it.is<NamedGenerator> ()) {
+		    bool found = false;
+		    for (auto & fi : str.getFields ()) {
+			if (fi.getLocation ().getStr () == it.to <NamedGenerator> ().getLocation ().getStr ()) {
+			    found = true;
+			    break;
+			}
+		    }
+		    if (!found) {
+			errors.push_back (Ymir::Error::makeOccur (it.getLocation (),
+								  ExternalError::STRUCT_NO_FIELD, str.prettyString (), it.to <NamedGenerator> ().getLocation ().getStr ()));
+		    }
+		}
+	    }
+	}
+	
+
 	Generator CallVisitor::validateUnionCst (const lexing::Word & location, const generator::Struct & str, const std::vector <Generator> & rights, int & score, std::list <Ymir::Error::ErrorMsg> & errors) {
 	    lexing::Word name = lexing::Word::eof ();
 	    std::vector <Generator> params;
 	    std::vector <Generator> types;
 	    try {
-		if (rights.size () != 1) {
+		if (rights.size () > 1) {
 		    Ymir::Error::occur (location, ExternalError::UNION_CST_MULT);
+		} else if (rights.size () == 0) {
+		    Ymir::Error::occur (location, ExternalError::UNION_CST_NONE);
+		} else if (!rights[0].is <NamedGenerator> ()) {
+		    Ymir::Error::occur (rights[0].getLocation (), ExternalError::UNION_ONLY_NAMED);
 		}
 
-		if (rights [0].is <NamedGenerator> ()) { // If it is a named gen, we get the field with the same name
-		    name = rights [0].to <NamedGenerator> ().getLocation ();
-		    auto param = rights [0].to <NamedGenerator> ().getContent ();
-		    for (auto it : str.getFields ()) {
-			if (it.to <generator::VarDecl> ().getLocation ().getStr () == name.getStr ()) {
-			    this-> _context.verifyMemoryOwner (
-				name,
-				it.to <generator::VarDecl> ().getVarType (),
-				param,
-				true
-				);
+		name = rights [0].to <NamedGenerator> ().getLocation ();
+		auto param = rights [0].to <NamedGenerator> ().getContent ();
+		for (auto it : str.getFields ()) {
+		    if (it.to <generator::VarDecl> ().getLocation ().getStr () == name.getStr ()) {
+			this-> _context.verifyMemoryOwner (
+			    name,
+			    it.to <generator::VarDecl> ().getVarType (),
+			    param,
+			    true
+			    );
 				
-			    types.push_back (it.to <generator::VarDecl> ().getVarType ());
-			    params.push_back (param);
-			    break;
-			}
+			types.push_back (it.to <generator::VarDecl> ().getVarType ());
+			params.push_back (param);
+			break;
 		    }
-		} // No else, we must name the field we want to construct
-	    } catch (Error::ErrorList list) {
+		}
+		
+	    } catch (Error::ErrorList list) {		
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    }
 	    
-	    if (params.size () == 0) return Generator::empty ();
-	    if (errors.size () != 0) return Generator::empty ();
+	    if (params.size () == 0 || errors.size () != 0) {
+		this-> checkStructNamedGen (str, rights, errors);
+		return Generator::empty ();
+	    }
 	    
 	    score = 0;
 	    return UnionCst::init (location, StructRef::init (str.getLocation (), str.getRef ()), str.clone (), name.getStr (), types[0], params[0]);

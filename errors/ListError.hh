@@ -65,15 +65,14 @@ namespace Ymir {
 	static const char*	GLOBAL_VAR_DEPENDENCY; 
 	static const char*	IMMUTABLE_LVALUE;
 	static const char*	IMPLICIT_ALIAS;
-	static const char*      IMPLICIT_PURE;
 	static const char*	IMPLICIT_OVERRIDE;
 	static const char*	IMPLICIT_OVERRIDE_BY_TRAIT;
 	static const char*	IMPLICIT_REFERENCE;
 	static const char*	IMPL_NO_TRAIT;
 	static const char*	IMPOSSIBLE_EXTERN;
 	static const char*	INCOMPATIBLE_TOKENS;
-	static const char*	INCOMPATIBLE_TYPES_RANGE;
 	static const char*	INCOMPATIBLE_TYPES;
+	static const char*	INCOMPATIBLE_TYPES_RANGE;
 	static const char*	INCOMPATIBLE_VALUES;
 	static const char*	INCOMPLETE_TEMPLATE;
 	static const char*	INCOMPLETE_TYPE;
@@ -81,7 +80,6 @@ namespace Ymir {
 	static const char*	INFINITE_CONSTRUCTION_LOOP;
 	static const char*	INHERIT_FINAL_CLASS;
 	static const char*	INHERIT_NO_CLASS;
-	static const char*      INHERIT_RECURSIVE;
 	static const char*	INSERT_NO_TABLE;
 	static const char*	INVALID_MACRO_EVAL;
 	static const char*	INVALID_MACRO_RULE;
@@ -130,6 +128,7 @@ namespace Ymir {
 	static const char*	NO_ALIAS_EXIST;
 	static const char*	NO_BODY_METHOD;
 	static const char*	NO_COPY_EXIST;
+	static const char*	NO_PARAMETER_NAMED;
 	static const char*	NO_SIZE_FORWARD_REF;
 	static const char*	NO_SUCH_FILE;
 	static const char*	NO_SUPER_FOR_CLASS;
@@ -143,7 +142,6 @@ namespace Ymir {
 	static const char*	OVERRIDE_PRIVATE;
 	static const char*	PACKED_AND_UNION;
 	static const char*	PARAMETER_NAME;
-	static const char*	NO_PARAMETER_NAMED;
 	static const char*	PRIVATE_IN_THIS_CONTEXT;
 	static const char*	PROTECTION_NO_IMPACT;
 	static const char*	REF_NO_EFFECT;
@@ -194,9 +192,11 @@ namespace Ymir {
 	static const char*	UNDEF_VAR;
 	static const char*	UNINIT_FIELD;
 	static const char*	UNION_CST_MULT;
+	static const char*	UNION_CST_NONE;
 	static const char*	UNION_INIT_FIELD;
 	static const char*	UNKNOWN_LAMBDA_TYPE;
 	static const char*	UNKNOWN_OPTION_NAME;
+	static const char*	UNKNOWN_PRAGMA;
 	static const char*	UNREACHBLE_STATEMENT;
 	static const char*	UNRESOLVED_TEMPLATE;
 	static const char*	UNTERMINATED_SEQUENCE;
@@ -217,8 +217,12 @@ namespace Ymir {
 	static const char*	VOID_VAR_VALUE;
 	static const char*	WRONG_IMPLEMENT;
 	static const char*	WRONG_MODULE_NAME;
-	static const char*	UNKNOWN_PRAGMA;
+	static const char*      IMPLICIT_PURE;
+	static const char*      INHERIT_RECURSIVE;
 	static const char*      SCOPE_MUST_BE_SAFE;
+	static const char*      STRUCT_FIELD_NO_VALUE;
+	static const char*      STRUCT_NO_FIELD;
+	static const char*      UNION_ONLY_NAMED;
     };
     
         

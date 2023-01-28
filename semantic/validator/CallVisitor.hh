@@ -155,6 +155,14 @@ namespace semantic {
 	    generator::Generator validateStructCst (const lexing::Word & location, const generator::Struct & str, const std::vector <generator::Generator> & params, int & score, std::list <Ymir::Error::ErrorMsg> & errors);
 
 	    /**
+	     * Check if there are parameters with named generator that have no sense
+	     * \param str the structure that is constructed
+	     * \param params the list of parameters used to construct the struct
+	     * \param errors the list of errors to fill
+	     */
+	    void checkStructNamedGen (const generator::Struct & str, const std::vector <generator::Generator> & params, std::list <Ymir::Error::ErrorMsg> & errors) const; 
+	    
+	    /**
 	     *  Validate a call expression on a union structure
 	     * \param expression the call expression 
 	     * \param str the structure to construct
