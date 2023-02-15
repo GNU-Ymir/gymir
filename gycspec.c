@@ -33,8 +33,8 @@
 #endif
 #endif
 
-#ifndef LIBBFD
-#define LIBBFD "bfd"
+#ifndef LIBDWARF
+#define LIBDWARF "dwarf"
 #endif
 
 #ifndef LIBUNITTEST
@@ -58,7 +58,7 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
     bool need_pthread = *in_decoded_options_count != 1;
     bool need_libs = true, need_unittest = false;
 #ifdef __linux__
-    bool need_m = true, need_bfd = true;
+    bool need_m = true, need_dwarf = true;
 #endif
     /* bool need_midgard = *in_decoded_options_count != 1; */
     /* bool need_runtime = *in_decoded_options_count != 1; */
@@ -72,7 +72,7 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 	    if (arg != NULL && (strcmp (arg, LIBPTHREAD) == 0)) need_pthread = false;
 #ifdef __linux__
 	    if (arg != NULL && (strcmp (arg, LIBM) == 0)) need_m = false;
-	    if (arg != NULL && (strcmp (arg, LIBBFD) == 0)) need_bfd = false;
+	    if (arg != NULL && (strcmp (arg, LIBDWARF) == 0)) need_dwarf = false;
 #endif
 	} else if (decoded_options [i].opt_index == OPT_SPECIAL_input_file) {
 	    yr_file_found = true;	    
@@ -87,7 +87,7 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
     
     if (yr_file_found) {
 #ifdef __linux__
-	num_args = argc + ((need_gc + need_pthread + need_libs + need_m + need_bfd + need_unittest)) + includes.size ();
+	num_args = argc + ((need_gc + need_pthread + need_libs + need_m + need_dwarf + need_unittest)) + includes.size ();
 #else
 	num_args = argc + ((need_gc + need_pthread + need_libs + need_unittest)) + includes.size ();
 #endif
@@ -131,8 +131,8 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 	    i++;
 	}
 	
-	if (need_bfd) {
-	  generate_option (OPT_l, LIBBFD, 1, CL_DRIVER, &new_decoded_options [i]);
+	if (need_dwarf) {
+	  generate_option (OPT_l, LIBDWARF, 1, CL_DRIVER, &new_decoded_options [i]);
 	  added_libraries ++;
 	    i++;
 	}
