@@ -83,7 +83,6 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 	    need_unittest = false;
 	} else if (decoded_options [i].opt_index == OPT_funittest) {
 	    need_unittest = true;
-	    need_libs = false;
 	}
     }
     
