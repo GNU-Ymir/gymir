@@ -20,7 +20,7 @@ git checkout releases/gcc-{version}
 
 # cloning ymir - master revision
 cd ${install_dir}/gcc/gcc-src/gcc
-git clone --depth=1 https://github.com/GNU-Ymir/gymir.git ymir
+git clone https://github.com/GNU-Ymir/gymir.git ymir
 cd ${install_dir}/gcc-src/gcc/ymir
 git checkout bootstrap
 ./configure.sh
