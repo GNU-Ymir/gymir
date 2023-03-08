@@ -1,0 +1,40 @@
+mod binding::parser;
+
+import ymirc::parser;
+import ymirc::utils::_;
+
+import ymirc::args::_;
+import ymirc::errors::_;
+import std::collection::vec;
+
+import std::conv;
+import std::io;
+
+extern (C) def ymir_binding_parse_file (nb_files : u32, filenames : &(&c8)) {
+    let dmut files = Vec!{[c32]}::new ();
+    for i in 0u32 .. nb_files {
+        files:.push (filenames [i].fromStringZ ().to![c32] ());
+    } catch {
+        _ => __pragma!panic ();
+    }
+
+    let args = YmirArguments (files-> files[]);
+    {
+        let dmut parser = Parser::new (args);
+
+        let gens = parser:.parseAll ();
+        for gen in gens {
+            println (format ("%", gen));
+        }
+    } catch {
+        err : &ErrorMsg => {
+            println (format ("%", err));
+            __version DEBUG {
+                for j in err.getRecursiveTrace () {
+                    println (j);
+                }
+            }
+            println (format ("ymirc: %(r)\ncompilation terminated", "fatal error"s8));
+        }
+    }
+}

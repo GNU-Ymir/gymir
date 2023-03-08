@@ -39,7 +39,6 @@ enum y_tree_index
 
 extern GTY(()) tree y_global_trees[YTI_MAX];
 
-
 #define y_bool_type			y_global_trees[YTI_BOOL_TYPE]
 #define y_i8_type			y_global_trees[YTI_I8_TYPE]
 #define y_u8_type			y_global_trees[YTI_U8_TYPE]
@@ -56,4 +55,6 @@ extern GTY(()) tree y_global_trees[YTI_MAX];
 #define y_c8_type			y_global_trees[YTI_C8_TYPE]
 #define y_c16_type			y_global_trees[YTI_C16_TYPE]
 #define y_c32_type			y_global_trees[YTI_C32_TYPE]
- 
+
+
+extern "C" void ymir_binding_parse_file (uint32_t nb_files, const char ** file);
