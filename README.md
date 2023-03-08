@@ -1,6 +1,6 @@
 # What is GYMIR ? 
 
-GYMIR is a GPL implementation of the Ymir compiler that use the GCC as a back end.
+GYMIR is a GPL implementation of the Ymir compiler that use the GCC as a back end, and boostrap ymirc compiler.
 
 # Compilation for local usage and tests
 
@@ -21,6 +21,9 @@ git checkout releases/gcc-{version}
 # cloning ymir - master revision
 cd ${install_dir}/gcc/gcc-src/gcc
 git clone --depth=1 https://github.com/GNU-Ymir/gymir.git ymir
+cd ${install_dir}/gcc-src/gcc/ymir
+git checkout bootstrap
+./configure.sh
 
 # install deps
 cd ${install_dir}/gcc/gcc-src/gcc
@@ -28,7 +31,7 @@ cd ${install_dir}/gcc/gcc-src/gcc
 
 # configure
 cd ${install_dir}/gcc/gcc-build
-../gcc-src/configure --prefix=${install_dir}/gcc/gcc-build/../gcc-install --enable-languages=c,ymir --disable-bootstrap --disable-multilib
+../gcc-src/configure --prefix=${install_dir}/gcc/gcc-build/../gcc-install --enable-languages=c,d,ymir --disable-bootstrap --disable-multilib
 
 # compile
 make
@@ -56,7 +59,7 @@ To remove all precompiled file, and make sure everything is correct, you will ha
 
 ```bash
 cd ${install_dir}/gcc/gcc-build
-rm gcc/ymir/*.o # remove old object files
+rm gcc/ymir/*.o gcc/ymir/*.a # remove old object files
 make
 make install
 ```
