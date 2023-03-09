@@ -2,12 +2,33 @@ mod binding::generator::visitor;
 
 
 import ymirc::semantic::generator::_;
+import ymirc::utils::_;
+import ymirc::lexing::word;
+
+import binding::tree::_;
+
+import std::collection::vec;
+import std::collection::map;
+import std::io;
 
 
 /**
  * This generator class transform ymirc objects into GCC trees
  */
 pub class GenerateVisitor {
+
+    // The var decl stack of each block
+    let dmut _stackVarDeclChain = Vec!{dmut &TreeChain}::new ();
+
+    // The stack of blocks
+    let dmut _stackBlockChain = Vec!{dmut &BlockChain}::new ();
+
+    // The function being generated
+    let mut _currentFunctionContext : tree_t = null;
+
+    // The declaration of the variable in the current function context
+    let dmut _varDecls = HashMap!{u32, tree_t}::new ();
+
 
     /**
      * Create a new empty generator
@@ -21,7 +42,87 @@ pub class GenerateVisitor {
      *    - gen: the generator to transform
      */
     pub def generate (mut self, gen : &Generator) {
-        gen;
+        match gen {
+            frame : &FrameGenerator => {
+                self:.generateFrame (frame);
+            }
+            _ => {
+                eprintln (gen::typeinfo.name);
+                eprintln (format ("%", gen));
+                __pragma!panic ();
+            }
+        }
     }
+
+    /**
+     * Generate a frame from a frame generator.
+     * @params:
+     *    - frame: the frame to generate
+     * */
+    def generateFrame (mut self, frame : &FrameGenerator) {
+        let fnDecl = self:.generateFunctionDecl (frame);
+        c_binding_debug_print_tree (fnDecl);
+    }
+
+    /**
+     * Generate a function declaration from a frame generator
+     * */
+    def generateFunctionDecl (mut self, frame : &FrameGenerator)-> tree_t {
+        let params = frame.getParameters ();
+        let mut args : [mut tree_t] = [cast!{tree_t} (null) ; new params.len];
+        for i, p in params {
+            args [i] = self:.generateType (p.getType ());
+        }
+
+        let ret = self:.generateType (frame.getReturnType ());
+        let fnType = types::functionTypeTree (ret, args);
+        let fnDecl = decl::functionDeclTree (EOF_WORD, frame.getName ().toStr (sep-> "_"s8), fnType);
+
+        return fnDecl;
+    }
+
+
+    /**
+     * =========================================================================
+     * =========================================================================
+     * ========================           TYPES           ======================
+     * =========================================================================
+     * =========================================================================
+     * */
+
+    /**
+     * Generate a type tree from a Type
+     * */
+    def generateType (mut self, type : &Type)-> tree_t {
+        match type {
+            n : &NativeType => self:.generateNativeType (n);
+            _ => {
+                eprintln (type::typeinfo.name);
+                __pragma!panic ();
+            }
+        }
+    }
+
+    /**
+     * Generate a type tree from a native type.
+     * */
+    def generateNativeType (mut self, type : &NativeType)-> tree_t {
+        match type {
+            i : &IntType =>
+                return intTypeTree (cast!i32 (i.getSize ()), i.isSigned ());
+            c : &CharType =>
+                return charTypeTree (cast!i32 (c.getSize ()));
+            f : &FloatType =>
+                return floatTypeTree (cast!i32 (f.getSize ()));
+            BoolType () => return boolTypeTree ();
+            NoneType () => return voidTypeTree ();
+            VoidType () => return voidTypeTree ();
+            _ => {
+                eprintln (type::typeinfo.name);
+                __pragma!panic ();
+            }
+        }
+    }
+
 
 }

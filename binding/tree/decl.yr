@@ -32,6 +32,6 @@ pub def paramDeclTree (loc : &Word, name : [c8], type : tree_t)-> tree_t {
  *    - loc: the location of the declaration
  *    - name: the name of the function
  */
-pub def functionDeclTree (loc : &Word, name : [c8])-> tree_t {
-    return c_binding_build_function_decl (wordToLocation (loc), name.toStringZ ());
+pub def functionDeclTree (loc : &Word, name : [c8], type : tree_t)-> tree_t {
+    return c_binding_build_function_decl (wordToLocation (loc), name.toStringZ (), type);
 }

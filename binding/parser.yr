@@ -51,7 +51,6 @@ extern (C) def ymir_binding_d_add_builtin_version (version : &c8) {
             for d_v in D_VERSIONS::__members__ {
                 if d_v._0 == v {
                     state::instance ().addVersion (d_v._1);
-                    println (d_v._1);
                     return {}
                 }
             }
@@ -61,5 +60,4 @@ extern (C) def ymir_binding_d_add_builtin_version (version : &c8) {
 
 extern (C) def ymir_binding_set_size_type (size : u32) {
     state::instance ().setSizeTypeSize (size);
-    println ("SIZE type : ", size);
 }

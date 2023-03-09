@@ -121,9 +121,9 @@ pub def optionTypeTree (common : [tree_t], unions : [tree_t], fieldNames : [[c8]
         fieldStringZ [i] = f.toStringZ ();
     }
 
-    return c_binding_build_option_type (cast!u64 (common.len), common.ptr,
-                                        cast!u64 (unions.len), unions.ptr,
-                                        cast!u64 (fieldStringZ.len), fieldStringZ.ptr);
+    return c_binding_build_option_type (cast!u64 (fieldStringZ.len), fieldStringZ.ptr,
+                                        cast!u64 (common.len), common.ptr,
+                                        cast!u64 (unions.len), unions.ptr);
 }
 
 /**

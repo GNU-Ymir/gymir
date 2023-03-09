@@ -24,15 +24,15 @@ gyc$(exeext): $(GYC_OBJS) $(EXTRA_GCC_OBJS) libcommon-target.a $(LIBDEPS)
 
 
 WARN_YFLAGS = -Wall -Wdeprecated $(NOCOMMON_FLAG)
-ALL_YFLAGS = $(PICFLAG) $(ALIASING_FLAGS) $(COVERAGE_FLAGS) $(WARN_YFLAGS) -O3
-
+ALL_YFLAGS = $(PICFLAG) $(ALIASING_FLAGS) $(COVERAGE_FLAGS) $(WARN_YFLAGS) -g
+ALL_GYMIRFLAGS = -g $(PICFLAG)
 
 YCOMPILE.base = $(CXX) $(NO_PIE_CFLAGS) -c $(ALL_YFLAGS) $(INCLUDES) -o $@ -std=c++17
 YCOMPILE = $(YCOMPILE.base) -MT $@ -MMD -MP -MF $(@D)/$(DEPDIR)/$(*F).TPo
 YPOSTCOMPILE = @mv $(@D)/$(DEPDIR)/$(*F).TPo $(@D)/$(DEPDIR)/$(*F).Po
-YLINKER = $(CXX) $(NO_PIE_CFLAG) -lstdc++ -lgymidgard -ldwarf
+YLINKER = /usr/bin/gyc $(NO_PIE_CFLAG) $(ALL_GYMIRFLAGS) -lstdc++ -lgymidgard -ldwarf
 
-GYMIRCOMPILE.base = /usr/bin/gyc $(NO_PIE_CFLAGS) -c $(INCLUDES) -o $@
+GYMIRCOMPILE.base = /usr/bin/gyc $(NO_PIE_CFLAGS) -c $(ALL_GYMIRFLAGS) $(INCLUDES) -o $@
 GYMIRCOMPILE = $(GYMIRCOMPILE.base) -MT $@ -MMD -MP -MF $(@D)/$(DEPDIR)/$(*F).TPo
 
 # The compiler proper
@@ -54,8 +54,8 @@ ymir_OBJS = \
 bootstrap_objs := $(shell find $(ROOT_DIR)/$(srcdir)/ymir/bootstrap/src | grep [.]yr)
 
 ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)
-	+$(LLINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) -o $@ \
-	attribs.o $(ymir_OBJS) $(D_TARGET_OBJS) $(BACKEND) $(LIBS) $(BACKENDLIBS) libbackend.a -lgymidgard -lgc -ldwarf
+	+$(YLINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) -o $@ \
+	attribs.o $(ymir_OBJS) $(D_TARGET_OBJS) $(BACKEND) $(LIBS) $(BACKENDLIBS) libbackend.a
 
 ymir/binding_%.o: ymir/binding/%.yr
 	  $(GYMIRCOMPILE) $(GYC_INCLUDES) -I$(ROOT_DIR)/$(srcdir)/ymir/bootstrap/src -I$(ROOT_DIR)/$(srcdir)/ymir/ $<
