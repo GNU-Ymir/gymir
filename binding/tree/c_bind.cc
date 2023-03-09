@@ -255,6 +255,15 @@ extern "C" bool c_binding_is_scalar (tree type) {
     }
 }
 
+extern "C" bool c_binding_is_pointer (tree type) {
+    if (type == nullptr) return false;
+    return TREE_CODE (type) == POINTER_TYPE;
+}
+
+extern "C" bool c_binding_is_float (tree type) {
+    return (type == y_f32_type) || (type == y_f64_type);
+}
+
 extern "C" bool c_binding_is_compound (tree value) {
     if (value == nullptr) return false;
     return (TREE_CODE (value) == COMPOUND_EXPR);
@@ -637,13 +646,59 @@ extern "C" tree c_binding_build_compound (tree list, tree value) {
 }
 
 extern "C" tree c_binding_build_call (location_t loc, tree retType, tree fn, uint64_t nbArgs, tree* args) {
-    tree fnptr = build1 (ADDR_EXPR, build_pointer_type (TREE_TYPE (fn)), fn);
-    return build_call_array_loc (loc, retType, fnptr, nbArgs, args);
+    return build_call_array_loc (loc, retType, fn, nbArgs, args);
 }
 
-// extern "C" tree c_binding_build_call_from_name (location_t loc, tree retType, const char * name, uint64_t nbArgs, tree * args) {
-//     std::vector <tree> fndecl_type_params
-// }
+extern "C" tree c_binding_build_array_ref (location_t loc, tree array, tree index) {
+    auto innerType = TREE_TYPE (TREE_TYPE (array));
+    return build2_loc (loc, ARRAY_REF, innerType, array, index);
+}
+
+
+extern "C" tree c_binding_build_binary (location_t loc, const char * op, tree type, tree left, tree right, bool pointer, bool fl) {
+    tree_code code = LSHIFT_EXPR;
+    if (strcmp (op, "<<") == 0) { code = LSHIFT_EXPR; }
+    else if (strcmp (op, ">>") == 0) { code = RSHIFT_EXPR; }
+    else if (strcmp (op, "|") == 0) { code = BIT_IOR_EXPR; }
+    else if (strcmp (op, "&") == 0) { code = BIT_AND_EXPR; }
+    else if (strcmp (op, "^") == 0) { code = BIT_XOR_EXPR; }
+    else if (strcmp (op, "+") == 0) { if (pointer) { code = POINTER_PLUS_EXPR; } else { code = PLUS_EXPR; } }
+    else if (strcmp (op, "-") == 0) { if (pointer) { code = POINTER_DIFF_EXPR; } else { code = MINUS_EXPR; } }
+    else if (strcmp (op, "*") == 0) { code = MULT_EXPR; }
+    else if (strcmp (op, "/") == 0) { if (fl) { code = RDIV_EXPR; } else { code = TRUNC_DIV_EXPR; } }
+    else if (strcmp (op, "%") == 0) { code = TRUNC_MOD_EXPR; }
+    else if (strcmp (op, "<") == 0) { code = LT_EXPR; }
+    else if (strcmp (op, ">") == 0) { code = GT_EXPR; }
+    else if (strcmp (op, "<=") == 0) { code = LE_EXPR; }
+    else if (strcmp (op, ">=") == 0) { code = GE_EXPR; }
+    else if (strcmp (op, "==") == 0) { code = EQ_EXPR; }
+    else if (strcmp (op, "!=") == 0) { code = NE_EXPR; }
+    else if (strcmp (op, "&&") == 0) { code = TRUTH_ANDIF_EXPR; }
+    else if (strcmp (op, "||") == 0) { code = TRUTH_ORIF_EXPR; }
+    else _yrt_exc_panic (__FILE__, __FUNCTION__, __LINE__);
+
+    return build2_loc (loc, code, type, left, right);
+}
+
+extern "C" tree c_binding_build_label_decl (location_t loc, const char * name) {
+    return build_decl (loc, LABEL_DECL, get_identifier (name), void_type_node);
+}
+
+extern "C" tree c_binding_build_label_expr (location_t loc, tree label) {
+    return build1_loc (loc, LABEL_EXPR, void_type_node, label);
+}
+
+extern "C" tree c_binding_build_goto_expr (location_t loc, tree label) {
+    return build1_loc (loc, GOTO_EXPR, void_type_node, label);
+}
+
+extern "C" tree c_binding_build_return_expr (location_t loc, tree expression) {
+    return build1_loc (loc, RETURN_EXPR, void_type_node, expression);
+}
+
+extern "C" tree c_binding_build_cond_expr (location_t loc, tree test, tree gotoS, tree gotoF) {
+    return build3_loc (loc, COND_EXPR, void_type_node, test, gotoS, gotoF);
+}
 
 /**
  * =========================================================================
@@ -652,6 +707,12 @@ extern "C" tree c_binding_build_call (location_t loc, tree retType, tree fn, uin
  * =========================================================================
  * =========================================================================
  * */
+
+
+extern "C" tree c_binding_convert (tree type, tree value) {
+    return convert (type, value);
+}
+
 
 /**
  * Mandatory Implementation from GCC internals

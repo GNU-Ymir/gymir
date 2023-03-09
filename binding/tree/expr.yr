@@ -1,10 +1,15 @@
 mod binding::tree::expr;
 
 import ymirc::lexing::word;
+import ymirc::syntax::keys;
+
 import binding::tree::c_tree;
 import binding::tree::chain;
 import binding::tree::stmtlist;
+
 import std::conv;
+
+static mut __LAST_LABEL_ID__ = 0us;
 
 
 /**
@@ -72,9 +77,175 @@ pub def callExprTree (loc : &Word, type : tree_t, func : [c8], params : [tree_t]
         types [i] = c_binding_get_type (params [i]);
     }
 
-    let location = wordToLocation (loc);
-    let fnType = c_binding_build_function_type (type, cast!u64 (types.len), types.ptr);
-    let fnDecl = c_binding_build_function_decl (location, func.toStringZ (), fnType);
+    let fnPtr = funcPtrExprTree (loc, func, type, types);
+    return c_binding_build_call (wordToLocation (loc), type, fnPtr, cast!u64 (params.len), params.ptr);
+}
 
-    return c_binding_build_call (location, type, fnDecl, cast!u64 (params.len), params.ptr);
+/**
+ * Build a function pointer expression.
+ * @params:
+ *     - loc: the location of the expression
+ *     - name: the name of the function
+ *     - type: the return type of the function
+ *     - params: the types of the paramters of the function
+ * @returns: a function pointer expression tree
+ * */
+pub def funcPtrExprTree (loc : &Word, name : [c8], type : tree_t, params : [tree_t])-> tree_t {
+    let location = wordToLocation (loc);
+
+    let fnType = c_binding_build_function_type (type, cast!u64 (params.len), params.ptr);
+    let fnDecl = c_binding_build_function_decl (location, name.toStringZ (), fnType);
+
+    return c_binding_build_address (location, c_binding_build_pointer_type (fnType), fnDecl);
+}
+
+/**
+ * Build an array access tree
+ * @params:
+ *    - loc: the location of the access
+ *    - array: the array being accessed
+ *    - index: the index of the access
+ * @returns: the access expression tree
+ * */
+pub def arrayAccessExprTree (loc : &Word, array : tree_t, index : tree_t)-> tree_t {
+    return c_binding_build_array_ref (wordToLocation (loc), array, index);
+}
+
+
+/**
+ * Build a binary expression tree.
+ * @params:
+ *     - loc: the location of the binary
+ *     - op: the operator
+ *     - type: the return type of the expression
+ *     - left: the left operand
+ *     - right: the right operand
+ * @returns: the binary expression tree
+ * @info: perform conversion of type to make sure the operation is valid
+ */
+pub def binaryExprTree (loc : &Word, op : BinaryOperators, type : tree_t, left : tree_t, right : tree_t)-> tree_t {
+    let lType = c_binding_get_type (left);
+    let rType = c_binding_get_type (right);
+    let pointer = c_binding_is_pointer (lType);
+    let fl = c_binding_is_float (lType);
+
+    if (c_binding_get_type_size (lType) >= c_binding_get_type_size (rType)) {
+        return c_binding_build_binary (wordToLocation (loc),
+                                       op.toStringZ (),
+                                       type, left, c_binding_convert (lType, right), pointer, fl);
+    } else {
+        return c_binding_build_binary (wordToLocation (loc),
+                                       op.toStringZ (),
+                                       type, c_binding_convert (rType, left), right, pointer, fl);
+    }
+}
+
+/**
+ * Build a binary expression tree.
+ * @params:
+ *     - loc: the location of the binary
+ *     - op: the operator
+ *     - type: the return type of the expression
+ *     - left: the left operand
+ *     - right: the right operand
+ * @returns: the binary expression tree
+ * @warning: does not perform conversion of type to make sure the operation is valid
+ */
+pub def binaryExprNoConvTree (loc : &Word, op : BinaryOperators, type : tree_t, left : tree_t, right : tree_t)-> tree_t {
+    let pointer = c_binding_is_pointer (c_binding_get_type (left));
+    let fl = c_binding_is_float (c_binding_get_type (left));
+
+    return c_binding_build_binary (wordToLocation (loc),
+                                   op.toStringZ (),
+                                   type, left, right, pointer, fl);
+}
+
+/**
+ * Build a cast expression tree.
+ * @params:
+ *     - loc: the location of the cast
+ *     - type: the type of the cast
+ *     - value: the value to cast
+ * */
+pub def castExprTree (_ : &Word, type : tree_t, value : tree_t)-> tree_t {
+    return c_binding_convert (type, value);
+}
+
+/**
+ * Build a label tree.
+ * @params:
+ *     - loc: the location of the label
+ *     - context: the context of declaration of the label
+ *     - label: the name of the label
+ * */
+pub def labelExprTree (loc : &Word, context : tree_t, name : [c8])-> tree_t {
+    let labelId = name ~ "["s8 ~ (__LAST_LABEL_ID__ + 1us).to![c8] () ~ "]"s8;
+    __LAST_LABEL_ID__ += 1us;
+
+    let decl = c_binding_build_label_decl (wordToLocation (loc), labelId.toStringZ ());
+    c_binding_set_decl_context (decl, context);
+
+    return decl;
+}
+
+/**
+ * Build a goto expression.
+ * @params:
+ *     - loc: the location of the goto
+ *     - label: the label to goto
+ */
+pub def gotoExprTree (loc : &Word, label : tree_t)-> tree_t {
+    return c_binding_build_goto_expr (wordToLocation (loc), label);
+}
+
+/**
+ * Construct a condition tree
+ * @params:
+ *     - loc: the location of the condition
+ *     - segmentContext: the context of the current declarations
+ *     - test: the test of the condition
+ *     - suc: the code to execute if test passes
+ *     - fail: the code to execute if the test fails
+ */
+pub def conditionalExprTree (loc : &Word, segmentContext : tree_t, test : tree_t, suc : tree_t, fail : tree_t)-> tree_t {
+    let location = wordToLocation (loc);
+    let thenLabel = labelExprTree (loc, segmentContext, "then"s8);
+    let endLabel = labelExprTree (loc, segmentContext, "end_if"s8);
+    let gotoThen = gotoExprTree (loc, thenLabel);
+    let gotoEnd = gotoExprTree (loc, endLabel);
+
+    let (elseLabel, gotoElse) = if (fail is null) {
+        let elseLabel = labelExprTree (loc, segmentContext, "else"s8);
+        let gotoElse = gotoExprTree (loc, elseLabel);
+
+        (elseLabel, gotoElse)
+    } else { (endLabel, gotoEnd) };
+
+    let dmut list = TreeStatementList::new ();
+    list:.append (c_binding_build_cond_expr (location, test, gotoThen, gotoElse))
+        :.append (c_binding_build_label_expr (location, thenLabel))
+        :.append (suc)
+        :.append (gotoEnd);
+
+    if (fail !is null) {
+        list:.append (c_binding_build_label_expr (location, elseLabel))
+            :.append (fail)
+            :.append (gotoEnd);
+    }
+
+    list:.append (c_binding_build_label_expr (location, endLabel));
+    return list.getTree ();
+}
+
+/**
+ * Build a return expression tree.
+ * @params:
+ *     - loc: the location of the return
+ *     - resultDecl: the declaration of the return of the current function
+ *     - value: the value to return
+ * */
+pub def returnExprTree (loc : &Word, resultDecl : tree_t, value : tree_t)-> tree_t {
+    let location = wordToLocation (loc);
+    let inside = c_binding_build_modify_expr (location, c_binding_get_void_type (), resultDecl, value);
+    return c_binding_build_return_expr (location, inside);
 }
