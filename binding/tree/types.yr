@@ -1,0 +1,142 @@
+mod binding::tree::types;
+
+import binding::tree::c_tree;
+
+/**
+ * @returns: the error tree
+ */
+pub def errorTree ()-> tree_t {
+    return c_binding_error_tree ();
+}
+
+/**
+ * @returns: the empty tree
+ */
+pub def emptyTree () -> tree_t { null }
+
+/**
+ * @params:
+ *     - vars: the list of variable declared in the block
+ *     - chain: the list of instruction inside the block
+ * @returns: a block tree
+ */
+pub def blockTree (vars : tree_t, chain : tree_t)-> tree_t {
+    c_binding_build_block (
+        vars, chain, null, null
+    )
+}
+
+/**
+ * @returns: the void type tree
+ */
+pub aka voidTypeTree = c_binding_get_void_type;
+
+/**
+ * @returns: the bool type tree
+ */
+pub aka boolTypeTree = c_binding_get_bool_type;
+
+
+/**
+ * @returns: the tree for the int type of the size 'size'
+ * */
+pub aka intTypeTree = c_binding_get_int_type;
+
+/**
+ * @returns: the tree for the type usize
+ */
+pub def sizeTypeTree ()-> tree_t {
+    intTypeTree (0, false)
+}
+
+/**
+ * @returns: the tree for the type float of size 'size'
+ */
+pub aka floatTypeTree = c_binding_get_float_type;
+
+/**
+ * @returns: the tree fo the type char of size 'size'
+ */
+pub aka charTypeTree = c_binding_get_char_type;
+
+/**
+ * @returns: the tree for an array type of inner type 'inner' and size 'size'
+ */
+pub aka arrayTypeTree = c_binding_build_array_type;
+
+/**
+ * @returns: the tree for a pointer type of inner type 'inner'
+ * */
+pub aka pointerTypeTree = c_binding_build_pointer_type;
+
+/**
+ * @returns: the tree for a slice type of inner type 'inner'
+ * */
+pub def sliceTypeTree (inner : tree_t)-> tree_t {
+    return tupleTypeTree (""s8,
+                          [sizeTypeTree (), pointerTypeTree (inner)],
+                          ["len"s8, "ptr"s8]);
+}
+
+
+/**
+ * @params:
+ *    - name: the name of the tuple type
+ *    - fields: the type of the fields of the tuple
+ *    - fieldNames: the name of the fields of the tuple (can be smaller than fields, in that case ._0, ._1, etc. are added)
+ *    - isUnion: true if the tuple is an union type
+ *    - isPacked: true if the tuple is packed in memory
+ * @returns: a tuple type tree
+ */
+pub def tupleTypeTree (name : [c8], fields : [tree_t], fieldNames : [[c8]], isUnion : bool = false, isPacked : bool = false)-> tree_t {
+    import std::conv;
+
+    let mut fieldStringZ : [mut &c8] = [cast!{&c8} (null) ; new fieldNames.len];
+    for i, f in fieldNames {
+        fieldStringZ [i] = f.toStringZ ();
+    }
+
+    return c_binding_build_tuple_type (name.toStringZ (),
+                                       cast!u64 (fields.len), fields.ptr,
+                                       cast!u64 (fieldStringZ.len), fieldStringZ.ptr,
+                                       isUnion, isPacked);
+}
+
+/**
+ * @params:
+ *     - common: the list of fields that are common to all options
+ *     - union: the list of fields that shares the same memory address
+ *     - names: the name of the field of the option type
+ * @returns: an option type tree
+ * @example:
+ * ```
+ * // common : [bool], union : [i32, &Exception], names : ["isOk", "value", "error"]
+ * ```
+ */
+pub def optionTypeTree (common : [tree_t], unions : [tree_t], fieldNames : [[c8]])-> tree_t {
+    import std::conv;
+
+    let mut fieldStringZ : [mut &c8] = [cast!{&c8} (null) ; new fieldNames.len];
+    for i, f in fieldNames {
+        fieldStringZ [i] = f.toStringZ ();
+    }
+
+    return c_binding_build_option_type (cast!u64 (common.len), common.ptr,
+                                        cast!u64 (unions.len), unions.ptr,
+                                        cast!u64 (fieldStringZ.len), fieldStringZ.ptr);
+}
+
+/**
+ * @params:
+ *     - retType: the return type of the function
+ *     - params: the types of the parameters of the function
+ * @returns: a function type tree
+ */
+pub def functionTypeTree (retType : tree_t, params : [tree_t])-> tree_t {
+    return c_binding_build_function_type (retType,
+                                          cast!u64 (params.len), params.ptr);
+}
+
+pub def methodTypeTree (retType : tree_t, selfType : tree_t, params : [tree_t])-> tree_t {
+    return c_binding_build_method_type (retType, selfType, cast!u64 (params.len), params.ptr);
+}

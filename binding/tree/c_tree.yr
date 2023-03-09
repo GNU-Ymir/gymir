@@ -1,0 +1,168 @@
+mod binding::tree::c_tree;
+
+import ymirc::lexing::word;
+import std::conv;
+
+pub aka tree_t = &(void);
+pub aka location_t = u32;
+
+/**
+ * Trasnform a ymirc word into a GCC location
+ * */
+pub def wordToLocation (word : &Word)-> location_t {
+    if (word.isEof ()) {
+        return c_binding_get_unknwon_location ();
+    } else {
+        return c_binding_build_debug_location (word.filename ().toStringZ (), word.line (), word.col ())
+    }
+}
+
+/**
+ * =========================================================================
+ * =========================================================================
+ * ======================          STATEMENTS            ===================
+ * =========================================================================
+ * =========================================================================
+ * */
+
+pub extern (C) def  c_binding_alloc_stmt_list ()-> tree_t;
+pub extern (C) def c_binding_append_to_statement_list (left : tree_t, right :  &tree_t)-> void;
+pub extern (C) def c_binding_tree_chain_set (left : tree_t, right : tree_t)-> void;
+pub extern (C) def c_binding_block_chain_set (left : tree_t, right : tree_t);
+
+/**
+ * =========================================================================
+ * =========================================================================
+ * ======================             TYPES              ===================
+ * =========================================================================
+ * =========================================================================
+ * */
+
+pub extern (C) def  c_binding_error_tree ()-> tree_t;
+pub extern (C) def  c_binding_build_block (vars : tree_t, chain : tree_t, a : tree_t, b : tree_t)-> tree_t;
+pub extern (C) def  c_binding_get_void_type ()-> tree_t;
+pub extern (C) def  c_binding_get_bool_type ()-> tree_t;
+pub extern (C) def  c_binding_get_int_type (size : i32, isSigned : bool)-> tree_t;
+pub extern (C) def  c_binding_get_float_type (size : i32)-> tree_t;
+pub extern (C) def  c_binding_get_char_type (size : i32)-> tree_t;
+pub extern (C) def  c_binding_build_array_type (innertype : tree_t, size : i32)-> tree_t;
+pub extern (C) def  c_binding_build_pointer_type (innerType : tree_t)-> tree_t;
+pub extern (C) def  c_binding_build_tuple_type (name : &c8, nbFields : u64, fieldTypes : &tree_t, nbFieldNames : u64, fieldNames : &(&c8), isUnion : bool, isPacked : bool)-> tree_t;
+pub extern (C) def  c_binding_build_option_type (nbFieldNames : u64, fieldNames : &(&c8), nbCommon : u64, commons : &tree_t, nbUnions : u64, unions : &tree_t)-> tree_t;
+pub extern (C) def  c_binding_build_function_type (retType : tree_t, nbParams : u64, params : &tree_t)-> tree_t;
+pub extern (C) def  c_binding_build_method_type (retType : tree_t, selfType : tree_t, nbParams : u64, params : &tree_t)-> tree_t;
+
+/**
+ * =========================================================================
+ * =========================================================================
+ * =========================           TESTS           =====================
+ * =========================================================================
+ * =========================================================================
+ * */
+
+pub extern (C) def c_binding_is_scalar (type : tree_t) -> bool;
+pub extern (C) def c_binding_is_compound (value : tree_t)-> bool;
+pub extern (C) def c_binding_get_list_operand (value : tree_t)-> tree_t;
+pub extern (C) def c_binding_get_value_operand (value : tree_t)-> tree_t;
+pub extern (C) def c_binding_unref_pointer (value : tree_t, index : u64)-> tree_t;
+pub extern (C) def c_binding_unref_pointer_force_type (value : tree_t, type : tree_t, index : u64)-> tree_t;
+pub extern (C) def c_binding_access_field_by_name (value : tree_t, fieldname : &c8)-> tree_t;
+pub extern (C) def c_binding_to_direct_value (value : tree_t)-> tree_t;
+pub extern (C) def c_binding_is_string_type (type : tree_t)-> bool;
+pub extern (C) def c_binding_is_array_type (type : tree_t)-> bool;
+pub extern (C) def c_binding_is_empty_stmt_list (value : tree_t)-> bool;
+pub extern (C) def c_binding_is_stmt_list (value : tree_t)-> bool;
+pub extern (C) def c_binding_get_type (value : tree_t)-> tree_t;
+pub extern (C) def c_binding_set_type (value : tree_t, type : tree_t)-> void;
+pub extern (C) def c_binding_get_operand (t : tree_t, index : u32)-> tree_t;
+pub extern (C) def c_binding_get_array_size (type : tree_t)-> tree_t;
+pub extern (C) def c_binding_get_string_size (type : tree_t)-> tree_t;
+pub extern (C) def c_binding_get_type_size (type : tree_t)-> u32;
+pub extern (C) def c_binding_is_error (type : tree_t)-> bool;
+pub extern (C) def c_binding_is_static (t : tree_t)-> bool;
+pub extern (C) def c_binding_set_static (t : tree_t, set : bool)-> void;
+pub extern (C) def c_binding_is_global_ctor (t : tree_t)-> bool;
+pub extern (C) def c_binding_set_global_ctor (t : tree_t, set : bool)-> void;
+pub extern (C) def c_binding_is_used (t : tree_t)-> bool;
+pub extern (C) def c_binding_set_used (t : tree_t, set : bool)-> void;
+pub extern (C) def c_binding_is_public (t : tree_t)-> bool;
+pub extern (C) def c_binding_set_public (t : tree_t, set : bool)-> void;
+pub extern (C) def c_binding_is_weak (t : tree_t)-> bool;
+pub extern (C) def c_binding_set_weak (t : tree_t, set : bool)-> void;
+pub extern (C) def c_binding_is_external (t : tree_t)-> bool;
+pub extern (C) def c_binding_set_external (t : tree_t, set : bool)-> void;
+pub extern (C) def c_binding_is_preserved (t : tree_t)-> bool;
+pub extern (C) def c_binding_set_preserved (t : tree_t, set : bool)-> void;
+pub extern (C) def c_binding_is_addressable (t : tree_t)-> tree_t;
+pub extern (C) def c_binding_set_addressable (t : tree_t, set : bool)-> void;
+pub extern (C) def c_binding_get_asm_name (t : tree_t)-> &c8;
+pub extern (C) def c_binding_set_asm_name (t : tree_t, name : &c8)-> void;
+pub extern (C) def c_binding_get_name (t : tree_t)-> &c8;
+pub extern (C) def c_binding_set_decl_context (t : tree_t, context : tree_t)-> void;
+pub extern (C) def c_binding_get_decl_context (t : tree_t)-> tree_t;
+pub extern (C) def c_binding_set_decl_initial (t : tree_t, init : tree_t)-> void;
+pub extern (C) def c_binding_get_decl_initial (t : tree_t)-> tree_t;
+pub extern (C) def c_binding_set_decl_saved_tree (t : tree_t, saved : tree_t)-> void;
+pub extern (C) def c_binding_get_decl_saved_tree (t : tree_t)-> tree_t;
+pub extern (C) def c_binding_set_decl_arguments (t : tree_t, nbArgs : u64, args : &tree_t)-> void;
+pub extern (C) def c_binding_set_arg_type (t : tree_t, type : tree_t)-> void;
+pub extern (C) def c_binding_get_arg_type (t : tree_t)-> tree_t;
+pub extern (C) def c_binding_set_result_decl (t : tree_t, result : tree_t)-> void;
+pub extern (C) def c_binding_get_result_decl (t : tree_t)-> tree_t;
+pub extern (C) def c_binding_set_block_super_context (t : tree_t, supercontext : tree_t)-> void;
+pub extern (C) def c_binding_get_block_super_context (t : tree_t)-> tree_t;
+
+/**
+ * =========================================================================
+ * =========================================================================
+ * ======================           DECLARATION           ==================
+ * =========================================================================
+ * =========================================================================
+ * */
+
+
+pub extern (C) def c_binding_get_builtin_location ()-> location_t;
+pub extern (C) def c_binding_get_unknwon_location ()-> location_t;
+pub extern (C) def c_binding_build_debug_location (filename : &c8, line : u64, col : u64)-> location_t;
+pub extern (C) def c_binding_build_var_decl (loc : location_t, name : &c8, type : tree_t)-> tree_t;
+pub extern (C) def c_binding_build_decl (loc : location_t, type : tree_t, content : tree_t)-> tree_t;
+pub extern (C) def c_binding_build_param_decl (loc : location_t, name : &c8, type : tree_t)-> tree_t;
+pub extern (C) def c_binding_build_function_decl (loc : location_t, name : &c8, type : tree_t)-> tree_t;
+pub extern (C) def c_binding_build_result_decl (loc : location_t, type : tree_t)-> tree_t;
+
+/**
+ * =========================================================================
+ * =========================================================================
+ * ======================           EXPRESSION           ===================
+ * =========================================================================
+ * =========================================================================
+ * */
+
+pub extern (C) def c_binding_build_modify_expr (loc : location_t, type : tree_t, left : tree_t, right : tree_t)-> tree_t;
+pub extern (C) def c_binding_build_address (loc : location_t, type : tree_t, value : tree_t)-> tree_t;
+pub extern (C) def c_binding_build_memcpy (loc : location_t, left : tree_t, right : tree_t)-> tree_t;
+pub extern (C) def c_binding_build_compound (list : tree_t, value : tree_t)-> tree_t;
+pub extern (C) def c_binding_build_call (loc : location_t, retType : tree_t, func : tree_t, nbParams : u64, params : &tree_t)-> tree_t;
+pub extern (C) def c_binding_build_call_from_name (loc : location_t, retType : tree_t, name : &c8, nbParams : u64, params : &tree_t)-> tree_t;
+
+/**
+ * =========================================================================
+ * =========================================================================
+ * =======================           FINALIZE           ====================
+ * =========================================================================
+ * =========================================================================
+ * */
+
+pub extern (C) def c_binding_gimplify_function (t : tree_t)-> void;
+pub extern (C) def c_binding_finalize_function (t : tree_t)-> void;
+
+/**
+ * =========================================================================
+ * =========================================================================
+ * =========================           DEBUG           =====================
+ * =========================================================================
+ * =========================================================================
+ * */
+
+pub extern (C) def c_binding_debug_print_tree (t : tree_t)-> void;
+pub extern (C) def c_binding_debug_generic_print_tree (t : tree_t);

@@ -2,13 +2,17 @@ mod binding::parser;
 
 import ymirc::parser;
 import ymirc::utils::_;
-
 import ymirc::args::_;
 import ymirc::errors::_;
+import ymirc::global::state;
+
 import std::collection::vec;
 
 import std::conv;
 import std::io;
+
+import binding::version;
+import binding::generator::visitor;
 
 extern (C) def ymir_binding_parse_file (nb_files : u32, filenames : &(&c8)) {
     let dmut files = Vec!{[c32]}::new ();
@@ -19,13 +23,9 @@ extern (C) def ymir_binding_parse_file (nb_files : u32, filenames : &(&c8)) {
     }
 
     let args = YmirArguments (files-> files[]);
-    {
+    let gens = {
         let dmut parser = Parser::new (args);
-
-        let gens = parser:.parseAll ();
-        for gen in gens {
-            println (format ("%", gen));
-        }
+        parser:.parseAll ()
     } catch {
         err : &ErrorMsg => {
             println (format ("%", err));
@@ -35,6 +35,31 @@ extern (C) def ymir_binding_parse_file (nb_files : u32, filenames : &(&c8)) {
                 }
             }
             println (format ("ymirc: %(r)\ncompilation terminated", "fatal error"s8));
+            return {}
         }
     }
+
+    let dmut generator = GenerateVisitor::new ();
+    for g in gens {
+        generator:.generate (g);
+    }
+}
+
+extern (C) def ymir_binding_d_add_builtin_version (version : &c8) {
+    match version.fromStringZ ()? {
+        Ok (v : _) => {
+            for d_v in D_VERSIONS::__members__ {
+                if d_v._0 == v {
+                    state::instance ().addVersion (d_v._1);
+                    println (d_v._1);
+                    return {}
+                }
+            }
+        }
+    }
+}
+
+extern (C) def ymir_binding_set_size_type (size : u32) {
+    state::instance ().setSizeTypeSize (size);
+    println ("SIZE type : ", size);
 }

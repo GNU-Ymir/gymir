@@ -94,7 +94,9 @@ void d_add_target_info_handlers (const d_target_info_spec * handlers ATTRIBUTE_U
 /**
  * Thanks to dlang we can use their version system for our version system !
  */
-void d_add_builtin_version (const char* v) {}
+void d_add_builtin_version (const char* v) {
+  ymir_binding_d_add_builtin_version (v);
+}
 
 
 static void
@@ -121,6 +123,7 @@ ymir_init_builtins () {
     y_isize_type = lang_hooks.types.type_for_mode (type_mode, 0);
     uint32_t size = TREE_INT_CST_LOW (TYPE_SIZE_UNIT (y_usize_type));
 
+    ymir_binding_set_size_type (size * 8);
   }
 
   y_c8_type = make_unsigned_type (8);

@@ -1,0 +1,27 @@
+mod binding::generator::visitor;
+
+
+import ymirc::semantic::generator::_;
+
+
+/**
+ * This generator class transform ymirc objects into GCC trees
+ */
+pub class GenerateVisitor {
+
+    /**
+     * Create a new empty generator
+     */
+    pub self () {}
+
+
+    /**
+     * Generate the GCC trees from gen
+     * @params:
+     *    - gen: the generator to transform
+     */
+    pub def generate (mut self, gen : &Generator) {
+        gen;
+    }
+
+}

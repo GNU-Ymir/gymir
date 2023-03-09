@@ -1,0 +1,80 @@
+mod binding::tree::expr;
+
+import ymirc::lexing::word;
+import binding::tree::c_tree;
+import binding::tree::chain;
+import binding::tree::stmtlist;
+import std::conv;
+
+
+/**
+ * Create an affectation tree. Local variable are declared if necessary for compound type affectation.
+ * @params:
+ *     - loc: the location of the affectation
+ *     - left: the left operand
+ *     - right: the right operand
+ *     - stackContext: the current stack context in which local variable can be added
+ *     - segmentContext: the segmentContext in which variable are declared
+ * @returns: a tree containing the affectation
+ */
+pub def affectExprTree (loc : &Word, left : tree_t, right : tree_t, dmut stackContext : &TreeChain, segmentContext : tree_t)-> tree_t {
+    let lType = c_binding_get_type (left);
+    let rType = c_binding_get_type (right);
+    let location = wordToLocation (loc);
+    if (c_binding_is_scalar (lType) || rType is lType) {
+        return c_binding_build_modify_expr (location, lType, left, right);
+    } else {
+        let lValue = c_binding_get_value_operand (left);
+        let rValue = c_binding_get_value_operand (right);
+
+        let name = "#_aff("s8 ~ loc.line ().to![c8] () ~ ")"s8;
+        let var = c_binding_build_var_decl (location, name.ptr, rType);
+        c_binding_set_decl_context (var, segmentContext);
+        stackContext:.append (var);
+
+        let dmut list = TreeStatementList::new ();
+
+        list:.append (c_binding_get_list_operand (left))
+            :.append (c_binding_get_list_operand (right))
+            :.append (c_binding_build_modify_expr (location, rType, var, rValue))
+            :.append (c_binding_build_memcpy (location, lValue, var));
+
+        return c_binding_build_compound (list.getTree (), var);
+    }
+}
+
+
+/**
+ * Build a call expression tree.
+ * @params:
+ *    - loc: the location of the call
+ *    - type: the return type of the call
+ *    - func: the function to call
+ *    - params: the parameters to pass to the call
+ * */
+pub def callExprTree (loc : &Word, type : tree_t, func : tree_t, params : [tree_t])-> tree_t {
+    return c_binding_build_call (wordToLocation (loc), type, func, cast!u64 (params.len), params.ptr);
+}
+
+
+/**
+ * Build a call expression tree from a function name.
+ * @params:
+ *     - loc: the location of the call
+ *     - type: the return type of the call
+ *     - func: the name of the function to call
+ *     - params: the parameters passed to the function
+ * @returns: a call expr tree
+ */
+pub def callExprTree (loc : &Word, type : tree_t, func : [c8], params : [tree_t])-> tree_t {
+    let mut types : [mut tree_t] = [cast!{tree_t} (null) ; new params.len];
+    for i in 0us .. params.len {
+        types [i] = c_binding_get_type (params [i]);
+    }
+
+    let location = wordToLocation (loc);
+    let fnType = c_binding_build_function_type (type, cast!u64 (types.len), types.ptr);
+    let fnDecl = c_binding_build_function_decl (location, func.toStringZ (), fnType);
+
+    return c_binding_build_call (location, type, fnDecl, cast!u64 (params.len), params.ptr);
+}

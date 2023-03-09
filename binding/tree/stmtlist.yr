@@ -1,0 +1,43 @@
+mod binding::tree::stmtlist;
+
+import binding::tree::c_tree;
+
+/**
+ * A statement list is a list of trees
+ */
+pub class TreeStatementList {
+
+    // The content of the tree list
+    let _list : tree_t;
+
+    // True iif the list contains nothing
+    let mut _isEmpty : bool = true;
+
+    /**
+     * Create an empty statement list
+     */
+    pub self () with _list = c_binding_alloc_stmt_list () {}
+
+    /**
+     * Append a tree expression to a stmtlist
+     * @params:
+     *    - t: the expression to append
+     */
+    pub def append (mut self, t : tree_t) -> dmut &TreeStatementList {
+        if (t !is null) {
+            self._isEmpty = false;
+            c_binding_append_to_statement_list (t, &self._list);
+        }
+
+        return alias self;
+    }
+
+    pub def isEmpty (self)-> bool {
+        self._isEmpty
+    }
+
+    pub def getTree (self)-> tree_t {
+        self._list
+    }
+
+}
