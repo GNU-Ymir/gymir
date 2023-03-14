@@ -80,6 +80,7 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 	    need_gc = false;
 	    need_libs = false;
 	    need_pthread = false;
+	    need_unittest = false;
 	} else if (decoded_options [i].opt_index == OPT_funittest) {
 	    need_unittest = true;
 	}
@@ -94,7 +95,6 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 	new_decoded_options = XNEWVEC (cl_decoded_option, num_args);
 
 	i = 0;
-	int c = 0;
 	while (i < argc) {
 	    new_decoded_options [i] = decoded_options [i];
 	    i ++;
