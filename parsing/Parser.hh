@@ -22,45 +22,45 @@ namespace Ymir {
      */
     struct Parser {
 
-	/**
-	 * \param filename the path of the file to parse
-	 */
-	Parser (const char * filename); 
+        /**
+         * \param filename the path of the file to parse
+         */
+        Parser (const char * filename);
 	
-	/**
-	 * \brief Run all the phase of the parsing
-	 */
-	void run ();
+        /**
+         * \brief Run all the phase of the parsing
+         */
+        void run ();
 	
-	/**
-	 * \brief Generate the abstract syntax tree of the current file
-	 * \return the AST representing the source code
-	 */
-	void syntaxicTime ();
+        /**
+         * \brief Generate the abstract syntax tree of the current file
+         * \return the AST representing the source code
+         */
+        void syntaxicTime ();
 
-	/**
-	 * \brief Semantic analyses of the AST 
-	 * \brief Generate all the symbols and verify the consistency of the program
-	 * \brief Produce the frames and the global variables that will be used during code generation 
-	 * \param module the module that will be analysed
-	 */
-	void semanticTime ();
+        /**
+         * \brief Semantic analyses of the AST
+         * \brief Generate all the symbols and verify the consistency of the program
+         * \brief Produce the frames and the global variables that will be used during code generation
+         * \param module the module that will be analysed
+         */
+        void semanticTime ();
 
-	/**
-	 * \brief (lint is for Intermediate Language)
-	 * \brief This method generate the code and call gcc internals to produce target	 
-	 */
-	void lintTime ();
+        /**
+         * \brief (lint is for Intermediate Language)
+         * \brief This method generate the code and call gcc internals to produce target
+         */
+        void lintTime ();
 
-	~Parser ();	
+        ~Parser ();
 	
     private :
 
-	/// The path of the file parsed 
-	std::string _path;
+        /// The path of the file parsed
+        std::string _path;
 
-	/// The module produce by syntaxic analyse
-	syntax::Declaration _module;
+        /// The module produce by syntaxic analyse
+        syntax::Declaration _module;
 			
     };
     

@@ -22,17 +22,17 @@ using namespace Ymir;
 
 void ymir_parse_file (const char * filename) {
     {
-	Ymir::Parser parser (filename);
-	parser.run ();
+		Ymir::Parser parser (filename);
+		parser.run ();
     }
     //control_memory_leakage ();
 }
 
 void ymir_parse_files (int nb_files, const char ** files) {
     {     
-	for (int i = 0 ; i < nb_files ; i++) {
-	    ymir_parse_file (files [i]);
-	}
+		for (int i = 0 ; i < nb_files ; i++) {
+			ymir_parse_file (files [i]);
+		}
     }
     
     //control_memory_leakage ();
@@ -41,113 +41,116 @@ void ymir_parse_files (int nb_files, const char ** files) {
 namespace Ymir {
 
     Parser::Parser (const char * filename) :
-	_path (filename),
-	_module (syntax::Declaration::empty ())
-    {}
+		_path (filename),
+		_module (syntax::Declaration::empty ())
+    {
+		auto cwd = Path::getCwd ();
+		this-> _path = Path::build (this-> _path, "/").toAbsolute (cwd).simplify ().toString ();
+	}
 
     Parser::~Parser () {}
     
     void Parser::run () {
-	std::vector <std::string> errors;
-	try {	    
-	    syntaxicTime ();
-	    semanticTime ();
-	} catch (Error::ErrorList list) {
-	    list.print ();
-	    Error::end (ExternalError::COMPILATION_END);
-	} catch (Error::FatalError ftl) {
-	    ftl.print ();
-	    Error::end (ExternalError::COMPILATION_END);
-	}
+		std::vector <std::string> errors;
+		try {
+			syntaxicTime ();
+			semanticTime ();
+		} catch (Error::ErrorList list) {
+			list.print ();
+			Error::end (ExternalError::COMPILATION_END);
+		} catch (Error::FatalError ftl) {
+			ftl.print ();
+			Error::end (ExternalError::COMPILATION_END);
+		}
     }
     
     void Parser::syntaxicTime () {
-	if (!Ymir::file_exists (this-> _path.c_str ())) Error::occur (ExternalError::NO_SUCH_FILE, _path);
+		if (!Ymir::file_exists (this-> _path.c_str ())) Error::occur (ExternalError::NO_SUCH_FILE, _path);
 
-	auto visitor = syntax::Visitor::init (this-> _path);
-	this-> _module = visitor.visitModGlobal ();
+		auto visitor = syntax::Visitor::init (this-> _path);
+		this-> _module = visitor.visitModGlobal ();
     }
 
     void Parser::semanticTime () {	
-	// STAMP(DECLARATOR);
-	auto declarator = semantic::declarator::Visitor::init ();
-	auto module = declarator.visit (this-> _module, false);
+		// STAMP(DECLARATOR);
+		auto declarator = semantic::declarator::Visitor::init ();
+		auto module = declarator.visit (this-> _module, false);
 
-	// ELAPSED(DECLARATOR);
-	// for (auto & it : semantic::Symbol::getAllModules ()) {
-	//     println (it.second.formatTree ());
-	// }
-	// STAMP(VALIDATOR); 
-	auto validator = semantic::validator::Visitor::init ();
-	validator.validate (module);
-	validator.validateAllClasses ();
-	// ELAPSED(VALIDATOR);
+		// ELAPSED(DECLARATOR);
+		// for (auto & it : semantic::Symbol::getAllModules ()) {
+		//     println (it.second.formatTree ());
+		// }
+		// STAMP(VALIDATOR);
+		auto validator = semantic::validator::Visitor::init ();
+		validator.validate (module);
+		validator.validateAllClasses ();
+		// ELAPSED(VALIDATOR);
 
-	if (global::State::instance ().isDependencyDumpingActive ()) {
-	    auto doc_visit = documentation::Visitor::init (validator);
-	    auto res = doc_visit.dumpDependency (module).toString ();
-	    auto name = Ymir::replace (module.getRealName () + ".dep.json", ':', '_');
-	    auto path = Path::build (global::State::instance ().getOutputDir (), name).toString ();
-	    auto file = fopen (path.c_str (), "w");
-	    if (file != NULL) {
-		fwrite (res.c_str (), sizeof (char), res.length (), file);
-		fclose (file);
-	    } else {
-		(Error::ErrorList {{Error::makeOccurOneLine (ExternalError::DOC_FILE_ERROR, path)}}).print ();
-	    }
-	}
-	
-	if (global::State::instance ().isDocDumpingActive ()) {
-	    auto doc_visit = documentation::Visitor::init (validator);
-	    auto res = doc_visit.dump (module).toString ();
-	    auto name = Ymir::replace (module.getRealName () + ".doc.json", ':', '_');
-	    auto path = Path::build (global::State::instance ().getOutputDir (), name).toString ();
-	    auto file = fopen (path.c_str (), "w");
-	    if (file != NULL) {
-		fwrite (res.c_str (), sizeof (char), res.length (), file);
-		fclose (file);
-	    } else {
-		(Error::ErrorList {{Error::makeOccurOneLine (ExternalError::DOC_FILE_ERROR, path)}}).print ();
-	    }
-	}
-
-	if (global::State::instance ().isGCCDependencyActive ()) {
-	    auto doc_visit = documentation::Visitor::init (validator);
-	    auto res = doc_visit.dumpGCCDependency (module);
-	    std::string name;
-	    FILE* deps_stream;
-	    if (global::State::instance ().getGCCDepFilenameUser () != "") {
-		name = global::State::instance ().getGCCDepFilenameUser ();
-	    } else if (global::State::instance ().isGCCDepFilenameActive ()) {
-		name = "a-" + Ymir::Path (module.getName ().getFilename ()).fileName ().toString () + ".d";
-	    }
-
-	    if (name != "") {
-		deps_stream = fopen (name.c_str (), "w");
-		if (!deps_stream) {
-		    (Error::ErrorList {{Error::makeOccurOneLine (ExternalError::DOC_FILE_ERROR, name)}}).print ();
-		} 
-	    } else deps_stream = stdout;
-
-	    if (deps_stream != nullptr) {
-		fprintf (deps_stream, "%s", res.c_str ());
-		if (deps_stream != stdout) {
-		    fclose (deps_stream);
+		if (global::State::instance ().isDependencyDumpingActive ()) {
+			auto doc_visit = documentation::Visitor::init (validator);
+			auto res = doc_visit.dumpDependency (module).toString ();
+			auto name = Ymir::replace (module.getRealName () + ".dep.json", ':', '_');
+			auto path = Path::build (global::State::instance ().getOutputDir (), name).toString ();
+			auto file = fopen (path.c_str (), "w");
+			if (file != NULL) {
+				fwrite (res.c_str (), sizeof (char), res.length (), file);
+				fclose (file);
+			} else {
+				(Error::ErrorList {{Error::makeOccurOneLine (ExternalError::DOC_FILE_ERROR, path)}}).print ();
+			}
 		}
-	    }
-	}
-		
-	// STAMP(GENERATOR);
-		
-	auto generator = semantic::generator::Visitor::init ();	
-	for (auto & gen : validator.getGenerators ()) {
-	    generator.generate (gen);
-	}
+	
+		if (global::State::instance ().isDocDumpingActive ()) {
+			auto doc_visit = documentation::Visitor::init (validator);
+			auto res = doc_visit.dump (module).toString ();
+			auto name = Ymir::replace (module.getRealName () + ".doc.json", ':', '_');
+			auto path = Path::build (global::State::instance ().getOutputDir (), name).toString ();
+			auto file = fopen (path.c_str (), "w");
+			if (file != NULL) {
+				fwrite (res.c_str (), sizeof (char), res.length (), file);
+				fclose (file);
+			} else {
+				(Error::ErrorList {{Error::makeOccurOneLine (ExternalError::DOC_FILE_ERROR, path)}}).print ();
+			}
+		}
 
-	generator.finalize (module.getRealName ());
+		if (global::State::instance ().isGCCDependencyActive ()) {
+			auto doc_visit = documentation::Visitor::init (validator);
+			auto res = doc_visit.dumpGCCDependency (module);
+			std::string name;
+			FILE* deps_stream;
+			if (global::State::instance ().getGCCDepFilenameUser () != "") {
+				name = global::State::instance ().getGCCDepFilenameUser ();
+			} else if (global::State::instance ().isGCCDepFilenameActive ()) {
+				name = "a-" + Ymir::Path (module.getName ().getFilename ()).fileName ().toString () + ".d";
+			}
+
+			if (name != "") {
+				deps_stream = fopen (name.c_str (), "w");
+				if (!deps_stream) {
+					(Error::ErrorList {{Error::makeOccurOneLine (ExternalError::DOC_FILE_ERROR, name)}}).print ();
+				}
+			} else deps_stream = stdout;
+
+			if (deps_stream != nullptr) {
+				fprintf (deps_stream, "%s", res.c_str ());
+				if (deps_stream != stdout) {
+					fclose (deps_stream);
+				}
+			}
+		}
+		
+		// STAMP(GENERATOR);
+		
+		auto generator = semantic::generator::Visitor::init ();
+		for (auto & gen : validator.getGenerators ()) {
+			generator.generate (gen);
+		}
+
+		generator.finalize (module.getRealName ());
 	    
-	semantic::Symbol::purge ();
-	semantic::declarator::Visitor::purge ();
+		semantic::Symbol::purge ();
+		semantic::declarator::Visitor::purge ();
     }
     
 }
