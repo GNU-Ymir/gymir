@@ -5,15 +5,14 @@
 
 namespace Ymir {
 
-    class Path {
+	class Path {
 
 		std::vector <std::string> _files;
-	
-    private : 
+
+	public :
 
 		Path (const std::vector <std::string> & files);
-	
-    public : 
+
 
 		/**
 		 * \param path the path to parse
@@ -83,10 +82,10 @@ namespace Ymir {
 		 */
 		std::string toString (const std::string & file_sep = "/") const;
 	
-    };
+	};
     
 
-    bool file_exists (const std::string& name);
+	bool file_exists (const std::string& name);
     
 }
 
