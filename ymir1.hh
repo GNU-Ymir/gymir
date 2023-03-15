@@ -60,3 +60,4 @@ extern GTY(()) tree y_global_trees[YTI_MAX];
 extern "C" void ymir_binding_parse_file (uint32_t nb_files, const char ** file);
 extern "C" void ymir_binding_d_add_builtin_version (const char * version);
 extern "C" void ymir_binding_set_size_type (uint32_t size);
+extern "C" void ymir_binding_init ();

@@ -1,0 +1,39 @@
+mod binding::generator::values;
+
+
+import ymirc::semantic::generator::_;
+import ymirc::utils::_;
+import ymirc::lexing::word;
+
+import binding::tree::_;
+import binding::generator::visitor;
+
+import std::io;
+
+/**
+ * This visitor class transform ymirc values into GCC trees
+ * */
+pub class GenerateValueVisitor {
+
+    /**
+     * Create an empty visitor
+     * */
+    pub self () {}
+
+    /**
+     * Transform a value into a tree
+     * @params:
+     *     - context: the context of the generation
+     *     - value: the value to generate
+     * @returns: a GCC tree
+     * */
+    pub def generate (mut self, dmut _ : &GenerateVisitor, value : &Value)-> tree_t {
+        match value {
+            _ => {
+                eprintln (value::typeinfo.name);
+                __pragma!panic ();
+            }
+        }
+    }
+
+}

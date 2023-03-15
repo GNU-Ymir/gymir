@@ -29,6 +29,9 @@ pub extern (C) def  c_binding_alloc_stmt_list ()-> tree_t;
 pub extern (C) def c_binding_append_to_statement_list (left : tree_t, right :  &tree_t)-> void;
 pub extern (C) def c_binding_tree_chain_set (left : tree_t, right : tree_t)-> void;
 pub extern (C) def c_binding_block_chain_set (left : tree_t, right : tree_t);
+pub extern (C) def c_binding_block_chain_get (elem : tree_t)-> tree_t;
+pub extern (C) def c_binding_build_block_tree (loc : location_t, varChain : tree_t, blockChain : tree_t)-> tree_t;
+pub extern (C) def c_binding_build_bind_tree (loc : location_t, varChain : tree_t, content : tree_t, block : tree_t)-> tree_t;
 
 /**
  * =========================================================================
@@ -154,6 +157,7 @@ pub extern (C) def c_binding_build_label_expr (loc : location_t, label : tree_t)
 pub extern (C) def c_binding_build_goto_expr (loc : location_t, label : tree_t)-> tree_t;
 pub extern (C) def c_binding_build_cond_expr (loc : location_t, test : tree_t, gotoS : tree_t, gotoF : tree_t)-> tree_t;
 pub extern (C) def c_binding_build_return_expr (loc : location_t, ret : tree_t)-> tree_t;
+pub extern (C) def c_binding_build_int_cst_value (type : tree_t, value : u64)-> tree_t;
 
 /**
  * =========================================================================

@@ -58,6 +58,18 @@ extern "C" void c_binding_block_chain_set (tree left, tree right) {
     BLOCK_CHAIN (left) = right;
 }
 
+extern "C" tree c_binding_block_chain_get (tree elem) {
+    return BLOCK_CHAIN (elem);
+}
+
+
+extern "C" tree c_binding_build_block_tree (location_t, tree varChain, tree blockChain) {
+    return build_block (varChain, blockChain, nullptr, nullptr);
+}
+
+extern "C" tree c_binding_build_bind_tree (location_t loc, tree varChain, tree content, tree block) {
+    return build3_loc (loc, BIND_EXPR, void_type_node, varChain, content, block);
+}
 
 /**
  * =========================================================================
@@ -698,6 +710,10 @@ extern "C" tree c_binding_build_return_expr (location_t loc, tree expression) {
 
 extern "C" tree c_binding_build_cond_expr (location_t loc, tree test, tree gotoS, tree gotoF) {
     return build3_loc (loc, COND_EXPR, void_type_node, test, gotoS, gotoF);
+}
+
+extern "C" tree c_binding_build_int_cst_value (tree type, uint64_t value) {
+    return build_int_cst_type (type, value);
 }
 
 /**

@@ -46,6 +46,14 @@ pub class BlockChain {
         return alias self;
     }
 
+    pub def setSuperContext (mut self, block : tree_t) {
+        let mut current = self._first;
+        while (current !is null) {
+            c_binding_set_block_super_context (current, block);
+            current = c_binding_block_chain_get (current);
+        }
+    }
+
     pub def getTree (self)-> tree_t {
         return self._first;
     }

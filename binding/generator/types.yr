@@ -1,0 +1,77 @@
+mod binding::generator::types;
+
+import ymirc::semantic::generator::_;
+import ymirc::utils::_;
+import ymirc::lexing::word;
+
+import binding::tree::_;
+import binding::generator::visitor;
+
+import std::io;
+
+/**
+ * This visitor class transform ymirc types into GCC trees
+ * */
+pub class GenerateTypeVisitor {
+
+    /**
+     * Create an empty visitor
+     * */
+    pub self () {}
+
+    /**
+     * Transform a type into a tree
+     * @params:
+     *     - context: the context of the generation
+     *     - type: the type to generate
+     * @returns: a GCC tree
+     * */
+    pub def generate (mut self, dmut context : &GenerateVisitor, type : &Type)-> tree_t {
+        match type {
+            n : &NativeType => self:.generateNativeType (alias context, n);
+            _ => {
+                eprintln (type::typeinfo.name);
+                __pragma!panic ();
+            }
+        }
+    }
+
+    /**
+     * Generate a type tree from a native type.
+     * */
+    def generateNativeType (mut self, dmut context : &GenerateVisitor, type : &NativeType)-> tree_t {
+        match type {
+            i : &IntType =>
+                return intTypeTree (cast!i32 (i.getSize ()), i.isSigned ());
+            c : &CharType =>
+                return charTypeTree (cast!i32 (c.getSize ()));
+            f : &FloatType =>
+                return floatTypeTree (cast!i32 (f.getSize ()));
+            BoolType () => return boolTypeTree ();
+            NoneType () => return voidTypeTree ();
+            VoidType () => return voidTypeTree ();
+            slc : &SliceType => return self:.generateSliceType (alias context, slc);
+            _ => {
+                eprintln (type::typeinfo.name);
+                __pragma!panic ();
+            }
+        }
+    }
+
+
+    /**
+     * Generate a type tree containing a slice type
+     * @params:
+     *     - slc: the generator used to generate the tree
+     * */
+    def generateSliceType (mut self, dmut context : &GenerateVisitor, slc : &SliceType)-> tree_t {
+        let inner = self:.generate (alias context, slc.getInners ()[0]);
+        let len = intTypeTree (0, false);
+        let ptr = pointerTypeTree (inner);
+
+        tupleTypeTree (format ("%", slc),
+                       [len, ptr],
+                       ["len"s8, "ptr"s8])
+    }
+
+}

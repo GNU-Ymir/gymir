@@ -249,3 +249,19 @@ pub def returnExprTree (loc : &Word, resultDecl : tree_t, value : tree_t)-> tree
     let inside = c_binding_build_modify_expr (location, c_binding_get_void_type (), resultDecl, value);
     return c_binding_build_return_expr (location, inside);
 }
+
+/**
+ * Build an int constant from a value
+ * */
+pub def buildIntCst (type : tree_t, value : u64)-> tree_t {
+    c_binding_build_int_cst_value (type, value)
+}
+
+
+pub def blockTree (loc : &Word, varChain : tree_t, blockChain : tree_t)-> tree_t {
+    c_binding_build_block_tree (wordToLocation (loc), varChain, blockChain)
+}
+
+pub def bindTree (loc : &Word, varChain : tree_t, content : tree_t, block : tree_t)-> tree_t {
+    c_binding_build_bind_tree (wordToLocation (loc), varChain, content, block)
+}

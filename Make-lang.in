@@ -32,7 +32,7 @@ YCOMPILE = $(YCOMPILE.base) -MT $@ -MMD -MP -MF $(@D)/$(DEPDIR)/$(*F).TPo
 YPOSTCOMPILE = @mv $(@D)/$(DEPDIR)/$(*F).TPo $(@D)/$(DEPDIR)/$(*F).Po
 YLINKER = /usr/bin/gyc $(NO_PIE_CFLAG) $(ALL_GYMIRFLAGS) -lstdc++ -lgymidgard -ldwarf
 
-GYMIRCOMPILE.base = /usr/bin/gyc $(NO_PIE_CFLAGS) -c $(ALL_GYMIRFLAGS) $(INCLUDES) -o $@
+GYMIRCOMPILE.base = /usr/bin/gyc $(NO_PIE_CFLAGS) -c $(ALL_GYMIRFLAGS) -o $@
 GYMIRCOMPILE = $(GYMIRCOMPILE.base) -MT $@ -MMD -MP -MF $(@D)/$(DEPDIR)/$(*F).TPo
 
 # The compiler proper
@@ -41,6 +41,8 @@ ymir_OBJS = \
     ymir/binding_parser.o \
 	ymir/ymir1.o \
     ymir/generator_visitor.o \
+    ymir/generator_types.o \
+    ymir/generator_values.o \
     ymir/tree_c_tree.o \
     ymir/tree_stmtlist.o \
     ymir/tree_c_bind.o \
@@ -57,19 +59,19 @@ ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)
 	+$(YLINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) -o $@ \
 	attribs.o $(ymir_OBJS) $(D_TARGET_OBJS) $(BACKEND) $(LIBS) $(BACKENDLIBS) libbackend.a
 
-ymir/binding_%.o: ymir/binding/%.yr
-	  $(GYMIRCOMPILE) $(GYC_INCLUDES) -I$(ROOT_DIR)/$(srcdir)/ymir/bootstrap/src -I$(ROOT_DIR)/$(srcdir)/ymir/ $<
+ymir/binding_%.o: ymir/binding/%.yr ymir/libymirc.a
+	  $(GYMIRCOMPILE) -I$(ROOT_DIR)/$(srcdir)/ymir/bootstrap/src -I$(ROOT_DIR)/$(srcdir)/ymir/ $<
 	  $(YPOSTCOMPILE)
 
-ymir/generator_%.o: ymir/binding/generator/%.yr
-	  $(GYMIRCOMPILE) $(GYC_INCLUDES) -I$(ROOT_DIR)/$(srcdir)/ymir/bootstrap/src -I$(ROOT_DIR)/$(srcdir)/ymir/ $<
+ymir/generator_%.o: ymir/binding/generator/%.yr ymir/libymirc.a
+	  $(GYMIRCOMPILE) -I$(ROOT_DIR)/$(srcdir)/ymir/bootstrap/src -I$(ROOT_DIR)/$(srcdir)/ymir/ $<
 	  $(YPOSTCOMPILE)
 
-ymir/tree_%.o: ymir/binding/tree/%.yr
-	  $(GYMIRCOMPILE) $(GYC_INCLUDES) -I$(ROOT_DIR)/$(srcdir)/ymir/bootstrap/src -I$(ROOT_DIR)/$(srcdir)/ymir/ $<
+ymir/tree_%.o: ymir/binding/tree/%.yr ymir/libymirc.a
+	  $(GYMIRCOMPILE) -I$(ROOT_DIR)/$(srcdir)/ymir/bootstrap/src -I$(ROOT_DIR)/$(srcdir)/ymir/ $<
 	  $(YPOSTCOMPILE)
 
-ymir/tree_%.o: ymir/binding/tree/%.cc
+ymir/tree_%.o: ymir/binding/tree/%.cc ymir/libymirc.a
 	  $(YCOMPILE) $(GYC_INCLUDES) $<
 	  $(YPOSTCOMPILE)
 

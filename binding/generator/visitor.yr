@@ -1,7 +1,14 @@
 mod binding::generator::visitor;
 
+import binding::generator::types;
+import binding::generator::values;
 
+import ymirc::semantic::generator::mangler;
 import ymirc::semantic::generator::_;
+import ymirc::global::state;
+import ymirc::global::core_;
+import ymirc::syntax::keys;
+
 import ymirc::utils::_;
 import ymirc::lexing::word;
 
@@ -9,6 +16,7 @@ import binding::tree::_;
 
 import std::collection::vec;
 import std::collection::map;
+import std::collection::set;
 import std::io;
 
 
@@ -16,6 +24,17 @@ import std::io;
  * This generator class transform ymirc objects into GCC trees
  */
 pub class GenerateVisitor {
+
+    /**
+     * ================================================================================
+     * ================================================================================
+     * =============================        CONTEXT        ============================
+     * ================================================================================
+     * ================================================================================
+     */
+
+    /// The list of defined frames
+    let dmut _definedFrame = HashSet!{[c8]}::new ();
 
     // The var decl stack of each block
     let dmut _stackVarDeclChain = Vec!{dmut &TreeChain}::new ();
@@ -27,7 +46,35 @@ pub class GenerateVisitor {
     let mut _currentFunctionContext : tree_t = null;
 
     // The declaration of the variable in the current function context
-    let dmut _varDecls = HashMap!{u32, tree_t}::new ();
+    let dmut _varDecls = Vec!{dmut &HashMap!{u32, tree_t}}::new ();
+
+    // The location of the block opening / closing
+    let dmut _blockLocs = Vec!{&Word}::new ();
+
+    /**
+     * ================================================================================
+     * ================================================================================
+     * =========================        SUB GENERATORS        =========================
+     * ================================================================================
+     * ================================================================================
+     */
+
+    // The visitor used to generate types
+    let dmut _typeGenerator = GenerateTypeVisitor::new ();
+
+    // // The visitor used to generate values
+    // let dmut _valueGenerator = GenerateValueVisitor::new ();
+
+    // The string mangler
+    let dmut _mangler = Mangler::new ();
+
+    /**
+     * ================================================================================
+     * ================================================================================
+     * ==============================        CTORS        =============================
+     * ================================================================================
+     * ================================================================================
+     */
 
 
     /**
@@ -55,13 +102,35 @@ pub class GenerateVisitor {
     }
 
     /**
+     * ================================================================================
+     * ================================================================================
+     * =============================        SYMBOLS        ============================
+     * ================================================================================
+     * ================================================================================
+     */
+
+    /**
      * Generate a frame from a frame generator.
      * @params:
      *    - frame: the frame to generate
      * */
     def generateFrame (mut self, frame : &FrameGenerator) {
         let fnDecl = self:.generateFunctionDecl (frame);
-        c_binding_debug_print_tree (fnDecl);
+        let asmName = decl::getAsmName (fnDecl);
+        if (!state::instance ().isUnittestActive () && frame.getName ().file () == Keys::MAIN) {
+            if (!frame.isWeak () || asmName in self._definedFrame) {
+                self:.generateMainCall (frame.getLoc (), frame.getReturnType ().isOf!{&VoidType} (), asmName);
+            }
+        }
+
+        self:.setCurrentFunctionContext (fnDecl);
+        self:.enterFrame ();
+
+        // let args = self:.generateFrameArguments (frame);
+
+        self:.quitFrame ();
+        self:.setCurrentFunctionContext (null);
+        self._definedFrame:.insert (asmName);
     }
 
     /**
@@ -77,10 +146,95 @@ pub class GenerateVisitor {
         let ret = self:.generateType (frame.getReturnType ());
         let fnType = types::functionTypeTree (ret, args);
         let fnDecl = decl::functionDeclTree (EOF_WORD, frame.getName ().toStr (sep-> "_"s8), fnType);
+        decl::setAsmName (fnDecl, self._mangler.mangleFrame (frame));
+
+
 
         return fnDecl;
     }
 
+    /**
+     * Generate the function calling the main of the program
+     * @params:
+     *     - loc: the location of the definition of the main function
+     *     - mainName: the name of the main function in the program
+     *     - isVoid: if true, the main is defined as void
+     * */
+    def generateMainCall (mut self, loc :  &Word, isVoid : bool, mainName : [c8]) {
+        let argcT = intTypeTree (32, true);
+        let argvT = pointerTypeTree (pointerTypeTree (charTypeTree (8)));
+        let retT  = intTypeTree (32, true);
+
+        let fnType = types::functionTypeTree (retT, [argcT, argvT]);
+        let fnDecl = decl::functionDeclTree (EOF_WORD, Keys::MAIN, fnType);
+        decl::setAsmName (fnType, Keys::MAIN);
+
+        self:.setCurrentFunctionContext (fnDecl);
+        self:.enterFrame ();
+
+        let argcV = self:.generateParamVar ("argc"s8, argcT);
+        let argvV = self:.generateParamVar ("argv"s8, argvT);
+
+        let resDecl = decl::buildResultDecl (EOF_WORD, retT);
+        decl::setDeclArguments (fnDecl, [argcV, argvV]);
+        c_binding_set_result_decl (fnDecl, resDecl);
+
+        self:.enterBlock (loc);
+
+        let dmut list = TreeStatementList::new ();
+        let mainRetT = if (isVoid) {
+            types::voidTypeTree ()
+        } else {
+            retT
+        };
+
+        let mainFuncPtr = funcPtrExprTree (loc, mainName, mainRetT, [argcT, argcV]);
+        let runMainName = if (state::instance ().isDebugActive ()) {
+            CoreNames::RUN_MAIN_DEBUG
+        } else {
+            CoreNames::RUN_MAIN_RELEASE
+        };
+
+        let call = expr::callExprTree (EOF_WORD, mainRetT, runMainName, [argcV, argvV, mainFuncPtr]);
+        if (isVoid) {
+            list:.append (call)
+                :.append (expr::returnExprTree (EOF_WORD, resDecl, expr::buildIntCst (retT, 0u64)));
+        } else {
+            list:.append (expr::returnExprTree (EOF_WORD, resDecl, call));
+        }
+
+        let (bind, body) = self:.quitBlock (loc, list.getTree ());
+        c_binding_set_block_super_context (body, fnDecl);
+        c_binding_set_decl_initial (fnDecl, body);
+        c_binding_set_decl_saved_tree (fnDecl, bind);
+        c_binding_set_external (fnDecl, false);
+        c_binding_set_preserved (fnDecl, true);
+        c_binding_set_public (fnDecl, true);
+        c_binding_set_static (fnDecl, true);
+
+        self:.quitFrame ();
+        self:.setCurrentFunctionContext (null);
+
+        c_binding_gimplify_function (fnDecl);
+        c_binding_finalize_function (fnDecl);
+    }
+
+    /**
+     * Generate the GCC tree of a function parameter
+     * @params:
+     *     - name: the name of the parameter
+     *     - type: the tree of the type of the variable to declare
+     *  @warning: a function context must be entered
+     * */
+    def generateParamVar (mut self, name : [c8], type : tree_t)-> tree_t {
+        let var = decl::paramDeclTree (EOF_WORD, name, type);
+
+        c_binding_set_decl_context (var, self.getCurrentFunctionContext ());
+        c_binding_set_arg_type (var, type);
+        c_binding_set_used (var, true);
+
+        var
+    }
 
     /**
      * =========================================================================
@@ -93,36 +247,83 @@ pub class GenerateVisitor {
     /**
      * Generate a type tree from a Type
      * */
-    def generateType (mut self, type : &Type)-> tree_t {
-        match type {
-            n : &NativeType => self:.generateNativeType (n);
-            _ => {
-                eprintln (type::typeinfo.name);
-                __pragma!panic ();
-            }
-        }
+    pub def generateType (mut self, type : &Type)-> tree_t {
+        self._typeGenerator:.generate (alias self, type)
     }
 
     /**
-     * Generate a type tree from a native type.
+     * =========================================================================
+     * =========================================================================
+     * ======================           MANAGEMENT           ===================
+     * =========================================================================
+     * =========================================================================
      * */
-    def generateNativeType (mut self, type : &NativeType)-> tree_t {
-        match type {
-            i : &IntType =>
-                return intTypeTree (cast!i32 (i.getSize ()), i.isSigned ());
-            c : &CharType =>
-                return charTypeTree (cast!i32 (c.getSize ()));
-            f : &FloatType =>
-                return floatTypeTree (cast!i32 (f.getSize ()));
-            BoolType () => return boolTypeTree ();
-            NoneType () => return voidTypeTree ();
-            VoidType () => return voidTypeTree ();
-            _ => {
-                eprintln (type::typeinfo.name);
-                __pragma!panic ();
-            }
-        }
+
+    /**
+     * Set the context of the generation
+     * @params:
+     *     - fnDecl: the function being generated
+     * */
+    pub def setCurrentFunctionContext (mut self, fnDecl : tree_t) {
+        self._currentFunctionContext = fnDecl;
     }
 
+    /**
+     * @returns: the GCC tree of the function being currently generated
+     * */
+    pub def getCurrentFunctionContext (self)-> tree_t {
+        self._currentFunctionContext
+    }
 
+    /**
+     * Enter a new frame generation
+     * */
+    pub def enterFrame (mut self) {
+        self._varDecls:.push (HashMap!{u32, tree_t}::new ());
+    }
+
+    /**
+     * Quit the frame being validated
+     * */
+    pub def quitFrame (mut self) {
+        __pragma!trusted ({
+            self._varDecls:.pop ();
+        });
+    }
+
+    /**
+     * Enter a block
+     * */
+    pub def enterBlock (mut self, loc : &Word) {
+        self._stackBlockChain:.push (BlockChain::new ());
+        self._stackVarDeclChain:.push (TreeChain::new ());
+        self._blockLocs:.push (loc);
+    }
+
+    /**
+     * Quit a block
+     * @params:
+     *     - loc: the location of the block
+     *     - content: the list of expression to put inside the block to quit
+     * */
+    pub def quitBlock (mut self, loc : &Word, content : tree_t)-> (tree_t, tree_t) {
+        let blkLoc = self._blockLocs [$ - 1us];
+        if (blkLoc != loc) __pragma!panic ();
+
+        let varChain = self._stackVarDeclChain[$ - 1us];
+        let dmut blkChain = (alias self._stackBlockChain)[$ - 1us];
+
+        self._stackBlockChain:.pop ();
+        self._stackVarDeclChain:.pop ();
+        self._blockLocs:.pop ();
+
+        let block = expr::blockTree (loc, varChain.getTree (), blkChain.getTree ());
+        let bind = expr::bindTree (loc, varChain.getTree (), content, block);
+
+        blkChain:.setSuperContext (block);
+
+        (bind, block)
+    } catch {
+        _ => __pragma!panic ();
+    }
 }

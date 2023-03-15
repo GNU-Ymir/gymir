@@ -143,7 +143,9 @@ ymir_init_builtins () {
  
 static bool
 ymir_langhook_init (void)
-{        
+{
+
+  ymir_binding_init ();
   /* NOTE: Newer versions of GCC use only:
      build_common_tree_nodes (false);
      See Eugene's comment in the comments section. */

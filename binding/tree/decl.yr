@@ -35,3 +35,36 @@ pub def paramDeclTree (loc : &Word, name : [c8], type : tree_t)-> tree_t {
 pub def functionDeclTree (loc : &Word, name : [c8], type : tree_t)-> tree_t {
     return c_binding_build_function_decl (wordToLocation (loc), name.toStringZ (), type);
 }
+
+/**
+ * Set the assembly name of a declaration
+ * @params:
+ *    - name: the mangled name
+ * */
+pub def setAsmName (decl : tree_t, name : [c8]) {
+    c_binding_set_asm_name (decl, name.toStringZ ());
+}
+
+/**
+ * @returns: the assembly name of a declaration
+ * */
+pub def getAsmName (decl : tree_t)-> [c8] {
+    c_binding_get_asm_name (decl).fromStringZ ()
+} catch {
+    _ => []
+}
+
+/**
+ * Set the arguments of a declaration (e.g. parameters of a function decl)
+ * */
+pub def setDeclArguments (decl : tree_t, arguments : [tree_t]) {
+    c_binding_set_decl_arguments (decl, cast!u64 (arguments.len), arguments.ptr);
+}
+
+/**
+ * Build a result declaration
+ * */
+pub def buildResultDecl (loc : &Word, type : tree_t)-> tree_t {
+    c_binding_build_result_decl (wordToLocation (loc), type)
+}
+
