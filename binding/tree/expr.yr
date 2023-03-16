@@ -246,7 +246,7 @@ pub def conditionalExprTree (loc : &Word, segmentContext : tree_t, test : tree_t
  * */
 pub def returnExprTree (loc : &Word, resultDecl : tree_t, value : tree_t)-> tree_t {
     let location = wordToLocation (loc);
-    let inside = c_binding_build_modify_expr (location, c_binding_get_void_type (), resultDecl, value);
+    let inside = c_binding_build_modify_expr (location, c_binding_get_type (resultDecl), resultDecl, value);
     return c_binding_build_return_expr (location, inside);
 }
 
@@ -257,6 +257,17 @@ pub def buildIntCst (type : tree_t, value : u64)-> tree_t {
     c_binding_build_int_cst_value (type, value)
 }
 
+pub def buildFloatCst (type : tree_t, value : f32)-> tree_t {
+    c_binding_build_float_cst_value_32 (type, value)
+}
+
+pub def buildFloatCst (type : tree_t, value : f64)-> tree_t {
+    c_binding_build_float_cst_value_64 (type, value)
+}
+
+pub def buildFloatCst (type : tree_t, value : [c8])-> tree_t {
+    c_binding_build_float_cst_value_str (type, value.toStringZ ())
+}
 
 pub def blockTree (loc : &Word, varChain : tree_t, blockChain : tree_t)-> tree_t {
     c_binding_build_block_tree (wordToLocation (loc), varChain, blockChain)
@@ -264,4 +275,11 @@ pub def blockTree (loc : &Word, varChain : tree_t, blockChain : tree_t)-> tree_t
 
 pub def bindTree (loc : &Word, varChain : tree_t, content : tree_t, block : tree_t)-> tree_t {
     c_binding_build_bind_tree (wordToLocation (loc), varChain, content, block)
+}
+
+/**
+ * Build a constructor where each parameters is indexed by its position
+ * */
+pub def buildConstructorIndexed (type : tree_t, elems : [tree_t])-> tree_t {
+    c_binding_build_constructor_indexed (type, cast!u64 (elems.len), elems.ptr)
 }

@@ -8,6 +8,7 @@ import ymirc::lexing::word;
 import binding::tree::_;
 import binding::generator::visitor;
 
+import std::collection::vec;
 import std::io;
 
 /**
@@ -29,6 +30,7 @@ pub class GenerateValueVisitor {
      * */
     pub def generate (self, dmut context : &GenerateVisitor, value : &Value)-> tree_t {
         match value {
+            lit : &LiteralValue => { self.generateLiteralValue (alias context, lit) }
             b : &BlockValue => { self.generateBlockValue (alias context, b) }
             _ => {
                 eprintln (value::typeinfo.name);
@@ -164,5 +166,139 @@ pub class GenerateValueVisitor {
                                         var);
         (decl, var)
     }
+
+    /**
+     * ================================================================================
+     * ================================================================================
+     * ===============================        LITERAL        ==========================
+     * ================================================================================
+     * ================================================================================
+     */
+
+    /**
+     * Generate a literal value
+     * @params:
+     *     - context: the context of the generation
+     *     - lit: the literal value to generate
+     * @returns: the GCC tree containing the value
+     * */
+    def generateLiteralValue (self, dmut context : &GenerateVisitor, lit : &LiteralValue)-> tree_t {
+        match lit {
+            arr : &ArrayValue => { self.generateArrayLit (alias context, arr) }
+            arr : &ArrayAllocValue => { self.generateArrayAlloc (alias context, arr) }
+            b : &BoolValue => { self.generateBoolLit (alias context, b) }
+            c : &CharValue => { self.generateCharLit (alias context, c) }
+            f : &FloatValue => { self.generateFloatLit (alias context, f) }
+            i : &IntValue => { self.generateIntLit (alias context, i) }
+            n : &NullValue => { self.generateNullLit (alias context, n) }
+            s : &StringValue => { self.generateStringLit (alias context, s) }
+            t : &TupleValue => { self.generateTupleLit (alias context, t) }
+            _ => {
+                eprintln (lit::typeinfo.name);
+                __pragma!panic ();
+            }
+        }
+    }
+
+    /**
+     * Generate an array literal value
+     * */
+    def generateArrayLit (self, dmut context : &GenerateVisitor, arr : &ArrayValue)-> tree_t {
+        let type = context:.generateType (arr.getType ());
+        let dmut params = Vec!{tree_t}::new ();
+        params:.reserve (arr.getInners ().len);
+
+        for i in arr.getInners () {
+            params:.push (self.generate (alias context, i));
+        }
+
+        expr::buildConstructorIndexed (type, params[])
+    }
+
+    /**
+     * Generate an array allocation value
+     * */
+    def generateArrayAlloc (self, dmut context : &GenerateVisitor, arr : &ArrayAllocValue)-> tree_t {
+        arr;
+        context;
+        __pragma!panic ();
+    }
+
+    /**
+     * Generate an bool literal value
+     * */
+    def generateBoolLit (self, dmut _ : &GenerateVisitor, b : &BoolValue)-> tree_t {
+        expr::buildIntCst (boolTypeTree (), if (b.isTrue ()) { 1u64 } else { 0u64 })
+    }
+
+    /**
+     * Generate an char literal value
+     * */
+    def generateCharLit (self, dmut context : &GenerateVisitor, c : &CharValue)-> tree_t {
+        let type = context:.generateType (c.getType ());
+        match c.getType ().asOf!{&CharType} ().getSize () {
+            8u16 => {
+                expr::buildIntCst (type, cast!u64 (c.getUtf8 ()))
+            }
+            _ => {
+                expr::buildIntCst (type, cast!u64 (c.getUtf32 ()))
+            }
+        }
+    }
+
+    /**
+     * Generate an float literal value
+     * */
+    def generateFloatLit (self, dmut context : &GenerateVisitor, f : &FloatValue)-> tree_t {
+        let type = context:.generateType (f.getType ());
+        match f.getType ().asOf!{&FloatType} ().getSize () {
+            32u16 => {
+                expr::buildFloatCst (type, f.getF32 ())
+            }
+            _ => {
+                expr::buildFloatCst (type, f.getF64 ())
+            }
+        }
+    }
+
+    /**
+     * Generate an int literal value
+     * */
+    def generateIntLit (self, dmut context : &GenerateVisitor, i : &IntValue)-> tree_t {
+        let type = context:.generateType (i.getType ());
+        let val = i.getValue ().to!{u64} ();
+
+        expr::buildIntCst (type, val)
+    } catch {
+        _ => __pragma!panic ();
+    }
+
+    /**
+     * Generate an null literal value
+     * */
+    def generateNullLit (self, dmut _ : &GenerateVisitor, _ : &NullValue)-> tree_t {
+        let type = pointerTypeTree (voidTypeTree ());
+        c_binding_build_pointer_cst_value (type, 0u64)
+    }
+
+    /**
+     * Generate an string literal value
+     * */
+    def generateStringLit (self, dmut context : &GenerateVisitor, arr : &StringValue)-> tree_t {
+        context;
+        arr;
+        __pragma!panic ();
+    }
+
+    /**
+     * Generate an tuple literal value
+     * */
+    def generateTupleLit (self, dmut context : &GenerateVisitor, arr : &TupleValue)-> tree_t {
+        context;
+        arr;
+        __pragma!panic ();
+    }
+
+
 
 }

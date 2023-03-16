@@ -716,6 +716,52 @@ extern "C" tree c_binding_build_int_cst_value (tree type, uint64_t value) {
     return build_int_cst_type (type, value);
 }
 
+extern "C" tree c_binding_build_pointer_cst_value (tree type, uint64_t value) {
+    auto cst = c_binding_get_int_type (0, false);
+    return convert (type, convert_to_ptrofftype (build_int_cst_type (cst, value)));
+}
+
+extern "C" tree c_binding_build_float_cst_value_str (tree type, const char* value) {
+    REAL_VALUE_TYPE real_value;
+    if (strcmp (value, "INF") == 0) value = "Inf";
+    else if (strcmp (value, "NAN") == 0) value = "QNaN";
+
+    real_from_string (&real_value, value);
+    return build_real (type, real_value);
+}
+
+extern "C" tree c_binding_build_float_cst_value_32 (tree type, float value) {
+    uint64_t len = snprintf (NULL, 0, "%.32e", value);
+    char * res = (char*) malloc (len);
+    snprintf (res, len, "%.32e", value);
+
+    auto ret = c_binding_build_float_cst_value_str (type, res);
+
+    free (res);
+    return ret;
+}
+
+extern "C" tree c_binding_build_float_cst_value_64 (tree type, double value) {
+    uint64_t len = snprintf (NULL, 0, "%.32e", value);
+    char * res = (char*) malloc (len);
+    snprintf (res, len, "%.32e", value);
+
+    auto ret = c_binding_build_float_cst_value_str (type, res);
+
+    free (res);
+    return ret;
+}
+
+
+extern "C" tree c_binding_build_constructor_indexed (tree type, uint64_t nbElems, tree * elems) {
+    vec<constructor_elt, va_gc> * elms = nullptr;
+    for (uint64_t i = 0 ; i < nbElems ; i++) {
+        CONSTRUCTOR_APPEND_ELT (elms, size_int (i), elems [i]);
+    }
+
+    return build_constructor (type, elms);
+}
+
 /**
  * =========================================================================
  * =========================================================================
