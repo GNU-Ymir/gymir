@@ -130,7 +130,7 @@ extern "C" tree c_binding_get_char_type (int32_t size) {
     }
 }
 
-extern "C" tree c_binding_build_array_type (tree innertype, int32_t size) {
+extern "C" tree c_binding_build_array_type (tree innertype, uint64_t size) {
     auto len = build_int_cst_type (y_usize_type, size - 1);
     auto begin = build_int_cst_type (y_usize_type, 0);
     auto range = build_range_type (y_i32_type, fold (begin), fold (len));

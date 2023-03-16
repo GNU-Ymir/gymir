@@ -48,7 +48,7 @@ pub extern (C) def  c_binding_get_bool_type ()-> tree_t;
 pub extern (C) def  c_binding_get_int_type (size : i32, isSigned : bool)-> tree_t;
 pub extern (C) def  c_binding_get_float_type (size : i32)-> tree_t;
 pub extern (C) def  c_binding_get_char_type (size : i32)-> tree_t;
-pub extern (C) def  c_binding_build_array_type (innertype : tree_t, size : i32)-> tree_t;
+pub extern (C) def  c_binding_build_array_type (innertype : tree_t, size : u64)-> tree_t;
 pub extern (C) def  c_binding_build_pointer_type (innerType : tree_t)-> tree_t;
 pub extern (C) def  c_binding_build_tuple_type (name : &c8, nbFields : u64, fieldTypes : &tree_t, nbFieldNames : u64, fieldNames : &(&c8), isUnion : bool, isPacked : bool)-> tree_t;
 pub extern (C) def  c_binding_build_option_type (nbFieldNames : u64, fieldNames : &(&c8), nbCommon : u64, commons : &tree_t, nbUnions : u64, unions : &tree_t)-> tree_t;

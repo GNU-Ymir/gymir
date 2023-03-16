@@ -45,8 +45,8 @@ pub class GenerateVisitor {
     // The function being generated
     let mut _currentFunctionContext : tree_t = null;
 
-    // The declaration of the variable in the current function context
-    let dmut _varDecls = Vec!{dmut &HashMap!{u32, tree_t}}::new ();
+    // The declaration of the variable in the current function context id => (isRef, varDeclTree)
+    let dmut _varDecls = Vec!{dmut &HashMap!{usize, (bool, tree_t)}}::new ();
 
     // The location of the block opening / closing
     let dmut _blockLocs = Vec!{&Word}::new ();
@@ -203,6 +203,7 @@ pub class GenerateVisitor {
 
                 let var = decl::paramDeclTree (param.getLoc (), param.getLoc ().str (), type);
 
+                self:.insertVariable (param.getUniqId (), var, param.isReference ());
                 c_binding_set_decl_context (var, self.getCurrentFunctionContext ());
                 c_binding_set_arg_type (var, type);
                 c_binding_set_used (var, true);
@@ -358,7 +359,7 @@ pub class GenerateVisitor {
      * Enter a new frame generation
      * */
     pub def enterFrame (mut self) {
-        self._varDecls:.push (HashMap!{u32, tree_t}::new ());
+        self._varDecls:.push (HashMap!{usize, (bool, tree_t)}::new ());
     }
 
     /**
@@ -424,5 +425,27 @@ pub class GenerateVisitor {
     } catch {
         _ => __pragma!panic ();
     }
+
+    /**
+     * Insert a variable declaration
+     * */
+    pub def insertVariable (mut self, id : usize, var : tree_t, isRef : bool) {
+        ((alias self._varDecls)[$ - 1us]):.insert (id, (isRef, var));
+    } catch {
+        _ => __pragma!panic ();
+    }
+
+    /**
+     * Get a variable by its reference id
+     * @returns:
+     *    - .0: true iif the variable is a reference
+     *    - .1: the variable declaration
+     * */
+    pub def getVariable (mut self, id : usize)-> (bool, tree_t)? {
+        (self._varDecls[$ - 1us]).find (id)
+    } catch {
+        _ => __pragma!panic ();
+    }
+
 
 }

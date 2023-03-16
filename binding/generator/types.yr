@@ -29,7 +29,7 @@ pub class GenerateTypeVisitor {
      * */
     pub def generate (self, dmut context : &GenerateVisitor, type : &Type)-> tree_t {
         match type {
-            n : &NativeType => self.generateNativeType (alias context, n);
+            n : &NativeType => self.generateNative (alias context, n);
             _ => {
                 eprintln (type::typeinfo.name);
                 __pragma!panic ();
@@ -40,7 +40,7 @@ pub class GenerateTypeVisitor {
     /**
      * Generate a type tree from a native type.
      * */
-    def generateNativeType (self, dmut context : &GenerateVisitor, type : &NativeType)-> tree_t {
+    def generateNative (self, dmut context : &GenerateVisitor, type : &NativeType)-> tree_t {
         match type {
             i : &IntType =>
                 return intTypeTree (cast!i32 (i.getSize ()), i.isSigned ());
@@ -51,7 +51,8 @@ pub class GenerateTypeVisitor {
             BoolType () => return boolTypeTree ();
             NoneType () => return voidTypeTree ();
             VoidType () => return voidTypeTree ();
-            slc : &SliceType => return self.generateSliceType (alias context, slc);
+            slc : &SliceType => return self.generateSlice (alias context, slc);
+            arr : &ArrayType => return self.generateArray (alias context, arr);
             _ => {
                 eprintln (type::typeinfo.name);
                 __pragma!panic ();
@@ -62,10 +63,8 @@ pub class GenerateTypeVisitor {
 
     /**
      * Generate a type tree containing a slice type
-     * @params:
-     *     - slc: the generator used to generate the tree
      * */
-    def generateSliceType (self, dmut context : &GenerateVisitor, slc : &SliceType)-> tree_t {
+    def generateSlice (self, dmut context : &GenerateVisitor, slc : &SliceType)-> tree_t {
         let inner = self.generate (alias context, slc.getInners ()[0]);
         let len = intTypeTree (0, false);
         let ptr = pointerTypeTree (inner);
@@ -73,6 +72,16 @@ pub class GenerateTypeVisitor {
         tupleTypeTree (format ("%", slc),
                        [len, ptr],
                        [SliceKeys::LEN, SliceKeys::PTR])
+    }
+
+    /**
+     * Generate a type tree containing an array type
+     * */
+    def generateArray (self, dmut context : &GenerateVisitor, arr : &ArrayType)-> tree_t {
+        let inner = self.generate (alias context, arr.getInners ()[0]);
+        c_binding_build_array_type (inner, arr.getSize ().getValue ().to!{u64} ())
+    } catch {
+        _ => __pragma!panic ();
     }
 
 }

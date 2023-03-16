@@ -35,6 +35,8 @@ pub class GenerateValueVisitor {
             ct : &ConstructValue  => { self.generateConstruct (alias context, ct) }
             b : &BlockValue       => { self.generateBlock (alias context, b) }
             m : &MemoryValue      => { self.generateMemory (alias context, m) }
+            v : &VarDeclValue     => { self.generateVarDecl (alias context, v) }
+            v : &VarRefValue      => { self.generateVarRef (alias context, v) }
             _ => {
                 eprintln (value::typeinfo.name);
                 __pragma!panic ();
@@ -168,6 +170,57 @@ pub class GenerateValueVisitor {
                                         types::voidTypeTree (),
                                         var);
         (decl, var)
+    }
+
+    /**
+     * Generate a variable declaration
+     * */
+    def generateVarDecl (self, dmut context : &GenerateVisitor, v : &VarDeclValue)-> tree_t {
+        match v.getType () {
+            LambdaType () => { return null; }
+            TemporaryType () => { return null; }
+        }
+
+        let type = context:.generateType (v.getType ());
+        let var = varDeclTree (v.getLoc (), v.getLoc ().str (), type);
+
+        c_binding_set_decl_context (var, context:.getCurrentFunctionContext ());
+        context:.getStackVarDeclChain ():.append (var);
+        context:.insertVariable (v.getUniqId (), var, false);
+
+        match v.getValue () {
+            NoneValue () => {
+                decl::buildDeclTree (v.getLoc (), voidTypeTree (), var)
+            }
+            val : _ => {
+                let value = self.generate (alias context, val);
+                let dmut list = TreeStatementList::new ();
+                list:.append (c_binding_get_list_operand (value))
+                    :.append (affectExprTree (v.getLoc (), var, c_binding_get_value_operand (value),
+                                              context:.getStackVarDeclChain (), context:.getCurrentFunctionContext ()));
+
+                c_binding_build_compound (list.getTree (), decl::buildDeclTree (v.getLoc (), voidTypeTree (), var))
+            }
+        }
+    }
+
+    /**
+     * Generate a variable reference value
+     * */
+    def generateVarRef (self, dmut context : &GenerateVisitor, v : &VarRefValue)-> tree_t {
+        match context:.getVariable (v.getRefId ()) {
+            Ok (x : _) => {
+                if (x._0) { // should be the same as v.isReference ()
+                    c_binding_to_direct_value (x._1)
+                } else {
+                    x._1
+                }
+            }
+            _ => {
+                eprintln ("Malformed variable : ", v);
+                __pragma!panic ();
+            }
+        }
     }
 
     /**
@@ -390,6 +443,7 @@ pub class GenerateValueVisitor {
             n : &NullValue          => { self.generateNullLit (alias context, n) }
             s : &StringValue        => { self.generateStringLit (alias context, s) }
             t : &TupleValue         => { self.generateTupleLit (alias context, t) }
+            UnitValue ()            => { null }
             _ => {
                 eprintln (lit::typeinfo.name);
                 __pragma!panic ();
