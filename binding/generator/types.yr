@@ -3,6 +3,7 @@ mod binding::generator::types;
 import ymirc::semantic::generator::_;
 import ymirc::utils::_;
 import ymirc::lexing::word;
+import ymirc::syntax::keys;
 
 import binding::tree::_;
 import binding::generator::visitor;
@@ -71,7 +72,7 @@ pub class GenerateTypeVisitor {
 
         tupleTypeTree (format ("%", slc),
                        [len, ptr],
-                       ["len"s8, "ptr"s8])
+                       [SliceKeys::LEN, SliceKeys::PTR])
     }
 
 }

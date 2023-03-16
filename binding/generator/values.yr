@@ -4,6 +4,7 @@ mod binding::generator::values;
 import ymirc::semantic::generator::_;
 import ymirc::utils::_;
 import ymirc::lexing::word;
+import ymirc::syntax::keys;
 
 import binding::tree::_;
 import binding::generator::visitor;
@@ -248,11 +249,26 @@ pub class GenerateValueVisitor {
      * Generate an aliaser to a slice value
      * */
     def generateSliceMem (self, dmut context : &GenerateVisitor, s : &SliceValue)-> tree_t {
-        context;
-        s;
-        __pragma!panic ();
+        let val = self.generate (alias context, s.getInner ());
+        let type = context:.generateType (s.getType ());
+        match s.getInner () {
+            str : &StringValue => {
+                let size = buildIntCst (intTypeTree (0, false), cast!{u64} (str.getLen ()));
+                expr::buildConstructorFields (type, [size, val], [SliceKeys::LEN, SliceKeys::PTR])
+            }
+            a : &ArrayValue => {
+                let size = buildIntCst (intTypeTree (0, false), cast!{u64} (a.getLen ()));
+                expr::buildConstructorFields (type, [size, val], [SliceKeys::LEN, SliceKeys::PTR])
+            }
+            SliceCtorValue () => {
+                val
+            }
+            _ => {
+                eprintln ((s.getInner ())::typeinfo.name);
+                __pragma!panic ();
+            }
+        }
     }
-
 
     /**
      * ================================================================================
@@ -343,7 +359,6 @@ pub class GenerateValueVisitor {
      * Generate the tree value reprensenting a slice value ctor
      * */
     def generateSliceCtor (self, dmut context : &GenerateVisitor, s : &SliceCtorValue)-> tree_t {
-        println (s.getPointer (), " ", s.getLen ());
         context;
         s;
         __pragma!panic ();
@@ -466,10 +481,16 @@ pub class GenerateValueVisitor {
     /**
      * Generate an string literal value
      * */
-    def generateStringLit (self, dmut context : &GenerateVisitor, str : &StringValue)-> tree_t {
-        println (str.getType ());
-        context;
-        __pragma!panic ();
+    def generateStringLit (self, dmut _ : &GenerateVisitor, str : &StringValue)-> tree_t {
+        let charT = str.getType ().asOf!{&ArrayType} ().getInners ()[0].asOf!{&CharType} ();
+        match charT.getSize () {
+            8u16 => {
+                c_binding_build_string_literal (cast!u64 (str.getLen ()), str.getUtf8 ().ptr)
+            }
+            _ => {
+                c_binding_build_string_literal (cast!u64 (str.getLen () * 4us), str.getUtf32 ().ptr)
+            }
+        }
     }
 
     /**

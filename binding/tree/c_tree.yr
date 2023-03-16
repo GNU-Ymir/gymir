@@ -144,6 +144,7 @@ pub extern (C) def c_binding_build_result_decl (loc : location_t, type : tree_t)
  * */
 
 pub extern (C) def c_binding_build_modify_expr (loc : location_t, type : tree_t, left : tree_t, right : tree_t)-> tree_t;
+pub extern (C) def c_binding_build_modify_expr_no_conv (loc : location_t, type : tree_t, left : tree_t, right : tree_t)-> tree_t;
 pub extern (C) def c_binding_build_address (loc : location_t, type : tree_t, value : tree_t)-> tree_t;
 pub extern (C) def c_binding_build_memcpy (loc : location_t, left : tree_t, right : tree_t)-> tree_t;
 pub extern (C) def c_binding_build_compound (list : tree_t, value : tree_t)-> tree_t;
@@ -163,6 +164,9 @@ pub extern (C) def c_binding_build_float_cst_value_32 (type : tree_t, value : f3
 pub extern (C) def c_binding_build_float_cst_value_64 (type : tree_t, value : f64)-> tree_t;
 pub extern (C) def c_binding_build_float_cst_value_str (type : tree_t, value : &c8)-> tree_t;
 pub extern (C) def c_binding_build_constructor_indexed (type : tree_t, nbElems : u64, elems : &tree_t)-> tree_t;
+pub extern (C) def c_binding_build_constructor_fields (type : tree_t, nbElems : u64, elems : &tree_t, nbFieldNames : u64, fieldNames : &(&c8))-> tree_t;
+pub extern (C) def c_binding_build_string_literal (len : u64, content : &c8)-> tree_t;
+pub extern (C) def c_binding_build_string_literal (len : u64, content : &c32)-> tree_t;
 
 /**
  * =========================================================================

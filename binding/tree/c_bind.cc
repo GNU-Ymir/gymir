@@ -243,6 +243,23 @@ extern "C" tree c_binding_build_method_type (tree retType, tree self, uint64_t n
     return build_method_type (self, build_function_type_array (retType, nbParams, params));
 }
 
+extern "C" tree c_binding_get_type_field_by_name (tree type, const char * name) {
+    tree field_decl = TYPE_FIELDS (type);
+    while (field_decl != nullptr) {
+        tree decl_name = DECL_NAME (field_decl);
+        if (strcmp (name, IDENTIFIER_POINTER (decl_name)) == 0) {
+            break;
+        }
+
+        field_decl = TREE_CHAIN (field_decl);
+    }
+
+    if (field_decl == nullptr) {
+        _yrt_exc_panic (__FILE__, __FUNCTION__, __LINE__);
+    }
+
+    return field_decl;
+}
 
 /**
  * =========================================================================
@@ -326,8 +343,6 @@ extern "C" tree c_binding_unref_pointer_force_type (tree value, tree type, uint6
         return build2 (MEM_REF, inner, addr, build_int_cst_type (ptrType, 0));
     }
 }
-
-
 
 extern "C" tree c_binding_access_field_by_name (tree value, const char * fieldname) {
     tree type = TREE_TYPE (value);
@@ -635,6 +650,10 @@ extern "C" tree c_binding_build_modify_expr (location_t loc, tree type, tree lef
     return build2_loc (loc, MODIFY_EXPR, type, left, convert (type, right));
 }
 
+extern "C" tree c_binding_build_modify_expr_no_conv (location_t loc, tree type, tree left, tree right) {
+    return build2_loc (loc, MODIFY_EXPR, type, left, right);
+}
+
 extern "C" tree c_binding_build_address (location_t loc, tree type, tree value) {
     TREE_ADDRESSABLE (value) = true;
     return build1_loc (loc, ADDR_EXPR, type, value);
@@ -760,6 +779,25 @@ extern "C" tree c_binding_build_constructor_indexed (tree type, uint64_t nbElems
     }
 
     return build_constructor (type, elms);
+}
+
+extern "C" tree c_binding_build_constructor_fields (tree type, uint64_t nbElems, tree * elems, uint64_t nbNames, const char ** names) {
+    vec<constructor_elt, va_gc> * elms = nullptr;
+    for (uint64_t i = 0 ; i < nbElems ; i++) {
+        if (i >= nbNames) {
+            char buffer [64];
+            snprintf (buffer, 64, "_%ld", i);
+            CONSTRUCTOR_APPEND_ELT (elms, c_binding_get_type_field_by_name (type, buffer), elems [i]);
+        } else {
+            CONSTRUCTOR_APPEND_ELT (elms, c_binding_get_type_field_by_name (type, names [i]), elems [i]);
+        }
+    }
+
+    return build_constructor (type, elms);
+}
+
+extern "C" tree c_binding_build_string_literal (uint64_t len, const char * content) {
+    return build_string_literal (len , content);
 }
 
 /**

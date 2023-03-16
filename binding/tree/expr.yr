@@ -246,7 +246,7 @@ pub def conditionalExprTree (loc : &Word, segmentContext : tree_t, test : tree_t
  * */
 pub def returnExprTree (loc : &Word, resultDecl : tree_t, value : tree_t)-> tree_t {
     let location = wordToLocation (loc);
-    let inside = c_binding_build_modify_expr (location, c_binding_get_type (resultDecl), resultDecl, value);
+    let inside = c_binding_build_modify_expr_no_conv (location, c_binding_get_type (resultDecl), resultDecl, value);
     return c_binding_build_return_expr (location, inside);
 }
 
@@ -282,4 +282,20 @@ pub def bindTree (loc : &Word, varChain : tree_t, content : tree_t, block : tree
  * */
 pub def buildConstructorIndexed (type : tree_t, elems : [tree_t])-> tree_t {
     c_binding_build_constructor_indexed (type, cast!u64 (elems.len), elems.ptr)
+}
+
+/**
+ * Build the construction of a structure (or tuple, slice etc.) using field names
+ * */
+pub def buildConstructorFields (type : tree_t, elems : [tree_t], fields : [[c8]])-> tree_t {
+    let mut fieldStringZ : [mut &c8] = [cast!{&c8} (null) ; new fields.len];
+    for i, f in fields {
+        fieldStringZ [i] = f.toStringZ ();
+    }
+
+    return c_binding_build_constructor_fields (type,
+                                               cast!u64 (elems.len),
+                                               elems.ptr,
+                                               cast!u64 (fieldStringZ.len),
+                                               fieldStringZ.ptr);
 }
