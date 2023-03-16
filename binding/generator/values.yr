@@ -30,8 +30,10 @@ pub class GenerateValueVisitor {
      * */
     pub def generate (self, dmut context : &GenerateVisitor, value : &Value)-> tree_t {
         match value {
-            lit : &LiteralValue => { self.generateLiteralValue (alias context, lit) }
-            b : &BlockValue => { self.generateBlockValue (alias context, b) }
+            lit : &LiteralValue   => { self.generateLiteral (alias context, lit) }
+            ct : &ConstructValue  => { self.generateConstruct (alias context, ct) }
+            b : &BlockValue       => { self.generateBlock (alias context, b) }
+            m : &MemoryValue      => { self.generateMemory (alias context, m) }
             _ => {
                 eprintln (value::typeinfo.name);
                 __pragma!panic ();
@@ -53,8 +55,8 @@ pub class GenerateValueVisitor {
      *     - context: the context of the generation
      *     - block: the block to generate
      * */
-    pub def generateBlockValue (self, dmut context : &GenerateVisitor, block : &BlockValue)-> tree_t {
-        if (block.isSet ()) return self.generateSetValue (alias context, block);
+    pub def generateBlock (self, dmut context : &GenerateVisitor, block : &BlockValue)-> tree_t {
+        if (block.isSet ()) return self.generateSet (alias context, block);
 
         let dmut outerList = TreeStatementList::new ();
 
@@ -115,7 +117,7 @@ pub class GenerateValueVisitor {
      *     - context: the context of the generation
      *     - block: the block of values to generate
      * */
-    pub def generateSetValue (self, dmut context : &GenerateVisitor, block : &BlockValue)-> tree_t {
+    pub def generateSet (self, dmut context : &GenerateVisitor, block : &BlockValue)-> tree_t {
         context;
         block;
         __pragma!panic ();
@@ -170,6 +172,186 @@ pub class GenerateValueVisitor {
     /**
      * ================================================================================
      * ================================================================================
+     * ================================        MEMORY        ==========================
+     * ================================================================================
+     * ================================================================================
+     */
+
+    /**
+     * Generate a memory operation value
+     * @params:
+     *     - context: the context of the generation
+     *     - mem: the memory value to generate
+     * @returns: the GCC tree containing the memory operation
+     * */
+    def generateMemory (self, dmut context : &GenerateVisitor, mem : &MemoryValue)-> tree_t {
+        match mem {
+            a : &AddressValue     => { self.generateAddress (alias context, a) }
+            a : &AliaserValue     => { self.generateAliaser (alias context, a) }
+            c : &CopierValue      => { self.generateCopier (alias context, c) }
+            d : &DeepCopierValue  => { self.generateDeepCopier (alias context, d) }
+            r : &ReferencerValue  => { self.generateReferencer (alias context, r) }
+            s : &SliceValue       => { self.generateSliceMem (alias context, s) }
+            _ => {
+                eprintln (mem::typeinfo.name);
+                __pragma!panic ();
+            }
+        }
+    }
+
+    /**
+     * Generate a address operation
+     * */
+    def generateAddress (self, dmut context : &GenerateVisitor, a : &AddressValue)-> tree_t {
+        context;
+        a;
+        __pragma!panic ();
+    }
+
+    /**
+     * Generate an aliaser value
+     * */
+    def generateAliaser (self, dmut context : &GenerateVisitor, a : &AliaserValue)-> tree_t {
+        context;
+        a;
+        __pragma!panic ();
+    }
+
+    /**
+     * Generate a copy value
+     * */
+    def generateCopier (self, dmut context : &GenerateVisitor, c : &CopierValue)-> tree_t {
+        context;
+        c;
+        __pragma!panic ();
+    }
+
+    /**
+     * Generate a deep copy value
+     * */
+    def generateDeepCopier (self, dmut context : &GenerateVisitor, d : &DeepCopierValue)-> tree_t {
+        context;
+        d;
+        __pragma!panic ();
+    }
+
+    /**
+     * Generate a referencer value
+     * */
+    def generateReferencer (self, dmut context : &GenerateVisitor, r : &ReferencerValue)-> tree_t {
+        context;
+        r;
+        __pragma!panic ();
+    }
+
+    /**
+     * Generate an aliaser to a slice value
+     * */
+    def generateSliceMem (self, dmut context : &GenerateVisitor, s : &SliceValue)-> tree_t {
+        context;
+        s;
+        __pragma!panic ();
+    }
+
+
+    /**
+     * ================================================================================
+     * ================================================================================
+     * ================================        CTORS        ===========================
+     * ================================================================================
+     * ================================================================================
+     */
+
+    /**
+     * Generate a construct value
+     * @params:
+     *     - context: the context of the generation
+     *     - val: the value to generate
+     * @returns: the GCC tree containing the value
+     * */
+    def generateConstruct (self, dmut context : &GenerateVisitor, val : &ConstructValue)-> tree_t {
+        match val {
+            c : &CastValue            => { self.generateCast (alias context, c) }
+            c : &CtorDelegateValue    => { self.generateCtorDelegate (alias context, c) }
+            d : &DelegateValue        => { self.generateDelegate (alias context, d) }
+            f : &FuncPtrValue         => { self.generateFuncPtr (alias context, f) }
+            m : &MethodDelegateValue  => { self.generateMethodDelegate (alias context, m) }
+            r : &RangeValue           => { self.generateRange (alias context, r) }
+            s : &SliceCtorValue       => { self.generateSliceCtor (alias context, s) }
+            _ => {
+                eprintln (val::typeinfo.name);
+                __pragma!panic ();
+            }
+        }
+    }
+
+    /**
+     * Generate a cast value
+     * */
+    def generateCast (self, dmut context : &GenerateVisitor, c : &CastValue)-> tree_t {
+        context;
+        c;
+        __pragma!panic ();
+    }
+
+    /**
+     * Generate the tree value reprensenting a class ctor delegate
+     * */
+    def generateCtorDelegate (self, dmut context : &GenerateVisitor, c : &CtorDelegateValue)-> tree_t {
+        context;
+        c;
+        __pragma!panic ();
+    }
+
+    /**
+     * Generate the tree value reprensenting a function delegate
+     * */
+    def generateDelegate (self, dmut context : &GenerateVisitor, d : &DelegateValue)-> tree_t {
+        context;
+        d;
+        __pragma!panic ();
+    }
+
+    /**
+     * Generate the tree value reprensenting a function pointer
+     * */
+    def generateFuncPtr (self, dmut context : &GenerateVisitor, f : &FuncPtrValue)-> tree_t {
+        context;
+        f;
+        __pragma!panic ();
+    }
+
+    /**
+     * Generate the tree value reprensenting a class method delegate
+     * */
+    def generateMethodDelegate (self, dmut context : &GenerateVisitor, m : &MethodDelegateValue)-> tree_t {
+        context;
+        m;
+        __pragma!panic ();
+    }
+
+    /**
+     * Generate the tree value reprensenting a range value
+     * */
+    def generateRange (self, dmut context : &GenerateVisitor, r : &RangeValue)-> tree_t {
+        context;
+        r;
+        __pragma!panic ();
+    }
+
+    /**
+     * Generate the tree value reprensenting a slice value ctor
+     * */
+    def generateSliceCtor (self, dmut context : &GenerateVisitor, s : &SliceCtorValue)-> tree_t {
+        println (s.getPointer (), " ", s.getLen ());
+        context;
+        s;
+        __pragma!panic ();
+    }
+
+    /**
+     * ================================================================================
+     * ================================================================================
      * ===============================        LITERAL        ==========================
      * ================================================================================
      * ================================================================================
@@ -182,17 +364,17 @@ pub class GenerateValueVisitor {
      *     - lit: the literal value to generate
      * @returns: the GCC tree containing the value
      * */
-    def generateLiteralValue (self, dmut context : &GenerateVisitor, lit : &LiteralValue)-> tree_t {
+    def generateLiteral (self, dmut context : &GenerateVisitor, lit : &LiteralValue)-> tree_t {
         match lit {
-            arr : &ArrayValue => { self.generateArrayLit (alias context, arr) }
-            arr : &ArrayAllocValue => { self.generateArrayAlloc (alias context, arr) }
-            b : &BoolValue => { self.generateBoolLit (alias context, b) }
-            c : &CharValue => { self.generateCharLit (alias context, c) }
-            f : &FloatValue => { self.generateFloatLit (alias context, f) }
-            i : &IntValue => { self.generateIntLit (alias context, i) }
-            n : &NullValue => { self.generateNullLit (alias context, n) }
-            s : &StringValue => { self.generateStringLit (alias context, s) }
-            t : &TupleValue => { self.generateTupleLit (alias context, t) }
+            arr : &ArrayValue       => { self.generateArrayLit (alias context, arr) }
+            arr : &ArrayAllocValue  => { self.generateArrayAlloc (alias context, arr) }
+            b : &BoolValue          => { self.generateBoolLit (alias context, b) }
+            c : &CharValue          => { self.generateCharLit (alias context, c) }
+            f : &FloatValue         => { self.generateFloatLit (alias context, f) }
+            i : &IntValue           => { self.generateIntLit (alias context, i) }
+            n : &NullValue          => { self.generateNullLit (alias context, n) }
+            s : &StringValue        => { self.generateStringLit (alias context, s) }
+            t : &TupleValue         => { self.generateTupleLit (alias context, t) }
             _ => {
                 eprintln (lit::typeinfo.name);
                 __pragma!panic ();
@@ -284,9 +466,9 @@ pub class GenerateValueVisitor {
     /**
      * Generate an string literal value
      * */
-    def generateStringLit (self, dmut context : &GenerateVisitor, arr : &StringValue)-> tree_t {
+    def generateStringLit (self, dmut context : &GenerateVisitor, str : &StringValue)-> tree_t {
+        println (str.getType ());
         context;
-        arr;
         __pragma!panic ();
     }
 
