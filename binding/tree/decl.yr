@@ -68,3 +68,9 @@ pub def buildResultDecl (loc : &Word, type : tree_t)-> tree_t {
     c_binding_build_result_decl (wordToLocation (loc), type)
 }
 
+/**
+ * Build a declaration tree
+ * */
+pub def buildDeclTree (loc : &Word, type : tree_t, decl : tree_t)-> tree_t {
+    c_binding_build_decl (wordToLocation (loc), type, decl)
+}

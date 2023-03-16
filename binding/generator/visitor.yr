@@ -62,8 +62,8 @@ pub class GenerateVisitor {
     // The visitor used to generate types
     let dmut _typeGenerator = GenerateTypeVisitor::new ();
 
-    // // The visitor used to generate values
-    // let dmut _valueGenerator = GenerateValueVisitor::new ();
+    // The visitor used to generate values
+    let dmut _valueGenerator = GenerateValueVisitor::new ();
 
     // The string mangler
     let dmut _mangler = Mangler::new ();
@@ -104,7 +104,7 @@ pub class GenerateVisitor {
     /**
      * ================================================================================
      * ================================================================================
-     * =============================        SYMBOLS        ============================
+     * ===============================         FRAMES         =========================
      * ================================================================================
      * ================================================================================
      */
@@ -126,11 +126,42 @@ pub class GenerateVisitor {
         self:.setCurrentFunctionContext (fnDecl);
         self:.enterFrame ();
 
-        // let args = self:.generateFrameArguments (frame);
+        let args = self:.generateFrameArguments (frame);
+        let resDecl = decl::buildResultDecl (frame.getLoc (), self:.generateType (frame.getReturnType ()));
+        decl::setDeclArguments (fnDecl, args);
+        c_binding_set_result_decl (fnDecl, resDecl);
+
+        let bodyLoc = frame.getBody ().getLoc ();
+        self:.enterBlock (bodyLoc);
+
+        let dmut list = TreeStatementList::new ();
+        {
+            let bodyLst = self:.generateValue (frame.getBody ());
+            if (frame.needFinalReturn ()) {
+                list:.append (c_binding_get_list_operand (bodyLst))
+                    :.append (expr::returnExprTree (bodyLoc, resDecl, c_binding_get_value_operand (bodyLst)));
+            } else {
+                list:.append (bodyLst);
+            }
+        }
+
+        let (bind, body) = self:.quitBlock (bodyLoc, list.getTree ());
+
+        c_binding_set_block_super_context (body, fnDecl);
+        c_binding_set_decl_initial (fnDecl, body);
+        c_binding_set_decl_saved_tree (fnDecl, bind);
+        c_binding_set_external (fnDecl, false);
+        c_binding_set_preserved (fnDecl, true);
+        c_binding_set_public (fnDecl, true);
+        c_binding_set_static (fnDecl, true);
+        c_binding_set_weak (fnDecl, frame.isWeak ());
 
         self:.quitFrame ();
         self:.setCurrentFunctionContext (null);
         self._definedFrame:.insert (asmName);
+
+        c_binding_gimplify_function (fnDecl);
+        c_binding_finalize_function (fnDecl);
     }
 
     /**
@@ -148,9 +179,37 @@ pub class GenerateVisitor {
         let fnDecl = decl::functionDeclTree (EOF_WORD, frame.getName ().toStr (sep-> "_"s8), fnType);
         decl::setAsmName (fnDecl, self._mangler.mangleFrame (frame));
 
-
-
         return fnDecl;
+    }
+
+    /**
+     * Generate the parameter variables of a frame
+     * @assume: a function context is entered
+     * @params:
+     *     - frame: the frame being generated
+     * @returns: the list of tree containing the parameters
+     * */
+    def generateFrameArguments (mut self, frame : &FrameGenerator)-> [tree_t] {
+        let dmut results = Vec!{tree_t}::new ();
+        results:.reserve (frame.getParameters ().len);
+        for p in frame.getParameters () match p {
+            param : &ProtoVarValue => {
+                let type = if (param.isReference ()) {
+                    pointerTypeTree (self:.generateType (param.getType ()))
+                } else { self:.generateType (param.getType ()) };
+
+                let var = decl::paramDeclTree (param.getLoc (), param.getLoc ().str (), type);
+
+                c_binding_set_decl_context (var, self.getCurrentFunctionContext ());
+                c_binding_set_arg_type (var, type);
+                c_binding_set_used (var, true);
+
+                results:.push (var);
+            }
+            _ => __pragma!panic ();
+        }
+
+        results[]
     }
 
     /**
@@ -182,25 +241,27 @@ pub class GenerateVisitor {
         self:.enterBlock (loc);
 
         let dmut list = TreeStatementList::new ();
-        let mainRetT = if (isVoid) {
-            types::voidTypeTree ()
-        } else {
-            retT
-        };
+        {
+            let mainRetT = if (isVoid) {
+                types::voidTypeTree ()
+            } else {
+                retT
+            };
 
-        let mainFuncPtr = funcPtrExprTree (loc, mainName, mainRetT, [argcT, argcV]);
-        let runMainName = if (state::instance ().isDebugActive ()) {
-            CoreNames::RUN_MAIN_DEBUG
-        } else {
-            CoreNames::RUN_MAIN_RELEASE
-        };
+            let mainFuncPtr = funcPtrExprTree (loc, mainName, mainRetT, [argcT, argcV]);
+            let runMainName = if (state::instance ().isDebugActive ()) {
+                CoreNames::RUN_MAIN_DEBUG
+            } else {
+                CoreNames::RUN_MAIN_RELEASE
+            };
 
-        let call = expr::callExprTree (EOF_WORD, mainRetT, runMainName, [argcV, argvV, mainFuncPtr]);
-        if (isVoid) {
-            list:.append (call)
-                :.append (expr::returnExprTree (EOF_WORD, resDecl, expr::buildIntCst (retT, 0u64)));
-        } else {
-            list:.append (expr::returnExprTree (EOF_WORD, resDecl, call));
+            let call = expr::callExprTree (EOF_WORD, mainRetT, runMainName, [argcV, argvV, mainFuncPtr]);
+            if (isVoid) {
+                list:.append (call)
+                    :.append (expr::returnExprTree (EOF_WORD, resDecl, expr::buildIntCst (retT, 0u64)));
+            } else {
+                list:.append (expr::returnExprTree (EOF_WORD, resDecl, call));
+            }
         }
 
         let (bind, body) = self:.quitBlock (loc, list.getTree ());
@@ -248,7 +309,22 @@ pub class GenerateVisitor {
      * Generate a type tree from a Type
      * */
     pub def generateType (mut self, type : &Type)-> tree_t {
-        self._typeGenerator:.generate (alias self, type)
+        self._typeGenerator.generate (alias self, type)
+    }
+
+    /**
+     * =========================================================================
+     * =========================================================================
+     * ========================           VALUES           =====================
+     * =========================================================================
+     * =========================================================================
+     * */
+
+    /**
+     * Generate a value tree from a Value generator
+     * */
+    pub def generateValue (mut self, value : &Value)-> tree_t {
+        self._valueGenerator.generate (alias self, value)
     }
 
     /**
@@ -326,4 +402,24 @@ pub class GenerateVisitor {
     } catch {
         _ => __pragma!panic ();
     }
+
+
+    /**
+     * @returns: the stack var decl chain of the current block
+     * */
+    pub def getStackVarDeclChain (mut self)-> dmut &TreeChain {
+        return (alias self._stackVarDeclChain)[$ - 1us];
+    } catch {
+        _ => __pragma!panic ();
+    }
+
+    /**
+     * @returns: the block chain of the current block
+     * */
+    pub def getBlockChain (mut self)-> dmut &BlockChain {
+        return (alias self._stackBlockChain)[$ - 1us];
+    } catch {
+        _ => __pragma!panic ();
+    }
+
 }

@@ -27,13 +27,142 @@ pub class GenerateValueVisitor {
      *     - value: the value to generate
      * @returns: a GCC tree
      * */
-    pub def generate (mut self, dmut _ : &GenerateVisitor, value : &Value)-> tree_t {
+    pub def generate (self, dmut context : &GenerateVisitor, value : &Value)-> tree_t {
         match value {
+            b : &BlockValue => { self.generateBlockValue (alias context, b) }
             _ => {
                 eprintln (value::typeinfo.name);
                 __pragma!panic ();
             }
         }
+    }
+
+    /**
+     * ================================================================================
+     * ================================================================================
+     * ===============================        SCOPE        ============================
+     * ================================================================================
+     * ================================================================================
+     */
+
+    /**
+     * Generate a block of values
+     * @params:
+     *     - context: the context of the generation
+     *     - block: the block to generate
+     * */
+    pub def generateBlockValue (self, dmut context : &GenerateVisitor, block : &BlockValue)-> tree_t {
+        if (block.isSet ()) return self.generateSetValue (alias context, block);
+
+        let dmut outerList = TreeStatementList::new ();
+
+        // The variable containing the result value of the block
+        let var = match block.getType () {
+            VoidType () => { null }
+            NoneType () => { null }
+            type : _ => {
+                let (vdecl, var) = self.generateVarDecl (alias context,
+                                                         block.getLoc (),
+                                                         format ("_b(%)", block.getLoc ().line ()),
+                                                         context:.generateType (type));
+                outerList:.append (vdecl);
+                var
+            }
+        };
+
+        context:.enterBlock (block.getLoc ());
+        let dmut innerList = TreeStatementList::new ();
+        let mut last : (&Value)? = ((&Value)?)::__err__;
+
+        for val in block.getValues () match last {
+            Ok (lst : _) => {
+                innerList:.append (self.generate (alias context, lst));
+                last = val?;
+            }
+            _ => {
+                last = val?;
+            }
+        }
+
+        if (var !is null) {
+            let value = self.generate (alias context,
+                                       __pragma!trusted (last.unwrap ()));
+
+            innerList:.append (c_binding_get_list_operand (value))
+                :.append (self.generateAffect (alias context, block.getLoc (), var, c_binding_get_value_operand (value)));
+
+            let (bind, _) = context:.quitBlock (block.getLoc (), innerList.getTree ());
+            outerList:.append (bind);
+
+            c_binding_build_compound (outerList.getTree (), var)
+        } else {
+            match last {
+                Ok (lst : _) => {
+                    innerList:.append (self.generate (alias context, lst));
+                }
+            }
+
+            let (bind, _) = context:.quitBlock (block.getLoc (), innerList.getTree ());
+            bind
+        }
+    }
+
+    /**
+     * Generate a block of value declared as a set (not really entering a block, but just a list of values)
+     * @params:
+     *     - context: the context of the generation
+     *     - block: the block of values to generate
+     * */
+    pub def generateSetValue (self, dmut context : &GenerateVisitor, block : &BlockValue)-> tree_t {
+        context;
+        block;
+        __pragma!panic ();
+    }
+
+    /**
+     * ================================================================================
+     * ================================================================================
+     * ==============================        STATEMENTS        ========================
+     * ================================================================================
+     * ================================================================================
+     */
+
+    /**
+     * Generate an affectation
+     * */
+    def generateAffect (self, dmut context : &GenerateVisitor, loc : &Word, left : tree_t, right : tree_t)-> tree_t {
+        expr::affectExprTree (loc, left, right, context:.getStackVarDeclChain (), context:.getCurrentFunctionContext ())
+    }
+
+    /**
+     * ================================================================================
+     * ================================================================================
+     * ==============================        VARIABLES        =========================
+     * ================================================================================
+     * ================================================================================
+     */
+
+    /**
+     * Generate a variable declaration
+     * @assume: the context is currently inside a block inside a frame
+     * @params:
+     *     - context: the context of the generation
+     *     - loc: the location of the declaration
+     *     - name: the name of the variable to declare
+     *     - type: the type of the variable to declare
+     * @returns:
+     *     - .0: the declaration expression (that should be inserted in the block statement list)
+     *     - .1: the variable expression (that can be used for referencing the declared variable)
+     * */
+    pub def generateVarDecl (self, dmut context : &GenerateVisitor, loc : &Word, name : [c8], type : tree_t)-> (tree_t, tree_t) {
+        let var = varDeclTree (loc, name, type);
+        c_binding_set_decl_context (var, context:.getCurrentFunctionContext ());
+        context:.getStackVarDeclChain ():.append (var);
+
+        let decl = decl::buildDeclTree (loc,
+                                        types::voidTypeTree (),
+                                        var);
+        (decl, var)
     }
 
 }
