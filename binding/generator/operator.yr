@@ -1,0 +1,286 @@
+mod binding::generator::operator;
+
+
+import ymirc::semantic::generator::_;
+import ymirc::utils::_;
+import ymirc::lexing::word;
+import ymirc::syntax::keys;
+
+import binding::tree::_;
+import binding::generator::visitor;
+
+import std::collection::vec;
+import std::io;
+
+
+
+/**
+ * This visitor class transform ymirc operators into GCC trees
+ * */
+pub class GenerateOperatorVisitor {
+
+    /**
+     * Create an empty visitor
+     * */
+    pub self () {}
+
+    /**
+     * Transform an operator value into a tree
+     * @params:
+     *     - context: the context of the generation
+     *     - value: the value to generate
+     * @returns: a GCC tree
+     * */
+    pub def generate (self, dmut context : &GenerateVisitor, value : &OperatorValue)-> tree_t {
+        match value {
+            a : &AffectValue              => { self.generateAffect (alias context, a) }
+            a : &SliceAccessValue         => { self.generateSliceAccess (alias context, a) }
+            c : &CallValue                => { self.generateCall (alias context, c) }
+            c : &ClassFieldAccessValue    => { self.generateClassFieldAccess (alias context, c) }
+            c : &ClosureFieldAccessValue  => { self.generateClosureFieldAccess (alias context, c) }
+            c : &CtorCallValue            => { self.generateCtorCall (alias context, c) }
+            f : &FuncPtrCallValue         => { self.generateFuncPtrCall (alias context, f) }
+            m : &MethodCallValue          => { self.generateMethodCall (alias context, m) }
+            n : &NameCallValue            => { self.generateNameCall (alias context, n) }
+            s : &SliceCompareValue        => { self.generateSliceCompare (alias context, s) }
+            s : &SliceConcatValue         => { self.generateSliceConcat (alias context, s) }
+            s : &StructFieldAccessValue   => { self.generateStructFieldAccess (alias context, s) }
+            t : &TupleFieldAccessValue    => { self.generateTupleFieldAccess (alias context, t) }
+            u : &UnaryOperatorValue       => { self.generateUnaryOperator (alias context, u) }
+            b : &BinaryOperatorValue      => { self.generateBinaryOperator (alias context, b) }
+            _ => {
+                eprintln (value::typeinfo.name);
+                __pragma!panic ();
+            }
+        }
+    }
+
+    /**
+     * ================================================================================
+     * ================================================================================
+     * ===============================        CALLS        ============================
+     * ================================================================================
+     * ================================================================================
+     */
+
+    /**
+     * Generate Call value
+     * @params:
+     *    - context: the context of the generation
+     *    - c: the call value to generate
+     * */
+    def generateCall (self, dmut context : &GenerateVisitor, c : &CallValue)-> tree_t {
+        context;
+        c;
+        __pragma!panic ();
+    }
+
+    /**
+     * Generate the call of a class constructor
+     * @params:
+     *     - context: the context of the generation
+     *     - c: the call to generate
+     * */
+    def generateCtorCall (self, dmut context : &GenerateVisitor, c : &CtorCallValue)-> tree_t {
+        context;
+        c;
+        __pragma!panic ();
+    }
+
+    /**
+     * Generate a call to a function pointer
+     * @params:
+     *     - context: the context of the generation
+     *     - f: the function pointer to call
+     * */
+    def generateFuncPtrCall (self, dmut context : &GenerateVisitor, f : &FuncPtrCallValue)-> tree_t {
+        context;
+        f;
+        __pragma!panic ();
+    }
+
+    /**
+     * Generate a call to a method
+     * @params:
+     *     - context: the context of the generation
+     *     - m: the method call to generate
+     * */
+    def generateMethodCall (self, dmut context : &GenerateVisitor, m : &MethodCallValue)-> tree_t {
+        context;
+        m;
+        __pragma!panic ();
+    }
+
+    /**
+     * Generate to the call to a function by its name
+     * @params:
+     *     - context: the context of the generation
+     *     - n: the call value to generate
+     * */
+    def generateNameCall (self, dmut context : &GenerateVisitor, n : &NameCallValue)-> tree_t {
+        context;
+        n;
+        __pragma!panic ();
+    }
+
+    /**
+     * ================================================================================
+     * ================================================================================
+     * ===============================        SLICES        ===========================
+     * ================================================================================
+     * ================================================================================
+     */
+
+
+    /**
+     * Generate a slice comparison value
+     * @params:
+     *     - context: the context of the generation
+     *     - s: the slice compare to generate
+     * */
+    def generateSliceCompare (self, dmut context : &GenerateVisitor, s : &SliceCompareValue)-> tree_t {
+        context;
+        s;
+        __pragma!panic ();
+    }
+
+    /**
+     * Generate a slice concatenation value
+     * @params:
+     *     - context: the context of the generation
+     *     - s: the slice concatenation to generate
+     * */
+    def generateSliceConcat (self, dmut context : &GenerateVisitor, s : &SliceConcatValue)-> tree_t {
+        context;
+        s;
+        __pragma!panic ();
+    }
+
+
+    /**
+     * Generate a slice access value
+     * @params:
+     *     - context: the context of the generation
+     *     - a: the slice access to generate
+     * */
+    def generateSliceAccess (self, dmut context : &GenerateVisitor, a : &SliceAccessValue)-> tree_t {
+        context;
+        a;
+        __pragma!panic ();
+    }
+
+
+    /**
+     * ================================================================================
+     * ================================================================================
+     * ===============================        FIELDS        ===========================
+     * ================================================================================
+     * ================================================================================
+     */
+
+
+    /**
+     * Generate a class field access value
+     * @params:
+     *    - context: the context of the generation
+     *    - c: the field access value to generate
+     * */
+    def generateClassFieldAccess (self, dmut context : &GenerateVisitor, c : &ClassFieldAccessValue)-> tree_t {
+        context;
+        c;
+        __pragma!panic ();
+    }
+
+    /**
+     * Generate a field access on a closure value
+     * @params:
+     *     - context: the context of the generation
+     *     - c: the closure field access to generate
+     * */
+    def generateClosureFieldAccess (self, dmut context : &GenerateVisitor, c : &ClosureFieldAccessValue)-> tree_t {
+        context;
+        c;
+        __pragma!panic ();
+    }
+
+    /**
+     * Generate a field access on a struct value
+     * @params:
+     *     - context: the context of the generation
+     *     - s: the field access to generate
+     * */
+    def generateStructFieldAccess (self, dmut context : &GenerateVisitor, s : &StructFieldAccessValue)-> tree_t {
+        context;
+        s;
+        __pragma!panic ();
+    }
+
+    /**
+     * Generate a field access on a tuple value
+     * @params:
+     *     - context: the context of the generation
+     *     - t: the field access to generate
+     * */
+    def generateTupleFieldAccess (self, dmut context : &GenerateVisitor, t : &TupleFieldAccessValue)-> tree_t {
+        context;
+        t;
+        __pragma!panic ();
+    }
+
+    /**
+     * ================================================================================
+     * ================================================================================
+     * =================================        UNARY        ==========================
+     * ================================================================================
+     * ================================================================================
+     */
+
+    /**
+     * Generate an unary operator
+     * @params:
+     *    - context: the context of the generation
+     *    - u: the unary operator to generate
+     * */
+    def generateUnaryOperator (self, dmut context : &GenerateVisitor, u : &UnaryOperatorValue)-> tree_t {
+        context;
+        u;
+        __pragma!panic ();
+    }
+
+
+    /**
+     * ================================================================================
+     * ================================================================================
+     * ================================        BINARY        ==========================
+     * ================================================================================
+     * ================================================================================
+     */
+
+
+    /**
+     * Generate an affectation
+     * @params:
+     *    - context: the context of the generation
+     *    - a: the affectation value to generate
+     * */
+    def generateAffect (self, dmut context : &GenerateVisitor, a : &AffectValue)-> tree_t  {
+        context;
+        a;
+        __pragma!panic ();
+    }
+
+
+    /**
+     * Generate a binary operator
+     * @params:
+     *     - context: the context of the generation
+     *     - b: the binary operator to generate
+     * */
+    def generateBinaryOperator (self, dmut context : &GenerateVisitor, b : &BinaryOperatorValue)-> tree_t {
+        context;
+        b;
+        __pragma!panic ();
+    }
+
+
+}

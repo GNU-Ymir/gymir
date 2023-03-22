@@ -2,6 +2,7 @@ mod binding::generator::visitor;
 
 import binding::generator::types;
 import binding::generator::values;
+import binding::generator::operator;
 
 import ymirc::semantic::generator::mangler;
 import ymirc::semantic::generator::_;
@@ -64,6 +65,9 @@ pub class GenerateVisitor {
 
     // The visitor used to generate values
     let dmut _valueGenerator = GenerateValueVisitor::new ();
+
+    // The visitor used to generate operators (sub generation of values)
+    let dmut _opGenerator = GenerateOperatorVisitor::new ();
 
     // The string mangler
     let dmut _mangler = Mangler::new ();
@@ -299,6 +303,35 @@ pub class GenerateVisitor {
         c_binding_set_used (var, true);
 
         var
+    }
+
+    /**
+     * ================================================================================
+     * ================================================================================
+     * ===============================         GETTERS         ========================
+     * ================================================================================
+     * ================================================================================
+     */
+
+    /**
+     * @returns: the visitor used to generate types
+     * */
+    pub def getTypeVisitor (mut self)-> dmut &GenerateTypeVisitor {
+        alias self._typeGenerator
+    }
+
+    /**
+     * @returns: the visitor used to generate values
+     * */
+    pub def getValueVisitor (mut self)-> dmut &GenerateValueVisitor {
+        alias self._valueGenerator
+    }
+
+    /**
+     * @returns: the visitor used to generate operator values
+     * */
+    pub def getOperatorVisitor (mut self)-> dmut &GenerateOperatorVisitor {
+        alias self._opGenerator
     }
 
     /**
