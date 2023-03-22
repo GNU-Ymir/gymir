@@ -167,6 +167,7 @@ pub extern (C) def c_binding_build_constructor_indexed (type : tree_t, nbElems :
 pub extern (C) def c_binding_build_constructor_fields (type : tree_t, nbElems : u64, elems : &tree_t, nbFieldNames : u64, fieldNames : &(&c8))-> tree_t;
 pub extern (C) def c_binding_build_string_literal (len : u64, content : &c8)-> tree_t;
 pub extern (C) def c_binding_build_string_literal (len : u64, content : &c32)-> tree_t;
+pub extern (C) def c_binding_promote (val : tree_t)-> tree_t;
 
 /**
  * =========================================================================

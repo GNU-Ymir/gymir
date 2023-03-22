@@ -813,6 +813,31 @@ extern "C" tree c_binding_convert (tree type, tree value) {
     return convert (type, value);
 }
 
+extern "C" tree c_binding_promote (tree value) {
+    tree type = TREE_TYPE (value);
+
+    if (type == y_bool_type || TREE_CODE (type) == ENUMERAL_TYPE) {
+        return convert (y_i32_type, value);
+    }
+
+    if (type == y_i8_type || type == y_i16_type) {
+        return convert (y_i32_type, value);
+    }
+
+    if (type == y_u8_type || type == y_u16_type) {
+        return convert (y_u32_type, value);
+    }
+
+    if (type == y_c8_type || type == y_c16_type) {
+        return convert (y_u32_type, value);
+    }
+
+    if (type == y_f32_type) {
+        return convert (y_f64_type, value);
+    }
+
+    return value;
+}
 
 /**
  * Mandatory Implementation from GCC internals

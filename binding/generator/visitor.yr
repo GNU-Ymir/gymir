@@ -335,6 +335,13 @@ pub class GenerateVisitor {
     }
 
     /**
+     * @returns: the mangler for mangling names
+     * */
+    pub def getMangler (mut self)-> dmut &Mangler {
+        alias self._mangler
+    }
+
+    /**
      * =========================================================================
      * =========================================================================
      * ========================           TYPES           ======================

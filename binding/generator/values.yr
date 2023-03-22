@@ -6,16 +6,19 @@ import ymirc::utils::_;
 import ymirc::lexing::word;
 import ymirc::syntax::keys;
 
+
 import binding::tree::_;
 import binding::generator::visitor;
 
 import std::collection::vec;
+import std::collection::map;
 import std::io;
 
 /**
  * This visitor class transform ymirc values into GCC trees
  * */
 pub class GenerateValueVisitor {
+
 
     /**
      * Create an empty visitor
@@ -38,6 +41,7 @@ pub class GenerateValueVisitor {
             v : &VarDeclValue     => { self.generateVarDecl (alias context, v) }
             v : &VarRefValue      => { self.generateVarRef (alias context, v) }
             o : &OperatorValue    => { context:.getOperatorVisitor ().generate (alias context, o) }
+            p : &PrototypeValue   => { self.generatePrototype (alias context, p) }
             _ => {
                 eprintln (value::typeinfo.name);
                 __pragma!panic ();
@@ -325,6 +329,42 @@ pub class GenerateValueVisitor {
             }
         }
     }
+
+
+    /**
+     * ================================================================================
+     * ================================================================================
+     * ================================        PROTOS        ==========================
+     * ================================================================================
+     * ================================================================================
+     */
+
+    /**
+     * Generate a prototype value
+     * @params:
+     *    - context: the context of the generation
+     *    - proto: the prototype to generate
+     * */
+    def generatePrototype (self, dmut context : &GenerateVisitor, proto : &PrototypeValue)-> tree_t {
+        let asmName = context:.getMangler ().manglePrototype (proto);
+
+        let mut params : [mut tree_t] = [null ; new proto.getParameters ().len];
+        for i, p in proto.getParameters () {
+            let type = if p.isReference () {
+                pointerTypeTree (context:.generateType (p.getType ()))
+            } else {
+                context:.generateType (p.getType ())
+            };
+
+            params [i] = type;
+        }
+
+        let retType = context:.generateType (proto.getRetType ());
+        let addrProto = expr::funcPtrExprTree (proto.getLoc (), asmName, retType, params);
+
+        addrProto
+    }
+
 
     /**
      * ================================================================================
