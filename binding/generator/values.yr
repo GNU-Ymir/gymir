@@ -560,11 +560,25 @@ pub class GenerateValueVisitor {
      * */
     def generateIntLit (self, dmut context : &GenerateVisitor, i : &IntValue)-> tree_t {
         let type = context:.generateType (i.getType ());
-        let val = i.getValue ().to!{u64} ();
-
-        expr::buildIntCst (type, val)
+        match i.getType () {
+            t : &IntType => {
+                match t.isSigned () {
+                    true => {
+                        let val = i.getValue ().to!{i64} ();
+                        expr::buildIntCst (type, val)
+                    }
+                    _ => {
+                        let val = i.getValue ().to!{u64} ();
+                        expr::buildIntCst (type, val)
+                    }
+                }
+            }
+            _ => __pragma!panic ();
+        }
     } catch {
-        _ => __pragma!panic ();
+        _ => {
+            __pragma!panic ();
+        }
     }
 
     /**

@@ -159,6 +159,7 @@ pub extern (C) def c_binding_build_goto_expr (loc : location_t, label : tree_t)-
 pub extern (C) def c_binding_build_cond_expr (loc : location_t, test : tree_t, gotoS : tree_t, gotoF : tree_t)-> tree_t;
 pub extern (C) def c_binding_build_return_expr (loc : location_t, ret : tree_t)-> tree_t;
 pub extern (C) def c_binding_build_int_cst_value (type : tree_t, value : u64)-> tree_t;
+pub extern (C) def c_binding_build_int_cst_value (type : tree_t, value : i64)-> tree_t;
 pub extern (C) def c_binding_build_pointer_cst_value (type : tree_t, value : u64)-> tree_t;
 pub extern (C) def c_binding_build_float_cst_value_32 (type : tree_t, value : f32)-> tree_t;
 pub extern (C) def c_binding_build_float_cst_value_64 (type : tree_t, value : f64)-> tree_t;

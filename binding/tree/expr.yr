@@ -257,6 +257,13 @@ pub def buildIntCst (type : tree_t, value : u64)-> tree_t {
     c_binding_build_int_cst_value (type, value)
 }
 
+/**
+ * Build an int constant from a value
+ * */
+pub def buildIntCst (type : tree_t, value : i64)-> tree_t {
+    c_binding_build_int_cst_value (type, value)
+}
+
 pub def buildFloatCst (type : tree_t, value : f32)-> tree_t {
     c_binding_build_float_cst_value_32 (type, value)
 }
