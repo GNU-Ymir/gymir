@@ -53,6 +53,7 @@ pub class GenerateTypeVisitor {
             VoidType () => return voidTypeTree ();
             slc : &SliceType => return self.generateSlice (alias context, slc);
             arr : &ArrayType => return self.generateArray (alias context, arr);
+            p   : &PointerType => return self.generatePointer (alias context, p);
             _ => {
                 eprintln (type::typeinfo.name);
                 __pragma!panic ();
@@ -60,6 +61,13 @@ pub class GenerateTypeVisitor {
         }
     }
 
+    /**
+     * Generate a pointer type
+     * */
+    def generatePointer (self, dmut context : &GenerateVisitor, p : &PointerType)-> tree_t {
+        let inner = self.generate (alias context, p.getInners ()[0]);
+        pointerTypeTree (inner)
+    }
 
     /**
      * Generate a type tree containing a slice type
