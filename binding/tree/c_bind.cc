@@ -33,6 +33,10 @@
 
 extern "C" void _yrt_exc_panic (const char * filename, const char * function, uint64_t line);
 
+extern "C" void c_binding_fatal_error () {
+    fatal_error (UNKNOWN_LOCATION, "");
+}
+
 /**
  * =========================================================================
  * =========================================================================
