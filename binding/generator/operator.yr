@@ -304,9 +304,22 @@ pub class GenerateOperatorVisitor {
      *    - a: the affectation value to generate
      * */
     def generateAffect (self, dmut context : &GenerateVisitor, a : &AffectValue)-> tree_t  {
-        context;
-        a;
-        __pragma!panic ();
+        let left = context:.generateValue (a.getLeft ());
+        let right = context:.generateValue (a.getRight ());
+
+        let dmut list = TreeStatementList::new ();
+        list:.append (c_binding_get_list_operand (left));
+        list:.append (c_binding_get_list_operand (right));
+
+        let lvalue = c_binding_get_value_operand (left);
+        let rvalue = c_binding_get_value_operand (right);
+
+        let affVal = affectExprTree (a.getLoc (), lvalue, rvalue, context:.getStackVarDeclChain (), context:.getCurrentFunctionContext ());
+        list:.append (c_binding_get_list_operand (affVal));
+
+        let retVal = c_binding_get_value_operand (affVal);
+
+        return c_binding_build_compound (list.getTree (), retVal);
     }
 
 
