@@ -214,7 +214,7 @@ pub def conditionalExprTree (loc : &Word, segmentContext : tree_t, test : tree_t
     let gotoThen = gotoExprTree (loc, thenLabel);
     let gotoEnd = gotoExprTree (loc, endLabel);
 
-    let (elseLabel, gotoElse) = if (fail is null) {
+    let (elseLabel, gotoElse) = if (fail !is null) {
         let elseLabel = labelExprTree (loc, segmentContext, "else"s8);
         let gotoElse = gotoExprTree (loc, elseLabel);
 
