@@ -34,7 +34,7 @@
 extern "C" void _yrt_exc_panic (const char * filename, const char * function, uint64_t line);
 
 extern "C" void c_binding_fatal_error () {
-    fatal_error (UNKNOWN_LOCATION, "");
+    fatal_error (UNKNOWN_LOCATION, "%s", "");
 }
 
 /**
@@ -292,6 +292,11 @@ extern "C" bool c_binding_is_pointer (tree type) {
     if (type == nullptr) return false;
     return TREE_CODE (type) == POINTER_TYPE;
 }
+
+extern "C" bool c_binding_is_bool (tree type) {
+    return (type == y_bool_type);
+}
+
 
 extern "C" bool c_binding_is_float (tree type) {
     return (type == y_f32_type) || (type == y_f64_type);
@@ -713,6 +718,21 @@ extern "C" tree c_binding_build_binary (location_t loc, const char * op, tree ty
     else _yrt_exc_panic (__FILE__, __FUNCTION__, __LINE__);
 
     return build2_loc (loc, code, type, left, right);
+}
+
+extern "C" tree c_binding_build_unary (location_t loc, const char * op, tree type, tree operand, bool isbool) {
+    tree_code code = NEGATE_EXPR;
+    if (strcmp (op, "!") == 0) { if (isbool) { code = BIT_XOR_EXPR; } else { code = BIT_NOT_EXPR; } }
+    else if (strcmp (op, "-") == 0) { code = NEGATE_EXPR; }
+    else _yrt_exc_panic (__FILE__, __FUNCTION__, __LINE__);
+
+    if (code == BIT_XOR_EXPR) {
+        tree right = build_int_cst_type (y_bool_type, 1);
+
+        return build2_loc (loc, code, type, operand, right);
+    } else {
+        return build1_loc (loc, code, type, operand);
+    }
 }
 
 extern "C" tree c_binding_build_label_decl (location_t loc, const char * name) {

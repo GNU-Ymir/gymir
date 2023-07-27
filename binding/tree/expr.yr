@@ -141,6 +141,23 @@ pub def binaryExprTree (loc : &Word, op : BinaryOperators, type : tree_t, left :
 }
 
 /**
+ * Build an unary expression tree
+ * @params:
+ *    - loc: the location of the unary
+ *    - op: the operator
+ *    - type: the return type of the epxression
+ *    - operand: the operand involved in the operation
+ * @returns: the unary expression tree
+ * */
+pub def unaryExprTree (loc : &Word, op : UnaryOperators, type : tree_t, operand : tree_t)-> tree_t {
+    let otype = c_binding_get_type (operand);
+
+    return c_binding_build_unary (wordToLocation (loc),
+                                  op.toStringZ (),
+                                  type, operand, c_binding_is_bool (otype));
+}
+
+/**
  * Build a binary expression tree.
  * @params:
  *     - loc: the location of the binary

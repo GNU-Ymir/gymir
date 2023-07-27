@@ -66,6 +66,7 @@ pub extern (C) def  c_binding_build_method_type (retType : tree_t, selfType : tr
 pub extern (C) def c_binding_is_scalar (type : tree_t) -> bool;
 pub extern (C) def c_binding_is_pointer (type : tree_t)-> bool;
 pub extern (C) def c_binding_is_float (type : tree_t)-> bool;
+pub extern (C) def c_binding_is_bool (type : tree_t)-> bool;
 pub extern (C) def c_binding_is_compound (value : tree_t)-> bool;
 pub extern (C) def c_binding_get_list_operand (value : tree_t)-> tree_t;
 pub extern (C) def c_binding_get_value_operand (value : tree_t)-> tree_t;
@@ -153,6 +154,7 @@ pub extern (C) def c_binding_build_call_from_name (loc : location_t, retType : t
 pub extern (C) def c_binding_build_array_ref (loc : location_t, array : tree_t, index : tree_t)-> tree_t;
 pub extern (C) def c_binding_convert (type : tree_t, value : tree_t)-> tree_t;
 pub extern (C) def c_binding_build_binary (loc : location_t, op : &c8, type : tree_t, left : tree_t, right : tree_t, pointer : bool, fl : bool)-> tree_t;
+pub extern (C) def c_binding_build_unary (loc : location_t, op : &c8, type : tree_t, operand : tree_t, bl : bool)-> tree_t;
 pub extern (C) def c_binding_build_label_decl (loc : location_t, name : &c8)-> tree_t;
 pub extern (C) def c_binding_build_label_expr (loc : location_t, label : tree_t)-> tree_t;
 pub extern (C) def c_binding_build_goto_expr (loc : location_t, label : tree_t)-> tree_t;
