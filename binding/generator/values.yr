@@ -42,6 +42,7 @@ pub class GenerateValueVisitor {
             o : &OperatorValue    => { context:.getOperatorVisitor ().generate (alias context, o) }
             p : &PrototypeValue   => { self.generatePrototype (alias context, p) }
             sc : &ScopeValue      => { self.generateScope (alias context, sc) }
+            r : &ReturnValue      => { self.generateReturn (alias context, r) }
             _ => {
                 eprintln (value::typeinfo.name);
                 __pragma!panic ();
@@ -229,6 +230,20 @@ pub class GenerateValueVisitor {
         expr::affectExprTree (loc, left, right, context:.getStackVarDeclChain (), context:.getCurrentFunctionContext ())
     }
 
+    /**
+     * Generate a return value
+     * */
+    def generateReturn (self, dmut context : &GenerateVisitor, ret : &ReturnValue)-> tree_t {
+        match ret.getValue () {
+            NoneValue () => returnExprTree (ret.getLoc ())
+            UnitValue () => returnExprTree (ret.getLoc ())
+            val : _ => {
+                let res = c_binding_get_result_decl (context:.getCurrentFunctionContext ());
+                returnExprTree (ret.getLoc (), res, context:.generateValue (val))
+            }
+        }
+    }
+    
     /**
      * ================================================================================
      * ================================================================================
