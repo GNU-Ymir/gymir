@@ -36,12 +36,12 @@ pub class GenerateValueVisitor {
         match value {
             lit : &LiteralValue   => { self.generateLiteral (alias context, lit) }
             ct : &ConstructValue  => { self.generateConstruct (alias context, ct) }
-            b : &BlockValue       => { self.generateBlock (alias context, b) }
             m : &MemoryValue      => { self.generateMemory (alias context, m) }
             v : &VarDeclValue     => { self.generateVarDecl (alias context, v) }
             v : &VarRefValue      => { self.generateVarRef (alias context, v) }
             o : &OperatorValue    => { context:.getOperatorVisitor ().generate (alias context, o) }
             p : &PrototypeValue   => { self.generatePrototype (alias context, p) }
+            sc : &ScopeValue      => { self.generateScope (alias context, sc) }
             _ => {
                 eprintln (value::typeinfo.name);
                 __pragma!panic ();
@@ -56,6 +56,25 @@ pub class GenerateValueVisitor {
      * ================================================================================
      * ================================================================================
      */
+
+
+    /**
+     * Generate a scope and flow control value
+     * @params:
+     *     - context: the context of the validation
+     *     - sc: the scope value to generate
+     * */
+    def generateScope (self, dmut context : &GenerateVisitor, sc : &ScopeValue)-> tree_t {
+        match sc {
+            b : &BlockValue       => { self.generateBlock (alias context, b) }
+            c : &ConditionalValue => { self.generateConditional (alias context, c) }
+            _ => {
+                eprintln (sc::typeinfo.name);
+                __pragma!panic ();
+            }
+        }
+    }
+
 
     /**
      * Generate a block of values
@@ -129,6 +148,68 @@ pub class GenerateValueVisitor {
         context;
         block;
         __pragma!panic ();
+    }
+
+
+    /**
+     * Generate a conditional value
+     * @params:
+     *    - context: the context of the validation
+     *    - cond: the conditional to generate
+     * */
+    pub def generateConditional (self, dmut context : &GenerateVisitor, cond : &ConditionalValue)-> tree_t {
+        let dmut all = TreeStatementList::new ();
+        let var = match cond.getType () {
+            VoidType () => { null }
+            NoneType () => { null }
+            type : _ => {
+                let (vdecl, var) = self.generateVarDecl (alias context,
+                                                         cond.getLoc (),
+                                                         format ("_c(%)", cond.getLoc ().line ()),
+                                                         context:.generateType (type));
+                all:.append (vdecl);
+                var
+            }
+        };
+
+        let test = context:.generateValue (cond.getTest ());
+        context:.enterBlock (cond.getLoc ());
+
+        let dmut condTree = TreeStatementList::new ();
+
+        let ifContent = if (var !is null && cond.getContent ().getType () == cond.getType ()) {
+            let dmut innerList = TreeStatementList::new ();
+            let ct = context:.generateValue (cond.getContent ());
+            innerList:.append (c_binding_get_list_operand (ct));
+            innerList:.append (affectExprTree (cond.getLoc (), var, c_binding_get_value_operand (ct),
+                                               context:.getStackVarDeclChain (), context:.getCurrentFunctionContext ()));
+
+            innerList.getTree ()
+        } else { context:.generateValue (cond.getContent ()) }
+
+        let elseContent = if (var !is null && cond.getElse ().getType () == cond.getType ()) {
+            let dmut innerList = TreeStatementList::new ();
+            let ct = context:.generateValue (cond.getElse ());
+            innerList:.append (c_binding_get_list_operand (ct));
+            innerList:.append (affectExprTree (cond.getLoc (), var, c_binding_get_value_operand (ct),
+                                               context:.getStackVarDeclChain (), context:.getCurrentFunctionContext ()));
+
+            innerList.getTree ()
+        } else { context:.generateValue (cond.getElse ()) }
+
+
+        condTree:.append (conditionalExprTree (cond.getLoc (),
+                                          context:.getCurrentFunctionContext (),
+                                          test, ifContent, elseContent));
+
+        let (bind, _) = context:.quitBlock (cond.getLoc (), condTree.getTree ());
+        all:.append (bind);
+
+        if (var !is null) {
+            c_binding_build_compound (all.getTree (), var)
+        } else {
+            all.getTree ()
+        }
     }
 
     /**
@@ -401,9 +482,10 @@ pub class GenerateValueVisitor {
      * Generate a cast value
      * */
     def generateCast (self, dmut context : &GenerateVisitor, c : &CastValue)-> tree_t {
-        context;
-        c;
-        __pragma!panic ();
+        let type = context:.generateType (c.getType ());
+        let val  = context:.generateValue (c.getContent ());
+
+        castExprTree (c.getLoc (), type, val)
     }
 
     /**
@@ -487,6 +569,7 @@ pub class GenerateValueVisitor {
             s : &StringValue        => { self.generateStringLit (alias context, s) }
             t : &TupleValue         => { self.generateTupleLit (alias context, t) }
             UnitValue ()            => { null }
+            NoneValue ()            => { null }
             _ => {
                 eprintln (lit::typeinfo.name);
                 __pragma!panic ();
