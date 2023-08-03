@@ -6,11 +6,9 @@ import ymirc::syntax::keys;
 import binding::tree::c_tree;
 import binding::tree::chain;
 import binding::tree::stmtlist;
+import binding::tree::decl;
 
 import std::conv;
-
-static mut __LAST_LABEL_ID__ = 0us;
-
 
 /**
  * Create an affectation tree. Local variable are declared if necessary for compound type affectation.
@@ -188,21 +186,13 @@ pub def castExprTree (_ : &Word, type : tree_t, value : tree_t)-> tree_t {
     return c_binding_convert (type, value);
 }
 
+
 /**
- * Build a label tree.
- * @params:
- *     - loc: the location of the label
- *     - context: the context of declaration of the label
- *     - label: the name of the label
+ * Build a label expr refering to a label decl
  * */
-pub def labelExprTree (loc : &Word, context : tree_t, name : [c8])-> tree_t {
-    let labelId = name ~ "["s8 ~ (__LAST_LABEL_ID__ + 1us).to![c8] () ~ "]"s8;
-    __LAST_LABEL_ID__ += 1us;
-
-    let decl = c_binding_build_label_decl (wordToLocation (loc), labelId.toStringZ ());
-    c_binding_set_decl_context (decl, context);
-
-    return decl;
+pub def labelExprTree (loc : &Word, label : tree_t)-> tree_t {
+    let location = wordToLocation (loc);
+    return c_binding_build_label_expr (location, label);
 }
 
 /**
@@ -226,13 +216,13 @@ pub def gotoExprTree (loc : &Word, label : tree_t)-> tree_t {
  */
 pub def conditionalExprTree (loc : &Word, segmentContext : tree_t, test : tree_t, suc : tree_t, fail : tree_t)-> tree_t {
     let location = wordToLocation (loc);
-    let thenLabel = labelExprTree (loc, segmentContext, "then"s8);
-    let endLabel = labelExprTree (loc, segmentContext, "end_if"s8);
+    let thenLabel = labelDeclTree (loc, segmentContext, "then"s8);
+    let endLabel = labelDeclTree (loc, segmentContext, "end_if"s8);
     let gotoThen = gotoExprTree (loc, thenLabel);
     let gotoEnd = gotoExprTree (loc, endLabel);
 
     let (elseLabel, gotoElse) = if (fail !is null) {
-        let elseLabel = labelExprTree (loc, segmentContext, "else"s8);
+        let elseLabel = labelDeclTree (loc, segmentContext, "else"s8);
         let gotoElse = gotoExprTree (loc, elseLabel);
 
         (elseLabel, gotoElse)
@@ -240,17 +230,17 @@ pub def conditionalExprTree (loc : &Word, segmentContext : tree_t, test : tree_t
 
     let dmut list = TreeStatementList::new ();
     list:.append (c_binding_build_cond_expr (location, test, gotoThen, gotoElse))
-        :.append (c_binding_build_label_expr (location, thenLabel))
+        :.append (labelExprTree (loc, thenLabel))
         :.append (suc)
         :.append (gotoEnd);
 
     if (fail !is null) {
-        list:.append (c_binding_build_label_expr (location, elseLabel))
+        list:.append (labelExprTree (loc, elseLabel))
             :.append (fail)
             :.append (gotoEnd);
     }
 
-    list:.append (c_binding_build_label_expr (location, endLabel));
+    list:.append (labelExprTree (loc, endLabel));
     return list.getTree ();
 }
 

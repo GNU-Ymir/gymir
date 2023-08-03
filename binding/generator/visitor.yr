@@ -52,6 +52,12 @@ pub class GenerateVisitor {
     // The location of the block opening / closing
     let dmut _blockLocs = Vec!{&Word}::new ();
 
+    // The labels closing loops
+    let dmut _loopLabels = Vec!{dmut &Vec!{tree_t}}::new ();
+
+    // The vars for loop values
+    let dmut _loopVars = Vec!{dmut &Vec!{tree_t}}::new ();
+
     /**
      * ================================================================================
      * ================================================================================
@@ -400,6 +406,8 @@ pub class GenerateVisitor {
      * */
     pub def enterFrame (mut self) {
         self._varDecls:.push (HashMap!{usize, (bool, tree_t)}::new ());
+        self._loopVars:.push (Vec!{tree_t}::new ());
+        self._loopLabels:.push (Vec!{tree_t}::new ());
     }
 
     /**
@@ -408,6 +416,8 @@ pub class GenerateVisitor {
     pub def quitFrame (mut self) {
         __pragma!trusted ({
             self._varDecls:.pop ();
+            self._loopLabels:.pop ();
+            self._loopVars:.pop ();
         });
     }
 
@@ -447,6 +457,46 @@ pub class GenerateVisitor {
         _ => __pragma!panic ();
     }
 
+    /**
+     * Enter a loop context
+     * @params:
+     *    - lab: the label closing the loop
+     *    - var: the variable in which the value of the loop will be written (i.e. for breaks)
+     * */
+    pub def enterLoop (mut self, lab : tree_t, var : tree_t) {
+        ((alias self._loopLabels) [$ - 1us]):.push (lab);
+        ((alias self._loopVars) [$ - 1us]):.push (var);
+    } catch {
+        _ => __pragma!panic ();
+    }
+
+    /**
+     * Quit a loop context
+     * */
+    pub def quitLoop (mut self) {
+        ((alias self._loopLabels) [$ - 1us]):.pop ();
+        ((alias self._loopVars) [$ - 1us]):.pop ();
+    } catch {
+        _ => __pragma!panic ();
+    }
+
+    /**
+     * @returns: the current loop variable
+     * */
+    pub def getCurrentLoopVar (mut self)-> tree_t {
+        ((alias self._loopVars) [$ - 1us])[$ - 1us]
+    } catch {
+        _ => __pragma!panic ();
+    }
+
+    /**
+     * @returns: the current loop closing label
+     * */
+    pub def getCurrentLoopLabel (mut self)-> tree_t {
+        ((alias self._loopLabels) [$ - 1us]) [$ - 1us]
+    } catch {
+        _ => __pragma!panic ();
+    }
 
     /**
      * @returns: the stack var decl chain of the current block

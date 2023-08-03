@@ -4,6 +4,8 @@ import ymirc::lexing::word;
 import binding::tree::c_tree;
 import std::conv;
 
+static mut __LAST_LABEL_ID__ = 0us;
+
 /**
  * @params:
  *     - loc: the location of the declaration
@@ -24,6 +26,23 @@ pub def varDeclTree (loc : &Word, name : [c8], type : tree_t)-> tree_t {
  */
 pub def paramDeclTree (loc : &Word, name : [c8], type : tree_t)-> tree_t {
     return c_binding_build_param_decl (wordToLocation (loc), name.toStringZ (), type);
+}
+
+/**
+ * Build a label tree.
+ * @params:
+ *     - loc: the location of the label
+ *     - context: the context of declaration of the label
+ *     - label: the name of the label
+ * */
+pub def labelDeclTree (loc : &Word, context : tree_t, name : [c8])-> tree_t {
+    let labelId = name ~ "["s8 ~ (__LAST_LABEL_ID__ + 1us).to![c8] () ~ "]"s8;
+    __LAST_LABEL_ID__ += 1us;
+
+    let decl = c_binding_build_label_decl (wordToLocation (loc), labelId.toStringZ ());
+    c_binding_set_decl_context (decl, context);
+
+    return decl;
 }
 
 /**

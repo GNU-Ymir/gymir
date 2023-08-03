@@ -69,6 +69,7 @@ pub class GenerateValueVisitor {
         match sc {
             b : &BlockValue       => { self.generateBlock (alias context, b) }
             c : &ConditionalValue => { self.generateConditional (alias context, c) }
+            l : &LoopValue        => { self.generateLoop (alias context, l) }
             _ => {
                 eprintln (sc::typeinfo.name);
                 __pragma!panic ();
@@ -151,7 +152,6 @@ pub class GenerateValueVisitor {
         __pragma!panic ();
     }
 
-
     /**
      * Generate a conditional value
      * @params:
@@ -192,8 +192,7 @@ pub class GenerateValueVisitor {
             let dmut innerList = TreeStatementList::new ();
             let ct = context:.generateValue (cond.getElse ());
             innerList:.append (c_binding_get_list_operand (ct));
-            innerList:.append (affectExprTree (cond.getLoc (), var, c_binding_get_value_operand (ct),
-                                               context:.getStackVarDeclChain (), context:.getCurrentFunctionContext ()));
+            innerList:.append (self.generateAffect (alias context, cond.getLoc (), var, c_binding_get_value_operand (ct)));
 
             innerList.getTree ()
         } else { context:.generateValue (cond.getElse ()) }
@@ -213,6 +212,79 @@ pub class GenerateValueVisitor {
         }
     }
 
+    /**
+     * Generate a loop value
+     * @params:
+     *    - context: the context of the validation
+     *    - l: the loop to generate
+     * */
+    def generateLoop (self, dmut context : &GenerateVisitor, l : &LoopValue)-> tree_t {
+        let dmut all = TreeStatementList::new ();
+        let var = match l.getType () {
+            VoidType () => { null }
+            NoneType () => { null }
+            type : _ => {
+                let (vdecl, var) = self.generateVarDecl (alias context,
+                                                         l.getLoc (),
+                                                         format ("_c(%)", l.getLoc ().line ()),
+                                                         context:.generateType (type));
+                all:.append (vdecl);
+                var
+            }
+        };
+
+        let test = context:.generateValue (l.getTest ());
+        context:.enterBlock (l.getLoc ());
+        let dmut loopTree = TreeStatementList::new ();
+
+        let endLab = decl::labelDeclTree (l.getLoc (), context:.getCurrentFunctionContext (), "end"s8);
+        context:.enterLoop (endLab, var);
+
+        let content = if (var !is null && !l.getContent ().isBreaker () && test !is null) {
+            let dmut innerList = TreeStatementList::new ();
+            let innerContent = context:.generateValue (l.getContent ());
+            innerList:.append (c_binding_get_list_operand (innerContent));
+
+            innerList:.append (self.generateAffect (alias context, l.getLoc (), var, c_binding_get_value_operand (innerContent)));
+            innerList.getTree ()
+        } else {
+            context:.generateValue (l.getContent ())
+        };
+
+        context:.quitLoop ();
+
+        let begLab = decl::labelDeclTree (l.getLoc (), context:.getCurrentFunctionContext (), "begin"s8);
+        let testLab = decl::labelDeclTree (l.getLoc (), context:.getCurrentFunctionContext (), "test"s8);
+
+        if (!l.isDo () && test !is null) {
+            loopTree:.append (expr::gotoExprTree (l.getLoc (), testLab));
+        }
+
+        loopTree:.append (expr::labelExprTree (l.getLoc (), begLab));
+        loopTree:.append (content);
+        if (test !is null) {
+            loopTree:.append (expr::labelExprTree (l.getLoc (), testLab));
+            loopTree:.append (expr::conditionalExprTree (l.getLoc (),
+                                                         context:.getCurrentFunctionContext (),
+                                                         test,
+                                                         expr::gotoExprTree (l.getLoc (), begLab),
+                                                         expr::gotoExprTree (l.getLoc (), endLab)));
+        } else {
+            loopTree:.append (expr::gotoExprTree (l.getLoc (), begLab));
+        }
+
+        loopTree:.append (expr::labelExprTree (l.getLoc (), endLab));
+
+        let (binding, _) = context:.quitBlock (l.getLoc (), loopTree.getTree ());
+        all:.append (binding);
+
+        if (var !is null) {
+            c_binding_build_compound (all.getTree (), var)
+        } else {
+            all.getTree ()
+        }
+    }
+    
     /**
      * ================================================================================
      * ================================================================================
