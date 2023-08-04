@@ -117,6 +117,7 @@ pub extern (C) def c_binding_set_result_decl (t : tree_t, result : tree_t)-> voi
 pub extern (C) def c_binding_get_result_decl (t : tree_t)-> tree_t;
 pub extern (C) def c_binding_set_block_super_context (t : tree_t, supercontext : tree_t)-> void;
 pub extern (C) def c_binding_get_block_super_context (t : tree_t)-> tree_t;
+pub extern (C) def c_binding_is_variable (t : tree_t)-> bool;
 
 /**
  * =========================================================================

@@ -245,9 +245,15 @@ pub class GenerateOperatorVisitor {
      *     - t: the field access to generate
      * */
     def generateTupleFieldAccess (self, dmut context : &GenerateVisitor, t : &TupleFieldAccessValue)-> tree_t {
-        context;
-        t;
-        __pragma!panic ();
+        let tuple = context:.generateValue (t.getTuple ());
+        let field = format ("_%", t.getFieldIndex ());
+
+        let val = c_binding_get_value_operand (tuple);
+        let lst = c_binding_get_list_operand (tuple);
+
+        let fieldAcc = fieldAccessExprTree (t.getLoc (), val, field);
+
+        c_binding_build_compound (lst, fieldAcc)
     }
 
     /**

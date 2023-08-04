@@ -43,6 +43,7 @@ pub class GenerateValueVisitor {
             p : &PrototypeValue   => { self.generatePrototype (alias context, p) }
             sc : &ScopeValue      => { self.generateScope (alias context, sc) }
             r : &ReturnValue      => { self.generateReturn (alias context, r) }
+            u : &UniqValue        => { self.generateUniq (alias context, u) }
             _ => {
                 eprintln (value::typeinfo.name);
                 __pragma!panic ();
@@ -199,8 +200,8 @@ pub class GenerateValueVisitor {
 
 
         condTree:.append (conditionalExprTree (cond.getLoc (),
-                                          context:.getCurrentFunctionContext (),
-                                          test, ifContent, elseContent));
+                                               context:.getCurrentFunctionContext (),
+                                               test, ifContent, elseContent));
 
         let (bind, _) = context:.quitBlock (cond.getLoc (), condTree.getTree ());
         all:.append (bind);
@@ -219,6 +220,7 @@ pub class GenerateValueVisitor {
      *    - l: the loop to generate
      * */
     def generateLoop (self, dmut context : &GenerateVisitor, l : &LoopValue)-> tree_t {
+        if (l.isCteFor ()) return self.generateCteForLoop (alias context, l);
         let dmut all = TreeStatementList::new ();
         let var = match l.getType () {
             VoidType () => { null }
@@ -284,6 +286,56 @@ pub class GenerateValueVisitor {
             all.getTree ()
         }
     }
+
+    /**
+     * Generate a cte for loop
+     * */
+    def generateCteForLoop (self, dmut context : &GenerateVisitor, l : &LoopValue)-> tree_t {
+        let dmut all = TreeStatementList::new ();
+        let var = match l.getType () {
+            VoidType () => { null }
+            NoneType () => { null }
+            type : _ => {
+                let (vdecl, var) = self.generateVarDecl (alias context,
+                                                         l.getLoc (),
+                                                         format ("_c(%)", l.getLoc ().line ()),
+                                                         context:.generateType (type));
+                all:.append (vdecl);
+                var
+            }
+        };
+
+        context:.enterBlock (l.getLoc ());
+        let dmut loopTree = TreeStatementList::new ();
+
+        let endLab = decl::labelDeclTree (l.getLoc (), context:.getCurrentFunctionContext (), "end"s8);
+        context:.enterLoop (endLab, var);
+
+        let content = if (var !is null && !l.getContent ().isBreaker ()) {
+            let dmut innerList = TreeStatementList::new ();
+            let innerContent = context:.generateValue (l.getContent ());
+            innerList:.append (c_binding_get_list_operand (innerContent));
+
+            innerList:.append (self.generateAffect (alias context, l.getLoc (), var, c_binding_get_value_operand (innerContent)));
+            innerList.getTree ()
+        } else {
+            context:.generateValue (l.getContent ())
+        };
+
+        context:.quitLoop ();
+
+        loopTree:.append (content);
+        loopTree:.append (expr::labelExprTree (l.getLoc (), endLab));
+
+        let (binding, _) = context:.quitBlock (l.getLoc (), loopTree.getTree ());
+        all:.append (binding);
+
+        if (var !is null) {
+            c_binding_build_compound (all.getTree (), var)
+        } else {
+            all.getTree ()
+        }
+    }
     
     /**
      * ================================================================================
@@ -314,6 +366,41 @@ pub class GenerateValueVisitor {
                 returnExprTree (ret.getLoc (), res, context:.generateValue (val))
             }
         }
+    }
+
+    /**
+     * Generate an uniq value
+     * */
+    def generateUniq (self, dmut context : &GenerateVisitor, uni : &UniqValue)-> tree_t {
+        let varR = context:.getVariable (uni.getValue ().getUniqId ());
+        match varR {
+            Ok ((_, var : _)) => { return c_binding_to_direct_value (var); }
+        };
+
+        let dmut list = TreeStatementList::new ();
+        let type = pointerTypeTree (context:.generateType (uni.getValue ().getType ()));
+        let name = format ("uniq_%", uni.getValue ().getUniqId ());
+        let var = self.generateRootVarDecl (alias context, uni.getLoc (), uni.getValue ().getUniqId (), name, type);
+
+        let valueC = context:.generateValue (uni.getValue ());
+        list:.append (c_binding_get_list_operand (valueC));
+
+        let value = c_binding_get_value_operand (valueC);
+        if (c_binding_is_variable (value)) {
+            let uniqContentAddr = expr::addressExprTree (uni.getLoc (), type, value);
+            list:.append (self.generateAffect (alias context, uni.getLoc (), var, uniqContentAddr));
+        } else {
+            let typeContent = context:.generateType (uni.getValue ().getType ());
+            let nameContent = format ("uniq_c_%", uni.getValue ().getUniqId ());
+            let varContent  = self.generateRootVarDecl (alias context, uni.getLoc (), uni.getValue ().getUniqId (), nameContent, typeContent, insertVarRef-> false);
+
+            list:.append (self.generateAffect (alias context, uni.getLoc (), varContent, value));
+
+            let uniqContentAddr = expr::addressExprTree (uni.getLoc (), type, varContent);
+            list:.append (self.generateAffect (alias context, uni.getLoc (), var, uniqContentAddr));
+        }
+
+        c_binding_build_compound (list.getTree (), c_binding_to_direct_value (var))
     }
     
     /**
@@ -346,6 +433,33 @@ pub class GenerateValueVisitor {
                                         var);
         (decl, var)
     }
+
+    /**
+     * Generate a variable declaration accessible anywhere in the frame
+     *      * @params:
+     *     - context: the context of the generation
+     *     - loc: the location of the declaration
+     *     - name: the name of the variable to declare
+     *     - type: the type of the variable to declare
+     * @returns:
+     *     - .0: the declaration expression (that should be inserted in the block statement list)
+     *     - .1: the variable expression (that can be used for referencing the declared variable)
+     * */
+    def generateRootVarDecl (self, dmut context : &GenerateVisitor, loc : &Word, id : usize, name : [c8], type : tree_t, insertVarRef : bool = true)-> tree_t {
+        let var = varDeclTree (loc, name, type);
+
+        c_binding_set_decl_context (var, context:.getCurrentFunctionContext ());
+        context:.getRootStackVarDeclChain ():.append (var);
+
+        let decl = decl::buildDeclTree (loc, types::voidTypeTree (), var);
+        context:.getRootExprList ():.append (decl);
+        if (insertVarRef) {
+            context:.insertVariable (id, var, false);
+        }
+
+        var
+    }
+
 
     /**
      * Generate a variable declaration
@@ -778,9 +892,13 @@ pub class GenerateValueVisitor {
      * Generate an tuple literal value
      * */
     def generateTupleLit (self, dmut context : &GenerateVisitor, arr : &TupleValue)-> tree_t {
-        context;
-        arr;
-        __pragma!panic ();
+        let type = context:.generateType (arr.getType ());
+        let mut inners : [mut tree_t] = [null ; new arr.getInners ().len];
+        for i, t in arr.getInners () {
+            inners [i] = context:.generateValue (t);
+        }
+
+        buildConstructorFields (type, inners, [])
     }
 
 

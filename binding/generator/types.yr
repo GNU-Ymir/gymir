@@ -8,6 +8,8 @@ import ymirc::syntax::keys;
 import binding::tree::_;
 import binding::generator::visitor;
 
+import std::collection::vec;
+
 import std::io;
 
 /**
@@ -54,6 +56,7 @@ pub class GenerateTypeVisitor {
             slc : &SliceType => return self.generateSlice (alias context, slc);
             arr : &ArrayType => return self.generateArray (alias context, arr);
             p   : &PointerType => return self.generatePointer (alias context, p);
+            t : &TupleType => return self.generateTuple (alias context, t);
             _ => {
                 eprintln (type::typeinfo.name);
                 __pragma!panic ();
@@ -80,6 +83,20 @@ pub class GenerateTypeVisitor {
         tupleTypeTree (format ("%", slc),
                        [len, ptr],
                        [SliceKeys::LEN, SliceKeys::PTR])
+    }
+
+    /**
+     * Generate a type tree for a tuple type
+     * */
+    def generateTuple (self, dmut context : &GenerateVisitor, tu : &TupleType)-> tree_t {
+        let mut inners : [mut tree_t] = [null ; new tu.getInners ().len];
+        for i, t in tu.getInners () {
+            inners [i] = self.generate (alias context, t);
+        }
+
+        tupleTypeTree (format ("%", tu),
+                       inners,
+                       [])
     }
 
     /**

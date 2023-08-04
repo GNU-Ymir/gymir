@@ -366,7 +366,7 @@ extern "C" tree c_binding_access_field_by_name (tree value, const char * fieldna
     }
 
     if (field_decl == nullptr) return nullptr;
-    return build2 (COMPONENT_REF, TREE_TYPE (field_decl), value, field_decl);
+    return build3 (COMPONENT_REF, TREE_TYPE (field_decl), value, field_decl, nullptr);
 }
 
 extern "C" tree c_binding_to_direct_value (tree value) {
@@ -374,6 +374,15 @@ extern "C" tree c_binding_to_direct_value (tree value) {
     if (TREE_CODE (TREE_TYPE (value)) == POINTER_TYPE) {
         return c_binding_unref_pointer (value, 0);
     } else return value;
+}
+
+extern "C" bool c_binding_is_variable (tree value) {
+    if (value == nullptr) return false;
+    if (TREE_CODE (value) == VAR_DECL) {
+        return true;
+    }
+
+    return false;
 }
 
 extern "C" bool c_binding_is_string_type (tree type) {
@@ -775,8 +784,9 @@ extern "C" tree c_binding_build_float_cst_value_str (tree type, const char* valu
 
 extern "C" tree c_binding_build_float_cst_value_32 (tree type, float value) {
     uint64_t len = snprintf (NULL, 0, "%.32e", value);
-    char * res = (char*) malloc (len);
-    snprintf (res, len, "%.32e", value);
+    char * res = (char*) malloc (len + 2);
+    snprintf (res, len + 1, "%.32e", value);
+    res [len + 1] = 0;
 
     auto ret = c_binding_build_float_cst_value_str (type, res);
 
@@ -786,8 +796,9 @@ extern "C" tree c_binding_build_float_cst_value_32 (tree type, float value) {
 
 extern "C" tree c_binding_build_float_cst_value_64 (tree type, double value) {
     uint64_t len = snprintf (NULL, 0, "%.32e", value);
-    char * res = (char*) malloc (len);
-    snprintf (res, len, "%.32e", value);
+    char * res = (char*) malloc (len + 2);
+    snprintf (res, len + 1, "%.32e", value);
+    res [len + 1] = 0;
 
     auto ret = c_binding_build_float_cst_value_str (type, res);
 

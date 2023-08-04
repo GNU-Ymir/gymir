@@ -156,6 +156,15 @@ pub def unaryExprTree (loc : &Word, op : UnaryOperators, type : tree_t, operand 
 }
 
 /**
+ * @returns: an address expression
+ * */
+pub def addressExprTree (loc : &Word, type : tree_t, value : tree_t)-> tree_t {
+    let location = wordToLocation (loc);
+
+    return c_binding_build_address (location, type, value);
+}
+
+/**
  * Build a binary expression tree.
  * @params:
  *     - loc: the location of the binary
@@ -186,6 +195,12 @@ pub def castExprTree (_ : &Word, type : tree_t, value : tree_t)-> tree_t {
     return c_binding_convert (type, value);
 }
 
+/**
+ * Access to a field by its name in a struct type
+ * */
+pub def fieldAccessExprTree (_ : &Word, str : tree_t, fieldName : [c8])-> tree_t {
+    c_binding_access_field_by_name (str, fieldName.toStringZ ())
+}
 
 /**
  * Build a label expr refering to a label decl
