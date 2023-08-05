@@ -44,6 +44,7 @@ pub class GenerateValueVisitor {
             sc : &ScopeValue      => { self.generateScope (alias context, sc) }
             r : &ReturnValue      => { self.generateReturn (alias context, r) }
             u : &UniqValue        => { self.generateUniq (alias context, u) }
+            n : &NamedValue       => { self.generate (alias context, n.getContent ()) }
             _ => {
                 eprintln (value::typeinfo.name);
                 __pragma!panic ();
