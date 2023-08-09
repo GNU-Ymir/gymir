@@ -233,9 +233,15 @@ pub class GenerateOperatorVisitor {
      *     - s: the field access to generate
      * */
     def generateStructFieldAccess (self, dmut context : &GenerateVisitor, s : &StructFieldAccessValue)-> tree_t {
-        context;
-        s;
-        __pragma!panic ();
+        let str = context:.generateValue (s.getStruct ());
+        let field = s.getFieldName ();
+
+        let val = c_binding_get_value_operand (str);
+        let lst = c_binding_get_list_operand (str);
+
+        let fieldAcc = fieldAccessExprTree (s.getLoc (), val, field);
+
+        c_binding_build_compound (lst, fieldAcc)
     }
 
     /**

@@ -769,9 +769,28 @@ pub class GenerateValueVisitor {
      * Generate the tree value reprensenting a range value
      * */
     def generateRange (self, dmut context : &GenerateVisitor, r : &RangeValue)-> tree_t {
-        context;
-        r;
-        __pragma!panic ();
+        let type = context:.generateType (r.getType ());
+        let fst = context:.generateValue (r.getLeft ());
+        let scd = context:.generateValue (r.getRight ());
+        let step = context:.generateValue (r.getStep ());
+        let contain = context:.generateValue (r.getIsFull ());
+
+        let dmut list = TreeStatementList::new ();
+        list:.append (c_binding_get_list_operand (fst));
+        list:.append (c_binding_get_list_operand (scd));
+        list:.append (c_binding_get_list_operand (step));
+        list:.append (c_binding_get_list_operand (contain));
+
+
+
+        let value = buildConstructorFields (type,
+                                            [c_binding_get_value_operand (fst),
+                                             c_binding_get_value_operand (scd),
+                                             c_binding_get_value_operand (step),
+                                             c_binding_get_value_operand (contain)],
+                                            [RangeKeys::FST, RangeKeys::SCD, RangeKeys::STEP, RangeKeys::CONTAIN]);
+
+        c_binding_build_compound (list.getTree (), value)
     }
 
     /**
@@ -823,14 +842,20 @@ pub class GenerateValueVisitor {
      * */
     def generateArrayLit (self, dmut context : &GenerateVisitor, arr : &ArrayValue)-> tree_t {
         let type = context:.generateType (arr.getType ());
+
+        let dmut list = TreeStatementList::new ();
         let dmut params = Vec!{tree_t}::new ();
         params:.reserve (arr.getInners ().len);
 
         for i in arr.getInners () {
-            params:.push (self.generate (alias context, i));
+            let p = self.generate (alias context, i);
+            list:.append (c_binding_get_list_operand (p));
+            params:.push (c_binding_get_value_operand (p));
         }
 
-        expr::buildConstructorIndexed (type, params[])
+        let value = expr::buildConstructorIndexed (type, params[]);
+
+        c_binding_build_compound (list.getTree (), value)
     }
 
     /**
@@ -933,12 +958,18 @@ pub class GenerateValueVisitor {
      * */
     def generateTupleLit (self, dmut context : &GenerateVisitor, arr : &TupleValue)-> tree_t {
         let type = context:.generateType (arr.getType ());
+        let dmut list = TreeStatementList::new ();
         let mut inners : [mut tree_t] = [null ; new arr.getInners ().len];
+
         for i, t in arr.getInners () {
-            inners [i] = context:.generateValue (t);
+            let p = context:.generateValue (t);
+            list:.append (c_binding_get_list_operand (p));
+            inners [i] = c_binding_get_value_operand (p);
         }
 
-        buildConstructorFields (type, inners, [])
+        let value = buildConstructorFields (type, inners, []);
+
+        c_binding_build_compound (list.getTree (), value)
     }
 
 

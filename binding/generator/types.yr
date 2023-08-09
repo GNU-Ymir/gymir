@@ -57,6 +57,7 @@ pub class GenerateTypeVisitor {
             arr : &ArrayType => return self.generateArray (alias context, arr);
             p   : &PointerType => return self.generatePointer (alias context, p);
             t : &TupleType => return self.generateTuple (alias context, t);
+            r : &RangeType => return self.generateRange (alias context, r);
             _ => {
                 eprintln (type::typeinfo.name);
                 __pragma!panic ();
@@ -97,6 +98,19 @@ pub class GenerateTypeVisitor {
         tupleTypeTree (format ("%", tu),
                        inners,
                        [])
+    }
+
+    /**
+     * Generate a type tree for a range type
+     * */
+    def generateRange (self, dmut context : &GenerateVisitor, r : &RangeType)-> tree_t {
+        let inner = self.generate (alias context, r.getInners ()[0]);
+        let step = self.generate (alias context, r.getInners ()[1]);
+        let b = boolTypeTree ();
+
+        tupleTypeTree (format ("%", r),
+                       [inner, inner, step, b],
+                       [RangeKeys::FST, RangeKeys::SCD, RangeKeys::STEP, RangeKeys::CONTAIN])
     }
 
     /**
