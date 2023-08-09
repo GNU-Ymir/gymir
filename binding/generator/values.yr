@@ -896,10 +896,10 @@ pub class GenerateValueVisitor {
         let type = context:.generateType (f.getType ());
         match f.getType ().asOf!{&FloatType} ().getSize () {
             32u16 => {
-                expr::buildFloatCst (type, f.getF32 ())
+                expr::buildFloatCst (type, f.getValue ().to!{f32} ())
             }
             _ => {
-                expr::buildFloatCst (type, f.getF64 ())
+                expr::buildFloatCst (type, f.getValue ().to!{f64} ())
             }
         }
     }
