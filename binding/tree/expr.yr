@@ -300,6 +300,18 @@ pub def buildFloatCst (type : tree_t, value : f32)-> tree_t {
     c_binding_build_float_cst_value_32 (type, value)
 }
 
+pub def buildNanCst (type : tree_t)-> tree_t {
+    c_binding_build_nan_cst_value (type)
+}
+
+pub def buildInfPosCst (type : tree_t)-> tree_t {
+    c_binding_build_inf_pos_cst_value (type)
+}
+
+pub def buildInfNegCst (type : tree_t)-> tree_t {
+    c_binding_build_inf_neg_cst_value (type)
+}
+
 pub def buildFloatCst (type : tree_t, value : f64)-> tree_t {
     c_binding_build_float_cst_value_64 (type, value)
 }

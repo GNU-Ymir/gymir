@@ -894,14 +894,16 @@ pub class GenerateValueVisitor {
      * */
     def generateFloatLit (self, dmut context : &GenerateVisitor, f : &FloatValue)-> tree_t {
         let type = context:.generateType (f.getType ());
-        match f.getType ().asOf!{&FloatType} ().getSize () {
-            32u16 => {
-                expr::buildFloatCst (type, f.getValue ().to!{f32} ())
-            }
-            _ => {
-                expr::buildFloatCst (type, f.getValue ().to!{f64} ())
-            }
+        if (f.getValue ().isNan ()) {
+            return expr::buildNanCst (type);
+        } else if (f.getValue ().isPositiveInf ()) {
+            return expr::buildInfPosCst (type);
+        } else if (f.getValue ().isNegativeInf ()) {
+            return expr::buildInfNegCst (type);
         }
+
+        let val = f.getValue ().toHexString ();
+        expr::buildFloatCst (type, val)
     }
 
     /**

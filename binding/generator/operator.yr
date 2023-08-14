@@ -346,6 +346,12 @@ pub class GenerateOperatorVisitor {
             bo : &LogicalBinBoolOperatorValue => {
                 self.generateBinaryBoolOp (alias context, bo)
             }
+            bSpeInt : &SpecialMathIntOperatorValue => {
+                context:.generateValue (bSpeInt.getRealValue ())
+            }
+            bSpeFloat : &SpecialMathFloatOperatorValue => {
+                context:.generateValue (bSpeFloat.getRealValue ())
+            }
             _ => {
                 self.generateBinaryBaseOp (alias context, b)
             }

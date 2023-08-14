@@ -122,7 +122,9 @@ extern "C" tree c_binding_get_int_type (int32_t size, bool isSigned) {
 extern "C" tree c_binding_get_float_type (int32_t size) {
     switch (size) {
     case 32: return y_f32_type;
-    default: return y_f64_type;
+    case 64: return y_f64_type;
+    case 80: return y_f80_type;
+    default: return y_real_type;
     }
 }
 
@@ -299,7 +301,7 @@ extern "C" bool c_binding_is_bool (tree type) {
 
 
 extern "C" bool c_binding_is_float (tree type) {
-    return (type == y_f32_type) || (type == y_f64_type);
+    return (type == y_f32_type) || (type == y_f64_type) || (type == y_f80_type) || (type == y_real_type);
 }
 
 extern "C" bool c_binding_is_compound (tree value) {
@@ -792,6 +794,21 @@ extern "C" tree c_binding_build_float_cst_value_32 (tree type, float value) {
 
     free (res);
     return ret;
+}
+
+extern "C" tree c_binding_build_nan_cst_value (tree type) {
+    auto ret = c_binding_build_float_cst_value_str (type, "NAN");
+    return ret;
+}
+
+extern "C" tree c_binding_build_inf_pos_cst_value (tree type) {
+    auto ret = c_binding_build_float_cst_value_str (type, "INF");
+    return ret;
+}
+
+extern "C" tree c_binding_build_inf_neg_cst_value (tree type) {
+    auto ret = c_binding_build_float_cst_value_str (type, "INF");
+    return build1 (NEGATE_EXPR, type, ret);
 }
 
 extern "C" tree c_binding_build_float_cst_value_64 (tree type, double value) {

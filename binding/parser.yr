@@ -74,3 +74,7 @@ extern (C) def ymir_binding_d_add_builtin_version (version : &c8) {
 extern (C) def ymir_binding_set_size_type (size : u32) {
     state::instance ().setSizeTypeSize (size);
 }
+
+extern (C) def ymir_binding_set_float_size_type (size : u32) {
+    state::instance ().setFloatTypeSize (size);
+}

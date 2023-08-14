@@ -33,6 +33,8 @@ enum y_tree_index
   YTI_USIZE_TYPE,
   YTI_F32_TYPE,
   YTI_F64_TYPE,
+  YTI_F80_TYPE,
+  YTI_REAL_TYPE,
   YTI_MAX
 };
 
@@ -52,6 +54,8 @@ extern GTY(()) tree y_global_trees[YTI_MAX];
 #define y_usize_type			y_global_trees[YTI_USIZE_TYPE]
 #define y_f32_type			y_global_trees[YTI_F32_TYPE]
 #define y_f64_type			y_global_trees[YTI_F64_TYPE]
+#define y_f80_type			y_global_trees[YTI_F80_TYPE]
+#define y_real_type			y_global_trees[YTI_REAL_TYPE]
 #define y_c8_type			y_global_trees[YTI_C8_TYPE]
 #define y_c16_type			y_global_trees[YTI_C16_TYPE]
 #define y_c32_type			y_global_trees[YTI_C32_TYPE]
@@ -60,4 +64,5 @@ extern GTY(()) tree y_global_trees[YTI_MAX];
 extern "C" void ymir_binding_parse_file (uint32_t nb_files, const char ** file);
 extern "C" void ymir_binding_d_add_builtin_version (const char * version);
 extern "C" void ymir_binding_set_size_type (uint32_t size);
+extern "C" void ymir_binding_set_float_size_type (uint32_t size);
 extern "C" void ymir_binding_init ();

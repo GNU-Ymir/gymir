@@ -124,6 +124,10 @@ ymir_init_builtins () {
     uint32_t size = TREE_INT_CST_LOW (TYPE_SIZE_UNIT (y_usize_type));
 
     ymir_binding_set_size_type (size * 8);
+
+    y_real_type = build_distinct_type_copy (long_double_type_node);
+    uint32_t floatSize = TREE_INT_CST_LOW (TYPE_SIZE_UNIT (y_real_type));
+    ymir_binding_set_float_size_type (floatSize * 8);
   }
 
   y_c8_type = make_unsigned_type (8);
@@ -137,6 +141,7 @@ ymir_init_builtins () {
 
   y_f32_type = build_distinct_type_copy (float_type_node);
   y_f64_type = build_distinct_type_copy (double_type_node);
+  y_f80_type = build_distinct_type_copy (long_double_type_node);
 }
 
 /* Language hooks.  */
