@@ -130,7 +130,7 @@ namespace syntax {
 	    };
 
 	    visit._floatSuffix = {
-		Keys::FLOAT_S
+		Keys::FLOAT_S, Keys::FLOAT_R, Keys::FLOAT_D, Keys::FLOAT_L
 	    };
 
 	    visit._charSuffix = {

@@ -1723,67 +1723,67 @@ namespace semantic {
 	    }
 	}
 
-	generic::Tree Visitor::generateLoop (const Loop & loop) {
-	    TreeStmtList all = TreeStmtList::init ();
-	    Tree var (Tree::empty ());
-	    Tree test (Tree::empty ());
-	    if (!loop.getTest ().isEmpty ())
-		test = generateValue (loop.getTest ());
+		generic::Tree Visitor::generateLoop (const Loop & loop) {
+			TreeStmtList all = TreeStmtList::init ();
+			Tree var (Tree::empty ());
+			Tree test (Tree::empty ());
+			if (!loop.getTest ().isEmpty ())
+			test = generateValue (loop.getTest ());
 	    
-	    if (!loop.getType ().is<Void> ()) {
-		var = Tree::varDecl (loop.getLocation (), Ymir::format ("_l(%)", loop.getLocation ().getLine ()), generateType (loop.getType ()));
-		var.setDeclContext (getCurrentContext ());
-		stackVarDeclChain.back ().append (var);
-		all.append (Tree::declExpr (loop.getLocation (), var));
-	    }
+			if (!loop.getType ().is<Void> ()) {
+				var = Tree::varDecl (loop.getLocation (), Ymir::format ("_l(%)", loop.getLocation ().getLine ()), generateType (loop.getType ()));
+				var.setDeclContext (getCurrentContext ());
+				stackVarDeclChain.back ().append (var);
+				all.append (Tree::declExpr (loop.getLocation (), var));
+			}
 	    
-	    enterBlock (loop.getLocation ().toString ());
+			enterBlock (loop.getLocation ().toString ());
 
-	    auto end_label = Tree::makeLabel (loop.getLocation (), getCurrentContext (), "end");
-	    enterLoop (end_label, var);
-	    Tree content (Tree::empty ());
+			auto end_label = Tree::makeLabel (loop.getLocation (), getCurrentContext (), "end");
+			enterLoop (end_label, var);
+			Tree content (Tree::empty ());
 
-	    // The last value is not used when we have a loop {} expression
-	    // So, we have to verify if the loop has a test 
-	    if (!var.isEmpty () && !loop.getContent ().to <Value> ().isBreaker () && !test.isEmpty ()) {
-		TreeStmtList list = TreeStmtList::init ();
-		content = castTo (loop.getType (), loop.getContent ());
-		list.append (content.getList ());
-		auto value = content.getValue ();
+			// The last value is not used when we have a loop {} expression
+			// So, we have to verify if the loop has a test
+			if (!var.isEmpty () && !loop.getContent ().to <Value> ().isBreaker () && !test.isEmpty ()) {
+				TreeStmtList list = TreeStmtList::init ();
+				content = castTo (loop.getType (), loop.getContent ());
+				list.append (content.getList ());
+				auto value = content.getValue ();
 
-		list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), loop.getLocation (), var, value));		
-		content = list.toTree ();
-	    } else content = generateValue (loop.getContent ());
-	    quitLoop ();
+				list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), loop.getLocation (), var, value));
+				content = list.toTree ();
+			} else content = generateValue (loop.getContent ());
+			quitLoop ();
 	    
 
-	    auto begin_label = Tree::makeLabel (loop.getLocation (), getCurrentContext (), "begin");
-	    auto test_label = Tree::makeLabel (loop.getLocation (), getCurrentContext (), "test");
+			auto begin_label = Tree::makeLabel (loop.getLocation (), getCurrentContext (), "begin");
+			auto test_label = Tree::makeLabel (loop.getLocation (), getCurrentContext (), "test");
 	    
-	    if (!loop.isDo () && !test.isEmpty ())
-		all.append (Tree::gotoExpr (loop.getLocation (), test_label));
+			if (!loop.isDo () && !test.isEmpty ())
+			all.append (Tree::gotoExpr (loop.getLocation (), test_label));
 	    
-	    all.append (Tree::labelExpr (loop.getLocation (), begin_label));
-	    all.append (content);
-	    if (!test.isEmpty ()) {
-		all.append (Tree::labelExpr (loop.getLocation (), test_label));
-		all.append (Tree::condExpr (loop.getLocation (),
-					    test,
-					    Tree::gotoExpr (loop.getLocation (), begin_label),
-					    Tree::gotoExpr (loop.getLocation (), end_label)
-		));
-	    } else {
-		all.append  (Tree::gotoExpr (loop.getLocation (), begin_label));
-	    }
+			all.append (Tree::labelExpr (loop.getLocation (), begin_label));
+			all.append (content);
+			if (!test.isEmpty ()) {
+				all.append (Tree::labelExpr (loop.getLocation (), test_label));
+				all.append (Tree::condExpr (loop.getLocation (),
+											test,
+											Tree::gotoExpr (loop.getLocation (), begin_label),
+											Tree::gotoExpr (loop.getLocation (), end_label)
+											));
+			} else {
+				all.append  (Tree::gotoExpr (loop.getLocation (), begin_label));
+			}
 
-	    all.append (Tree::labelExpr (loop.getLocation (), end_label));
+			all.append (Tree::labelExpr (loop.getLocation (), end_label));
 	    
-	    auto binding = quitBlock (loop.getLocation (), all.toTree (), loop.getLocation ().toString ());	    
-	    return Tree::compound (loop.getLocation (),
-				   var, 
-				   binding.bind_expr
-		);
-	}
+			auto binding = quitBlock (loop.getLocation (), all.toTree (), loop.getLocation ().toString ());
+			return Tree::compound (loop.getLocation (),
+								   var,
+								   binding.bind_expr
+								   );
+		}
 
 	generic::Tree Visitor::generateBreak (const Break & br) {
 	    TreeStmtList list = TreeStmtList::init ();

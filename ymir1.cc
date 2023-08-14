@@ -225,6 +225,8 @@ ymir_init_builtins () {
 
   y_f32_type = build_distinct_type_copy (float_type_node);
   y_f64_type = build_distinct_type_copy (double_type_node);
+  y_f80_type = build_distinct_type_copy (long_double_type_node);
+  y_real_type = build_distinct_type_copy (long_double_type_node);
 }
 
 /* Language hooks.  */

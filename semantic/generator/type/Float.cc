@@ -4,7 +4,7 @@
 namespace semantic {
     namespace generator {
 
-	std::vector <std::string> Float::NAMES = {"f32", "f64", "fsize"};
+	std::vector <std::string> Float::NAMES = {"f32", "f64", "f80", "fsize"};
 
 	std::string Float::NOT_A_NUMBER = "NAN";
 	

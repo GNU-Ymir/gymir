@@ -100,11 +100,12 @@ namespace generic {
     }
     
     Tree Tree::floatType (int32_t size) {
-	switch (size) {
-	case 32: return Tree::init (UNKNOWN_LOCATION, y_f32_type);
-	case 64: return Tree::init (UNKNOWN_LOCATION, y_f64_type);
-	default : return Tree::init (UNKNOWN_LOCATION, y_f64_type);
-	}
+        switch (size) {
+        case 32: return Tree::init (UNKNOWN_LOCATION, y_f32_type);
+        case 64: return Tree::init (UNKNOWN_LOCATION, y_f64_type);
+        case 80: return Tree::init (UNKNOWN_LOCATION, y_f80_type);
+        default : return Tree::init (UNKNOWN_LOCATION, y_real_type);
+        }
     }
 
     Tree Tree::charType (int32_t size) {

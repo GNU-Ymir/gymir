@@ -43,7 +43,10 @@ struct Keys {
     static const std::string  FAILURE;
     static const std::string  FALSE_;
     static const std::string  FINAL_;
-    static const std::string  FLOAT_S;    
+    static const std::string  FLOAT_S;
+    static const std::string  FLOAT_D;
+    static const std::string  FLOAT_L;
+    static const std::string  FLOAT_R;
     static const std::string  FOR; 
     static const std::string  FROM; 
     static const std::string  FUNCTION;

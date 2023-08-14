@@ -160,8 +160,10 @@ namespace semantic {
 	    };
 	    
 	    if (f.getSuffix () == Keys::FLOAT_S) type = Float::init (f.getLocation (), 32);
+		else if (f.getSuffix () == Keys::FLOAT_R) type = Float::init (f.getLocation (), 0);
+		else if (f.getSuffix () == Keys::FLOAT_L) type = Float::init (f.getLocation (), 80);
 	    else {
-		type = Float::init (f.getLocation (), 64);
+			type = Float::init (f.getLocation (), 64);
 	    }
 	    
 	    return FloatValue::init (f.getLocation (), type, Anonymous::removeUnder (f.getValue ()));
