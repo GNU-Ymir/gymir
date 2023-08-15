@@ -77,7 +77,7 @@ ymir/tree_%.o: ymir/binding/tree/%.cc ymir/libymirc.a
 	  $(YPOSTCOMPILE)
 
 ymir/libymirc.a: $(bootstrap_objs)
-	  cd $(srcdir)/ymir/bootstrap/ ; gyllir build ; cd - ; \
+	  cd $(srcdir)/ymir/bootstrap/ ; gyllir build || (echo "gyllir failed $$?"; sh -c 'exit 1') ; cd - ; \
 	  cp $(srcdir)/ymir/bootstrap/__libs/libymirc.a $@
 
 ymir.all.cross: 
