@@ -390,9 +390,6 @@ pub class GenerateOperatorVisitor {
      *    - b: the binary operator to generate
      * */
     def generateBinaryBoolOp (self, dmut context : &GenerateVisitor, b : &LogicalBinBoolOperatorValue)-> tree_t {
-        if (b.getOperator () != BinaryOperators::DAND)
-            return self.generateBinaryBaseOp (alias context, b);
-
         let left = context:.generateValue (b.getLeft ());
         let right = context:.generateValue (b.getRight ());
         let type = context:.generateType (b.getType ());
@@ -409,17 +406,21 @@ pub class GenerateOperatorVisitor {
 
         // left && right => if (left) { right } else { left }
         let dmut if_L = TreeStatementList::new ();
-        if_L:.append (c_binding_get_list_operand (right)); // left && right => if (true) { right }
+        if_L:.append (c_binding_get_list_operand (right)); // left && right => if (true) { right }, left || right => if (false) { left }
         if_L:.append (affectExprTree (b.getLoc (), var, rvalue,
                                       context:.getStackVarDeclChain (), context:.getCurrentFunctionContext ()));
 
-        let dmut if_nL = TreeStatementList::new (); // left && right => else { left }
+        let dmut if_nL = TreeStatementList::new (); // left && right => else { left }, left || right => else { right }
         if_nL:.append (affectExprTree (b.getLoc (), var, expr::buildIntCst (type, 0u64),
                                        context:.getStackVarDeclChain (), context:.getCurrentFunctionContext ()));
 
 
         list:.append (c_binding_get_list_operand (left));
-        list:.append (conditionalExprTree (b.getLoc (), context:.getCurrentFunctionContext (), lvalue, if_L.getTree (), if_nL.getTree ()));
+        if (b.getOperator () == BinaryOperators::DAND) {
+            list:.append (conditionalExprTree (b.getLoc (), context:.getCurrentFunctionContext (), lvalue, if_L.getTree (), if_nL.getTree ()));
+        } else {
+            list:.append (conditionalExprTree (b.getLoc (), context:.getCurrentFunctionContext (), lvalue, if_nL.getTree (), if_L.getTree ()));
+        }
 
         return c_binding_build_compound (list.getTree (), var);
     }

@@ -781,13 +781,14 @@ pub class GenerateValueVisitor {
         list:.append (c_binding_get_list_operand (step));
         list:.append (c_binding_get_list_operand (contain));
 
-
+        let innerType = context:.generateType (r.getType ().asOf!{&RangeType} ().getInners ()[0]);
 
         let value = buildConstructorFields (type,
-                                            [c_binding_get_value_operand (fst),
-                                             c_binding_get_value_operand (scd),
-                                             c_binding_get_value_operand (step),
-                                             c_binding_get_value_operand (contain)],
+                                            [
+                                                c_binding_convert (innerType, c_binding_get_value_operand (fst)),
+                                                c_binding_convert (innerType, c_binding_get_value_operand (scd)),
+                                                c_binding_get_value_operand (step),
+                                                c_binding_get_value_operand (contain)],
                                             [RangeKeys::FST, RangeKeys::SCD, RangeKeys::STEP, RangeKeys::CONTAIN]);
 
         c_binding_build_compound (list.getTree (), value)
@@ -881,10 +882,13 @@ pub class GenerateValueVisitor {
         let type = context:.generateType (c.getType ());
         match c.getType ().asOf!{&CharType} ().getSize () {
             8u16 => {
-                expr::buildIntCst (type, cast!u64 (c.getUtf8 ()))
+                expr::buildIntCst (type, cast!u64 (c.getValue ().utf8))
+            }
+            16u16 => {
+                expr::buildIntCst (type, cast!u64 (c.getValue ().utf16))
             }
             _ => {
-                expr::buildIntCst (type, cast!u64 (c.getUtf32 ()))
+                expr::buildIntCst (type, cast!u64 (c.getValue ().utf32))
             }
         }
     }
