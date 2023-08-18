@@ -24,13 +24,13 @@ gyc$(exeext): $(GYC_OBJS) $(EXTRA_GCC_OBJS) libcommon-target.a $(LIBDEPS)
 
 
 WARN_YFLAGS = -Wall -Wdeprecated $(NOCOMMON_FLAG)
-ALL_YFLAGS = $(PICFLAG) $(ALIASING_FLAGS) $(COVERAGE_FLAGS) $(WARN_YFLAGS) -g
-ALL_GYMIRFLAGS = -g $(PICFLAG)
+ALL_YFLAGS = $(PICFLAG) $(ALIASING_FLAGS) $(COVERAGE_FLAGS) $(WARN_YFLAGS) -O3
+ALL_GYMIRFLAGS = -O3 $(PICFLAG)
 
 YCOMPILE.base = $(CXX) $(NO_PIE_CFLAGS) -c $(ALL_YFLAGS) $(INCLUDES) -o $@ -std=c++17
 YCOMPILE = $(YCOMPILE.base) -MT $@ -MMD -MP -MF $(@D)/$(DEPDIR)/$(*F).TPo
 YPOSTCOMPILE = @mv $(@D)/$(DEPDIR)/$(*F).TPo $(@D)/$(DEPDIR)/$(*F).Po
-YLINKER = /usr/bin/gyc $(NO_PIE_CFLAG) $(ALL_GYMIRFLAGS) -lstdc++ -lgymidgard -ldwarf
+YLINKER = /usr/bin/gyc $(NO_PIE_CFLAG) $(ALL_GYMIRFLAGS) -lstdc++ -lgymidgard-release -ldwarf
 
 GYMIRCOMPILE.base = /usr/bin/gyc $(NO_PIE_CFLAGS) -c $(ALL_GYMIRFLAGS) -o $@
 GYMIRCOMPILE = $(GYMIRCOMPILE.base) -MT $@ -MMD -MP -MF $(@D)/$(DEPDIR)/$(*F).TPo
@@ -77,7 +77,7 @@ ymir/tree_%.o: ymir/binding/tree/%.cc ymir/libymirc.a
 	  $(YPOSTCOMPILE)
 
 ymir/libymirc.a: $(bootstrap_objs)
-	  cd $(srcdir)/ymir/bootstrap/ ; gyllir build || (echo "gyllir failed $$?"; sh -c 'exit 1') ; cd - ; \
+	  cd $(srcdir)/ymir/bootstrap/ ; gyllir build --release || (echo "gyllir failed $$?"; sh -c 'exit 1') ; cd - ; \
 	  cp $(srcdir)/ymir/bootstrap/__libs/libymirc.a $@
 
 ymir.all.cross: 
