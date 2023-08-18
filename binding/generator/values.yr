@@ -948,13 +948,20 @@ pub class GenerateValueVisitor {
      * Generate an string literal value
      * */
     def generateStringLit (self, dmut _ : &GenerateVisitor, str : &StringValue)-> tree_t {
-        let charT = str.getType ().asOf!{&ArrayType} ().getInners ()[0].asOf!{&CharType} ();
-        match charT.getSize () {
+        import ymirc::semantic::validator::utf;
+
+        match str.getEncodingSize () {
             8u16 => {
-                c_binding_build_string_literal (cast!u64 (str.getLen ()), str.getUtf8 ().ptr)
+                let encoded = (str.getValue ().utf8 ~ [0u8]);
+                c_binding_build_string_literal (cast!u64 (encoded.len), encoded.ptr)
+            }
+            16u16 => {
+                let encoded = (str.getValue ().utf16 ~ [0u16]);
+                c_binding_build_string_literal (cast!u64 (encoded.len * 2us), encoded.ptr)
             }
             _ => {
-                c_binding_build_string_literal (cast!u64 (str.getLen () * 4us), str.getUtf32 ().ptr)
+                let encoded = (str.getValue ().utf32 ~ [0u32]);
+                c_binding_build_string_literal (cast!u64 (encoded.len * 4us), encoded.ptr)
             }
         }
     }
