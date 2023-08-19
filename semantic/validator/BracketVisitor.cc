@@ -178,15 +178,15 @@ namespace semantic {
 		innerType = Type::init (innerType.to <Type> (), false);
 	    }
 
-	    if (global::State::instance ().isDebugActive ()) {
+	    // if (global::State::instance ().isDebugActive ()) {
 		return LBlock::init (
 		    loc,
 		    innerType,
 		    { conditional, ArrayAccess::init (loc, innerType, left, right) }
 		    );
-	    } else {
-		return ArrayAccess::init (loc, innerType, left, right);
-	    }
+	    // } else {
+		// return ArrayAccess::init (loc, innerType, left, right);
+	    // }
 	}
 
 
@@ -420,15 +420,15 @@ namespace semantic {
 	    else
 	    innerType = Type::init (innerType.to <Type> (), false);
 
-	    if (global::State::instance ().isDebugActive ()) {
+	    // if (global::State::instance ().isDebugActive ()) {
 		return LBlock::init (
 		    loc,
 		    innerType,
 		    { conditional, SliceAccess::init (expression.getLocation (), innerType, lRef, rRef) } 
 		    );
-	    } else {
-		return SliceAccess::init (expression.getLocation (), innerType, lRef, rRef);
-	    }
+	    // } else {
+		// return SliceAccess::init (expression.getLocation (), innerType, lRef, rRef);
+	    // }
 	}
 
 
@@ -514,19 +514,20 @@ namespace semantic {
 	    }
 ;
 	    auto value = SliceValue::init (loc, slcType, ptrFinal, lenFinal);
-	    if (global::State::instance ().isDebugActive () && !checkedRange) {
+	    //if (global::State::instance ().isDebugActive () && !checkedRange) {
 		return Block::init (
 		    loc,
 		    slcType,
 		    {rRef, lRef, conditional, value}
 		    );
-	    } else {
-		return Block::init (
-		    loc,
-		    slcType,
-		    {rRef, lRef, value}
-		    );
-	    }	    
+	    // } else {
+		// return Block::init (
+		//     loc,
+		//     slcType,
+		//     {rRef, lRef, value}
+		//     );
+	    // }
+
 	}
 
 	Generator BracketVisitor::validateRangeCheck (const syntax::MultOperator & expression, const Generator & fst, const Generator & scd, const Generator & len) {
