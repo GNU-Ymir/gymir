@@ -394,34 +394,42 @@ pub class GenerateOperatorVisitor {
         let right = context:.generateValue (b.getRight ());
         let type = context:.generateType (b.getType ());
 
-        let lvalue = c_binding_get_value_operand (left);
-        let rvalue = c_binding_get_value_operand (right);
-
         let dmut list = TreeStatementList::new ();
 
-        let var = varDeclTree (b.getLoc (), format ("_bb(%)", b.getLoc ().line ()), type);
+        let var = varDeclTree (b.getLoc (), format ("_bb(%:%)", b.getLoc ().line (), b.getLoc ().col ()), type);
         c_binding_set_decl_context (var, context:.getCurrentFunctionContext ());
+
         context:.getStackVarDeclChain ():.append (var);
-        list:.append (decl::buildDeclTree (b.getLoc (), types::voidTypeTree (), var));
+        list:.append (decl::buildDeclTree (b.getLoc (), types::voidTypeTree (), var)); // let __bb(%:%) : bool;
+        list:.append (c_binding_get_list_operand (left)); // list (left);
 
-        // left && right => if (left) { right } else { left }
-        let dmut if_L = TreeStatementList::new ();
-        if_L:.append (c_binding_get_list_operand (right)); // left && right => if (true) { right }, left || right => if (false) { left }
-        if_L:.append (affectExprTree (b.getLoc (), var, rvalue,
-                                      context:.getStackVarDeclChain (), context:.getCurrentFunctionContext ()));
+        let (if_L, if_nL) = if (b.getOperator () == BinaryOperators::DAND) { // left && right => if (left) { right } else { left }
+            let dmut if_L = TreeStatementList::new (); // left && right => if (left) { list (right); __bb(%:%) = value (right); }
+            if_L:.append (c_binding_get_list_operand (right));
+            if_L:.append (affectExprTree (b.getLoc (), var, c_binding_get_value_operand (right),
+                                          context:.getStackVarDeclChain (), context:.getCurrentFunctionContext ()));
 
-        let dmut if_nL = TreeStatementList::new (); // left && right => else { left }, left || right => else { right }
-        if_nL:.append (affectExprTree (b.getLoc (), var, expr::buildIntCst (type, 0u64),
-                                       context:.getStackVarDeclChain (), context:.getCurrentFunctionContext ()));
+            let dmut if_nL = TreeStatementList::new (); // left && right => else { __bb(%:%) = false; }
+            if_nL:.append (affectExprTree (b.getLoc (), var, expr::buildIntCst (type, 0u64),
+                                           context:.getStackVarDeclChain (), context:.getCurrentFunctionContext ()));
 
+            (if_L.getTree (), if_nL.getTree ())
+        } else { // left || right => if (left) { true } else { right }
+            let dmut if_L = TreeStatementList::new (); // if (left) { __bb(%:%) = true; }
+            if_L:.append (affectExprTree (b.getLoc (), var, expr::buildIntCst (type, 1u64),
+                                          context:.getStackVarDeclChain (), context:.getCurrentFunctionContext ()));
 
-        list:.append (c_binding_get_list_operand (left));
-        if (b.getOperator () == BinaryOperators::DAND) {
-            list:.append (conditionalExprTree (b.getLoc (), context:.getCurrentFunctionContext (), lvalue, if_L.getTree (), if_nL.getTree ()));
-        } else {
-            list:.append (conditionalExprTree (b.getLoc (), context:.getCurrentFunctionContext (), lvalue, if_nL.getTree (), if_L.getTree ()));
+            let dmut if_nL = TreeStatementList::new (); // left || right => else { list (right); __bb(%:%) = value (right); }
+            if_nL:.append (c_binding_get_list_operand (right));
+            if_nL:.append (affectExprTree (b.getLoc (), var, c_binding_get_value_operand (right),
+                                           context:.getStackVarDeclChain (), context:.getCurrentFunctionContext ()));
+            (if_L.getTree (), if_nL.getTree ())
         }
 
+        list:.append (conditionalExprTree (b.getLoc (), context:.getCurrentFunctionContext (), c_binding_get_value_operand (left), if_L, if_nL));
+
+        // list  => if (value (left)) { __bb(%:%) = if_L } else { __bb(%:%) = if_nL };
+        // value => __bb(%:%)
         return c_binding_build_compound (list.getTree (), var);
     }
 
