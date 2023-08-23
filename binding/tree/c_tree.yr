@@ -65,6 +65,7 @@ pub extern (C) def  c_binding_build_method_type (retType : tree_t, selfType : tr
 
 pub extern (C) def c_binding_is_scalar (type : tree_t) -> bool;
 pub extern (C) def c_binding_is_pointer (type : tree_t)-> bool;
+pub extern (C) def c_binding_get_pointer_depth (type : tree_t)-> i32;
 pub extern (C) def c_binding_is_float (type : tree_t)-> bool;
 pub extern (C) def c_binding_is_bool (type : tree_t)-> bool;
 pub extern (C) def c_binding_is_compound (value : tree_t)-> bool;

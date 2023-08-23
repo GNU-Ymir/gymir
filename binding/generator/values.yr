@@ -586,9 +586,24 @@ pub class GenerateValueVisitor {
      * Generate a address operation
      * */
     def generateAddress (self, dmut context : &GenerateVisitor, a : &AddressValue)-> tree_t {
-        context;
-        a;
-        __pragma!panic ();
+        let type = context:.generateType (a.getType ());
+        let value = context:.generateValue (a.getInner ());
+
+        let valType = c_binding_get_type (value);
+
+        // sometimes AddressValue are used on already constructed addresses (references, string literals, ...)
+        // So if we get a pointer value that has the same depth, meaning pointer of pointer of ...
+        // Then we can assume it is already constructed, and can be returned as it is, with a cast though
+        if (c_binding_get_pointer_depth (valType) == c_binding_get_pointer_depth (type)) {
+            expr::castExprTree (a.getLoc (), type, value)
+        } else {
+            let dmut lst = TreeStatementList::new ();
+            lst:.append (c_binding_get_list_operand (value));
+
+            let addr = expr::addressExprTree (a.getLoc (), type, c_binding_get_value_operand (value));
+
+            c_binding_build_compound (lst.getTree (), addr)
+        }
     }
 
     /**

@@ -295,6 +295,15 @@ extern "C" bool c_binding_is_pointer (tree type) {
     return TREE_CODE (type) == POINTER_TYPE;
 }
 
+extern "C" int c_binding_get_pointer_depth (tree type) {
+    if (type == nullptr) return 0;
+    if (TREE_CODE (type) == POINTER_TYPE) {
+        return c_binding_get_pointer_depth (TREE_TYPE (type)) + 1;
+    } else {
+        return 0;
+    }
+}
+
 extern "C" bool c_binding_is_bool (tree type) {
     return (type == y_bool_type);
 }
