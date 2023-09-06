@@ -223,8 +223,11 @@ ymir_option_lang_mask (void) {
 //size_t, const char*, long long int, int, location_t, const cl_option_handlers*
 
 static bool
-ymir_langhook_handle_option (size_t scode, const char *arg, HOST_WIDE_INT value ATTRIBUTE_UNUSED,
-                             int kind ATTRIBUTE_UNUSED, location_t loc ATTRIBUTE_UNUSED,
+ymir_langhook_handle_option (size_t scode ATTRIBUTE_UNUSED,
+                             const char *arg ATTRIBUTE_UNUSED,
+                             HOST_WIDE_INT value ATTRIBUTE_UNUSED,
+                             int kind ATTRIBUTE_UNUSED,
+                             location_t loc ATTRIBUTE_UNUSED,
                              const struct cl_option_handlers *handlers ATTRIBUTE_UNUSED)
 {
   return true;

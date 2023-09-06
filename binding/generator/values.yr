@@ -569,12 +569,13 @@ pub class GenerateValueVisitor {
      * */
     def generateMemory (self, dmut context : &GenerateVisitor, mem : &MemoryValue)-> tree_t {
         match mem {
-            a : &AddressValue     => { self.generateAddress (alias context, a) }
-            a : &AliaserValue     => { self.generateAliaser (alias context, a) }
-            c : &CopierValue      => { self.generateCopier (alias context, c) }
-            d : &DeepCopierValue  => { self.generateDeepCopier (alias context, d) }
-            r : &ReferencerValue  => { self.generateReferencer (alias context, r) }
-            s : &SliceValue       => { self.generateSliceMem (alias context, s) }
+            a : &AddressValue      => { self.generateAddress (alias context, a) }
+            a : &AliaserValue      => { self.generateAliaser (alias context, a) }
+            c : &CopierValue       => { self.generateCopier (alias context, c) }
+            d : &DeepCopierValue   => { self.generateDeepCopier (alias context, d) }
+            r : &ReferencerValue   => { self.generateReferencer (alias context, r) }
+            s : &SliceValue        => { self.generateSliceMem (alias context, s) }
+            d : &DereferencerValue => { self.generateDereference (alias context, d) }
             _ => {
                 eprintln (mem::typeinfo.name);
                 __pragma!panic ();
@@ -667,6 +668,17 @@ pub class GenerateValueVisitor {
         }
     }
 
+    /**
+     * Generate a dereferencer value
+     * */
+    def generateDereference (self, dmut context : &GenerateVisitor, d : &DereferencerValue)-> tree_t {
+        let inner = self.generate (alias context, d.getInner ());
+
+        let result = c_binding_unref_pointer (c_binding_get_value_operand (inner), 0u64);
+
+        c_binding_build_compound (c_binding_get_list_operand (inner),
+                                  result)
+    }
 
     /**
      * ================================================================================
