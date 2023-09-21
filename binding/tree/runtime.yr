@@ -1,0 +1,30 @@
+mod binding::tree::runtime;
+
+import ymirc::lexing::word;
+import ymirc::syntax::keys;
+
+import binding::tree::c_tree;
+import binding::tree::chain;
+import binding::tree::stmtlist;
+import binding::tree::decl;
+import binding::tree::expr;
+import binding::tree::types;
+
+
+enum
+| YRT_ALLOC_SLICE = "_yrt_new_block"s8
+ -> RuntimeFunctions;
+
+
+/**
+ * Call the runtime function that allocate a block of memory
+ * */
+pub def callBlockAlloc (len : tree_t, size : tree_t)-> tree_t {
+    let params = [intTypeTree (0, false), intTypeTree (0, false)];
+    let retType = pointerTypeTree (voidTypeTree ());
+
+    let addrProto = expr::funcPtrExprTree (EOF_WORD, RuntimeFunctions::YRT_ALLOC_SLICE, retType, params);
+
+
+    expr::callExprTree (EOF_WORD, retType, addrProto, [len, size])
+}
