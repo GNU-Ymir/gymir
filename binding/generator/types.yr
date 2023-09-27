@@ -29,7 +29,7 @@ pub class GenerateTypeVisitor {
      *     - type: the type to generate
      * @returns: a GCC tree
      * */
-    pub def generate (self, dmut context : &GenerateVisitor, type : &Type)-> tree_t {
+    pub fn generate (self, dmut context : &GenerateVisitor, type : &Type)-> tree_t {
         match type {
             n : &NativeType => self.generateNative (alias context, n);
             _ => {
@@ -42,7 +42,7 @@ pub class GenerateTypeVisitor {
     /**
      * Generate a type tree from a native type.
      * */
-    def generateNative (self, dmut context : &GenerateVisitor, type : &NativeType)-> tree_t {
+    fn generateNative (self, dmut context : &GenerateVisitor, type : &NativeType)-> tree_t {
         match type {
             i : &IntType =>
                 return intTypeTree (cast!i32 (i.getSize ()), i.isSigned ());
@@ -68,7 +68,7 @@ pub class GenerateTypeVisitor {
     /**
      * Generate a pointer type
      * */
-    def generatePointer (self, dmut context : &GenerateVisitor, p : &PointerType)-> tree_t {
+    fn generatePointer (self, dmut context : &GenerateVisitor, p : &PointerType)-> tree_t {
         let inner = self.generate (alias context, p.getInners ()[0]);
         pointerTypeTree (inner)
     }
@@ -76,7 +76,7 @@ pub class GenerateTypeVisitor {
     /**
      * Generate a type tree containing a slice type
      * */
-    def generateSlice (self, dmut context : &GenerateVisitor, slc : &SliceType)-> tree_t {
+    fn generateSlice (self, dmut context : &GenerateVisitor, slc : &SliceType)-> tree_t {
         let inner = self.generate (alias context, slc.getInners ()[0]);
         let len = intTypeTree (0, false);
         let ptr = pointerTypeTree (inner);
@@ -89,7 +89,7 @@ pub class GenerateTypeVisitor {
     /**
      * Generate a type tree for a tuple type
      * */
-    def generateTuple (self, dmut context : &GenerateVisitor, tu : &TupleType)-> tree_t {
+    fn generateTuple (self, dmut context : &GenerateVisitor, tu : &TupleType)-> tree_t {
         let mut inners : [mut tree_t] = [null ; new tu.getInners ().len];
         for i, t in tu.getInners () {
             inners [i] = self.generate (alias context, t);
@@ -103,7 +103,7 @@ pub class GenerateTypeVisitor {
     /**
      * Generate a type tree for a range type
      * */
-    def generateRange (self, dmut context : &GenerateVisitor, r : &RangeType)-> tree_t {
+    fn generateRange (self, dmut context : &GenerateVisitor, r : &RangeType)-> tree_t {
         let inner = self.generate (alias context, r.getInners ()[0]);
         let step = self.generate (alias context, r.getInners ()[1]);
         let b = boolTypeTree ();
@@ -116,7 +116,7 @@ pub class GenerateTypeVisitor {
     /**
      * Generate a type tree containing an array type
      * */
-    def generateArray (self, dmut context : &GenerateVisitor, arr : &ArrayType)-> tree_t {
+    fn generateArray (self, dmut context : &GenerateVisitor, arr : &ArrayType)-> tree_t {
         let inner = self.generate (alias context, arr.getInners ()[0]);
         c_binding_build_array_type (inner, arr.getSize ().getValue ().to!{u64} ())
     } catch {

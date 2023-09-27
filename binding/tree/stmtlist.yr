@@ -23,7 +23,7 @@ pub class TreeStatementList {
      * @params:
      *    - t: the expression to append
      */
-    pub def append (mut self, t : tree_t) -> dmut &TreeStatementList {
+    pub fn append (mut self, t : tree_t) -> dmut &TreeStatementList {
         if (t !is null) {
             self._isEmpty = false;
             c_binding_append_to_statement_list (t, &self._list);
@@ -32,11 +32,11 @@ pub class TreeStatementList {
         return alias self;
     }
 
-    pub def isEmpty (self)-> bool {
+    pub fn isEmpty (self)-> bool {
         self._isEmpty
     }
 
-    pub def getTree (self)-> tree_t {
+    pub fn getTree (self)-> tree_t {
         self._list
     }
 

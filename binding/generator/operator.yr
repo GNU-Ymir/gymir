@@ -31,7 +31,7 @@ pub class GenerateOperatorVisitor {
      *     - value: the value to generate
      * @returns: a GCC tree
      * */
-    pub def generate (self, dmut context : &GenerateVisitor, value : &OperatorValue)-> tree_t {
+    pub fn generate (self, dmut context : &GenerateVisitor, value : &OperatorValue)-> tree_t {
         match value {
             a : &AffectValue              => { self.generateAffect (alias context, a) }
             a : &SliceAccessValue         => { self.generateSliceAccess (alias context, a) }
@@ -69,7 +69,7 @@ pub class GenerateOperatorVisitor {
      *    - context: the context of the generation
      *    - c: the call value to generate
      * */
-    def generateCall (self, dmut context : &GenerateVisitor, c : &CallValue)-> tree_t {
+    fn generateCall (self, dmut context : &GenerateVisitor, c : &CallValue)-> tree_t {
         let mut params : [mut tree_t] = [null ; new (c.getParameters ().len + c.getAddParameters ().len)];
         let dmut pre = TreeStatementList::new ();
 
@@ -104,7 +104,7 @@ pub class GenerateOperatorVisitor {
      *     - context: the context of the generation
      *     - c: the call to generate
      * */
-    def generateCtorCall (self, dmut context : &GenerateVisitor, c : &CtorCallValue)-> tree_t {
+    fn generateCtorCall (self, dmut context : &GenerateVisitor, c : &CtorCallValue)-> tree_t {
         context;
         c;
         __pragma!panic ();
@@ -116,7 +116,7 @@ pub class GenerateOperatorVisitor {
      *     - context: the context of the generation
      *     - f: the function pointer to call
      * */
-    def generateFuncPtrCall (self, dmut context : &GenerateVisitor, f : &FuncPtrCallValue)-> tree_t {
+    fn generateFuncPtrCall (self, dmut context : &GenerateVisitor, f : &FuncPtrCallValue)-> tree_t {
         context;
         f;
         __pragma!panic ();
@@ -128,7 +128,7 @@ pub class GenerateOperatorVisitor {
      *     - context: the context of the generation
      *     - m: the method call to generate
      * */
-    def generateMethodCall (self, dmut context : &GenerateVisitor, m : &MethodCallValue)-> tree_t {
+    fn generateMethodCall (self, dmut context : &GenerateVisitor, m : &MethodCallValue)-> tree_t {
         context;
         m;
         __pragma!panic ();
@@ -140,7 +140,7 @@ pub class GenerateOperatorVisitor {
      *     - context: the context of the generation
      *     - n: the call value to generate
      * */
-    def generateNameCall (self, dmut context : &GenerateVisitor, n : &NameCallValue)-> tree_t {
+    fn generateNameCall (self, dmut context : &GenerateVisitor, n : &NameCallValue)-> tree_t {
         context;
         n;
         __pragma!panic ();
@@ -161,7 +161,7 @@ pub class GenerateOperatorVisitor {
      *     - context: the context of the generation
      *     - s: the slice compare to generate
      * */
-    def generateSliceCompare (self, dmut context : &GenerateVisitor, s : &SliceCompareValue)-> tree_t {
+    fn generateSliceCompare (self, dmut context : &GenerateVisitor, s : &SliceCompareValue)-> tree_t {
         context;
         s;
         __pragma!panic ();
@@ -173,7 +173,7 @@ pub class GenerateOperatorVisitor {
      *     - context: the context of the generation
      *     - s: the slice concatenation to generate
      * */
-    def generateSliceConcat (self, dmut context : &GenerateVisitor, s : &SliceConcatValue)-> tree_t {
+    fn generateSliceConcat (self, dmut context : &GenerateVisitor, s : &SliceConcatValue)-> tree_t {
         context;
         s;
         __pragma!panic ();
@@ -186,7 +186,7 @@ pub class GenerateOperatorVisitor {
      *     - context: the context of the generation
      *     - a: the slice access to generate
      * */
-    def generateSliceAccess (self, dmut context : &GenerateVisitor, a : &SliceAccessValue)-> tree_t {
+    fn generateSliceAccess (self, dmut context : &GenerateVisitor, a : &SliceAccessValue)-> tree_t {
         context;
         a;
         __pragma!panic ();
@@ -208,7 +208,7 @@ pub class GenerateOperatorVisitor {
      *    - context: the context of the generation
      *    - c: the field access value to generate
      * */
-    def generateClassFieldAccess (self, dmut context : &GenerateVisitor, c : &ClassFieldAccessValue)-> tree_t {
+    fn generateClassFieldAccess (self, dmut context : &GenerateVisitor, c : &ClassFieldAccessValue)-> tree_t {
         context;
         c;
         __pragma!panic ();
@@ -220,7 +220,7 @@ pub class GenerateOperatorVisitor {
      *     - context: the context of the generation
      *     - c: the closure field access to generate
      * */
-    def generateClosureFieldAccess (self, dmut context : &GenerateVisitor, c : &ClosureFieldAccessValue)-> tree_t {
+    fn generateClosureFieldAccess (self, dmut context : &GenerateVisitor, c : &ClosureFieldAccessValue)-> tree_t {
         context;
         c;
         __pragma!panic ();
@@ -232,7 +232,7 @@ pub class GenerateOperatorVisitor {
      *     - context: the context of the generation
      *     - s: the field access to generate
      * */
-    def generateStructFieldAccess (self, dmut context : &GenerateVisitor, s : &StructFieldAccessValue)-> tree_t {
+    fn generateStructFieldAccess (self, dmut context : &GenerateVisitor, s : &StructFieldAccessValue)-> tree_t {
         let str = context:.generateValue (s.getStruct ());
         let field = s.getFieldName ();
 
@@ -250,7 +250,7 @@ pub class GenerateOperatorVisitor {
      *     - context: the context of the generation
      *     - t: the field access to generate
      * */
-    def generateTupleFieldAccess (self, dmut context : &GenerateVisitor, t : &TupleFieldAccessValue)-> tree_t {
+    fn generateTupleFieldAccess (self, dmut context : &GenerateVisitor, t : &TupleFieldAccessValue)-> tree_t {
         let tuple = context:.generateValue (t.getTuple ());
         let field = format ("_%", t.getFieldIndex ());
 
@@ -276,7 +276,7 @@ pub class GenerateOperatorVisitor {
      *    - context: the context of the generation
      *    - u: the unary operator to generate
      * */
-    def generateUnaryOperator (self, dmut context : &GenerateVisitor, u : &UnaryOperatorValue)-> tree_t {
+    fn generateUnaryOperator (self, dmut context : &GenerateVisitor, u : &UnaryOperatorValue)-> tree_t {
         match u {
             _ => {
                 self.generateUnaryBaseOp (alias context, u)
@@ -290,7 +290,7 @@ pub class GenerateOperatorVisitor {
      *     - context: the context of the generation
      *     - u: the unary operator to generate
      * */
-    def generateUnaryBaseOp (self, dmut context : &GenerateVisitor, u : &UnaryOperatorValue)-> tree_t {
+    fn generateUnaryBaseOp (self, dmut context : &GenerateVisitor, u : &UnaryOperatorValue)-> tree_t {
         let val = context:.generateValue (u.getInner ());
         let type = context:.generateType (u.getType ());
 
@@ -315,7 +315,7 @@ pub class GenerateOperatorVisitor {
      *    - context: the context of the generation
      *    - a: the affectation value to generate
      * */
-    def generateAffect (self, dmut context : &GenerateVisitor, a : &AffectValue)-> tree_t  {
+    fn generateAffect (self, dmut context : &GenerateVisitor, a : &AffectValue)-> tree_t  {
         let left = context:.generateValue (a.getLeft ());
         let right = context:.generateValue (a.getRight ());
 
@@ -341,7 +341,7 @@ pub class GenerateOperatorVisitor {
      *     - context: the context of the generation
      *     - b: the binary operator to generate
      * */
-    def generateBinaryOperator (self, dmut context : &GenerateVisitor, b : &BinaryOperatorValue)-> tree_t {
+    fn generateBinaryOperator (self, dmut context : &GenerateVisitor, b : &BinaryOperatorValue)-> tree_t {
         match b {
             bo : &LogicalBinBoolOperatorValue => {
                 self.generateBinaryBoolOp (alias context, bo)
@@ -364,7 +364,7 @@ pub class GenerateOperatorVisitor {
      *   - context: the context of the generation
      *   - b: the binary operator to generate
      * */
-    def generateBinaryBaseOp (self, dmut context : &GenerateVisitor, b : &BinaryOperatorValue)-> tree_t {
+    fn generateBinaryBaseOp (self, dmut context : &GenerateVisitor, b : &BinaryOperatorValue)-> tree_t {
         let left = context:.generateValue (b.getLeft ());
         let right = context:.generateValue (b.getRight ());
         let type = context:.generateType (b.getType ());
@@ -389,7 +389,7 @@ pub class GenerateOperatorVisitor {
      *    - context: the context of the generation
      *    - b: the binary operator to generate
      * */
-    def generateBinaryBoolOp (self, dmut context : &GenerateVisitor, b : &LogicalBinBoolOperatorValue)-> tree_t {
+    fn generateBinaryBoolOp (self, dmut context : &GenerateVisitor, b : &LogicalBinBoolOperatorValue)-> tree_t {
         let left = context:.generateValue (b.getLeft ());
         let right = context:.generateValue (b.getRight ());
         let type = context:.generateType (b.getType ());

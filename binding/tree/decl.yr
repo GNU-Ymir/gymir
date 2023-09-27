@@ -13,7 +13,7 @@ static mut __LAST_LABEL_ID__ = 0us;
  *     - type: the type of the variable to declare
  * @returns: the tree of the variable declaration
  */
-pub def varDeclTree (loc : &Word, name : [c8], type : tree_t)-> tree_t {
+pub fn varDeclTree (loc : &Word, name : [c8], type : tree_t)-> tree_t {
     return c_binding_build_var_decl (wordToLocation (loc), name.toStringZ (), type);
 }
 
@@ -24,7 +24,7 @@ pub def varDeclTree (loc : &Word, name : [c8], type : tree_t)-> tree_t {
  *     - type: the type of the parameter to declare
  * @returns: the tree of a parameter decl
  */
-pub def paramDeclTree (loc : &Word, name : [c8], type : tree_t)-> tree_t {
+pub fn paramDeclTree (loc : &Word, name : [c8], type : tree_t)-> tree_t {
     return c_binding_build_param_decl (wordToLocation (loc), name.toStringZ (), type);
 }
 
@@ -35,7 +35,7 @@ pub def paramDeclTree (loc : &Word, name : [c8], type : tree_t)-> tree_t {
  *     - context: the context of declaration of the label
  *     - label: the name of the label
  * */
-pub def labelDeclTree (loc : &Word, context : tree_t, name : [c8])-> tree_t {
+pub fn labelDeclTree (loc : &Word, context : tree_t, name : [c8])-> tree_t {
     let labelId = name ~ "["s8 ~ (__LAST_LABEL_ID__ + 1us).to![c8] () ~ "]"s8;
     __LAST_LABEL_ID__ += 1us;
 
@@ -51,7 +51,7 @@ pub def labelDeclTree (loc : &Word, context : tree_t, name : [c8])-> tree_t {
  *    - loc: the location of the declaration
  *    - name: the name of the function
  */
-pub def functionDeclTree (loc : &Word, name : [c8], type : tree_t)-> tree_t {
+pub fn functionDeclTree (loc : &Word, name : [c8], type : tree_t)-> tree_t {
     return c_binding_build_function_decl (wordToLocation (loc), name.toStringZ (), type);
 }
 
@@ -60,14 +60,14 @@ pub def functionDeclTree (loc : &Word, name : [c8], type : tree_t)-> tree_t {
  * @params:
  *    - name: the mangled name
  * */
-pub def setAsmName (decl : tree_t, name : [c8]) {
+pub fn setAsmName (decl : tree_t, name : [c8]) {
     c_binding_set_asm_name (decl, name.toStringZ ());
 }
 
 /**
  * @returns: the assembly name of a declaration
  * */
-pub def getAsmName (decl : tree_t)-> [c8] {
+pub fn getAsmName (decl : tree_t)-> [c8] {
     c_binding_get_asm_name (decl).fromStringZ ()
 } catch {
     _ => []
@@ -76,20 +76,20 @@ pub def getAsmName (decl : tree_t)-> [c8] {
 /**
  * Set the arguments of a declaration (e.g. parameters of a function decl)
  * */
-pub def setDeclArguments (decl : tree_t, arguments : [tree_t]) {
+pub fn setDeclArguments (decl : tree_t, arguments : [tree_t]) {
     c_binding_set_decl_arguments (decl, cast!u64 (arguments.len), arguments.ptr);
 }
 
 /**
  * Build a result declaration
  * */
-pub def buildResultDecl (loc : &Word, type : tree_t)-> tree_t {
+pub fn buildResultDecl (loc : &Word, type : tree_t)-> tree_t {
     c_binding_build_result_decl (wordToLocation (loc), type)
 }
 
 /**
  * Build a declaration tree
  * */
-pub def buildDeclTree (loc : &Word, type : tree_t, decl : tree_t)-> tree_t {
+pub fn buildDeclTree (loc : &Word, type : tree_t, decl : tree_t)-> tree_t {
     c_binding_build_decl (wordToLocation (loc), type, decl)
 }

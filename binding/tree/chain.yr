@@ -8,7 +8,7 @@ pub class TreeChain {
 
     pub self () {}
 
-    pub def append (mut self, t : tree_t)-> dmut &TreeChain {
+    pub fn append (mut self, t : tree_t)-> dmut &TreeChain {
         if (t is null) { __pragma!panic (); }
         if (self._first is null) {
             self._first = t;
@@ -21,7 +21,7 @@ pub class TreeChain {
         return alias self;
     }
 
-    pub def getTree (self)-> tree_t {
+    pub fn getTree (self)-> tree_t {
         return self._first;
     }
 
@@ -33,7 +33,7 @@ pub class BlockChain {
 
     pub self () {}
 
-    pub def append (mut self, t : tree_t)-> dmut &BlockChain {
+    pub fn append (mut self, t : tree_t)-> dmut &BlockChain {
         if (t is null) { __pragma!panic (); }
         if (self._first is null) {
             self._first = t;
@@ -46,7 +46,7 @@ pub class BlockChain {
         return alias self;
     }
 
-    pub def setSuperContext (mut self, block : tree_t) {
+    pub fn setSuperContext (mut self, block : tree_t) {
         let mut current = self._first;
         while (current !is null) {
             c_binding_set_block_super_context (current, block);
@@ -54,7 +54,7 @@ pub class BlockChain {
         }
     }
 
-    pub def getTree (self)-> tree_t {
+    pub fn getTree (self)-> tree_t {
         return self._first;
     }
 

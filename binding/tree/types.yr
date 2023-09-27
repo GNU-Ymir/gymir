@@ -5,14 +5,14 @@ import binding::tree::c_tree;
 /**
  * @returns: the error tree
  */
-pub def errorTree ()-> tree_t {
+pub fn errorTree ()-> tree_t {
     return c_binding_error_tree ();
 }
 
 /**
  * @returns: the empty tree
  */
-pub def emptyTree () -> tree_t { null }
+pub fn emptyTree () -> tree_t { null }
 
 /**
  * @params:
@@ -20,7 +20,7 @@ pub def emptyTree () -> tree_t { null }
  *     - chain: the list of instruction inside the block
  * @returns: a block tree
  */
-pub def blockTree (vars : tree_t, chain : tree_t)-> tree_t {
+pub fn blockTree (vars : tree_t, chain : tree_t)-> tree_t {
     c_binding_build_block (
         vars, chain, null, null
     )
@@ -29,50 +29,50 @@ pub def blockTree (vars : tree_t, chain : tree_t)-> tree_t {
 /**
  * @returns: the void type tree
  */
-pub aka voidTypeTree = c_binding_get_void_type;
+pub def voidTypeTree = c_binding_get_void_type;
 
 /**
  * @returns: the bool type tree
  */
-pub aka boolTypeTree = c_binding_get_bool_type;
+pub def boolTypeTree = c_binding_get_bool_type;
 
 
 /**
  * @returns: the tree for the int type of the size 'size'
  * */
-pub aka intTypeTree = c_binding_get_int_type;
+pub def intTypeTree = c_binding_get_int_type;
 
 /**
  * @returns: the tree for the type usize
  */
-pub def sizeTypeTree ()-> tree_t {
+pub fn sizeTypeTree ()-> tree_t {
     intTypeTree (0, false)
 }
 
 /**
  * @returns: the tree for the type float of size 'size'
  */
-pub aka floatTypeTree = c_binding_get_float_type;
+pub def floatTypeTree = c_binding_get_float_type;
 
 /**
  * @returns: the tree fo the type char of size 'size'
  */
-pub aka charTypeTree = c_binding_get_char_type;
+pub def charTypeTree = c_binding_get_char_type;
 
 /**
  * @returns: the tree for an array type of inner type 'inner' and size 'size'
  */
-pub aka arrayTypeTree = c_binding_build_array_type;
+pub def arrayTypeTree = c_binding_build_array_type;
 
 /**
  * @returns: the tree for a pointer type of inner type 'inner'
  * */
-pub aka pointerTypeTree = c_binding_build_pointer_type;
+pub def pointerTypeTree = c_binding_build_pointer_type;
 
 /**
  * @returns: the tree for a slice type of inner type 'inner'
  * */
-pub def sliceTypeTree (inner : tree_t)-> tree_t {
+pub fn sliceTypeTree (inner : tree_t)-> tree_t {
     return tupleTypeTree (""s8,
                           [sizeTypeTree (), pointerTypeTree (inner)],
                           ["len"s8, "ptr"s8]);
@@ -88,7 +88,7 @@ pub def sliceTypeTree (inner : tree_t)-> tree_t {
  *    - isPacked: true if the tuple is packed in memory
  * @returns: a tuple type tree
  */
-pub def tupleTypeTree (name : [c8], fields : [tree_t], fieldNames : [[c8]], isUnion : bool = false, isPacked : bool = false)-> tree_t {
+pub fn tupleTypeTree (name : [c8], fields : [tree_t], fieldNames : [[c8]], isUnion : bool = false, isPacked : bool = false)-> tree_t {
     import std::conv;
 
     let mut fieldStringZ : [mut &c8] = [cast!{&c8} (null) ; new fieldNames.len];
@@ -113,7 +113,7 @@ pub def tupleTypeTree (name : [c8], fields : [tree_t], fieldNames : [[c8]], isUn
  * // common : [bool], union : [i32, &Exception], names : ["isOk", "value", "error"]
  * ```
  */
-pub def optionTypeTree (common : [tree_t], unions : [tree_t], fieldNames : [[c8]])-> tree_t {
+pub fn optionTypeTree (common : [tree_t], unions : [tree_t], fieldNames : [[c8]])-> tree_t {
     import std::conv;
 
     let mut fieldStringZ : [mut &c8] = [cast!{&c8} (null) ; new fieldNames.len];
@@ -132,11 +132,11 @@ pub def optionTypeTree (common : [tree_t], unions : [tree_t], fieldNames : [[c8]
  *     - params: the types of the parameters of the function
  * @returns: a function type tree
  */
-pub def functionTypeTree (retType : tree_t, params : [tree_t])-> tree_t {
+pub fn functionTypeTree (retType : tree_t, params : [tree_t])-> tree_t {
     return c_binding_build_function_type (retType,
                                           cast!u64 (params.len), params.ptr);
 }
 
-pub def methodTypeTree (retType : tree_t, selfType : tree_t, params : [tree_t])-> tree_t {
+pub fn methodTypeTree (retType : tree_t, selfType : tree_t, params : [tree_t])-> tree_t {
     return c_binding_build_method_type (retType, selfType, cast!u64 (params.len), params.ptr);
 }

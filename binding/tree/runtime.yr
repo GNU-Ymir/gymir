@@ -19,7 +19,7 @@ enum
 /**
  * Call the runtime function that allocate a block of memory
  * */
-pub def callBlockAlloc (len : tree_t, size : tree_t)-> tree_t {
+pub fn callBlockAlloc (len : tree_t, size : tree_t)-> tree_t {
     let params = [intTypeTree (0, false), intTypeTree (0, false)];
     let retType = pointerTypeTree (voidTypeTree ());
 

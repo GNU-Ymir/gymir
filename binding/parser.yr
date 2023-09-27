@@ -14,11 +14,11 @@ import std::io;
 import binding::version;
 import binding::generator::visitor;
 
-extern (C) def _yrt_exc_init ();
-extern (C) def _yrt_force_debug (f : i32);
-extern (C) def c_binding_fatal_error ();
+extern (C) fn _yrt_exc_init ();
+extern (C) fn _yrt_force_debug (f : i32);
+extern (C) fn c_binding_fatal_error ();
 
-extern (C) def ymir_binding_init () {
+extern (C) fn ymir_binding_init () {
     _yrt_exc_init ();
 
     __version DEBUG {
@@ -26,7 +26,7 @@ extern (C) def ymir_binding_init () {
     }
 }
 
-extern (C) def ymir_binding_parse_file (nb_files : u32, filenames : &(&c8)) {
+extern (C) fn ymir_binding_parse_file (nb_files : u32, filenames : &(&c8)) {
     let dmut files = Vec!{[c32]}::new ();
     for i in 0u32 .. nb_files {
         files:.push (filenames [i].fromStringZ ().to![c32] ());
@@ -58,7 +58,7 @@ extern (C) def ymir_binding_parse_file (nb_files : u32, filenames : &(&c8)) {
     }
 }
 
-extern (C) def ymir_binding_d_add_builtin_version (version : &c8) {
+extern (C) fn ymir_binding_d_add_builtin_version (version : &c8) {
     match version.fromStringZ ()? {
         Ok (v : _) => {
             for d_v in D_VERSIONS::__members__ {
@@ -71,10 +71,10 @@ extern (C) def ymir_binding_d_add_builtin_version (version : &c8) {
     }
 }
 
-extern (C) def ymir_binding_set_size_type (size : u32) {
+extern (C) fn ymir_binding_set_size_type (size : u32) {
     state::instance ().setSizeTypeSize (size);
 }
 
-extern (C) def ymir_binding_set_float_size_type (size : u32) {
+extern (C) fn ymir_binding_set_float_size_type (size : u32) {
     state::instance ().setFloatTypeSize (size);
 }

@@ -101,7 +101,7 @@ pub class GenerateVisitor {
      * @params:
      *    - gen: the generator to transform
      */
-    pub def generate (mut self, gen : &Generator) {
+    pub fn generate (mut self, gen : &Generator) {
         match gen {
             frame : &FrameGenerator => {
                 self:.generateFrame (frame);
@@ -127,7 +127,7 @@ pub class GenerateVisitor {
      * @params:
      *    - frame: the frame to generate
      * */
-    def generateFrame (mut self, frame : &FrameGenerator) {
+    fn generateFrame (mut self, frame : &FrameGenerator) {
         let fnDecl = self:.generateFunctionDecl (frame);
         let asmName = decl::getAsmName (fnDecl);
         if (!state::instance ().isUnittestActive () && frame.getName ().file () == Keys::MAIN) {
@@ -186,7 +186,7 @@ pub class GenerateVisitor {
     /**
      * Generate a function declaration from a frame generator
      * */
-    def generateFunctionDecl (mut self, frame : &FrameGenerator)-> tree_t {
+    fn generateFunctionDecl (mut self, frame : &FrameGenerator)-> tree_t {
         let params = frame.getParameters ();
         let mut args : [mut tree_t] = [cast!{tree_t} (null) ; new params.len];
         for i, p in params {
@@ -208,7 +208,7 @@ pub class GenerateVisitor {
      *     - frame: the frame being generated
      * @returns: the list of tree containing the parameters
      * */
-    def generateFrameArguments (mut self, frame : &FrameGenerator)-> [tree_t] {
+    fn generateFrameArguments (mut self, frame : &FrameGenerator)-> [tree_t] {
         let dmut results = Vec!{tree_t}::new ();
         results:.reserve (frame.getParameters ().len);
         for p in frame.getParameters () match p {
@@ -239,7 +239,7 @@ pub class GenerateVisitor {
      *     - mainName: the name of the main function in the program
      *     - isVoid: if true, the main is defined as void
      * */
-    def generateMainCall (mut self, loc :  &Word, isVoid : bool, mainName : [c8]) {
+    fn generateMainCall (mut self, loc :  &Word, isVoid : bool, mainName : [c8]) {
         let argcT = intTypeTree (32, true);
         let argvT = pointerTypeTree (pointerTypeTree (charTypeTree (8)));
         let retT  = intTypeTree (32, true);
@@ -307,7 +307,7 @@ pub class GenerateVisitor {
      *     - type: the tree of the type of the variable to declare
      *  @warning: a function context must be entered
      * */
-    def generateParamVar (mut self, name : [c8], type : tree_t)-> tree_t {
+    fn generateParamVar (mut self, name : [c8], type : tree_t)-> tree_t {
         let var = decl::paramDeclTree (EOF_WORD, name, type);
 
         c_binding_set_decl_context (var, self.getCurrentFunctionContext ());
@@ -328,28 +328,28 @@ pub class GenerateVisitor {
     /**
      * @returns: the visitor used to generate types
      * */
-    pub def getTypeVisitor (mut self)-> dmut &GenerateTypeVisitor {
+    pub fn getTypeVisitor (mut self)-> dmut &GenerateTypeVisitor {
         alias self._typeGenerator
     }
 
     /**
      * @returns: the visitor used to generate values
      * */
-    pub def getValueVisitor (mut self)-> dmut &GenerateValueVisitor {
+    pub fn getValueVisitor (mut self)-> dmut &GenerateValueVisitor {
         alias self._valueGenerator
     }
 
     /**
      * @returns: the visitor used to generate operator values
      * */
-    pub def getOperatorVisitor (mut self)-> dmut &GenerateOperatorVisitor {
+    pub fn getOperatorVisitor (mut self)-> dmut &GenerateOperatorVisitor {
         alias self._opGenerator
     }
 
     /**
      * @returns: the mangler for mangling names
      * */
-    pub def getMangler (mut self)-> dmut &Mangler {
+    pub fn getMangler (mut self)-> dmut &Mangler {
         alias self._mangler
     }
 
@@ -364,7 +364,7 @@ pub class GenerateVisitor {
     /**
      * Generate a type tree from a Type
      * */
-    pub def generateType (mut self, type : &Type)-> tree_t {
+    pub fn generateType (mut self, type : &Type)-> tree_t {
         self._typeGenerator.generate (alias self, type)
     }
 
@@ -379,7 +379,7 @@ pub class GenerateVisitor {
     /**
      * Generate a value tree from a Value generator
      * */
-    pub def generateValue (mut self, value : &Value)-> tree_t {
+    pub fn generateValue (mut self, value : &Value)-> tree_t {
         self._valueGenerator.generate (alias self, value)
     }
 
@@ -396,21 +396,21 @@ pub class GenerateVisitor {
      * @params:
      *     - fnDecl: the function being generated
      * */
-    pub def setCurrentFunctionContext (mut self, fnDecl : tree_t) {
+    pub fn setCurrentFunctionContext (mut self, fnDecl : tree_t) {
         self._currentFunctionContext = fnDecl;
     }
 
     /**
      * @returns: the GCC tree of the function being currently generated
      * */
-    pub def getCurrentFunctionContext (self)-> tree_t {
+    pub fn getCurrentFunctionContext (self)-> tree_t {
         self._currentFunctionContext
     }
 
     /**
      * Enter a new frame generation
      * */
-    pub def enterFrame (mut self) {
+    pub fn enterFrame (mut self) {
         self._varDecls:.push (HashMap!{usize, (bool, tree_t)}::new ());
         self._loopVars:.push (Vec!{tree_t}::new ());
         self._loopLabels:.push (Vec!{tree_t}::new ());
@@ -419,7 +419,7 @@ pub class GenerateVisitor {
     /**
      * Quit the frame being validated
      * */
-    pub def quitFrame (mut self) {
+    pub fn quitFrame (mut self) {
         __pragma!trusted ({
             self._varDecls:.pop ();
             self._loopLabels:.pop ();
@@ -430,7 +430,7 @@ pub class GenerateVisitor {
     /**
      * Enter a block
      * */
-    pub def enterBlock (mut self, loc : &Word) {
+    pub fn enterBlock (mut self, loc : &Word) {
         self._stackBlockChain:.push (BlockChain::new ());
         self._stackVarDeclChain:.push (TreeChain::new ());
         self._blockLocs:.push (loc);
@@ -442,7 +442,7 @@ pub class GenerateVisitor {
      *     - loc: the location of the block
      *     - content: the list of expression to put inside the block to quit
      * */
-    pub def quitBlock (mut self, loc : &Word, content : tree_t)-> (tree_t, tree_t) {
+    pub fn quitBlock (mut self, loc : &Word, content : tree_t)-> (tree_t, tree_t) {
         let blkLoc = self._blockLocs [$ - 1us];
         if (blkLoc != loc) __pragma!panic ();
 
@@ -469,17 +469,15 @@ pub class GenerateVisitor {
      *    - lab: the label closing the loop
      *    - var: the variable in which the value of the loop will be written (i.e. for breaks)
      * */
-    pub def enterLoop (mut self, lab : tree_t, var : tree_t) {
+    pub fn enterLoop (mut self, lab : tree_t, var : tree_t) {
         ((alias self._loopLabels) [$ - 1us]):.push (lab);
         ((alias self._loopVars) [$ - 1us]):.push (var);
-    } catch {
-        _ => __pragma!panic ();
     }
 
     /**
      * Quit a loop context
      * */
-    pub def quitLoop (mut self) {
+    pub fn quitLoop (mut self) {
         ((alias self._loopLabels) [$ - 1us]):.pop ();
         ((alias self._loopVars) [$ - 1us]):.pop ();
     } catch {
@@ -489,62 +487,50 @@ pub class GenerateVisitor {
     /**
      * @returns: the current loop variable
      * */
-    pub def getCurrentLoopVar (mut self)-> tree_t {
+    pub fn getCurrentLoopVar (mut self)-> tree_t {
         ((alias self._loopVars) [$ - 1us])[$ - 1us]
-    } catch {
-        _ => __pragma!panic ();
     }
 
     /**
      * @returns: the current loop closing label
      * */
-    pub def getCurrentLoopLabel (mut self)-> tree_t {
+    pub fn getCurrentLoopLabel (mut self)-> tree_t {
         ((alias self._loopLabels) [$ - 1us]) [$ - 1us]
-    } catch {
-        _ => __pragma!panic ();
     }
 
     /**
      * @returns: the stack var decl chain of the current block
      * */
-    pub def getStackVarDeclChain (mut self)-> dmut &TreeChain {
+    pub fn getStackVarDeclChain (mut self)-> dmut &TreeChain {
         return (alias self._stackVarDeclChain)[$ - 1us];
-    } catch {
-        _ => __pragma!panic ();
     }
 
     /**
      * @returns: the block chain of the current block
      * */
-    pub def getBlockChain (mut self)-> dmut &BlockChain {
+    pub fn getBlockChain (mut self)-> dmut &BlockChain {
         return (alias self._stackBlockChain)[$ - 1us];
-    } catch {
-        _ => __pragma!panic ();
     }
 
     /**
      * @returns: the tree stmt list in which expression to run at the entry in the frame before everything else  have to be placed
      * */
-    pub def getRootExprList (mut self)-> dmut &TreeStatementList {
+    pub fn getRootExprList (mut self)-> dmut &TreeStatementList {
         alias self._rootExprList
     }
 
     /**
      * @returns: the root stack decl of variable accessible anywhere in the frame
      * */
-    pub def getRootStackVarDeclChain (mut self)-> dmut &TreeChain {
+    pub fn getRootStackVarDeclChain (mut self)-> dmut &TreeChain {
         return (alias self._stackVarDeclChain) [0us]
-    } catch {
-        _ => __pragma!panic ();
     }
 
     /**
      * Insert a variable declaration
      * */
-    pub def insertVariable (mut self, id : usize, var : tree_t, isRef : bool) {
+    pub fn insertVariable (mut self, id : usize, var : tree_t, isRef : bool) {
         ((alias self._varDecls)[$ - 1us]):.insert (id, (isRef, var));
-    } catch {
-        _ => __pragma!panic ();
     }
 
     /**
@@ -553,10 +539,8 @@ pub class GenerateVisitor {
      *    - .0: true iif the variable is a reference
      *    - .1: the variable declaration
      * */
-    pub def getVariable (mut self, id : usize)-> (bool, tree_t)? {
+    pub fn getVariable (mut self, id : usize)-> (bool, tree_t)? {
         (self._varDecls[$ - 1us]).find (id)
-    } catch {
-        _ => __pragma!panic ();
     }
 
 

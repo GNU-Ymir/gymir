@@ -20,7 +20,7 @@ import std::conv;
  *     - segmentContext: the segmentContext in which variable are declared
  * @returns: a tree containing the affectation
  */
-pub def affectExprTree (loc : &Word, left : tree_t, right : tree_t, dmut stackContext : &TreeChain, segmentContext : tree_t)-> tree_t {
+pub fn affectExprTree (loc : &Word, left : tree_t, right : tree_t, dmut stackContext : &TreeChain, segmentContext : tree_t)-> tree_t {
     let lType = c_binding_get_type (left);
     let rType = c_binding_get_type (right);
     let location = wordToLocation (loc);
@@ -55,7 +55,7 @@ pub def affectExprTree (loc : &Word, left : tree_t, right : tree_t, dmut stackCo
  *    - func: the function to call
  *    - params: the parameters to pass to the call
  * */
-pub def callExprTree (loc : &Word, type : tree_t, func : tree_t, params : [tree_t])-> tree_t {
+pub fn callExprTree (loc : &Word, type : tree_t, func : tree_t, params : [tree_t])-> tree_t {
     return c_binding_build_call (wordToLocation (loc), type, func, cast!u64 (params.len), params.ptr);
 }
 
@@ -69,7 +69,7 @@ pub def callExprTree (loc : &Word, type : tree_t, func : tree_t, params : [tree_
  *     - params: the parameters passed to the function
  * @returns: a call expr tree
  */
-pub def callExprTree (loc : &Word, type : tree_t, func : [c8], params : [tree_t])-> tree_t {
+pub fn callExprTree (loc : &Word, type : tree_t, func : [c8], params : [tree_t])-> tree_t {
     let mut types : [mut tree_t] = [cast!{tree_t} (null) ; new params.len];
     for i in 0us .. params.len {
         types [i] = c_binding_get_type (params [i]);
@@ -88,7 +88,7 @@ pub def callExprTree (loc : &Word, type : tree_t, func : [c8], params : [tree_t]
  *     - params: the types of the paramters of the function
  * @returns: a function pointer expression tree
  * */
-pub def funcPtrExprTree (loc : &Word, name : [c8], type : tree_t, params : [tree_t])-> tree_t {
+pub fn funcPtrExprTree (loc : &Word, name : [c8], type : tree_t, params : [tree_t])-> tree_t {
     let location = wordToLocation (loc);
 
     let fnType = c_binding_build_function_type (type, cast!u64 (params.len), params.ptr);
@@ -105,7 +105,7 @@ pub def funcPtrExprTree (loc : &Word, name : [c8], type : tree_t, params : [tree
  *    - index: the index of the access
  * @returns: the access expression tree
  * */
-pub def arrayAccessExprTree (loc : &Word, array : tree_t, index : tree_t)-> tree_t {
+pub fn arrayAccessExprTree (loc : &Word, array : tree_t, index : tree_t)-> tree_t {
     return c_binding_build_array_ref (wordToLocation (loc), array, index);
 }
 
@@ -121,7 +121,7 @@ pub def arrayAccessExprTree (loc : &Word, array : tree_t, index : tree_t)-> tree
  * @returns: the binary expression tree
  * @info: perform conversion of type to make sure the operation is valid
  */
-pub def binaryExprTree (loc : &Word, op : BinaryOperators, type : tree_t, left : tree_t, right : tree_t)-> tree_t {
+pub fn binaryExprTree (loc : &Word, op : BinaryOperators, type : tree_t, left : tree_t, right : tree_t)-> tree_t {
     let lType = c_binding_get_type (left);
     let rType = c_binding_get_type (right);
     let pointer = c_binding_is_pointer (lType);
@@ -147,7 +147,7 @@ pub def binaryExprTree (loc : &Word, op : BinaryOperators, type : tree_t, left :
  *    - operand: the operand involved in the operation
  * @returns: the unary expression tree
  * */
-pub def unaryExprTree (loc : &Word, op : UnaryOperators, type : tree_t, operand : tree_t)-> tree_t {
+pub fn unaryExprTree (loc : &Word, op : UnaryOperators, type : tree_t, operand : tree_t)-> tree_t {
     let otype = c_binding_get_type (operand);
 
     return c_binding_build_unary (wordToLocation (loc),
@@ -158,7 +158,7 @@ pub def unaryExprTree (loc : &Word, op : UnaryOperators, type : tree_t, operand 
 /**
  * @returns: an address expression
  * */
-pub def addressExprTree (loc : &Word, type : tree_t, value : tree_t)-> tree_t {
+pub fn addressExprTree (loc : &Word, type : tree_t, value : tree_t)-> tree_t {
     let location = wordToLocation (loc);
 
     return c_binding_build_address (location, type, value);
@@ -175,7 +175,7 @@ pub def addressExprTree (loc : &Word, type : tree_t, value : tree_t)-> tree_t {
  * @returns: the binary expression tree
  * @warning: does not perform conversion of type to make sure the operation is valid
  */
-pub def binaryExprNoConvTree (loc : &Word, op : BinaryOperators, type : tree_t, left : tree_t, right : tree_t)-> tree_t {
+pub fn binaryExprNoConvTree (loc : &Word, op : BinaryOperators, type : tree_t, left : tree_t, right : tree_t)-> tree_t {
     let pointer = c_binding_is_pointer (c_binding_get_type (left));
     let fl = c_binding_is_float (c_binding_get_type (left));
 
@@ -191,21 +191,21 @@ pub def binaryExprNoConvTree (loc : &Word, op : BinaryOperators, type : tree_t, 
  *     - type: the type of the cast
  *     - value: the value to cast
  * */
-pub def castExprTree (_ : &Word, type : tree_t, value : tree_t)-> tree_t {
+pub fn castExprTree (_ : &Word, type : tree_t, value : tree_t)-> tree_t {
     return c_binding_convert (type, value);
 }
 
 /**
  * Access to a field by its name in a struct type
  * */
-pub def fieldAccessExprTree (_ : &Word, str : tree_t, fieldName : [c8])-> tree_t {
+pub fn fieldAccessExprTree (_ : &Word, str : tree_t, fieldName : [c8])-> tree_t {
     c_binding_access_field_by_name (str, fieldName.toStringZ ())
 }
 
 /**
  * Build a label expr refering to a label decl
  * */
-pub def labelExprTree (loc : &Word, label : tree_t)-> tree_t {
+pub fn labelExprTree (loc : &Word, label : tree_t)-> tree_t {
     let location = wordToLocation (loc);
     return c_binding_build_label_expr (location, label);
 }
@@ -216,7 +216,7 @@ pub def labelExprTree (loc : &Word, label : tree_t)-> tree_t {
  *     - loc: the location of the goto
  *     - label: the label to goto
  */
-pub def gotoExprTree (loc : &Word, label : tree_t)-> tree_t {
+pub fn gotoExprTree (loc : &Word, label : tree_t)-> tree_t {
     return c_binding_build_goto_expr (wordToLocation (loc), label);
 }
 
@@ -229,7 +229,7 @@ pub def gotoExprTree (loc : &Word, label : tree_t)-> tree_t {
  *     - suc: the code to execute if test passes
  *     - fail: the code to execute if the test fails
  */
-pub def conditionalExprTree (loc : &Word, segmentContext : tree_t, test : tree_t, suc : tree_t, fail : tree_t)-> tree_t {
+pub fn conditionalExprTree (loc : &Word, segmentContext : tree_t, test : tree_t, suc : tree_t, fail : tree_t)-> tree_t {
     let location = wordToLocation (loc);
     let thenLabel = labelDeclTree (loc, segmentContext, "then"s8);
     let endLabel = labelDeclTree (loc, segmentContext, "end_if"s8);
@@ -266,7 +266,7 @@ pub def conditionalExprTree (loc : &Word, segmentContext : tree_t, test : tree_t
  *     - resultDecl: the declaration of the return of the current function
  *     - value: the value to return
  * */
-pub def returnExprTree (loc : &Word, resultDecl : tree_t, value : tree_t)-> tree_t {
+pub fn returnExprTree (loc : &Word, resultDecl : tree_t, value : tree_t)-> tree_t {
     let location = wordToLocation (loc);
     let inside = c_binding_build_modify_expr_no_conv (location, c_binding_get_type (resultDecl), resultDecl, value);
     return c_binding_build_return_expr (location, inside);
@@ -277,7 +277,7 @@ pub def returnExprTree (loc : &Word, resultDecl : tree_t, value : tree_t)-> tree
  * @params:
  *    - loc: the location of the return
  * */
-pub def returnExprTree (loc : &Word)-> tree_t {
+pub fn returnExprTree (loc : &Word)-> tree_t {
     let location = wordToLocation (loc);
     return c_binding_build_return_expr (location, null);
 }
@@ -285,60 +285,60 @@ pub def returnExprTree (loc : &Word)-> tree_t {
 /**
  * Build an int constant from a value
  * */
-pub def buildIntCst (type : tree_t, value : u64)-> tree_t {
+pub fn buildIntCst (type : tree_t, value : u64)-> tree_t {
     c_binding_build_int_cst_value (type, value)
 }
 
 /**
  * Build an int constant from a value
  * */
-pub def buildIntCst (type : tree_t, value : i64)-> tree_t {
+pub fn buildIntCst (type : tree_t, value : i64)-> tree_t {
     c_binding_build_int_cst_value (type, value)
 }
 
-pub def buildFloatCst (type : tree_t, value : f32)-> tree_t {
+pub fn buildFloatCst (type : tree_t, value : f32)-> tree_t {
     c_binding_build_float_cst_value_32 (type, value)
 }
 
-pub def buildNanCst (type : tree_t)-> tree_t {
+pub fn buildNanCst (type : tree_t)-> tree_t {
     c_binding_build_nan_cst_value (type)
 }
 
-pub def buildInfPosCst (type : tree_t)-> tree_t {
+pub fn buildInfPosCst (type : tree_t)-> tree_t {
     c_binding_build_inf_pos_cst_value (type)
 }
 
-pub def buildInfNegCst (type : tree_t)-> tree_t {
+pub fn buildInfNegCst (type : tree_t)-> tree_t {
     c_binding_build_inf_neg_cst_value (type)
 }
 
-pub def buildFloatCst (type : tree_t, value : f64)-> tree_t {
+pub fn buildFloatCst (type : tree_t, value : f64)-> tree_t {
     c_binding_build_float_cst_value_64 (type, value)
 }
 
-pub def buildFloatCst (type : tree_t, value : [c8])-> tree_t {
+pub fn buildFloatCst (type : tree_t, value : [c8])-> tree_t {
     c_binding_build_float_cst_value_str (type, value.toStringZ ())
 }
 
-pub def blockTree (loc : &Word, varChain : tree_t, blockChain : tree_t)-> tree_t {
+pub fn blockTree (loc : &Word, varChain : tree_t, blockChain : tree_t)-> tree_t {
     c_binding_build_block_tree (wordToLocation (loc), varChain, blockChain)
 }
 
-pub def bindTree (loc : &Word, varChain : tree_t, content : tree_t, block : tree_t)-> tree_t {
+pub fn bindTree (loc : &Word, varChain : tree_t, content : tree_t, block : tree_t)-> tree_t {
     c_binding_build_bind_tree (wordToLocation (loc), varChain, content, block)
 }
 
 /**
  * Build a constructor where each parameters is indexed by its position
  * */
-pub def buildConstructorIndexed (type : tree_t, elems : [tree_t])-> tree_t {
+pub fn buildConstructorIndexed (type : tree_t, elems : [tree_t])-> tree_t {
     c_binding_build_constructor_indexed (type, cast!u64 (elems.len), elems.ptr)
 }
 
 /**
  * Build the construction of a structure (or tuple, slice etc.) using field names
  * */
-pub def buildConstructorFields (type : tree_t, elems : [tree_t], fields : [[c8]])-> tree_t {
+pub fn buildConstructorFields (type : tree_t, elems : [tree_t], fields : [[c8]])-> tree_t {
     let mut fieldStringZ : [mut &c8] = [cast!{&c8} (null) ; new fields.len];
     for i, f in fields {
         fieldStringZ [i] = f.toStringZ ();
