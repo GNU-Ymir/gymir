@@ -5,6 +5,7 @@ import ymirc::utils::_;
 import ymirc::args::_;
 import ymirc::errors::_;
 import ymirc::global::state;
+import ymirc::global::common;
 
 import std::collection::vec;
 
@@ -77,4 +78,76 @@ extern (C) fn ymir_binding_set_size_type (size : u32) {
 
 extern (C) fn ymir_binding_set_float_size_type (size : u32) {
     state::instance ().setFloatTypeSize (size);
+}
+
+extern (C) fn ymir_binding_activate_debug (a : bool) {
+    if (a) {
+        state::instance ().activateDebug ();
+        state::instance ().addVersion (Versions::DEBUG);
+    }
+}
+
+extern (C) fn ymir_binding_activate_verbose (a : bool) {
+    if (a)
+        state::instance ().activateVerbose ();
+}
+
+extern (C) fn ymir_binding_activate_standalone (a : bool) {
+    if (a) {
+        state::instance ().activateStandalone ();
+        state::instance ().addVersion (Versions::STANDALONE);
+    }
+}
+
+extern (C) fn ymir_binding_activate_include_testing (a : bool) {
+    if (a) {
+        state::instance ().activateUnittest ();
+        state::instance ().addVersion (Versions::UNITTEST);
+    }
+}
+
+extern (C) fn ymir_binding_desactivate_reflection (a : bool) {
+    if (!a) {
+        state::instance ().desactivateReflection ();
+    }
+}
+
+extern (C) fn ymir_binding_activate_doc_dumping (a : bool) {
+    if (a) {
+        state::instance ().activateDocDumping ();
+    }
+}
+
+extern (C) fn ymir_binding_activate_depency_dumping (a : bool) {
+    if (a) {
+        state::instance ().activateDependencyDumping ();
+    }
+}
+
+extern (C) fn ymir_binding_add_include_dir (dir : &c8) {
+    import std::conv;
+    state::instance ().addIncludeDir (fromStringZ (dir));
+} catch {
+    _ => __pragma!panic ();
+}
+
+extern (C) fn ymir_binding_add_version (ver : &c8) {
+    import std::conv;
+    state::instance ().addVersion (fromStringZ (ver));
+} catch {
+    _ => __pragma!panic ();
+}
+
+extern (C) fn ymir_binding_set_prefix (pref : &c8) {
+    import std::conv;
+    state::instance ().setPrefix (fromStringZ (pref));
+} catch {
+    _ => __pragma!panic ();
+}
+
+extern (C) fn ymir_binding_set_executable_name (name : &c8) {
+    import std::conv;
+    state::instance ().setExecutable (fromStringZ (name));
+} catch {
+    _ => __pragma!panic ();
 }
