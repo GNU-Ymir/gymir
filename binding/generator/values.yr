@@ -611,9 +611,7 @@ pub class GenerateValueVisitor {
      * Generate an aliaser value
      * */
     fn generateAliaser (self, dmut context : &GenerateVisitor, a : &AliaserValue)-> tree_t {
-        context;
-        a;
-        __pragma!panic ();
+        context:.generateValue (a.getInnerValue ())
     }
 
     /**

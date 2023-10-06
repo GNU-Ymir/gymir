@@ -733,11 +733,18 @@ extern "C" tree c_binding_build_binary (location_t loc, const char * op, tree ty
     else if (strcmp (op, ">=") == 0) { code = GE_EXPR; }
     else if (strcmp (op, "==") == 0) { code = EQ_EXPR; }
     else if (strcmp (op, "!=") == 0) { code = NE_EXPR; }
+    else if (strcmp (op, "is") == 0) { code = EQ_EXPR; }
+    else if (strcmp (op, "!is") == 0) { code = NE_EXPR; }
     else if (strcmp (op, "&&") == 0) { code = TRUTH_ANDIF_EXPR; }
     else if (strcmp (op, "||") == 0) { code = TRUTH_ORIF_EXPR; }
     else _yrt_exc_panic (__FILE__, __FUNCTION__, __LINE__);
 
-    return build2_loc (loc, code, type, left, right);
+
+    if (code == POINTER_PLUS_EXPR && !ptrofftype_p (right)) {
+        return build2_loc (loc, code, type, left, convert_to_ptrofftype (right));
+    } else {
+        return build2_loc (loc, code, type, left, right);
+    }
 }
 
 extern "C" tree c_binding_build_unary (location_t loc, const char * op, tree type, tree operand, bool isbool) {
