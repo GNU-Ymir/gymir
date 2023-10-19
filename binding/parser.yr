@@ -151,3 +151,9 @@ extern (C) fn ymir_binding_set_executable_name (name : &c8) {
 } catch {
     _ => __pragma!panic ();
 }
+
+extern (C) fn ymir_binding_activate_ymir_dumping (a : bool) {
+    if (a) {
+        state::instance ().activateYmirDumping ();
+    }
+}

@@ -212,6 +212,9 @@ ymir_init_options (unsigned int argc ATTRIBUTE_UNUSED, cl_decoded_option * decod
     case OPT_fno_reflect :
       ymir_binding_desactivate_reflection (false);
 	    break;
+    case OPT_fdump_ymir:
+        ymir_binding_activate_ymir_dumping (true);
+        break;
     }
   }
 }
@@ -244,12 +247,12 @@ ymir_option_lang_mask (void) {
 //size_t, const char*, long long int, int, location_t, const cl_option_handlers*
 
 static bool
-  ymir_langhook_handle_option (size_t scode ATTRIBUTE_UNUSED,
-                               const char *arg ATTRIBUTE_UNUSED,
-                               HOST_WIDE_INT value ATTRIBUTE_UNUSED,
-                               int kind ATTRIBUTE_UNUSED,
-                               location_t loc ATTRIBUTE_UNUSED,
-                               const struct cl_option_handlers *handlers ATTRIBUTE_UNUSED)
+ymir_langhook_handle_option (size_t scode ATTRIBUTE_UNUSED,
+                             const char *arg ATTRIBUTE_UNUSED,
+                             HOST_WIDE_INT value ATTRIBUTE_UNUSED,
+                             int kind ATTRIBUTE_UNUSED,
+                             location_t loc ATTRIBUTE_UNUSED,
+                             const struct cl_option_handlers *handlers ATTRIBUTE_UNUSED)
 {
   opt_code code = (opt_code) scode;
   if (code == OPT_I) {
@@ -269,6 +272,8 @@ static bool
     ymir_binding_activate_include_testing (true);
   } else if (code == OPT_fno_reflect) {
     ymir_binding_desactivate_reflection (true);
+  } else if (code == OPT_fdump_ymir) {
+    ymir_binding_activate_ymir_dumping (true);
   } else if (code == OPT_fversion_) {
     ymir_binding_add_version (arg);
   } else if (code == OPT_imultilib) {

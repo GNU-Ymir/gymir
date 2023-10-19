@@ -99,6 +99,9 @@ YMIR Driver
 funittest
 YMIR Driver
 
+fdump-ymir
+YMIR Driver
+
 fno-reflect
 YMIR Driver
 
