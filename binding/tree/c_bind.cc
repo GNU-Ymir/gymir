@@ -711,7 +711,7 @@ extern "C" tree c_binding_build_call (location_t loc, tree retType, tree fn, uin
 
 extern "C" tree c_binding_build_array_ref (location_t loc, tree array, tree index) {
     auto innerType = TREE_TYPE (TREE_TYPE (array));
-    return build2_loc (loc, ARRAY_REF, innerType, array, index);
+    return build4_loc (loc, ARRAY_REF, innerType, array, index, NULL_TREE, NULL_TREE);
 }
 
 

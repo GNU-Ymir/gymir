@@ -48,6 +48,7 @@ pub class GenerateOperatorVisitor {
             t : &TupleFieldAccessValue    => { self.generateTupleFieldAccess (alias context, t) }
             u : &UnaryOperatorValue       => { self.generateUnaryOperator (alias context, u) }
             b : &BinaryOperatorValue      => { self.generateBinaryOperator (alias context, b) }
+            a : &ArrayAccessValue         => { self.generateArrayAccess (alias context, a) }
             _ => {
                 eprintln (value::typeinfo.name);
                 __pragma!panic ();
@@ -431,6 +432,35 @@ pub class GenerateOperatorVisitor {
         // list  => if (value (left)) { __bb(%:%) = if_L } else { __bb(%:%) = if_nL };
         // value => __bb(%:%)
         return c_binding_build_compound (list.getTree (), var);
+    }
+
+    /**
+     * ================================================================================
+     * ================================================================================
+     * ================================        ACCESS        ==========================
+     * ================================================================================
+     * ================================================================================
+     */
+
+    /**
+     * Generate an arary access operator
+     * @params:
+     *    - context: the context of the generation
+     *    - a: the array access to generate
+     * */
+    fn generateArrayAccess (self, dmut context : &GenerateVisitor, a : &ArrayAccessValue)-> tree_t {
+        let left = context:.generateValue (a.getArray ());
+        let right = context:.generateValue (a.getIndex ());
+
+        let dmut list = TreeStatementList::new ();
+        list:.append (c_binding_get_list_operand (left));
+        list:.append (c_binding_get_list_operand (right));
+
+        let lvalue = c_binding_get_value_operand (left);
+        let rvalue = c_binding_get_value_operand (right);
+
+        c_binding_build_compound (list.getTree (),
+                                  expr::arrayAccessExprTree (a.getLoc (), lvalue, rvalue))
     }
 
 
