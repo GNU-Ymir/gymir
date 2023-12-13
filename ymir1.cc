@@ -213,8 +213,11 @@ ymir_init_options (unsigned int argc ATTRIBUTE_UNUSED, cl_decoded_option * decod
       ymir_binding_desactivate_reflection (false);
 	    break;
     case OPT_fdump_ymir:
-        ymir_binding_activate_ymir_dumping (true);
-        break;
+      ymir_binding_activate_ymir_dumping (true);
+      break;
+    case OPT_fdump_syms:
+      ymir_binding_activate_import_dumping (true);
+      break;
     }
   }
 }
@@ -266,50 +269,20 @@ ymir_langhook_handle_option (size_t scode ATTRIBUTE_UNUSED,
     ymir_binding_activate_standalone (true);
   } else if (code == OPT_fdoc) {
     ymir_binding_activate_doc_dumping (true);
-  } else if (code == OPT_fdependency) {
-    ymir_binding_activate_depency_dumping (true);
   } else if (code == OPT_funittest) {
     ymir_binding_activate_include_testing (true);
   } else if (code == OPT_fno_reflect) {
     ymir_binding_desactivate_reflection (true);
   } else if (code == OPT_fdump_ymir) {
     ymir_binding_activate_ymir_dumping (true);
+  } else if (code == OPT_fdump_syms) {
+    ymir_binding_activate_import_dumping (true);
   } else if (code == OPT_fversion_) {
     ymir_binding_add_version (arg);
   } else if (code == OPT_imultilib) {
     // set multilib
   } else {
     switch (code) {
-    case OPT_MM :
-      // ymir_binding_activate_gcc_dep_skip ();
-	    // fall through
-    case OPT_M:
-      // ymir_binding_activate_gcc_deps ();
-	    break;
-
-    case OPT_MMD:
-      // ymir_binding_activate_gcc_dep_skip ();
-	    // fall through
-    case OPT_MD:
-      // ymir_binding_activate_gcc_deps ();
-      // ymir_binding_activate_gcc_dep_filename ();
-	    break;
-
-    case OPT_MF:
-      // ymir_binding_activate_gcc_dep_filename_user (arg);
-	    break;
-
-    case OPT_MP :
-      // ymir_binding_activate_gcc_phony (true);
-	    break;
-
-    case OPT_MQ :
-      // ymir_binding_add_gcc_dep_target (arg, true);
-	    break;
-
-    case OPT_MT:
-      // ymir_binding_add_gcc_dep_target (arg, false);
-	    break;
     case OPT_nomidgardlib :
 	    break;
     default :

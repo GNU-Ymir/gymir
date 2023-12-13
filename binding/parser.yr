@@ -28,34 +28,35 @@ extern (C) fn ymir_binding_init () {
 }
 
 extern (C) fn ymir_binding_parse_file (nb_files : u32, filenames : &(&c8)) {
-    let dmut files = Vec!{[c32]}::new ();
     for i in 0u32 .. nb_files {
-        files:.push (filenames [i].fromStringZ ().to![c32] ());
-    } catch {
-        _ => __pragma!panic ();
-    }
+        let filename = {
+            filenames [i].fromStringZ ().to![c32] ()
+        } catch {
+            _ => __pragma!panic ();
+        };
 
-    let args = YmirArguments (files-> files[]);
-    let gens = {
-        let dmut parser = Parser::new (args);
-        parser:.parseAll ()
-    } catch {
-        err : &ErrorMsg => {
-            println (format ("%", err));
-            __version DEBUG {
-                for j in err.getRecursiveTrace () {
-                    println (j);
+        let args = YmirArguments (file-> filename);
+        let gens = {
+            let dmut parser = Parser::new (args);
+            parser:.parseAll ()
+        } catch {
+            err : &ErrorMsg => {
+                println (format ("%", err));
+                __version DEBUG {
+                    for j in err.getRecursiveTrace () {
+                        println (j);
+                    }
                 }
+
+                c_binding_fatal_error ();
+                return {}
             }
-
-            c_binding_fatal_error ();
-            return {}
         }
-    }
 
-    let dmut generator = GenerateVisitor::new ();
-    for g in gens {
-        generator:.generate (g);
+        let dmut generator = GenerateVisitor::new ();
+        for g in gens {
+            generator:.generate (g);
+        }
     }
 }
 
@@ -155,5 +156,11 @@ extern (C) fn ymir_binding_set_executable_name (name : &c8) {
 extern (C) fn ymir_binding_activate_ymir_dumping (a : bool) {
     if (a) {
         state::instance ().activateYmirDumping ();
+    }
+}
+
+extern (C) fn ymir_binding_activate_import_dumping (a : bool) {
+    if (a) {
+        state::instance ().activateSymTreeDumping ();
     }
 }

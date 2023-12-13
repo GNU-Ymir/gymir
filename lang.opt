@@ -29,58 +29,6 @@ nostdinc
 YMIR
 ; Documented in C
 
--dependencies
-YMIR Alias(M)
-; Documented in C
-
--user-dependencies
-YMIR Alias(MM)
-; Documented in C
-
--write-dependencies
-YMIR NoDriverArg Separate Alias(MD)
-; Documented in C
-
--write-user-dependencies
-YMIR NoDriverArg Separate Alias(MMD)
-; Documented in C
-
-M
-YMIR
-; Documented in C
-
-MD
-YMIR Separate NoDriverArg
-; Documented in C
-
-MMD
-YMIR Separate NoDriverArg
-; Documented in C
-
-MF
-YMIR Joined Separate
-; Documented in C
-
-MG
-YMIR
-; Documented in C
-
-MM
-YMIR
-; Documented in C
-
-MP
-YMIR
-; Documented in C
-
-MT
-YMIR Joined Separate
-; Documented in C
-
-MQ
-YMIR Joined Separate
-; Documented in C
-
 I
 YMIR Joined Separate
 
@@ -88,22 +36,25 @@ iprefix
 YMIR Joined Separate
 
 fdoc
-YMIR Driver
+YMIR
 
 fversion=
 YMIR Joined
 
 fdependency
-YMIR Driver
+YMIR
 
 funittest
 YMIR Driver
 
 fdump-ymir
-YMIR Driver
+YMIR
+
+fdump-syms
+YMIR
 
 fno-reflect
-YMIR Driver
+YMIR
 
 imultilib
 YMIR Joined Separate

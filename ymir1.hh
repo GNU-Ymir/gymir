@@ -73,6 +73,7 @@ extern "C" void ymir_binding_activate_doc_dumping (bool);
 extern "C" void ymir_binding_activate_depency_dumping (bool);
 extern "C" void ymir_binding_activate_include_testing (bool);
 extern "C" void ymir_binding_activate_ymir_dumping (bool);
+extern "C" void ymir_binding_activate_import_dumping (bool);
 extern "C" void ymir_binding_desactivate_reflection (bool);
 extern "C" void ymir_binding_add_include_dir (const char* dir);
 extern "C" void ymir_binding_add_version (const char* ver);
