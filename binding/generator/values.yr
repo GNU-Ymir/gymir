@@ -3,6 +3,7 @@ mod binding::generator::values;
 
 import ymirc::semantic::generator::_;
 import ymirc::utils::_;
+import ymirc::global::core_;
 import ymirc::lexing::word;
 import ymirc::syntax::keys;
 
@@ -618,9 +619,30 @@ pub class GenerateValueVisitor {
      * Generate a copy value
      * */
     fn generateCopier (self, dmut context : &GenerateVisitor, c : &CopierValue)-> tree_t {
-        context;
-        c;
-        __pragma!panic ();
+        match c.getType () {
+            slc : &SliceType => {
+                let dmut list = TreeStatementList::new ();
+
+                let value = context:.generateValue (c.getValue ());
+
+                list:.append (c_binding_get_list_operand (value));
+                let rvalue = c_binding_get_value_operand (value);
+                let retType = c_binding_get_type (rvalue);
+
+                let innerType = context:.generateType (slc.getInners ()[0]);
+                let innerSize = expr::buildIntCst (c_binding_get_int_type (32, false), cast!u64 (c_binding_get_type_size (innerType)));
+
+                let call = expr::callExprTree (EOF_WORD, retType, CoreNames::YRT_DUPLICATE_SLICE, [rvalue, innerSize]);
+
+                list:.append (c_binding_get_list_operand (call));
+                let ret = c_binding_build_compound (list.getTree (), c_binding_get_value_operand (call));
+
+                return ret;
+            }
+            _ => {
+                __pragma!panic ();
+            }
+        }
     }
 
     /**
@@ -645,25 +667,45 @@ pub class GenerateValueVisitor {
      * Generate an aliaser to a slice value
      * */
     fn generateSliceMem (self, dmut context : &GenerateVisitor, s : &SliceValue)-> tree_t {
-        let val = self.generate (alias context, s.getInner ());
+        let dmut list = TreeStatementList::new ();
+        let mut val = self.generate (alias context, s.getInner ());
+        list:.append (c_binding_get_list_operand (val));
+        val = c_binding_get_value_operand (val);
+
         let type = context:.generateType (s.getType ());
-        match s.getInner () {
+        let ret = match s.getInner () {
             str : &StringValue => {
                 let size = buildIntCst (intTypeTree (0, false), cast!{u64} (str.getLen ()));
                 expr::buildConstructorFields (type, [size, val], [SliceKeys::LEN, SliceKeys::PTR])
             }
             a : &ArrayValue => {
                 let size = buildIntCst (intTypeTree (0, false), cast!{u64} (a.getLen ()));
-                expr::buildConstructorFields (type, [size, val], [SliceKeys::LEN, SliceKeys::PTR])
+                let innerType = context:.generateType (s.getType ().asOf!{&SliceType} ().getInners ()[0]);
+                let ptrType = pointerTypeTree (innerType);
+                let ptrValue = addressExprTree (a.getLoc (), ptrType, val);
+
+                expr::buildConstructorFields (type, [size, ptrValue], [SliceKeys::LEN, SliceKeys::PTR])
             }
             SliceCtorValue () => {
                 val
+            }
+            a : &ArrayAllocValue => {
+                let size = context:.generateValue (a.getLen ());
+                list:.append (c_binding_get_list_operand (size));
+                let innerType = context:.generateType (s.getType ().asOf!{&SliceType} ().getInners ()[0]);
+                let ptrType = pointerTypeTree (innerType);
+                let ptrValue = addressExprTree (a.getLoc (), ptrType, val);
+
+                expr::buildConstructorFields (type, [c_binding_get_value_operand (size), ptrValue], [SliceKeys::LEN, SliceKeys::PTR])
             }
             _ => {
                 eprintln ((s.getInner ())::typeinfo.name);
                 __pragma!panic ();
             }
-        }
+        };
+
+        list:.append (c_binding_get_list_operand (ret));
+        return c_binding_build_compound (list.getTree (), c_binding_get_value_operand (ret));
     }
 
     /**
@@ -888,9 +930,34 @@ pub class GenerateValueVisitor {
      * Generate an array allocation value
      * */
     fn generateArrayAlloc (self, dmut context : &GenerateVisitor, arr : &ArrayAllocValue)-> tree_t {
-        arr;
-        context;
-        __pragma!panic ();
+        let dmut list = TreeStatementList::new ();
+
+        let type = context:.generateType (arr.getType ());
+        let value = context:.generateValue (arr.getValue ());
+
+        list:.append (c_binding_get_list_operand (value));
+        let rvalue = c_binding_get_value_operand (value);
+
+        if (arr.isDynamic ()) {
+            let len = context:.generateValue (arr.getLen ());
+            let innerType = c_binding_get_type (rvalue);
+            let tSize = expr::buildIntCst (c_binding_get_int_type (32, false), cast!u64 (c_binding_get_type_size (innerType)));
+            let valPtr = expr::addressExprTree (arr.getValue ().getLoc (), pointerTypeTree (innerType), rvalue);
+
+            let call = expr::callExprTree (EOF_WORD, type, CoreNames::YRT_ALLOC_SET_SLICE, [valPtr, tSize, len]);
+            list:.append (c_binding_get_list_operand (call));
+
+            return c_binding_build_compound (list.getTree (), c_binding_get_value_operand (call));
+        }  else {
+            {
+                let cteSize = arr.getLen ().asOf!{&IntValue} ().getValue ().to!u64 ();
+                let result = expr::buildConstructorIndexedOneValue (type, cteSize, rvalue);
+
+                return c_binding_build_compound (list.getTree (), result);
+            } catch {
+                _ => __pragma!panic ();
+            }
+        }
     }
 
     /**

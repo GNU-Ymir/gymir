@@ -335,6 +335,14 @@ pub fn buildConstructorIndexed (type : tree_t, elems : [tree_t])-> tree_t {
     c_binding_build_constructor_indexed (type, cast!u64 (elems.len), elems.ptr)
 }
 
+
+/**
+ * Build a constructor where a single value is replicated at each index
+ * */
+pub fn buildConstructorIndexedOneValue (type : tree_t, size : u64, value : tree_t)-> tree_t {
+    c_binding_build_constructor_indexed_one_value (type, size, value)
+}
+
 /**
  * Build the construction of a structure (or tuple, slice etc.) using field names
  * */

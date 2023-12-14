@@ -849,6 +849,15 @@ extern "C" tree c_binding_build_constructor_indexed (tree type, uint64_t nbElems
     return build_constructor (type, elms);
 }
 
+extern "C" tree c_binding_build_constructor_indexed_one_value (tree type, uint64_t nbElems, tree elem) {
+    vec<constructor_elt, va_gc> * elms = nullptr;
+    for (uint64_t i = 0 ; i < nbElems ; i++) {
+        CONSTRUCTOR_APPEND_ELT (elms, size_int (i), elem);
+    }
+
+    return build_constructor (type, elms);
+}
+
 extern "C" tree c_binding_build_constructor_fields (tree type, uint64_t nbElems, tree * elems, uint64_t nbNames, const char ** names) {
     vec<constructor_elt, va_gc> * elms = nullptr;
     for (uint64_t i = 0 ; i < nbElems ; i++) {

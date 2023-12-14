@@ -172,6 +172,7 @@ pub extern (C) fn c_binding_build_inf_pos_cst_value (type : tree_t)-> tree_t;
 pub extern (C) fn c_binding_build_inf_neg_cst_value (type : tree_t)-> tree_t;
 pub extern (C) fn c_binding_build_float_cst_value_str (type : tree_t, value : &c8)-> tree_t;
 pub extern (C) fn c_binding_build_constructor_indexed (type : tree_t, nbElems : u64, elems : &tree_t)-> tree_t;
+pub extern (C) fn c_binding_build_constructor_indexed_one_value (type : tree_t, nbElems : u64, elem : tree_t)-> tree_t;
 pub extern (C) fn c_binding_build_constructor_fields (type : tree_t, nbElems : u64, elems : &tree_t, nbFieldNames : u64, fieldNames : &(&c8))-> tree_t;
 pub extern (C) fn c_binding_build_string_literal (len : u64, content : &u8)-> tree_t;
 pub extern (C) fn c_binding_build_string_literal (len : u64, content : &u16)-> tree_t;
