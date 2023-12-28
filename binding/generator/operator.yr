@@ -3,6 +3,7 @@ mod binding::generator::operator;
 
 import ymirc::semantic::generator::_;
 import ymirc::utils::_;
+import ymirc::global::core_;
 import ymirc::lexing::word;
 import ymirc::syntax::keys;
 
@@ -92,11 +93,7 @@ pub class GenerateOperatorVisitor {
         let type = context:.generateType (c.getType ());
         let call = expr::callExprTree (c.getLoc (), type, func, params);
 
-        if (pre.isEmpty ()) {
-            call
-        } else {
-            c_binding_build_compound (pre.getTree (), call)
-        }
+        c_binding_build_compound (pre.getTree (), call)
     }
 
     /**
@@ -106,9 +103,66 @@ pub class GenerateOperatorVisitor {
      *     - c: the call to generate
      * */
     fn generateCtorCall (self, dmut context : &GenerateVisitor, c : &CtorCallValue)-> tree_t {
-        context;
-        c;
-        __pragma!panic ();
+        let dmut params = Vec!{tree_t}::new ();
+        let dmut pre = TreeStatementList::new ();
+
+        let inst = match c.getCtor ().getInstance () {
+            NoneValue () => {
+                self.generateAllocateSelf (alias context, c.getLoc (), c.getType ().asOf!{&ClassPtrType} ())
+            }
+            s : _ => {
+                context:.generateValue (s)
+            }
+        };
+
+        params:.push (c_binding_get_value_operand (inst));
+        pre:.append (c_binding_get_list_operand (inst));
+
+        for semVal in c.getParameters () {
+            let val = context:.generateValue (semVal);
+            pre:.append (c_binding_get_list_operand (val));
+            params:.push (c_binding_get_value_operand (val));
+        }
+
+        for semVal in c.getAddParameters () {
+            let val = context:.generateValue (semVal);
+            pre:.append (c_binding_get_list_operand (val));
+            params:.push (c_binding_get_value_operand (val));
+        }
+
+        let clType = context:.generateType (c.getType ());
+        let mut func = context:.generateValue (c.getCtor ().getPrototype ());
+        pre:.append (c_binding_get_list_operand (func));
+        func = c_binding_get_value_operand (func);
+        let call = expr::callExprTree (c.getLoc (), clType, func, params[]);
+
+        c_binding_debug_generic_print_tree (call);
+        c_binding_build_compound (pre.getTree (), call)
+    }
+
+    /**
+     * Generate the call for the allocation of a new class
+     * @params:
+     *    - context: the context of the validation
+     * */
+    fn generateAllocateSelf (self, dmut context : &GenerateVisitor, loc : &Word, c : &ClassPtrType)-> tree_t {
+        let dmut list = TreeStatementList::new ();
+        let type = context:.generateType (c);
+        let (decl, var) = context:.getValueVisitor ().generateVarDecl (alias context, loc, format ("_self(%)", loc.line ()), type);
+
+        list:.append (decl);
+
+        let vtable = context:.getTypeVisitor ():.retreiveVtable (alias context, c.getInner ());
+        let vtableAddr = expr::addressExprTree (loc, pointerTypeTree (pointerTypeTree (voidTypeTree ())), vtable);
+        let mut callVal = expr::callExprTree (loc, type, CoreNames::YRT_ALLOC_CLASS, [vtableAddr]);
+
+        list:.append (c_binding_get_list_operand (callVal));
+        callVal = c_binding_get_value_operand (callVal);
+
+        let classValue = context:.getValueVisitor ().generateAffect (alias context, loc, var, callVal);
+        list:.append (c_binding_get_list_operand (classValue));
+
+        c_binding_build_compound (list.getTree (), c_binding_get_value_operand (classValue))
     }
 
     /**

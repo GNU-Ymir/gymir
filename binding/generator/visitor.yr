@@ -365,7 +365,7 @@ pub class GenerateVisitor {
      * Generate a type tree from a Type
      * */
     pub fn generateType (mut self, type : &Type)-> tree_t {
-        self._typeGenerator.generate (alias self, type)
+        self._typeGenerator:.generate (alias self, type)
     }
 
     /**

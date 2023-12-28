@@ -6,6 +6,15 @@ import std::conv;
 
 static mut __LAST_LABEL_ID__ = 0us;
 
+extern (C) fn ymir_get_global_context_bind ()-> tree_t;
+
+/**
+ * @returns: the global context for global var declarations
+ * */
+pub fn ymir_get_global_context ()-> tree_t {
+    ymir_get_global_context_bind ()
+}
+
 /**
  * @params:
  *     - loc: the location of the declaration

@@ -3,8 +3,6 @@
 
 #include "tree.h"
 
-
-
 /* The context to be used for global declarations.  */
 extern tree __global_context__;
 

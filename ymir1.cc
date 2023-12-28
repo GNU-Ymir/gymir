@@ -417,6 +417,9 @@ tree ymir_get_global_context(void)
   return __global_context__;
 }
 
+extern "C" tree ymir_get_global_context_bind () {
+  return ymir_get_global_context ();
+}
 
 static tree
 ymir_langhook_pushdecl (tree decl ATTRIBUTE_UNUSED)

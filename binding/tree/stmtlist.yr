@@ -37,7 +37,10 @@ pub class TreeStatementList {
     }
 
     pub fn getTree (self)-> tree_t {
-        self._list
+        if (self._isEmpty) { null }
+        else {
+            self._list
+        }
     }
 
 }

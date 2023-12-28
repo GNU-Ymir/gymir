@@ -1,6 +1,7 @@
 mod binding::generator::types;
 
 import ymirc::semantic::generator::_;
+import ymirc::semantic::symbol::base;
 import ymirc::utils::_;
 import ymirc::lexing::word;
 import ymirc::syntax::keys;
@@ -9,6 +10,10 @@ import binding::tree::_;
 import binding::generator::visitor;
 
 import std::collection::vec;
+import std::collection::map;
+import std::collection::set;
+
+import std::fs::path;
 
 import std::io;
 
@@ -16,6 +21,12 @@ import std::io;
  * This visitor class transform ymirc types into GCC trees
  * */
 pub class GenerateTypeVisitor {
+
+    // The set of classes being currently generated
+    let dmut _classCurrent = HashSet!{&Path}::new ();
+
+    // The set of classes that have already been validated
+    let dmut _classDones = HashMap!{&Path, tree_t}::new ();
 
     /**
      * Create an empty visitor
@@ -29,9 +40,11 @@ pub class GenerateTypeVisitor {
      *     - type: the type to generate
      * @returns: a GCC tree
      * */
-    pub fn generate (self, dmut context : &GenerateVisitor, type : &Type)-> tree_t {
+    pub fn generate (mut self, dmut context : &GenerateVisitor, type : &Type)-> tree_t {
         match type {
-            n : &NativeType => self.generateNative (alias context, n);
+            n : &NativeType => { self:.generateNative (alias context, n) }
+            c : &ClassPtrType => { self:.generateClassPtr (alias context, c) }
+            c : &ClassRefType => { self:.generateClassRef (alias context, c) }
             _ => {
                 eprintln (type::typeinfo.name);
                 __pragma!panic ();
@@ -40,9 +53,122 @@ pub class GenerateTypeVisitor {
     }
 
     /**
+     * ================================================================================
+     * ================================================================================
+     * ===============================        CLASS        ============================
+     * ================================================================================
+     * ================================================================================
+     */
+
+    /**
+     * Generate a class pointer type
+     * @params:
+     *     - context: the context of the generation
+     *     - type: the class ptr to generate
+     * @returns: a tree type
+     * */
+    fn generateClassPtr (mut self, dmut context : &GenerateVisitor, type : &ClassPtrType)-> tree_t {
+        let inner = self:.generateClassRef (alias context, type.getInner ());
+        let ptr = c_binding_build_pointer_type (inner);
+        ptr
+    }
+
+    /**
+     * Generate a class reference type (vtable, and )
+     * @params:
+     *     - context: the context of the generation
+     *     - name: the name of the symbol
+     *     - type: the type to generate
+     * @returns: the type tree
+     * */
+    fn generateClassRef (mut self, dmut context : &GenerateVisitor, type : &ClassRefType)-> tree_t {
+        let sym = type.getSymbol ();
+        let name = sym.getPath ();
+
+        match self._classDones.find (name) {
+            Ok (t : tree_t) => { return t; }
+        }
+        match name in self._classCurrent {
+            true => { voidTypeTree () }
+            _ => {
+                self._classCurrent:.insert (name);
+                let retType = {
+                    let dmut fields = Vec!{[c8]}::new ();
+                    let dmut types = Vec!{tree_t}::new ();
+                    fields:.push ("#_vtable"s8);
+                    fields:.push ("#_monitor"s8);
+                    types:.push (c_binding_build_pointer_type (c_binding_build_pointer_type (voidTypeTree ())));
+                    types:.push (c_binding_build_pointer_type (c_binding_build_pointer_type (voidTypeTree ())));
+
+                    for it in type.getFields () {
+                        match it {
+                            v : &VarDeclValue => {
+                                fields:.push (v.getLoc ().str ());
+                                types:.push (context:.generateType (v.getType ()));
+                            }
+                            _ => __pragma!panic ();
+                        }
+                    }
+
+                    tree::types::tupleTypeTree (name.toStr (sep-> "::"s8), types[], fields[])
+                } exit {
+                    self._classCurrent:.remove (name);
+                };
+
+                self._classDones:.insert (name, retType);
+                retType
+            }
+        }
+    }
+
+    /**
+     * Generate the vtable of a class type
+     * @params:
+     *    - context: the context of the generation
+     *    - type: the class reference whose vtable has to be generated
+     * @returns: the global var decl of the vtable
+     * */
+    pub fn generateVtable (mut self, dmut context : &GenerateVisitor, cl : &ClassRefType)-> tree_t {
+        context;
+        cl;
+        null
+    }
+
+    /**
+     * Retreive the global symbol defining the virtual table of a class type (but does not generate it)
+     * @params:
+     *    - context: the context of the generation
+     *    - cl: the class reference whose vtable has to be generated
+     * @returns: the var decl of the vtable
+     * */
+    pub fn retreiveVtable (mut self, dmut context : &GenerateVisitor, cl : &ClassRefType)-> tree_t {
+        let type = c_binding_build_array_type (pointerTypeTree (voidTypeTree ()), cast!u64 (cl.getVtable ().len));
+        let name = context:.getMangler ().mangleVtable (cl);
+        let decl = varDeclTree (Word::eof (), name, type);
+
+        c_binding_set_static (decl, true);
+        c_binding_set_used (decl, true);
+        c_binding_set_preserved (decl, true);
+        c_binding_set_external (decl, true);
+        c_binding_set_public (decl, true);
+        c_binding_set_weak (decl, true);
+        c_binding_set_decl_context (decl, tree::decl::ymir_get_global_context ());
+
+        decl
+    }
+
+    /**
+     * =================================================================================
+     * =================================================================================
+     * ===============================        NATIVE        ============================
+     * =================================================================================
+     * =================================================================================
+     */
+
+    /**
      * Generate a type tree from a native type.
      * */
-    fn generateNative (self, dmut context : &GenerateVisitor, type : &NativeType)-> tree_t {
+    fn generateNative (mut self, dmut context : &GenerateVisitor, type : &NativeType)-> tree_t {
         match type {
             i : &IntType =>
                 return intTypeTree (cast!i32 (i.getSize ()), i.isSigned ());
@@ -53,11 +179,11 @@ pub class GenerateTypeVisitor {
             BoolType () => return boolTypeTree ();
             NoneType () => return voidTypeTree ();
             VoidType () => return voidTypeTree ();
-            slc : &SliceType => return self.generateSlice (alias context, slc);
-            arr : &ArrayType => return self.generateArray (alias context, arr);
-            p   : &PointerType => return self.generatePointer (alias context, p);
-            t : &TupleType => return self.generateTuple (alias context, t);
-            r : &RangeType => return self.generateRange (alias context, r);
+            slc : &SliceType => return self:.generateSlice (alias context, slc);
+            arr : &ArrayType => return self:.generateArray (alias context, arr);
+            p   : &PointerType => return self:.generatePointer (alias context, p);
+            t : &TupleType => return self:.generateTuple (alias context, t);
+            r : &RangeType => return self:.generateRange (alias context, r);
             _ => {
                 eprintln (type::typeinfo.name);
                 __pragma!panic ();
@@ -68,16 +194,16 @@ pub class GenerateTypeVisitor {
     /**
      * Generate a pointer type
      * */
-    fn generatePointer (self, dmut context : &GenerateVisitor, p : &PointerType)-> tree_t {
-        let inner = self.generate (alias context, p.getInners ()[0]);
+    fn generatePointer (mut self, dmut context : &GenerateVisitor, p : &PointerType)-> tree_t {
+        let inner = self:.generate (alias context, p.getInners ()[0]);
         pointerTypeTree (inner)
     }
 
     /**
      * Generate a type tree containing a slice type
      * */
-    fn generateSlice (self, dmut context : &GenerateVisitor, slc : &SliceType)-> tree_t {
-        let inner = self.generate (alias context, slc.getInners ()[0]);
+    fn generateSlice (mut self, dmut context : &GenerateVisitor, slc : &SliceType)-> tree_t {
+        let inner = self:.generate (alias context, slc.getInners ()[0]);
         let len = intTypeTree (0, false);
         let ptr = pointerTypeTree (inner);
 
@@ -89,10 +215,10 @@ pub class GenerateTypeVisitor {
     /**
      * Generate a type tree for a tuple type
      * */
-    fn generateTuple (self, dmut context : &GenerateVisitor, tu : &TupleType)-> tree_t {
+    fn generateTuple (mut self, dmut context : &GenerateVisitor, tu : &TupleType)-> tree_t {
         let mut inners : [mut tree_t] = [null ; new tu.getInners ().len];
         for i, t in tu.getInners () {
-            inners [i] = self.generate (alias context, t);
+            inners [i] = self:.generate (alias context, t);
         }
 
         tupleTypeTree (format ("%", tu),
@@ -103,9 +229,9 @@ pub class GenerateTypeVisitor {
     /**
      * Generate a type tree for a range type
      * */
-    fn generateRange (self, dmut context : &GenerateVisitor, r : &RangeType)-> tree_t {
-        let inner = self.generate (alias context, r.getInners ()[0]);
-        let step = self.generate (alias context, r.getInners ()[1]);
+    fn generateRange (mut self, dmut context : &GenerateVisitor, r : &RangeType)-> tree_t {
+        let inner = self:.generate (alias context, r.getInners ()[0]);
+        let step = self:.generate (alias context, r.getInners ()[1]);
         let b = boolTypeTree ();
 
         tupleTypeTree (format ("%", r),
@@ -116,8 +242,8 @@ pub class GenerateTypeVisitor {
     /**
      * Generate a type tree containing an array type
      * */
-    fn generateArray (self, dmut context : &GenerateVisitor, arr : &ArrayType)-> tree_t {
-        let inner = self.generate (alias context, arr.getInners ()[0]);
+    fn generateArray (mut self, dmut context : &GenerateVisitor, arr : &ArrayType)-> tree_t {
+        let inner = self:.generate (alias context, arr.getInners ()[0]);
         c_binding_build_array_type (inner, arr.getSize ().getValue ().to!{u64} ())
     } catch {
         _ => __pragma!panic ();
