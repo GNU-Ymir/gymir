@@ -27,6 +27,7 @@
 #include "tree-pretty-print.h"
 #include "cppdefault.h"
 
+#include "toplev.h"
 #include <ymir/ymir1.hh>
 #include <map>
 #include <string>
@@ -1041,6 +1042,9 @@ extern "C" void c_binding_finalize_function (tree t) {
     cgraph_node::finalize_function (t, true);
 }
 
+extern "C" void c_binding_insert_global (tree decl) {
+    wrapup_global_declarations (&decl, 1);
+}
 /**
  * =========================================================================
  * =========================================================================

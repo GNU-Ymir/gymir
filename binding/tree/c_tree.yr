@@ -189,7 +189,7 @@ pub extern (C) fn c_binding_promote (val : tree_t)-> tree_t;
 
 pub extern (C) fn c_binding_gimplify_function (t : tree_t)-> void;
 pub extern (C) fn c_binding_finalize_function (t : tree_t)-> void;
-
+pub extern (C) fn c_binding_insert_global (t : tree_t)-> void;
 /**
  * =========================================================================
  * =========================================================================

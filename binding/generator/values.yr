@@ -918,7 +918,7 @@ pub class GenerateValueVisitor {
             c : &CharValue          => { self.generateCharLit (alias context, c) }
             f : &FloatValue         => { self.generateFloatLit (alias context, f) }
             i : &IntValue           => { self.generateIntLit (alias context, i) }
-            n : &NullValue          => { self.generateNullLit (alias context, n) }
+            _ : &NullValue          => { self.generateNullLit (alias context) }
             s : &StringValue        => { self.generateStringLit (alias context, s) }
             t : &TupleValue         => { self.generateTupleLit (alias context, t) }
             UnitValue ()            => { null }
@@ -1056,7 +1056,7 @@ pub class GenerateValueVisitor {
     /**
      * Generate an null literal value
      * */
-    fn generateNullLit (self, dmut _ : &GenerateVisitor, _ : &NullValue)-> tree_t {
+    pub fn generateNullLit (self, dmut _ : &GenerateVisitor)-> tree_t {
         let type = pointerTypeTree (voidTypeTree ());
         c_binding_build_pointer_cst_value (type, 0u64)
     }

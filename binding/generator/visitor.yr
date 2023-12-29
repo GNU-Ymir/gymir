@@ -106,6 +106,9 @@ pub class GenerateVisitor {
             frame : &FrameGenerator => {
                 self:.generateFrame (frame);
             }
+            cl : &ClassRefType => {
+                self._typeGenerator:.generateVtable (alias self, cl);
+            }
             _ => {
                 eprintln (gen::typeinfo.name);
                 eprintln (format ("%", gen));
