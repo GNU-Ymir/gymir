@@ -2,6 +2,7 @@ mod binding::generator::types;
 
 import ymirc::semantic::generator::_;
 import ymirc::semantic::symbol::base;
+import ymirc::semantic::validator::sizeof_;
 import ymirc::utils::_;
 import ymirc::lexing::word;
 import ymirc::syntax::keys;
@@ -27,6 +28,9 @@ pub class GenerateTypeVisitor {
 
     // The set of classes that have already been validated
     let dmut _classDones = HashMap!{&Path, tree_t}::new ();
+
+    // Visitor used to compute the size of types
+    let dmut _sizeofVisitor = SizeofValidator::new ();
 
     /**
      * Create an empty visitor
@@ -137,7 +141,7 @@ pub class GenerateTypeVisitor {
 
         let ancestorSlice = match cl.getAncestor () {
             anc : &ClassRefType => {
-                let ti = self.generateClassTypeInfo (alias context, anc);
+                let ti = self.retreiveClassTypeInfo (alias context, anc);
                 let size = buildIntCst (intTypeTree (0, false), 1u64);
 
                 expr::buildConstructorFields (slcType, [size, addressExprTree (cl.getLoc (), pointerTypeTree (voidTypeTree ()), ti)], [SliceKeys::LEN, SliceKeys::PTR])
@@ -148,9 +152,61 @@ pub class GenerateTypeVisitor {
             }
         };
 
-        name;
-        ancestorSlice;
-        __pragma!panic ();
+        let mut values : [mut tree_t] = [null ; new 4us];
+
+        match cl.getTypeInfo () {
+            ti : &TypeInfoValue => {
+                values [0] = context:.generateValue (ti.getId ());
+                values [1] = context:.generateValue (ti.getSize ());
+                values [2] = ancestorSlice;
+                values [3] = context:.generateValue (ti.getName ());
+            }
+            _ => __pragma!panic ();
+        }
+
+        let types = [c_binding_get_type (values [0]),
+                     c_binding_get_type (values [1]),
+                     c_binding_get_type (values [2]),
+                     c_binding_get_type (values [3])];
+
+        let tiType = tupleTypeTree ("typeinfo"s8, types, []);
+        let tiValue = expr::buildConstructorFields (tiType, values, []);
+
+        let decl = varDeclTree (Word::eof (), name, tiType);
+
+        c_binding_set_decl_initial (decl, tiValue);
+        c_binding_set_static (decl, true);
+        c_binding_set_used (decl, true);
+        c_binding_set_preserved (decl, true);
+        c_binding_set_public (decl, true);
+        c_binding_set_weak (decl, true);
+        c_binding_set_decl_context (decl, tree::decl::ymir_get_global_context ());
+
+        c_binding_insert_global (decl);
+        decl
+    }
+
+    /**
+     * Retreive the global symbol defining the typeinfo of a class type (but does not generate it)
+     * @params:
+     *    - context: the context of the generation
+     *    - cl: the class reference whose typeinfo has to be retreived
+     * @returns: the var decl of the typeinf
+     * */
+    fn retreiveClassTypeInfo (self, dmut context : &GenerateVisitor, cl : &ClassRefType)-> tree_t {
+        let name = context:.getMangler ().mangleTypeInfo (cl);
+        let tiType = context:.generateType (cl.getTypeInfo ().getType ());
+        let decl = varDeclTree (Word::eof (), name, tiType);
+
+        c_binding_set_static (decl, true);
+        c_binding_set_used (decl, true);
+        c_binding_set_preserved (decl, true);
+        c_binding_set_external (decl, true);
+        c_binding_set_public (decl, true);
+        c_binding_set_weak (decl, true);
+        c_binding_set_decl_context (decl, tree::decl::ymir_get_global_context ());
+
+        decl
     }
 
     /**
@@ -164,10 +220,11 @@ pub class GenerateTypeVisitor {
         let type = c_binding_build_array_type (pointerTypeTree (voidTypeTree ()), cast!u64 (cl.getVtable ().len) + 2us);
         let name = context:.getMangler ().mangleVtable (cl);
         let decl = varDeclTree (Word::eof (), name, type);
-
         let dmut params = Vec!{tree_t}::new ();
 
-        params:.push (self.generateClassTypeInfo (alias context, cl));
+        self.generateClassTypeInfo (alias context, cl);
+        let ti = self.retreiveClassTypeInfo (alias context, cl);
+        params:.push (addressExprTree (cl.getLoc (), pointerTypeTree (voidTypeTree ()), ti));
         match cl.getDestructor () {
             NoneValue () => {
                 params:.push (context:.getValueVisitor ().generateNullLit (alias context));
@@ -199,7 +256,7 @@ pub class GenerateTypeVisitor {
      * Retreive the global symbol defining the virtual table of a class type (but does not generate it)
      * @params:
      *    - context: the context of the generation
-     *    - cl: the class reference whose vtable has to be generated
+     *    - cl: the class reference whose vtable has to be retreived
      * @returns: the var decl of the vtable
      * */
     pub fn retreiveVtable (mut self, dmut context : &GenerateVisitor, cl : &ClassRefType)-> tree_t {
@@ -326,6 +383,16 @@ pub class GenerateTypeVisitor {
         c_binding_build_array_type (inner, arr.getSize ().getValue ().to!{u64} ())
     } catch {
         _ => __pragma!panic ();
+    }
+
+
+    /**
+     * Compute the size of a type
+     * */
+    pub fn computeSize (mut self, type : &Type)-> usize {
+        self._sizeofVisitor:.validateType (EOF_WORD, type)
+    } catch {
+        _ => { 0us }
     }
 
 }

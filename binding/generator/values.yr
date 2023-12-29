@@ -97,12 +97,15 @@ pub class GenerateValueVisitor {
             VoidType () => { null }
             NoneType () => { null }
             type : _ => {
-                let (vdecl, var) = self.generateVarDecl (alias context,
-                                                         block.getLoc (),
-                                                         format ("_b(%)", block.getLoc ().line ()),
-                                                         context:.generateType (type));
-                outerList:.append (vdecl);
-                var
+                let size = context:.getTypeVisitor ():.computeSize (type);
+                if (size != 0us) {
+                    let (vdecl, var) = self.generateVarDecl (alias context,
+                                                             block.getLoc (),
+                                                             format ("_b(%)", block.getLoc ().line ()),
+                                                             context:.generateType (type));
+                    outerList:.append (vdecl);
+                    var
+                } else { null }
             }
         };
 
@@ -698,9 +701,22 @@ pub class GenerateValueVisitor {
 
                 expr::buildConstructorFields (type, [c_binding_get_value_operand (size), ptrValue], [SliceKeys::LEN, SliceKeys::PTR])
             }
-            _ => {
-                eprintln ((s.getInner ())::typeinfo.name);
-                __pragma!panic ();
+            _ => { // anything else should be [void ; 0]
+                match s.getInner ().getType () {
+                    arr : &ArrayType => {
+                        if (arr.getSize ().getValue () != 0us) __pragma!panic ();
+
+                        let blk = context:.generateValue (s.getInner ());
+                        list:.append (c_binding_get_list_operand (blk));
+
+                        let ptrValue = self.generateNullLit (alias context);
+                        let size = buildIntCst (intTypeTree (0, false), 0u64);
+                        expr::buildConstructorFields (type, [size, ptrValue], [SliceKeys::LEN, SliceKeys::PTR])
+                    }
+                    _ => {
+                        __pragma!panic ();
+                    }
+                }
             }
         };
 
@@ -934,6 +950,11 @@ pub class GenerateValueVisitor {
      * Generate an array literal value
      * */
     fn generateArrayLit (self, dmut context : &GenerateVisitor, arr : &ArrayValue)-> tree_t {
+        if (arr.getInners ().len == 0us) {
+            let type = tupleTypeTree (""s8, [charTypeTree (8)], []);
+            return expr::buildConstructorFields (type, [buildIntCst (intTypeTree (8, false), 0u64)], []);
+        }
+
         let type = context:.generateType (arr.getType ());
 
         let dmut list = TreeStatementList::new ();
