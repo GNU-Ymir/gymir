@@ -258,9 +258,10 @@ pub class GenerateOperatorVisitor {
         let indexT = intTypeTree (0, false);
         let indexV = binaryExprTree (a.getLoc (), BinaryOperators::STAR, indexT, rvalue, buildIntCst (indexT, size)); // a.right * size
         let ptrT = pointerTypeTree (resultT);
+        let ptrVoid = pointerTypeTree (voidTypeTree ());
 
-        let data_field = fieldAccessExprTree (a.getLoc (), lvalue, SliceKeys::PTR);
-        let finalPtrV = binaryExprTree (a.getLoc (), BinaryOperators::PLUS, ptrT, data_field, indexV); // a.left.ptr + (a.right * size)
+        let data_field = castExprTree (a.getLoc (), ptrVoid, fieldAccessExprTree (a.getLoc (), lvalue, SliceKeys::PTR));
+        let finalPtrV = castExprTree (a.getLoc (), ptrT, binaryExprTree (a.getLoc (), BinaryOperators::PLUS, ptrVoid, data_field, indexV)); // a.left.ptr + (a.right * size)
 
         let finalV = c_binding_unref_pointer (finalPtrV, 0u64); // *(a.left.ptr + (a.right * size))
 

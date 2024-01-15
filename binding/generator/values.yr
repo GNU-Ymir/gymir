@@ -625,8 +625,11 @@ pub class GenerateValueVisitor {
         match c.getType () {
             slc : &SliceType => {
                 let dmut list = TreeStatementList::new ();
-
                 let value = context:.generateValue (c.getValue ());
+
+                if (slc.getInners ()[0].isOf!{&VoidType} ()) {
+                    return value;
+                }
 
                 list:.append (c_binding_get_list_operand (value));
                 let rvalue = c_binding_get_value_operand (value);
@@ -639,7 +642,6 @@ pub class GenerateValueVisitor {
 
                 list:.append (c_binding_get_list_operand (call));
                 let ret = c_binding_build_compound (list.getTree (), c_binding_get_value_operand (call));
-
                 return ret;
             }
             _ => {
@@ -701,17 +703,20 @@ pub class GenerateValueVisitor {
 
                 expr::buildConstructorFields (type, [c_binding_get_value_operand (size), ptrValue], [SliceKeys::LEN, SliceKeys::PTR])
             }
-            _ => { // anything else should be [void ; 0]
+            _ => {
                 match s.getInner ().getType () {
                     arr : &ArrayType => {
-                        if (arr.getSize ().getValue () != 0us) __pragma!panic ();
+                        let size = context:.generateValue (arr.getSize ());
+                        if (arr.getSize ().getValue () == 0us) { // empty slice
+                            let ptrValue = self.generateNullLit (alias context);
+                            expr::buildConstructorFields (type, [size, ptrValue], [SliceKeys::LEN, SliceKeys::PTR])
+                        } else { // Slice memory reference of an array value (ex: for loops)
+                            let innerType = context:.generateType (s.getType ().asOf!{&SliceType} ().getInners ()[0]);
+                            let ptrType = pointerTypeTree (innerType);
+                            let ptrValue = addressExprTree (s.getInner ().getLoc (), ptrType, val);
 
-                        let blk = context:.generateValue (s.getInner ());
-                        list:.append (c_binding_get_list_operand (blk));
-
-                        let ptrValue = self.generateNullLit (alias context);
-                        let size = buildIntCst (intTypeTree (0, false), 0u64);
-                        expr::buildConstructorFields (type, [size, ptrValue], [SliceKeys::LEN, SliceKeys::PTR])
+                            expr::buildConstructorFields (type, [size, ptrValue], [SliceKeys::LEN, SliceKeys::PTR])
+                        }
                     }
                     _ => {
                         __pragma!panic ();
@@ -906,9 +911,19 @@ pub class GenerateValueVisitor {
      * Generate the tree value reprensenting a slice value ctor
      * */
     fn generateSliceCtor (self, dmut context : &GenerateVisitor, s : &SliceCtorValue)-> tree_t {
-        context;
-        s;
-        __pragma!panic ();
+        let type = context:.generateType (s.getType ());
+        let ptr = context:.generateValue (s.getPointer ());
+        let len = context:.generateValue (s.getLen ());
+
+
+        let dmut list = TreeStatementList::new ();
+        list:.append (c_binding_get_list_operand (ptr));
+        list:.append (c_binding_get_list_operand (len));
+
+        let value = buildConstructorFields (type,
+                                            [c_binding_get_value_operand (len), c_binding_get_value_operand (ptr)], [SliceKeys::LEN, SliceKeys::PTR]);
+
+        c_binding_build_compound (list.getTree (), value)
     }
 
     /**
