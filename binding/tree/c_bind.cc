@@ -141,7 +141,11 @@ extern "C" tree c_binding_build_array_type (tree innertype, uint64_t size) {
     auto len = build_int_cst_type (y_usize_type, size - 1);
     auto begin = build_int_cst_type (y_usize_type, 0);
     auto range = build_range_type (y_i32_type, fold (begin), fold (len));
-    return build_array_type (innertype, range);
+    if (innertype == void_type_node) {
+        return build_array_type (y_c8_type, range);
+    } else {
+        return build_array_type (innertype, range);
+    }
 }
 
 extern "C" tree c_binding_build_pointer_type (tree innerType) {
