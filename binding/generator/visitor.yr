@@ -76,6 +76,9 @@ pub class GenerateVisitor {
             f : &YILFrame => {
                 self:.generateFrame (f);
             }
+            c : &YILConstant => {
+                self:.generateConstant (c);
+            }
             _ => {
                 eprintln (gen::typeinfo.name);
                 eprintln (format ("%", gen));
@@ -183,6 +186,35 @@ pub class GenerateVisitor {
     }
 
     /**
+     * ================================================================================
+     * ================================================================================
+     * ==============================         CONSTANT         ========================
+     * ================================================================================
+     * ================================================================================
+     */
+
+
+    /**
+     * Declare a constant value in the text segment
+     * */
+    fn generateConstant (mut self, cst : &YILConstant) {
+        let value = self.generateValue (cst.getValue ());
+        let type = c_binding_get_type (value);
+
+        let var = decl::varDeclTree (cst.getLoc (), cst.getName (), type);
+        c_binding_set_decl_initial (var, value);
+        c_binding_set_decl_context (var, tree::decl::ymir_get_global_context ());
+
+        c_binding_set_static (var, true);
+        c_binding_set_public (var, !cst.isLocal ());
+        c_binding_set_constant (var, true);
+        c_binding_set_readonly (var, true);
+
+        c_binding_insert_global (var);
+    }
+
+
+    /**
      * =========================================================================
      * =========================================================================
      * ========================           TYPES           ======================
@@ -197,8 +229,8 @@ pub class GenerateVisitor {
         match type {
             a : &YILArray   => { return self.generateArrayType (a); }
             t : &YILTuple   => { return self.generateTupleType (t); }
-            f : &YILFloat   => { return types::floatTypeTree (cast!i32 (f.getSize ())); }
-            i : &YILInt     => { return types::intTypeTree (cast!i32 (i.getSize ()), i.isSigned ()); }
+            f : &YILFloat   => { return types::floatTypeTree (cast!i32 (f.getSize () * 8u32)); }
+            i : &YILInt     => { return types::intTypeTree (cast!i32 (i.getSize () * 8u32), i.isSigned ()); }
             p : &YILPointer => { return types::pointerTypeTree (self.generateType (p.getInner ())); }
             YILVoid ()      => { return types::voidTypeTree (); }
             _ => {
@@ -258,6 +290,7 @@ pub class GenerateVisitor {
             t : &YILTupleValue => { return self.generateTupleValue (t); }
             u : &YILUnaryValue => { return self.generateUnary (u); }
             v : &YILVar => { return self.generateVarValue(v); }
+            u : &YILUnrefValue => { return self.generateUnref (u); }
             _ => {
                 eprintln (value::typeinfo.name);
                 __pragma!panic ();
@@ -282,6 +315,7 @@ pub class GenerateVisitor {
         let type = self.generateType (value.getType ());
         let inner = self.generateValue (value.getValue ());
 
+        c_binding_set_addressable (inner, true);
         return expr::addressExprTree (value.getLoc (), type, inner);
     }
 
@@ -293,8 +327,12 @@ pub class GenerateVisitor {
         let dmut params = Vec!{tree_t}::new ();
 
         for i in value.getValue () {
+            println (format ("% %", i, i.getType ()));
             params:.push (self.generateValue (i));
         }
+
+        println (format ("%", value.getType ()));
+        c_binding_debug_generic_print_tree (type);
 
         return expr::buildConstructorIndexed (type, params[]);
     }
@@ -445,6 +483,7 @@ pub class GenerateVisitor {
 
         // Else it is a global ref
         let type = self.generateType (value.getType ());
+
         let var = decl::varDeclTree (value.getLoc (), value.getName (), type);
         c_binding_set_external (var, true);
 
