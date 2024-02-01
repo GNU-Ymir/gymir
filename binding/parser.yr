@@ -36,9 +36,10 @@ extern (C) fn ymir_binding_parse_file (nb_files : u32, filenames : &(&c8)) {
         };
 
         let args = YmirArguments (file-> filename);
-        let gens = {
+        let nodes = {
             let dmut parser = Parser::new (args);
-            parser:.parseAll ()
+            parser:.parseAll ();
+            parser:.getOptYILNodes ()
         } catch {
             err : &ErrorMsg => {
                 println (format ("%", err));
@@ -54,8 +55,8 @@ extern (C) fn ymir_binding_parse_file (nb_files : u32, filenames : &(&c8)) {
         }
 
         let dmut generator = GenerateVisitor::new ();
-        for g in gens {
-            generator:.generate (g);
+        for n in nodes {
+            generator:.generate (n);
         }
     }
 }

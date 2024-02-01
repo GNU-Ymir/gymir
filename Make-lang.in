@@ -41,9 +41,6 @@ ymir_OBJS = \
     ymir/binding_parser.o \
 	ymir/ymir1.o \
     ymir/generator_visitor.o \
-    ymir/generator_types.o \
-    ymir/generator_values.o \
-    ymir/generator_operator.o \
     ymir/tree_c_tree.o \
     ymir/tree_stmtlist.o \
     ymir/tree_c_bind.o \
