@@ -53,7 +53,6 @@ pub extern (C) fn  c_binding_build_pointer_type (innerType : tree_t)-> tree_t;
 pub extern (C) fn  c_binding_build_tuple_type (name : &c8, nbFields : u64, fieldTypes : &tree_t, nbFieldNames : u64, fieldNames : &(&c8), isUnion : bool, isPacked : bool)-> tree_t;
 pub extern (C) fn  c_binding_build_option_type (nbFieldNames : u64, fieldNames : &(&c8), nbCommon : u64, commons : &tree_t, nbUnions : u64, unions : &tree_t)-> tree_t;
 pub extern (C) fn  c_binding_build_function_type (retType : tree_t, nbParams : u64, params : &tree_t)-> tree_t;
-pub extern (C) fn  c_binding_build_method_type (retType : tree_t, selfType : tree_t, nbParams : u64, params : &tree_t)-> tree_t;
 
 /**
  * =========================================================================

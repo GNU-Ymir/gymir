@@ -221,45 +221,6 @@ pub fn gotoExprTree (loc : &Word, label : tree_t)-> tree_t {
 }
 
 /**
- * Construct a condition tree
- * @params:
- *     - loc: the location of the condition
- *     - segmentContext: the context of the current declarations
- *     - test: the test of the condition
- *     - suc: the code to execute if test passes
- *     - fail: the code to execute if the test fails
- */
-pub fn conditionalExprTree (loc : &Word, segmentContext : tree_t, test : tree_t, suc : tree_t, fail : tree_t)-> tree_t {
-    let location = wordToLocation (loc);
-    let thenLabel = labelDeclTree (loc, segmentContext, "then"s8);
-    let endLabel = labelDeclTree (loc, segmentContext, "end_if"s8);
-    let gotoThen = gotoExprTree (loc, thenLabel);
-    let gotoEnd = gotoExprTree (loc, endLabel);
-
-    let (elseLabel, gotoElse) = if (fail !is null) {
-        let elseLabel = labelDeclTree (loc, segmentContext, "else"s8);
-        let gotoElse = gotoExprTree (loc, elseLabel);
-
-        (elseLabel, gotoElse)
-    } else { (endLabel, gotoEnd) };
-
-    let dmut list = TreeStatementList::new ();
-    list:.append (c_binding_build_cond_expr (location, test, gotoThen, gotoElse))
-        :.append (labelExprTree (loc, thenLabel))
-        :.append (suc)
-        :.append (gotoEnd);
-
-    if (fail !is null) {
-        list:.append (labelExprTree (loc, elseLabel))
-            :.append (fail)
-            :.append (gotoEnd);
-    }
-
-    list:.append (labelExprTree (loc, endLabel));
-    return list.getTree ();
-}
-
-/**
  * Build a return expression tree.
  * @params:
  *     - loc: the location of the return
@@ -333,14 +294,6 @@ pub fn bindTree (loc : &Word, varChain : tree_t, content : tree_t, block : tree_
  * */
 pub fn buildConstructorIndexed (type : tree_t, elems : [tree_t])-> tree_t {
     c_binding_build_constructor_indexed (type, cast!u64 (elems.len), elems.ptr)
-}
-
-
-/**
- * Build a constructor where a single value is replicated at each index
- * */
-pub fn buildConstructorIndexedOneValue (type : tree_t, size : u64, value : tree_t)-> tree_t {
-    c_binding_build_constructor_indexed_one_value (type, size, value)
 }
 
 /**

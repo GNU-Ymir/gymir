@@ -36,7 +36,6 @@ pub def voidTypeTree = c_binding_get_void_type;
  */
 pub def boolTypeTree = c_binding_get_bool_type;
 
-
 /**
  * @returns: the tree for the int type of the size 'size'
  * */
@@ -69,15 +68,6 @@ pub def arrayTypeTree = c_binding_build_array_type;
  * */
 pub def pointerTypeTree = c_binding_build_pointer_type;
 
-/**
- * @returns: the tree for a slice type of inner type 'inner'
- * */
-pub fn sliceTypeTree (inner : tree_t)-> tree_t {
-    return tupleTypeTree (""s8,
-                          [sizeTypeTree (), pointerTypeTree (inner)],
-                          ["len"s8, "ptr"s8]);
-}
-
 
 /**
  * @params:
@@ -104,30 +94,6 @@ pub fn tupleTypeTree (name : [c8], fields : [tree_t], fieldNames : [[c8]], isUni
 
 /**
  * @params:
- *     - common: the list of fields that are common to all options
- *     - union: the list of fields that shares the same memory address
- *     - names: the name of the field of the option type
- * @returns: an option type tree
- * @example:
- * ```
- * // common : [bool], union : [i32, &Exception], names : ["isOk", "value", "error"]
- * ```
- */
-pub fn optionTypeTree (common : [tree_t], unions : [tree_t], fieldNames : [[c8]])-> tree_t {
-    import std::conv;
-
-    let mut fieldStringZ : [mut &c8] = [cast!{&c8} (null) ; new fieldNames.len];
-    for i, f in fieldNames {
-        fieldStringZ [i] = f.toStringZ ();
-    }
-
-    return c_binding_build_option_type (cast!u64 (fieldStringZ.len), fieldStringZ.ptr,
-                                        cast!u64 (common.len), common.ptr,
-                                        cast!u64 (unions.len), unions.ptr);
-}
-
-/**
- * @params:
  *     - retType: the return type of the function
  *     - params: the types of the parameters of the function
  * @returns: a function type tree
@@ -135,8 +101,4 @@ pub fn optionTypeTree (common : [tree_t], unions : [tree_t], fieldNames : [[c8]]
 pub fn functionTypeTree (retType : tree_t, params : [tree_t])-> tree_t {
     return c_binding_build_function_type (retType,
                                           cast!u64 (params.len), params.ptr);
-}
-
-pub fn methodTypeTree (retType : tree_t, selfType : tree_t, params : [tree_t])-> tree_t {
-    return c_binding_build_method_type (retType, selfType, cast!u64 (params.len), params.ptr);
 }

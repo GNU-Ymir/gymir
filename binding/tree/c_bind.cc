@@ -250,10 +250,6 @@ extern "C" tree c_binding_build_function_type (tree retType, uint64_t nbParams, 
     return build_function_type_array (retType, nbParams, params);
 }
 
-extern "C" tree c_binding_build_method_type (tree retType, tree self, uint64_t nbParams, tree * params) {
-    return build_method_type (self, build_function_type_array (retType, nbParams, params));
-}
-
 extern "C" tree c_binding_get_type_field_by_name (tree type, const char * name) {
     tree field_decl = TYPE_FIELDS (type);
     while (field_decl != nullptr) {
