@@ -327,12 +327,8 @@ pub class GenerateVisitor {
         let dmut params = Vec!{tree_t}::new ();
 
         for i in value.getValue () {
-            println (format ("% %", i, i.getType ()));
             params:.push (self.generateValue (i));
         }
-
-        println (format ("%", value.getType ()));
-        c_binding_debug_generic_print_tree (type);
 
         return expr::buildConstructorIndexed (type, params[]);
     }
