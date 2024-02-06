@@ -206,9 +206,11 @@ pub class GenerateVisitor {
         c_binding_set_decl_context (var, tree::decl::ymir_get_global_context ());
 
         c_binding_set_static (var, true);
-        c_binding_set_public (var, !cst.isLocal ());
+        c_binding_set_public (var, true); // !cst.isLocal ());
         c_binding_set_constant (var, true);
         c_binding_set_readonly (var, true);
+        c_binding_set_used (var, true);
+        c_binding_set_addressable (var, true);
 
         c_binding_insert_global (var);
     }
