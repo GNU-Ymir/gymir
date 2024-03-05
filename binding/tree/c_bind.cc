@@ -892,7 +892,7 @@ extern "C" tree c_binding_build_constructor_fields (tree type, uint64_t nbElems,
 }
 
 extern "C" tree c_binding_build_string_literal (uint64_t len, const char * content) {
-    return build_string_literal (len , content);
+    return build_string_literal (len, content);
 }
 
 /**
