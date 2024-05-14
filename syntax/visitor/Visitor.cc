@@ -47,7 +47,7 @@ namespace syntax {
 			     {Token::LCOMM2, {Token::RETURN, ""}},
 				 {Token::LCOMM3, {Token::RCOMM3, ""}},
 				     {Token::LCOMM4, {Token::RCOMM3, Token::STAR}},
-					 {Token::LCOMM5, {Token::RCOMM5, Token::PLUS}} 
+					 {Token::LCOMM5, {Token::RCOMM3, Token::STAR}}
 		     }
 	    );
 	return Visitor::init (lexer);

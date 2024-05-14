@@ -64,8 +64,7 @@ const std::string Token::RCOMM3 = "*/";
 
 const std::string Token::LCOMM4 = "/**";
 
-const std::string Token::LCOMM5 = "/++";
-const std::string Token::RCOMM5 = "+/";
+const std::string Token::LCOMM5 = "/*!";
 
 const std::string Token::GUILL = "\"";
 const std::string Token::APOS = "'";
@@ -87,7 +86,7 @@ const std::vector <std::string> Token::__members__ = {Token::DIV,	Token::DIV_AFF
 						Token::COLON,		Token::DOLLAR,		Token::EQUAL,		Token::DEQUAL,		Token::STAR,		Token::STAR_AFF,	Token::PERCENT,	Token::PERCENT_AFF,
 						Token::XOR,		Token::DXOR_AFF,	Token::DXOR,		Token::TILDE,		Token::TILDE_AFF,	Token::AT,		Token::DARROW,
 						Token::SHARP,		Token::SPACE,		Token::RETURN,		Token::RRETURN,		Token::ANTI,		Token::LCOMM1,		Token::RCOMM1,	Token::LCOMM2,
-						Token::GUILL,		Token::APOS,		Token::TAB,		Token::LCOMM3,		Token::RCOMM3,		Token::LCOMM4,		Token::LCOMM5,  Token::RCOMM5,
+						Token::GUILL,		Token::APOS,		Token::TAB,		Token::LCOMM3,		Token::RCOMM3,		Token::LCOMM4,		Token::LCOMM5,
 						Token::ARROW,		Token::MACRO_ACC,	Token::MACRO_CRO,	Token::MACRO_PAR,	Token::DCOLON
 };
 

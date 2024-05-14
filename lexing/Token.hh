@@ -77,7 +77,6 @@ struct Token {
     static const std::string	RCOMM3;
     static const std::string	LCOMM4;
     static const std::string	LCOMM5;
-    static const std::string	RCOMM5;
     static const std::string 	ARROW;
     static const std::string 	DCOLON;
     static const std::string  MACRO_ACC;
