@@ -535,7 +535,7 @@ namespace semantic {
 							  {Token::LCOMM2, {Token::RETURN, ""}},
 							  {Token::LCOMM3, {Token::RCOMM3, ""}},
 							  {Token::LCOMM4, {Token::RCOMM3, Token::STAR}},
-							  {Token::LCOMM5, {Token::RCOMM5, Token::PLUS}}
+							  {Token::LCOMM5, {Token::RCOMM3, Token::STAR}}
 						      }, this-> _call.getLine () - 1);
 	    
 	    try {	    
@@ -729,7 +729,7 @@ namespace semantic {
 							      {Token::LCOMM2, {Token::RETURN, ""}},
 							      {Token::LCOMM3, {Token::RCOMM3, ""}},
 							      {Token::LCOMM4, {Token::RCOMM3, Token::STAR}},
-							      {Token::LCOMM5, {Token::RCOMM5, Token::PLUS}}
+							      {Token::LCOMM5, {Token::RCOMM3, Token::STAR}}
 							  }, loc.getLine () - 1);
 
 		// the return line in string literals must be considered
