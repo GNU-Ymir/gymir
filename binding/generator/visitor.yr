@@ -294,6 +294,7 @@ pub class GenerateVisitor {
             u : &YILUnaryValue => { return self.generateUnary (u); }
             v : &YILVar => { return self.generateVarValue(v); }
             u : &YILUnrefValue => { return self.generateUnref (u); }
+            b : &YILBeginCatch => { return self.generateBeginCatch (b); }
             _ => {
                 eprintln (value::typeinfo.name);
                 __pragma!panic ();
@@ -497,6 +498,15 @@ pub class GenerateVisitor {
     }
 
     /**
+     * Generate a begin catch expression
+     * */
+    fn generateBeginCatch (self, value : &YILBeginCatch)-> tree_t {
+        let ehptrT = c_binding_build_call_ehptr ();
+        let catchType = pointerTypeTree (voidTypeTree ());
+        return expr::callExprTree (value.getLoc (), catchType, value.getName (), [ ehptrT ]);
+    }
+
+    /**
      * =========================================================================
      * =========================================================================
      * ========================           INSTR           =====================
@@ -518,6 +528,8 @@ pub class GenerateVisitor {
             l : &YILLabel => { self:.generateLabel (l, alias list); }
             r : &YILReturn => { self:.generateReturn (r, alias list); }
             v : &YILVarDecl => { self:.generateVarDecl (v, alias list); }
+            t : &YILTryFinally => { self:.generateTryFinally (t, alias list); }
+            c : &YILTryCatch => { self:.generateTryCatch (c, alias list); }
             _ => {
                 eprintln (instr::typeinfo.name);
                 __pragma!panic ();
@@ -643,6 +655,54 @@ pub class GenerateVisitor {
         let decl = decl::buildDeclTree (v.getLoc (), types::voidTypeTree (), var);
         list:.append (decl);
     }
+
+    /**
+     * Transform a YIL Try finally declaration into a tree_t
+     * */
+    fn generateTryFinally (mut self, t : &YILTryFinally, dmut list : &TreeStatementList) {
+        let dmut tryList = TreeStatementList::new ();
+        let dmut finallyList = TreeStatementList::new ();
+
+        self:.enterBlock (t.getLoc ());
+        for i in t.getTryPart () {
+            self:.generateInstr (i, alias tryList);
+        }
+        let (tr, _) = self:.quitBlock (t.getLoc (), tryList.getTree ());
+
+        self:.enterBlock (t.getLoc ());
+        for i in t.getFinallyPart () {
+            self:.generateInstr (i, alias finallyList);
+        }
+        let (fin, _) = self:.quitBlock (t.getLoc (), finallyList.getTree ());
+
+        list:.append (buildTryFinally (t.getLoc (), tr, fin));
+    }
+
+    /**
+     * Transform a YIL Try catch declaration into a tree_t
+     * */
+    fn generateTryCatch (mut self, t : &YILTryCatch, dmut list : &TreeStatementList) {
+        let dmut tryList = TreeStatementList::new ();
+        let dmut catchList = TreeStatementList::new ();
+
+        self:.enterBlock (t.getLoc ());
+        for i in t.getTryPart () {
+            self:.generateInstr (i, alias tryList);
+        }
+        let (tr, _) = self:.quitBlock (t.getLoc (), tryList.getTree ());
+
+        self:.enterBlock (t.getLoc ());
+        for i in t.getCatchPart () {
+            self:.generateInstr (i, alias catchList);
+        }
+        let (ct, _) = self:.quitBlock (t.getLoc (), catchList.getTree ());
+
+        let dmut catchers = TreeStatementList::new ();
+        catchers:.append (buildCatcherExpr (t.getLoc (), ct));
+
+        list:.append (buildTryCatch (t.getLoc (), tr, catchers.getTree ()));
+    }
+
 
     /**
      * =========================================================================

@@ -311,3 +311,27 @@ pub fn buildConstructorFields (type : tree_t, elems : [tree_t], fields : [[c8]])
                                                cast!u64 (fieldStringZ.len),
                                                fieldStringZ.ptr);
 }
+
+/**
+ * Build a try finally control flow
+ * */
+pub fn buildTryFinally (loc : &Word, try : tree_t, fin : tree_t)-> tree_t {
+    let l = wordToLocation (loc);
+    return c_binding_build_try_finally_declaration (l, try, fin);
+}
+
+/**
+ * Build a try catch control flow
+ * */
+pub fn buildTryCatch (loc : &Word, try : tree_t, ct : tree_t)-> tree_t {
+    let l = wordToLocation (loc);
+    return c_binding_build_try_catch_declaration (l, try, ct);
+}
+
+/**
+ * Build the catcher part of a try catch
+ * */
+pub fn buildCatcherExpr (loc : &Word, ct : tree_t)-> tree_t {
+    let l = wordToLocation (loc);
+    return c_binding_build_catcher_expression (l, ct);
+}

@@ -716,6 +716,11 @@ extern "C" tree c_binding_build_memcpy (location_t loc, tree left, tree right) {
     return build_call_expr (memcpyFunc, 3, lPtr, rPtr, size);
 }
 
+extern "C" tree c_binding_build_call_ehptr () {
+    auto ehptr = builtin_decl_explicit (BUILT_IN_EH_POINTER);
+    return build_call_expr (ehptr, 1, integer_zero_node);
+}
+
 extern "C" tree c_binding_build_compound (tree list, tree value) {
     if (list == nullptr) return value;
     if (value == nullptr) return list;
@@ -893,6 +898,25 @@ extern "C" tree c_binding_build_constructor_fields (tree type, uint64_t nbElems,
 
 extern "C" tree c_binding_build_string_literal (uint64_t len, const char * content) {
     return build_string_literal (len, content);
+}
+
+extern "C" tree c_binding_build_try_finally_declaration (location_t loc, tree try_, tree fin_) {
+    return build2_loc (loc, TRY_FINALLY_EXPR, void_type_node, try_, fin_);
+}
+
+extern "C" tree c_binding_build_catcher_expression (location_t loc, tree catch_) {
+    return build2 (CATCH_EXPR, void_type_node, NULL, catch_);
+}
+
+
+extern "C" tree c_binding_build_try_catch_declaration (location_t loc, tree try_, tree catch_) {
+    if (TREE_CODE (catch_) != STATEMENT_LIST) {
+        tree stmt_list = alloc_stmt_list ();
+        append_to_statement_list (catch_, &stmt_list);
+        catch_ = stmt_list;
+    }
+
+    return build2 (TRY_CATCH_EXPR, void_type_node, try_, catch_);
 }
 
 /**

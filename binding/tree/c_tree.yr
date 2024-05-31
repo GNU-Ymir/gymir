@@ -153,6 +153,7 @@ pub extern (C) fn c_binding_build_modify_expr (loc : location_t, type : tree_t, 
 pub extern (C) fn c_binding_build_modify_expr_no_conv (loc : location_t, type : tree_t, left : tree_t, right : tree_t)-> tree_t;
 pub extern (C) fn c_binding_build_address (loc : location_t, type : tree_t, value : tree_t)-> tree_t;
 pub extern (C) fn c_binding_build_memcpy (loc : location_t, left : tree_t, right : tree_t)-> tree_t;
+pub extern (C) fn c_binding_build_call_ehptr ()-> tree_t;
 pub extern (C) fn c_binding_build_compound (list : tree_t, value : tree_t)-> tree_t;
 pub extern (C) fn c_binding_build_call (loc : location_t, retType : tree_t, func : tree_t, nbParams : u64, params : &tree_t)-> tree_t;
 pub extern (C) fn c_binding_build_call_from_name (loc : location_t, retType : tree_t, name : &c8, nbParams : u64, params : &tree_t)-> tree_t;
@@ -181,6 +182,9 @@ pub extern (C) fn c_binding_build_string_literal (len : u64, content : &u8)-> tr
 pub extern (C) fn c_binding_build_string_literal (len : u64, content : &u16)-> tree_t;
 pub extern (C) fn c_binding_build_string_literal (len : u64, content : &u32)-> tree_t;
 pub extern (C) fn c_binding_promote (val : tree_t)-> tree_t;
+pub extern (C) fn c_binding_build_try_finally_declaration (loc : location_t, try : tree_t, fin : tree_t)-> tree_t;
+pub extern (C) fn c_binding_build_try_catch_declaration (loc : location_t, try : tree_t, ct : tree_t)-> tree_t;
+pub extern (C) fn c_binding_build_catcher_expression (loc : location_t, ct : tree_t)-> tree_t;
 
 /**
  * =========================================================================
