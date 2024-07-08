@@ -88,6 +88,7 @@ const std::vector <std::string> Token::__members__ = {Token::DIV,	Token::DIV_AFF
 	Token::SHARP,		Token::SPACE,		Token::RETURN,		Token::RRETURN,		Token::ANTI,		Token::LCOMM1,		Token::RCOMM1,	Token::LCOMM2,
 	Token::GUILL,		Token::APOS,		Token::TAB,		Token::LCOMM3,		Token::RCOMM3,		Token::LCOMM4,		Token::LCOMM5,
 	Token::ARROW,		Token::MACRO_ACC,	Token::MACRO_CRO,	Token::MACRO_PAR,	Token::DCOLON
+
 };
 
 const std::vector <std::string> & Token::members () {
