@@ -105,6 +105,7 @@ pub extern (C) fn c_binding_is_preserved (t : tree_t)-> bool;
 pub extern (C) fn c_binding_set_preserved (t : tree_t, set : bool)-> void;
 pub extern (C) fn c_binding_is_addressable (t : tree_t)-> tree_t;
 pub extern (C) fn c_binding_set_addressable (t : tree_t, set : bool)-> void;
+pub extern (C) fn c_binding_set_thread_local (t : tree_t)-> void;
 pub extern (C) fn c_binding_get_asm_name (t : tree_t)-> &c8;
 pub extern (C) fn c_binding_set_asm_name (t : tree_t, name : &c8)-> void;
 pub extern (C) fn c_binding_get_name (t : tree_t)-> &c8;

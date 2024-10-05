@@ -28,6 +28,7 @@
 #include "cppdefault.h"
 
 #include "toplev.h"
+#include "varasm.h"
 #include <ymir/ymir1.hh>
 #include <map>
 #include <string>
@@ -544,6 +545,10 @@ extern "C" bool c_binding_is_addressable (tree t) {
 
 extern "C" void c_binding_set_addressable (tree t, bool set) {
     TREE_ADDRESSABLE (t) = set;
+}
+
+extern "C" void c_binding_set_thread_local (tree t) {
+    set_decl_tls_model (t, decl_default_tls_model (t));
 }
 
 extern "C" const char* c_binding_get_asm_name (tree t) {

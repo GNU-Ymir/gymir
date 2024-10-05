@@ -214,6 +214,7 @@ pub class GenerateVisitor {
         c_binding_set_readonly (var, true);
         c_binding_set_used (var, true);
         c_binding_set_addressable (var, true);
+        c_binding_set_weak (var, cst.isWeak ());
 
         c_binding_insert_global (var);
     }
@@ -236,6 +237,9 @@ pub class GenerateVisitor {
         let var = decl::varDeclTree (gv.getLoc (), gv.getName (), type);
         c_binding_set_decl_context (var, tree::decl::ymir_get_global_context ());
         c_binding_set_decl_initial (var, value);
+        if (gv.isThreadLocal ()) {
+            c_binding_set_thread_local (var);
+        }
 
         c_binding_set_static (var, true);
         c_binding_set_constant (var, false);
@@ -523,6 +527,9 @@ pub class GenerateVisitor {
 
         let var = decl::varDeclTree (value.getLoc (), value.getName (), type);
         c_binding_set_external (var, true);
+        if (value.isThreadLocal ()) {
+            c_binding_set_thread_local (var);
+        }
 
         return var;
     }
