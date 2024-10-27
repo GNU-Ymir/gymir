@@ -486,16 +486,16 @@ extern "C" void c_binding_set_constant (tree t, bool set) {
     TREE_CONSTANT (t) = set;
 }
 
-extern "C" void c_binding_is_constant (tree t) {
-    TREE_CONSTANT (t);
+extern "C" bool c_binding_is_constant (tree t) {
+    return TREE_CONSTANT (t);
 }
 
 extern "C" void c_binding_set_readonly (tree t, bool set) {
     TREE_READONLY (t) = set;
 }
 
-extern "C" void c_binding_is_readonly (tree t) {
-    TREE_READONLY (t);
+extern "C" bool c_binding_is_readonly (tree t) {
+    return TREE_READONLY (t);
 }
 
 
