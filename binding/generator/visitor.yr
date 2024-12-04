@@ -246,6 +246,8 @@ pub class GenerateVisitor {
         c_binding_set_readonly (var, false);
         c_binding_set_used (var, true);
         c_binding_set_addressable (var, true);
+        c_binding_set_public (var, true);
+        c_binding_set_weak (var, gv.isWeak ());
 
         c_binding_insert_global (var);
     }
