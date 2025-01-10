@@ -108,21 +108,9 @@ extern (C) fn ymir_binding_activate_include_testing (a : bool) {
     }
 }
 
-extern (C) fn ymir_binding_desactivate_reflection (a : bool) {
-    if (!a) {
-        state::instance ().desactivateReflection ();
-    }
-}
-
 extern (C) fn ymir_binding_activate_doc_dumping (a : bool) {
     if (a) {
         state::instance ().activateDocDumping ();
-    }
-}
-
-extern (C) fn ymir_binding_activate_depency_dumping (a : bool) {
-    if (a) {
-        state::instance ().activateDependencyDumping ();
     }
 }
 

@@ -131,7 +131,13 @@ pub class GenerateVisitor {
         c_binding_set_decl_saved_tree (fnDecl, bind);
         c_binding_set_external (fnDecl, false);
         c_binding_set_preserved (fnDecl, true);
-        c_binding_set_public (fnDecl, true);
+        if (frame.isGlobalCtor ()) {
+            c_binding_set_public (fnDecl, false);
+            c_binding_set_global_ctor (fnDecl, true);
+        } else {
+            c_binding_set_public (fnDecl, true);
+        }
+
         c_binding_set_static (fnDecl, true);
         c_binding_set_weak (fnDecl, frame.isWeak ());
 
