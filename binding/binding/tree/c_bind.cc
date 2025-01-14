@@ -269,6 +269,23 @@ extern "C" tree c_binding_get_type_field_by_name (tree type, const char * name) 
     return field_decl;
 }
 
+extern "C" bool c_binding_type_same_fields (tree left, tree right) {
+    tree field_decl_left = TYPE_FIELDS (left);
+    tree field_decl_right = TYPE_FIELDS (right);
+    while (field_decl_left != nullptr && field_decl_right != nullptr) {
+        tree decl_name_left = DECL_NAME (field_decl_left);
+        tree decl_name_right = DECL_NAME (field_decl_right);
+        if (strcmp (IDENTIFIER_POINTER (decl_name_left), IDENTIFIER_POINTER (decl_name_right)) != 0) {
+            return false;
+        }
+
+        field_decl_left = TREE_CHAIN (field_decl_left);
+        field_decl_right = TREE_CHAIN (field_decl_right);
+    }
+
+    return true;
+}
+
 /**
  * =========================================================================
  * =========================================================================
@@ -984,11 +1001,11 @@ tree convert (tree type, tree expr) {
 	    return error_mark_node;
 	}
 
-    if (type == TREE_TYPE (expr))
-	return expr;
+    if (type == TREE_TYPE (expr)) return expr;
     ret = targetm.convert_to_type (type, expr);
-    if (ret)
-	return ret;
+    if (ret) {
+        return ret;
+    }
 
     STRIP_TYPE_NOPS (e);
 
@@ -1019,8 +1036,9 @@ tree convert (tree type, tree expr) {
 		    expr = save_expr (expr);
 		    tree check = ubsan_instrument_float_cast (loc, type, expr);
 		    expr = fold_build1 (FIX_TRUNC_EXPR, type, expr);
-		    if (check == NULL_TREE)
-			return expr;
+		    if (check == NULL_TREE) {
+                return expr;
+            }
 		    return fold_build2 (COMPOUND_EXPR, TREE_TYPE (expr), check, expr);
 		}
 
@@ -1054,20 +1072,28 @@ tree convert (tree type, tree expr) {
 
 	case RECORD_TYPE:
 	case UNION_TYPE:
-	    if (lang_hooks.types_compatible_p (type, TREE_TYPE (expr)))
-		return e;
+        if (c_binding_get_type_size (type) == c_binding_get_type_size (TREE_TYPE (expr))
+            && c_binding_type_same_fields (type, TREE_TYPE (expr))) {
+            return e;
+        }
+
+	    if (lang_hooks.types_compatible_p (type, TREE_TYPE (expr))) {
+            return e;
+        }
 	    break;
 
 	default:
 	    break;
 
 	maybe_fold:
-	    if (TREE_CODE (ret) != C_MAYBE_CONST_EXPR)
-		ret = fold (ret);
+	    if (TREE_CODE (ret) != C_MAYBE_CONST_EXPR) {
+            ret = fold (ret);
+        }
 	    return ret;
 	}
 
     debug_tree (type);
+    debug_tree (TREE_TYPE (expr));
     _yrt_exc_panic (__FILE__, __FUNCTION__, __LINE__);
     return error_mark_node;
 }
