@@ -38,11 +38,11 @@ YMIR Joined Separate
 fdoc
 YMIR
 
+fv
+YMIR
+
 fversion=
 YMIR Joined
-
-fdependency
-YMIR
 
 funittest
 YMIR Driver
@@ -51,9 +51,6 @@ fdump-ymir
 YMIR
 
 fdump-syms
-YMIR
-
-fno-reflect
 YMIR
 
 imultilib

@@ -200,6 +200,7 @@ ymir_init_options (unsigned int argc ATTRIBUTE_UNUSED, cl_decoded_option * decod
     case OPT_ggdb :
       ymir_binding_activate_debug (true);
 	    break;
+    case OPT_fv:
     case OPT_v :
       ymir_binding_activate_verbose (true);
       break;
@@ -208,9 +209,6 @@ ymir_init_options (unsigned int argc ATTRIBUTE_UNUSED, cl_decoded_option * decod
       break;
     case OPT_funittest :
       ymir_binding_activate_include_testing (true);
-	    break;
-    case OPT_fno_reflect :
-      ymir_binding_desactivate_reflection (false);
 	    break;
     case OPT_fdump_ymir:
       ymir_binding_activate_ymir_dumping (true);
@@ -263,6 +261,8 @@ ymir_langhook_handle_option (size_t scode ATTRIBUTE_UNUSED,
     ymir_binding_add_include_dir (arg);
   } else if (code == OPT_iprefix) {
     ymir_binding_set_prefix (arg);
+  } else if (code == OPT_fv) {
+    ymir_binding_activate_verbose (true);
   } else if (code == OPT_v) {
     return false;
   } else if (code == OPT_nostdinc)  {
@@ -271,8 +271,6 @@ ymir_langhook_handle_option (size_t scode ATTRIBUTE_UNUSED,
     ymir_binding_activate_doc_dumping (true);
   } else if (code == OPT_funittest) {
     ymir_binding_activate_include_testing (true);
-  } else if (code == OPT_fno_reflect) {
-    ymir_binding_desactivate_reflection (true);
   } else if (code == OPT_fdump_ymir) {
     ymir_binding_activate_ymir_dumping (true);
   } else if (code == OPT_fdump_syms) {

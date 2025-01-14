@@ -16,6 +16,8 @@ import std::collection::map;
 import std::collection::set;
 import std::io;
 
+static dmut validatedTypes = HashMap!{&YILType, tree_t}::new ();
+
 
 /**
  * This generator class transform ymirc YIL nodes into GCC trees
@@ -106,6 +108,7 @@ pub class GenerateVisitor {
     fn generateFrame (mut self, frame : &YILFrame) {
         let fnDecl = self:.generateFunctionDecl (frame);
         let asmName = decl::getAsmName (fnDecl);
+        logging::info ("Generate frame %"s8, frame.getName ());
 
         self:.setCurrentFunctionContext (fnDecl);
         self:.enterFrame ();
@@ -210,6 +213,8 @@ pub class GenerateVisitor {
         let value = self.generateValue (cst.getValue ());
         let type = c_binding_get_type (value);
 
+        logging::info ("Generate constant %"s8, cst.getName ());
+
         let var = decl::varDeclTree (cst.getLoc (), cst.getName (), type);
         c_binding_set_decl_initial (var, value);
         c_binding_set_decl_context (var, tree::decl::ymir_get_global_context ());
@@ -239,6 +244,8 @@ pub class GenerateVisitor {
     fn generateGlobalVar (mut self, gv : &YILGlobalVar) {
         let value = self.generateValue (gv.getValue ());
         let type = c_binding_get_type (value);
+
+        logging::info ("Generate global var %"s8, gv.getName ());
 
         let var = decl::varDeclTree (gv.getLoc (), gv.getName (), type);
         c_binding_set_decl_context (var, tree::decl::ymir_get_global_context ());
@@ -288,24 +295,40 @@ pub class GenerateVisitor {
      * Gneerate a type tree from a YILArray
      * */
     fn generateArrayType (self, type : &YILArray)-> tree_t {
-        let inner = self.generateType (type.getInner ());
-        return c_binding_build_array_type (inner, cast!u64 (type.getLen ()));
+        match validatedTypes.find (type) {
+            Ok (t : _) => return t;
+            _ => {
+                let inner = self.generateType (type.getInner ());
+                let t = c_binding_build_array_type (inner, cast!u64 (type.getLen ()));
+                validatedTypes:.insert (type, t);
+
+                return t;
+            }
+        }
+
     }
 
     /**
      * Generate a type tree from a tuple type
      * */
     fn generateTupleType (self, type : &YILTuple)-> tree_t {
-        let dmut inners = Vec!{tree_t}::new ();
-        for ti in type.getInners () {
-            inners:.push (self.generateType (ti));
-        }
+        match validatedTypes.find (type) {
+            Ok (t : _) => return t;
+            _ => {
+                let dmut inners = Vec!{tree_t}::new ();
+                for ti in type.getInners () {
+                    inners:.push (self.generateType (ti));
+                }
 
-        return types::tupleTypeTree ("tuple"s8,
-                                     inners[],
-                                     type.getFieldNames (),
-                                     isUnion-> type.isUnion (),
-                                     isPacked-> type.isPacked ());
+                let t = types::tupleTypeTree ("tuple"s8,
+                                              inners[],
+                                              type.getFieldNames (),
+                                              isUnion-> type.isUnion (),
+                                              isPacked-> type.isPacked ());
+                validatedTypes:.insert (type, t);
+                return t;
+            }
+        }
     }
 
     /**
