@@ -55,7 +55,7 @@ ymir/libbinding.a: $(binding_objs) ymir/libymirc.a
 	  $(GYMIRCOMPILE) -I$(ROOT_DIR)/$(srcdir)/ymir/bootstrap/src/ymirc.yr $(srcdir)/ymir/binding/__lib__.yr -c -o $(srcdir)/ymir/binding/libbinding.o ; \
       cp $(srcdir)/ymir/binding/libbinding.o $@
 
-ymir/tree_%.o: ymir/binding/tree/%.cc ymir/libymirc.a
+ymir/tree_%.o: ymir/binding/binding/tree/%.cc ymir/libymirc.a
 	  $(YCOMPILE) $(GYC_INCLUDES) $<
 	  $(YPOSTCOMPILE)
 
