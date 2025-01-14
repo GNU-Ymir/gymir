@@ -1,6 +1,7 @@
-mod binding::tree::types;
+in types;
 
-import binding::tree::c_tree;
+use binding::tree::c_tree;
+use std::conv;
 
 /**
  * @returns: the error tree
@@ -79,13 +80,7 @@ pub def pointerTypeTree = c_binding_build_pointer_type;
  * @returns: a tuple type tree
  */
 pub fn tupleTypeTree (name : [c8], fields : [tree_t], fieldNames : [[c8]], isUnion : bool = false, isPacked : bool = false)-> tree_t {
-    import std::conv;
-
-    let mut fieldStringZ : [mut &c8] = [cast!{&c8} (null) ; new fieldNames.len];
-    for i, f in fieldNames {
-        fieldStringZ [i] = f.toStringZ ();
-    }
-
+    let fieldStringZ = copy [f.toStringZ () for f in fieldNames];
     return c_binding_build_tuple_type (name.toStringZ (),
                                        cast!u64 (fields.len), fields.ptr,
                                        cast!u64 (fieldStringZ.len), fieldStringZ.ptr,

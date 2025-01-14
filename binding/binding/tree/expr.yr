@@ -1,14 +1,10 @@
-mod binding::tree::expr;
+in expr;
 
-import ymirc::lexing::word;
-import ymirc::syntax::keys;
+use ymirc::lexing::word;
+use ymirc::syntax::keys;
 
-import binding::tree::c_tree;
-import binding::tree::chain;
-import binding::tree::stmtlist;
-import binding::tree::decl;
-
-import std::conv;
+use binding::tree::{c_tree, chain, stmtlist, decl};
+use std::conv;
 
 /**
  * Create an affectation tree. Local variable are declared if necessary for compound type affectation.
@@ -24,23 +20,23 @@ pub fn affectExprTree (loc : &Word, left : tree_t, right : tree_t, dmut stackCon
     let lType = c_binding_get_type (left);
     let rType = c_binding_get_type (right);
     let location = wordToLocation (loc);
-    if (c_binding_is_scalar (lType) || rType is lType) {
+    if (c_binding_is_scalar (lType) || rType == lType) {
         return c_binding_build_modify_expr (location, lType, left, right);
     } else {
         let lValue = c_binding_get_value_operand (left);
         let rValue = c_binding_get_value_operand (right);
 
-        let name = "#_aff("s8 ~ loc.line ().to![c8] () ~ ")"s8;
+        let name = "#_aff("s8 ~ std::conv::to!{[c8]} (loc.line) ~ ")"s8;
         let var = c_binding_build_var_decl (location, name.ptr, rType);
         c_binding_set_decl_context (var, segmentContext);
         stackContext:.append (var);
 
-        let dmut list = TreeStatementList::new ();
+        let mut list = TreeStatementList ();
 
-        list:.append (c_binding_get_list_operand (left))
-            :.append (c_binding_get_list_operand (right))
-            :.append (c_binding_build_modify_expr (location, rType, var, rValue))
-            :.append (c_binding_build_memcpy (location, lValue, var));
+        list:.append (c_binding_get_list_operand (left));
+        list:.append (c_binding_get_list_operand (right));
+        list:.append (c_binding_build_modify_expr (location, rType, var, rValue));
+        list:.append (c_binding_build_memcpy (location, lValue, var));
 
         return c_binding_build_compound (list.getTree (), var);
     }
@@ -70,11 +66,7 @@ pub fn callExprTree (loc : &Word, type : tree_t, func : tree_t, params : [tree_t
  * @returns: a call expr tree
  */
 pub fn callExprTree (loc : &Word, type : tree_t, func : [c8], params : [tree_t])-> tree_t {
-    let mut types : [mut tree_t] = [cast!{tree_t} (null) ; new params.len];
-    for i in 0us .. params.len {
-        types [i] = c_binding_get_type (params [i]);
-    }
-
+    let types = copy [c_binding_get_type (i) for i in params];
     let fnPtr = funcPtrExprTree (loc, func, type, types);
     return c_binding_build_call (wordToLocation (loc), type, fnPtr, cast!u64 (params.len), params.ptr);
 }
@@ -300,11 +292,7 @@ pub fn buildConstructorIndexed (type : tree_t, elems : [tree_t])-> tree_t {
  * Build the construction of a structure (or tuple, slice etc.) using field names
  * */
 pub fn buildConstructorFields (type : tree_t, elems : [tree_t], fields : [[c8]])-> tree_t {
-    let mut fieldStringZ : [mut &c8] = [cast!{&c8} (null) ; new fields.len];
-    for i, f in fields {
-        fieldStringZ [i] = f.toStringZ ();
-    }
-
+    let fieldStringZ = copy [f.toStringZ () for f in fields];
     return c_binding_build_constructor_fields (type,
                                                cast!u64 (elems.len),
                                                elems.ptr,

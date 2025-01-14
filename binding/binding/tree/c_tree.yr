@@ -1,10 +1,10 @@
-mod binding::tree::c_tree;
+in c_tree;
 
-import ymirc::lexing::word;
-import std::conv;
+use ymirc::lexing::word;
+use std::conv;
 
-pub def tree_t = &(void);
-pub def location_t = u32;
+pub def tree_t : *void;
+pub def location_t : u32;
 
 /**
  * Trasnform a ymirc word into a GCC location
@@ -13,7 +13,7 @@ pub fn wordToLocation (word : &Word)-> location_t {
     if (word.isEof ()) {
         return c_binding_get_unknwon_location ();
     } else {
-        return c_binding_build_debug_location (word.filename ().toStringZ (), word.line (), word.col ())
+        return c_binding_build_debug_location (word.filename.toStringZ (), word.line, word.col);
     }
 }
 
@@ -26,7 +26,7 @@ pub fn wordToLocation (word : &Word)-> location_t {
  * */
 
 pub extern (C) fn  c_binding_alloc_stmt_list ()-> tree_t;
-pub extern (C) fn c_binding_append_to_statement_list (left : tree_t, right :  &tree_t)-> void;
+pub extern (C) fn c_binding_append_to_statement_list (left : tree_t, right :  *tree_t)-> void;
 pub extern (C) fn c_binding_tree_chain_set (left : tree_t, right : tree_t)-> void;
 pub extern (C) fn c_binding_block_chain_set (left : tree_t, right : tree_t);
 pub extern (C) fn c_binding_block_chain_get (elem : tree_t)-> tree_t;
@@ -50,9 +50,9 @@ pub extern (C) fn  c_binding_get_float_type (size : i32)-> tree_t;
 pub extern (C) fn  c_binding_get_char_type (size : i32)-> tree_t;
 pub extern (C) fn  c_binding_build_array_type (innertype : tree_t, size : u64)-> tree_t;
 pub extern (C) fn  c_binding_build_pointer_type (innerType : tree_t)-> tree_t;
-pub extern (C) fn  c_binding_build_tuple_type (name : &c8, nbFields : u64, fieldTypes : &tree_t, nbFieldNames : u64, fieldNames : &(&c8), isUnion : bool, isPacked : bool)-> tree_t;
-pub extern (C) fn  c_binding_build_option_type (nbFieldNames : u64, fieldNames : &(&c8), nbCommon : u64, commons : &tree_t, nbUnions : u64, unions : &tree_t)-> tree_t;
-pub extern (C) fn  c_binding_build_function_type (retType : tree_t, nbParams : u64, params : &tree_t)-> tree_t;
+pub extern (C) fn  c_binding_build_tuple_type (name : *c8, nbFields : u64, fieldTypes : *tree_t, nbFieldNames : u64, fieldNames : *(*c8), isUnion : bool, isPacked : bool)-> tree_t;
+pub extern (C) fn  c_binding_build_option_type (nbFieldNames : u64, fieldNames : *(*c8), nbCommon : u64, commons : *tree_t, nbUnions : u64, unions : *tree_t)-> tree_t;
+pub extern (C) fn  c_binding_build_function_type (retType : tree_t, nbParams : u64, params : *tree_t)-> tree_t;
 
 /**
  * =========================================================================
@@ -72,7 +72,7 @@ pub extern (C) fn c_binding_get_list_operand (value : tree_t)-> tree_t;
 pub extern (C) fn c_binding_get_value_operand (value : tree_t)-> tree_t;
 pub extern (C) fn c_binding_unref_pointer (value : tree_t, index : u64)-> tree_t;
 pub extern (C) fn c_binding_unref_pointer_force_type (value : tree_t, type : tree_t, index : u64)-> tree_t;
-pub extern (C) fn c_binding_access_field_by_name (value : tree_t, fieldname : &c8)-> tree_t;
+pub extern (C) fn c_binding_access_field_by_name (value : tree_t, fieldname : *c8)-> tree_t;
 pub extern (C) fn c_binding_to_direct_value (value : tree_t)-> tree_t;
 pub extern (C) fn c_binding_is_string_type (type : tree_t)-> bool;
 pub extern (C) fn c_binding_is_array_type (type : tree_t)-> bool;
@@ -106,16 +106,16 @@ pub extern (C) fn c_binding_set_preserved (t : tree_t, set : bool)-> void;
 pub extern (C) fn c_binding_is_addressable (t : tree_t)-> tree_t;
 pub extern (C) fn c_binding_set_addressable (t : tree_t, set : bool)-> void;
 pub extern (C) fn c_binding_set_thread_local (t : tree_t)-> void;
-pub extern (C) fn c_binding_get_asm_name (t : tree_t)-> &c8;
-pub extern (C) fn c_binding_set_asm_name (t : tree_t, name : &c8)-> void;
-pub extern (C) fn c_binding_get_name (t : tree_t)-> &c8;
+pub extern (C) fn c_binding_get_asm_name (t : tree_t)-> *c8;
+pub extern (C) fn c_binding_set_asm_name (t : tree_t, name : *c8)-> void;
+pub extern (C) fn c_binding_get_name (t : tree_t)-> *c8;
 pub extern (C) fn c_binding_set_decl_context (t : tree_t, context : tree_t)-> void;
 pub extern (C) fn c_binding_get_decl_context (t : tree_t)-> tree_t;
 pub extern (C) fn c_binding_set_decl_initial (t : tree_t, init : tree_t)-> void;
 pub extern (C) fn c_binding_get_decl_initial (t : tree_t)-> tree_t;
 pub extern (C) fn c_binding_set_decl_saved_tree (t : tree_t, saved : tree_t)-> void;
 pub extern (C) fn c_binding_get_decl_saved_tree (t : tree_t)-> tree_t;
-pub extern (C) fn c_binding_set_decl_arguments (t : tree_t, nbArgs : u64, args : &tree_t)-> void;
+pub extern (C) fn c_binding_set_decl_arguments (t : tree_t, nbArgs : u64, args : *tree_t)-> void;
 pub extern (C) fn c_binding_set_arg_type (t : tree_t, type : tree_t)-> void;
 pub extern (C) fn c_binding_get_arg_type (t : tree_t)-> tree_t;
 pub extern (C) fn c_binding_set_result_decl (t : tree_t, result : tree_t)-> void;
@@ -135,11 +135,11 @@ pub extern (C) fn c_binding_is_variable (t : tree_t)-> bool;
 
 pub extern (C) fn c_binding_get_builtin_location ()-> location_t;
 pub extern (C) fn c_binding_get_unknwon_location ()-> location_t;
-pub extern (C) fn c_binding_build_debug_location (filename : &c8, line : u64, col : u64)-> location_t;
-pub extern (C) fn c_binding_build_var_decl (loc : location_t, name : &c8, type : tree_t)-> tree_t;
+pub extern (C) fn c_binding_build_debug_location (filename : *c8, line : u64, col : u64)-> location_t;
+pub extern (C) fn c_binding_build_var_decl (loc : location_t, name : *c8, type : tree_t)-> tree_t;
 pub extern (C) fn c_binding_build_decl (loc : location_t, type : tree_t, content : tree_t)-> tree_t;
-pub extern (C) fn c_binding_build_param_decl (loc : location_t, name : &c8, type : tree_t)-> tree_t;
-pub extern (C) fn c_binding_build_function_decl (loc : location_t, name : &c8, type : tree_t)-> tree_t;
+pub extern (C) fn c_binding_build_param_decl (loc : location_t, name : *c8, type : tree_t)-> tree_t;
+pub extern (C) fn c_binding_build_function_decl (loc : location_t, name : *c8, type : tree_t)-> tree_t;
 pub extern (C) fn c_binding_build_result_decl (loc : location_t, type : tree_t)-> tree_t;
 
 /**
@@ -156,13 +156,13 @@ pub extern (C) fn c_binding_build_address (loc : location_t, type : tree_t, valu
 pub extern (C) fn c_binding_build_memcpy (loc : location_t, left : tree_t, right : tree_t)-> tree_t;
 pub extern (C) fn c_binding_build_call_ehptr ()-> tree_t;
 pub extern (C) fn c_binding_build_compound (list : tree_t, value : tree_t)-> tree_t;
-pub extern (C) fn c_binding_build_call (loc : location_t, retType : tree_t, func : tree_t, nbParams : u64, params : &tree_t)-> tree_t;
-pub extern (C) fn c_binding_build_call_from_name (loc : location_t, retType : tree_t, name : &c8, nbParams : u64, params : &tree_t)-> tree_t;
+pub extern (C) fn c_binding_build_call (loc : location_t, retType : tree_t, func : tree_t, nbParams : u64, params : *tree_t)-> tree_t;
+pub extern (C) fn c_binding_build_call_from_name (loc : location_t, retType : tree_t, name : *c8, nbParams : u64, params : *tree_t)-> tree_t;
 pub extern (C) fn c_binding_build_array_ref (loc : location_t, array : tree_t, index : tree_t)-> tree_t;
 pub extern (C) fn c_binding_convert (type : tree_t, value : tree_t)-> tree_t;
-pub extern (C) fn c_binding_build_binary (loc : location_t, op : &c8, type : tree_t, left : tree_t, right : tree_t, pointer : bool, fl : bool)-> tree_t;
-pub extern (C) fn c_binding_build_unary (loc : location_t, op : &c8, type : tree_t, operand : tree_t, bl : bool)-> tree_t;
-pub extern (C) fn c_binding_build_label_decl (loc : location_t, name : &c8)-> tree_t;
+pub extern (C) fn c_binding_build_binary (loc : location_t, op : *c8, type : tree_t, left : tree_t, right : tree_t, pointer : bool, fl : bool)-> tree_t;
+pub extern (C) fn c_binding_build_unary (loc : location_t, op : *c8, type : tree_t, operand : tree_t, bl : bool)-> tree_t;
+pub extern (C) fn c_binding_build_label_decl (loc : location_t, name : *c8)-> tree_t;
 pub extern (C) fn c_binding_build_label_expr (loc : location_t, label : tree_t)-> tree_t;
 pub extern (C) fn c_binding_build_goto_expr (loc : location_t, label : tree_t)-> tree_t;
 pub extern (C) fn c_binding_build_cond_expr (loc : location_t, test : tree_t, gotoS : tree_t, gotoF : tree_t)-> tree_t;
@@ -175,13 +175,13 @@ pub extern (C) fn c_binding_build_float_cst_value_64 (type : tree_t, value : f64
 pub extern (C) fn c_binding_build_nan_cst_value (type : tree_t)-> tree_t;
 pub extern (C) fn c_binding_build_inf_pos_cst_value (type : tree_t)-> tree_t;
 pub extern (C) fn c_binding_build_inf_neg_cst_value (type : tree_t)-> tree_t;
-pub extern (C) fn c_binding_build_float_cst_value_str (type : tree_t, value : &c8)-> tree_t;
-pub extern (C) fn c_binding_build_constructor_indexed (type : tree_t, nbElems : u64, elems : &tree_t)-> tree_t;
+pub extern (C) fn c_binding_build_float_cst_value_str (type : tree_t, value : *c8)-> tree_t;
+pub extern (C) fn c_binding_build_constructor_indexed (type : tree_t, nbElems : u64, elems : *tree_t)-> tree_t;
 pub extern (C) fn c_binding_build_constructor_indexed_one_value (type : tree_t, nbElems : u64, elem : tree_t)-> tree_t;
-pub extern (C) fn c_binding_build_constructor_fields (type : tree_t, nbElems : u64, elems : &tree_t, nbFieldNames : u64, fieldNames : &(&c8))-> tree_t;
-pub extern (C) fn c_binding_build_string_literal (len : u64, content : &u8)-> tree_t;
-pub extern (C) fn c_binding_build_string_literal (len : u64, content : &u16)-> tree_t;
-pub extern (C) fn c_binding_build_string_literal (len : u64, content : &u32)-> tree_t;
+pub extern (C) fn c_binding_build_constructor_fields (type : tree_t, nbElems : u64, elems : *tree_t, nbFieldNames : u64, fieldNames : *(*c8))-> tree_t;
+pub extern (C) fn c_binding_build_string_literal (len : u64, content : *u8)-> tree_t;
+pub extern (C) fn c_binding_build_string_literal (len : u64, content : *u16)-> tree_t;
+pub extern (C) fn c_binding_build_string_literal (len : u64, content : *u32)-> tree_t;
 pub extern (C) fn c_binding_promote (val : tree_t)-> tree_t;
 pub extern (C) fn c_binding_build_try_finally_declaration (loc : location_t, try : tree_t, fin : tree_t)-> tree_t;
 pub extern (C) fn c_binding_build_try_catch_declaration (loc : location_t, try : tree_t, ct : tree_t)-> tree_t;

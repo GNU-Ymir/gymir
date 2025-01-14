@@ -1,11 +1,11 @@
-mod binding::tree::stmtlist;
+in stmtlist;
 
-import binding::tree::c_tree;
+use binding::tree::c_tree;
 
 /**
  * A statement list is a list of trees
  */
-pub class TreeStatementList {
+pub record TreeStatementList {
 
     // The content of the tree list
     let _list : tree_t;
@@ -23,13 +23,11 @@ pub class TreeStatementList {
      * @params:
      *    - t: the expression to append
      */
-    pub fn append (mut self, t : tree_t) -> dmut &TreeStatementList {
-        if (t !is null) {
+    pub fn append (mut self, t : tree_t) {
+        if (t != null) {
             self._isEmpty = false;
             c_binding_append_to_statement_list (t, &self._list);
         }
-
-        return alias self;
     }
 
     pub fn isEmpty (self)-> bool {

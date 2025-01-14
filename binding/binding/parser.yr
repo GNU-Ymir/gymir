@@ -1,0 +1,129 @@
+in parser;
+
+use ymirc::parser;
+use ymirc::{args, utils::_, errors::_};
+use ymirc::global::_;
+use std::{io, conv};
+
+use version;
+use generator::visitor;
+
+extern (C) fn _yrt_exc_init ();
+extern (C) fn _yrt_force_debug (f : i32);
+extern (C) fn c_binding_fatal_error ();
+
+extern (C) fn ymir_binding_init () {
+    _yrt_exc_init ();
+
+    __version DEBUG {
+        _yrt_force_debug (1);
+    }
+}
+
+extern (C) fn ymir_binding_parse_file (nb_files : u32, filenames : *(*c8)) {
+    for i in 0u32 .. nb_files {
+        let filename = filenames [i].fromStringZ ();
+
+        let args = YmirArguments (file-> filename);
+        let nodes = {
+            let dmut parser = copy Parser (args);
+            parser:.parseAll ();
+            parser.getOptYILNodes ()
+        } catch {
+            err : &ErrorMsg => {
+                println (format ("%", err));
+                __version DEBUG {
+                    for j in err.getRecursiveTrace () {
+                        println (j);
+                    }
+                }
+
+                c_binding_fatal_error ();
+                return;
+            }
+        }
+
+        let mut generator = GenerateVisitor ();
+        for n in nodes {
+            generator:.generate (n);
+        }
+    }
+}
+
+extern (C) fn ymir_binding_d_add_builtin_version (version : *c8) {
+    let v = version.fromStringZ ();
+    for d_v in D_VERSIONS::__members__ {
+        if d_v._0 == v {
+            state::instance ():.addVersion (d_v._1);
+            return;
+        }
+    }
+}
+
+extern (C) fn ymir_binding_set_size_type (size : u32) {
+    state::instance ():.setSizeTypeSize (size);
+}
+
+extern (C) fn ymir_binding_set_float_size_type (size : u32) {
+    state::instance ():.setFloatTypeSize (size);
+}
+
+extern (C) fn ymir_binding_activate_debug (a : bool) {
+    if (a) {
+        state::instance ():.activateDebug ();
+        state::instance ():.addVersion (Versions::DEBUG);
+    }
+}
+
+extern (C) fn ymir_binding_activate_verbose (a : bool) {
+    if (a)
+        state::instance ():.activateVerbose ();
+}
+
+extern (C) fn ymir_binding_activate_standalone (a : bool) {
+    if (a) {
+        state::instance ():.activateStandalone ();
+        state::instance ():.addVersion (Versions::STANDALONE);
+    }
+}
+
+extern (C) fn ymir_binding_activate_include_testing (a : bool) {
+    if (a) {
+        state::instance ():.activateUnittest ();
+        state::instance ():.addVersion (Versions::UNITTEST);
+    }
+}
+
+extern (C) fn ymir_binding_activate_doc_dumping (a : bool) {
+    if (a) {
+        state::instance ():.activateDocDumping ();
+    }
+}
+
+extern (C) fn ymir_binding_add_include_dir (dir : *c8) {
+    state::instance ():.addIncludeDir (fromStringZ (dir));
+}
+
+extern (C) fn ymir_binding_add_version (ver : *c8) {
+    state::instance ():.addVersion (fromStringZ (ver));
+}
+
+extern (C) fn ymir_binding_set_prefix (pref : *c8) {
+    state::instance ():.setPrefix (fromStringZ (pref));
+}
+
+extern (C) fn ymir_binding_set_executable_name (name : *c8) {
+    state::instance ():.setExecutable (fromStringZ (name));
+}
+
+extern (C) fn ymir_binding_activate_ymir_dumping (a : bool) {
+    if (a) {
+        state::instance ():.activateYmirDumping ();
+    }
+}
+
+extern (C) fn ymir_binding_activate_import_dumping (a : bool) {
+    if (a) {
+        state::instance ():.activateSymTreeDumping ();
+    }
+}

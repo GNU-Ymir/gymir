@@ -1,24 +1,23 @@
-mod binding::tree::chain;
+in chain;
 
-import binding::tree::c_tree;
+use binding::tree::c_tree;
 
+@final
 pub class TreeChain {
     let mut _first : tree_t = null;
     let mut _last : tree_t = null;
 
     pub self () {}
 
-    pub fn append (mut self, t : tree_t)-> dmut &TreeChain {
-        if (t is null) { __pragma!panic (); }
-        if (self._first is null) {
+    pub fn append (mut self, t : tree_t) {
+        if (t == null) { panic; }
+        if (self._first == null) {
             self._first = t;
             self._last = t;
         } else {
             c_binding_tree_chain_set (self._last, t);
             self._last = t;
         }
-
-        return alias self;
     }
 
     pub fn getTree (self)-> tree_t {
@@ -27,28 +26,27 @@ pub class TreeChain {
 
 }
 
+@final
 pub class BlockChain {
     let mut _first : tree_t = null;
     let mut _last : tree_t = null;
 
     pub self () {}
 
-    pub fn append (mut self, t : tree_t)-> dmut &BlockChain {
-        if (t is null) { __pragma!panic (); }
-        if (self._first is null) {
+    pub fn append (mut self, t : tree_t) {
+        if (t == null) { panic; }
+        if (self._first == null) {
             self._first = t;
             self._last = t;
         } else {
             c_binding_block_chain_set (self._last, t);
             self._last = t;
         }
-
-        return alias self;
     }
 
     pub fn setSuperContext (mut self, block : tree_t) {
         let mut current = self._first;
-        while (current !is null) {
+        while (current != null) {
             c_binding_set_block_super_context (current, block);
             current = c_binding_block_chain_get (current);
         }
@@ -60,7 +58,12 @@ pub class BlockChain {
 
 }
 
-pub struct
-| bind : tree_t
-| block : tree_t
- -> TreeSymbolMapping;
+pub record TreeSymbolMapping {
+    pub let bind : tree_t;
+    pub let block : tree_t;
+
+    pub self (bind : tree_t, block : tree_t)
+        with bind = bind
+        , block = block
+    {}
+}

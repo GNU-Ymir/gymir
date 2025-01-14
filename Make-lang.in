@@ -30,44 +30,30 @@ ALL_GYMIRFLAGS = -g $(PICFLAG)
 YCOMPILE.base = $(CXX) $(NO_PIE_CFLAGS) -c $(ALL_YFLAGS) $(INCLUDES) -o $@ -std=c++17
 YCOMPILE = $(YCOMPILE.base) -MT $@ -MMD -MP -MF $(@D)/$(DEPDIR)/$(*F).TPo
 YPOSTCOMPILE = @mv $(@D)/$(DEPDIR)/$(*F).TPo $(@D)/$(DEPDIR)/$(*F).Po
-YLINKER = /usr/bin/gyc $(NO_PIE_CFLAG) $(ALL_GYMIRFLAGS) -lstdc++ -lgymidgard-debug -ldwarf
+YLINKER = /usr/bin/gyc $(NO_PIE_CFLAG) $(ALL_GYMIRFLAGS) -lstdc++ -lgymidgard-bootstrap-debug -ldwarf
 
 GYMIRCOMPILE.base = /usr/bin/gyc $(NO_PIE_CFLAGS) -c $(ALL_GYMIRFLAGS) -o $@
-GYMIRCOMPILE = $(GYMIRCOMPILE.base) -MT $@ -MMD -MP -MF $(@D)/$(DEPDIR)/$(*F).TPo
+GYMIRCOMPILE = $(GYMIRCOMPILE.base) -fv -g
 
 # The compiler proper
  
 ymir_OBJS = \
-    ymir/binding_parser.o \
 	ymir/ymir1.o \
-    ymir/generator_visitor.o \
-    ymir/tree_c_tree.o \
-    ymir/tree_stmtlist.o \
     ymir/tree_c_bind.o \
-    ymir/tree_chain.o \
-    ymir/tree_types.o \
-    ymir/tree_decl.o \
-    ymir/tree_expr.o \
+    ymir/libbinding.a \
     ymir/libymirc.a \
 	$(END)	
 
 bootstrap_objs := $(shell find $(ROOT_DIR)/$(srcdir)/ymir/bootstrap/src | grep [.]yr)
+binding_objs := $(shell find $(ROOT_DIR)/$(srcdir)/ymir/binding | grep [.]yr)
 
 ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)
 	+$(YLINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) -o $@ \
 	attribs.o $(ymir_OBJS) $(D_TARGET_OBJS) $(BACKEND) $(LIBS) $(BACKENDLIBS) libbackend.a
 
-ymir/binding_%.o: ymir/binding/%.yr ymir/libymirc.a
-	  $(GYMIRCOMPILE) -I$(ROOT_DIR)/$(srcdir)/ymir/bootstrap/src -I$(ROOT_DIR)/$(srcdir)/ymir/ $<
-	  $(YPOSTCOMPILE)
-
-ymir/generator_%.o: ymir/binding/generator/%.yr ymir/libymirc.a
-	  $(GYMIRCOMPILE) -I$(ROOT_DIR)/$(srcdir)/ymir/bootstrap/src -I$(ROOT_DIR)/$(srcdir)/ymir/ $<
-	  $(YPOSTCOMPILE)
-
-ymir/tree_%.o: ymir/binding/tree/%.yr ymir/libymirc.a
-	  $(GYMIRCOMPILE) -I$(ROOT_DIR)/$(srcdir)/ymir/bootstrap/src -I$(ROOT_DIR)/$(srcdir)/ymir/ $<
-	  $(YPOSTCOMPILE)
+ymir/libbinding.a: $(binding_objs) ymir/libymirc.a
+	  $(GYMIRCOMPILE) -I$(ROOT_DIR)/$(srcdir)/ymir/bootstrap/src/ymirc.yr $(srcdir)/ymir/binding/__lib__.yr -c -o $(srcdir)/ymir/binding/libbinding.o ; \
+      cp $(srcdir)/ymir/binding/libbinding.o $@
 
 ymir/tree_%.o: ymir/binding/tree/%.cc ymir/libymirc.a
 	  $(YCOMPILE) $(GYC_INCLUDES) $<
@@ -75,7 +61,7 @@ ymir/tree_%.o: ymir/binding/tree/%.cc ymir/libymirc.a
 
 ymir/libymirc.a: $(bootstrap_objs)
 	  cd $(srcdir)/ymir/bootstrap/ ; gyllir build || (echo "gyllir failed $$?"; sh -c 'exit 1') ; cd - ; \
-	  cp $(srcdir)/ymir/bootstrap/__libs/libymirc.a $@
+	  cp $(srcdir)/ymir/bootstrap/libymirc.a $@
 
 ymir.all.cross: 
  

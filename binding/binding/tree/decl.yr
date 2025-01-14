@@ -1,10 +1,10 @@
-mod binding::tree::decl;
+in decl;
 
-import ymirc::lexing::word;
-import binding::tree::c_tree;
-import std::conv;
+use ymirc::lexing::word;
+use binding::tree::c_tree;
+use std::conv;
 
-static mut __LAST_LABEL_ID__ = 0us;
+lazy dmut __LAST_LABEL_ID__ = copy [0us];
 
 extern (C) fn ymir_get_global_context_bind ()-> tree_t;
 
@@ -45,8 +45,8 @@ pub fn paramDeclTree (loc : &Word, name : [c8], type : tree_t)-> tree_t {
  *     - label: the name of the label
  * */
 pub fn labelDeclTree (loc : &Word, context : tree_t, name : [c8])-> tree_t {
-    let labelId = name ~ "["s8 ~ (__LAST_LABEL_ID__ + 1us).to![c8] () ~ "]"s8;
-    __LAST_LABEL_ID__ += 1us;
+    let labelId = name ~ "["s8 ~ (__LAST_LABEL_ID__ [0] + 1us).to![c8] () ~ "]"s8;
+    __LAST_LABEL_ID__ [0] += 1us;
 
     let decl = c_binding_build_label_decl (wordToLocation (loc), labelId.toStringZ ());
     c_binding_set_decl_context (decl, context);
@@ -77,9 +77,9 @@ pub fn setAsmName (decl : tree_t, name : [c8]) {
  * @returns: the assembly name of a declaration
  * */
 pub fn getAsmName (decl : tree_t)-> [c8] {
-    c_binding_get_asm_name (decl).fromStringZ ()
-} catch {
-    _ => []
+    unsafe {
+        c_binding_get_asm_name (decl).fromStringZ ()
+    }
 }
 
 /**

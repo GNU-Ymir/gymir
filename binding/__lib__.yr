@@ -1,0 +1,3 @@
+in __lib__;
+
+pub mod .binding;
