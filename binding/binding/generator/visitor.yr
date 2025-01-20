@@ -279,7 +279,7 @@ pub record GenerateVisitor {
      * Gneerate a type tree from a YILArray
      * */
     fn generateArrayType (self, type : &YILArray)-> tree_t {
-        if let Ok (t) = validatedTypes [type]? {
+        if let Ok (t) = validatedTypes [type] {
             return t;
         }
 
@@ -294,7 +294,7 @@ pub record GenerateVisitor {
      * Generate a type tree from a tuple type
      * */
     fn generateTupleType (self, type : &YILTuple)-> tree_t {
-        if let Ok (t) = validatedTypes [type]? {
+        if let Ok (t) = validatedTypes [type] {
             return t;
         }
 
@@ -831,7 +831,7 @@ pub record GenerateVisitor {
      * @returns: the variable declaration if any
      * */
     pub fn getVariable (self, id : usize)-> (tree_t)? {
-        self._varDecls [$ - 1us][id]?
+        self._varDecls [$ - 1us][id]
     }
 
     /**
@@ -845,6 +845,6 @@ pub record GenerateVisitor {
      * @returns: the label declaration if any
      * */
     pub fn getLabel (self, id : usize)-> (tree_t)? {
-        self._labels [$ - 1us][id]?
+        self._labels [$ - 1us][id]
     }
 }
