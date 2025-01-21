@@ -9,7 +9,7 @@ use binding::tree::_;
 
 use std::io;
 
-lazy dmut validatedTypes : [&YILType => tree_t] = [];
+lazy dmut validatedTypes : [&YILType => tree_t] = copy [];
 
 /**
  * This generator class transform ymirc YIL nodes into GCC trees
@@ -25,7 +25,7 @@ pub record GenerateVisitor {
      */
 
     // The list of defined frames
-    let mut _definedFrame : [[c8] => mut ()] = [];
+    let mut _definedFrame : [[c8] => mut ()] = copy [];
 
     // The var decl stack of each block
     let mut _stackVarDeclChain : [dmut &TreeChain] = [];
@@ -759,8 +759,8 @@ pub record GenerateVisitor {
      * Enter a new frame generation
      * */
     pub fn enterFrame (mut self) {
-        self._varDecls ~= [cast!{[usize => tree_t]} ([])];
-        self._labels   ~= [cast!{[usize => tree_t]} ([])];
+        self._varDecls ~= [cast!{[usize => tree_t]} (copy [])];
+        self._labels   ~= [cast!{[usize => tree_t]} (copy [])];
     }
 
     /**
