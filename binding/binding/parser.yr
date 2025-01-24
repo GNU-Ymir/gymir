@@ -3,7 +3,7 @@ in parser;
 use ymirc::parser;
 use ymirc::{args, utils::_, errors::_};
 use ymirc::global::_;
-use std::{io, conv};
+use std::{io, conv, fs::path};
 
 use version;
 use generator::visitor;
@@ -125,5 +125,15 @@ extern (C) fn ymir_binding_activate_ymir_dumping (a : bool) {
 extern (C) fn ymir_binding_activate_import_dumping (a : bool) {
     if (a) {
         state::instance ():.activateSymTreeDumping ();
+    }
+}
+
+extern (C) fn ymir_binding_insert_filtering_module (name : *c8) {
+    state::instance ():.insertPathFilter (Path (fromStringZ (name)).stripExtension ());
+}
+
+extern (C) fn ymir_binding_activate_depency_dumping (b : bool) {
+    if (b) {
+        state::instance ():.activateDependencyDumping ();
     }
 }

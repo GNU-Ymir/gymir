@@ -44,6 +44,12 @@ YMIR
 fversion=
 YMIR Joined
 
+fmodule=
+YMIR Joined
+
+fdump-deps
+YMIR
+
 funittest
 YMIR Driver
 

@@ -77,3 +77,5 @@ extern "C" void ymir_binding_add_include_dir (const char* dir);
 extern "C" void ymir_binding_add_version (const char* ver);
 extern "C" void ymir_binding_set_prefix (const char* pref);
 extern "C" void ymir_binding_set_executable_name (const char* pref);
+extern "C" void ymir_binding_insert_filtering_module (const char * filter);
+extern "C" void ymir_binding_activate_depency_dumping (bool);

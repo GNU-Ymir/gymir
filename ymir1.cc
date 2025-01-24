@@ -275,8 +275,12 @@ ymir_langhook_handle_option (size_t scode ATTRIBUTE_UNUSED,
     ymir_binding_activate_ymir_dumping (true);
   } else if (code == OPT_fdump_syms) {
     ymir_binding_activate_import_dumping (true);
+  } else if (code == OPT_fdump_deps) {
+    ymir_binding_activate_depency_dumping (true);
   } else if (code == OPT_fversion_) {
     ymir_binding_add_version (arg);
+  } else if (code == OPT_fmodule_) {
+    ymir_binding_insert_filtering_module (arg);
   } else if (code == OPT_imultilib) {
     // set multilib
   } else {
