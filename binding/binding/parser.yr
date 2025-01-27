@@ -132,8 +132,6 @@ extern (C) fn ymir_binding_insert_filtering_module (name : *c8) {
     state::instance ():.insertPathFilter (Path (fromStringZ (name)).stripExtension ());
 }
 
-extern (C) fn ymir_binding_activate_depency_dumping (b : bool) {
-    if (b) {
-        state::instance ():.activateDependencyDumping ();
-    }
+extern (C) fn ymir_binding_activate_dependency_dumping (loc : *c8) {
+    state::instance ():.activateDependencyDumping (Path (fromStringZ (loc)));
 }
