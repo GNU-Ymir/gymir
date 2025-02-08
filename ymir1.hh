@@ -67,7 +67,7 @@ extern "C" void ymir_binding_init ();
 extern "C" void ymir_binding_activate_debug (bool);
 extern "C" void ymir_binding_activate_verbose (bool);
 extern "C" void ymir_binding_activate_standalone (bool);
-extern "C" void ymir_binding_activate_doc_dumping (bool);
+extern "C" void ymir_binding_activate_doc_dumping (const char* file);
 extern "C" void ymir_binding_activate_include_testing (bool);
 extern "C" void ymir_binding_activate_ymir_dumping (bool);
 extern "C" void ymir_binding_activate_import_dumping (bool);

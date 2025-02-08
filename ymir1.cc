@@ -268,7 +268,7 @@ ymir_langhook_handle_option (size_t scode ATTRIBUTE_UNUSED,
   } else if (code == OPT_nostdinc)  {
     ymir_binding_activate_standalone (true);
   } else if (code == OPT_fdoc) {
-    ymir_binding_activate_doc_dumping (true);
+    ymir_binding_activate_doc_dumping (arg);
   } else if (code == OPT_funittest) {
     ymir_binding_activate_include_testing (true);
   } else if (code == OPT_fdump_ymir) {
