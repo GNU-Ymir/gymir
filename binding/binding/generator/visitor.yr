@@ -290,7 +290,6 @@ pub record GenerateVisitor {
         let inner = self:.generateType (type.getInner ());
         let t = c_binding_build_array_type (inner, cast!u64 (type.getLen ()));
         self._generatedTypes [type.getUniqId ()] = t;
-
         return t;
     }
 
@@ -323,7 +322,7 @@ pub record GenerateVisitor {
 
         let inner = self:.generateType (type.getInner ());
         let ret = types::pointerTypeTree (inner);
-        self._generatedTypes [type.getUniqId ()];
+        self._generatedTypes [type.getUniqId ()] = ret;
         ret
     }
 
