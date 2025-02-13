@@ -319,20 +319,14 @@ ymir_langhook_type_for_mode (enum machine_mode mode, int unsignedp)
   if (mode == TYPE_MODE (y_isize_type))
   return unsignedp ? y_usize_type : y_isize_type;
 
-  if (mode == TYPE_MODE (float_type_node))
-  return float_type_node;
+  if (mode == TYPE_MODE (y_f32_type))
+  return y_f32_type;
 
-  if (mode == TYPE_MODE (double_type_node))
-  return double_type_node;
+  if (mode == TYPE_MODE (y_f64_type))
+  return y_f64_type;
 
-  if (mode == TYPE_MODE (long_double_type_node))
-  return long_double_type_node;
-
-  if (mode == TYPE_MODE (build_pointer_type (y_c8_type)))
-  return build_pointer_type (y_c8_type);
-
-  if (mode == TYPE_MODE (build_pointer_type (y_i32_type)))
-  return build_pointer_type (y_i32_type);
+  if (mode == TYPE_MODE (y_f80_type))
+  return y_f80_type;
 
   for (int i = 0; i < NUM_INT_N_ENTS; i ++)
   {
@@ -345,8 +339,7 @@ ymir_langhook_type_for_mode (enum machine_mode mode, int unsignedp)
     }
   }
   
-  if (COMPLEX_MODE_P (mode))
-  {
+  if (COMPLEX_MODE_P (mode)) {
     if (mode == TYPE_MODE (complex_float_type_node))
     return complex_float_type_node;
     if (mode == TYPE_MODE (complex_double_type_node))
@@ -355,12 +348,15 @@ ymir_langhook_type_for_mode (enum machine_mode mode, int unsignedp)
     return complex_long_double_type_node;
     if (mode == TYPE_MODE (complex_integer_type_node) && !unsignedp)
     return complex_integer_type_node;
-  } else if (VECTOR_MODE_P (mode)) {
-    machine_mode inner_mode = (machine_mode) GET_MODE_INNER (mode);
-    tree inner_type = ymir_langhook_type_for_mode (inner_mode, unsignedp);
-    if (inner_type != NULL_TREE)
-    return build_vector_type_for_mode (inner_type, mode);
   }
+
+  // else if (VECTOR_MODE_P (mode)) {
+  // machine_mode inner_mode = (machine_mode) GET_MODE_INNER (mode);
+  // tree inner_type = ymir_langhook_type_for_mode (inner_mode, unsignedp);
+
+  // if (inner_type != NULL_TREE) {
+  //   return build_vector_type_for_mode (inner_type, mode);
+  // }
 
   /* gcc_unreachable */
   return NULL;
