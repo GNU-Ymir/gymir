@@ -35,10 +35,10 @@ pub record GenerateVisitor {
     let mut _currentFunctionContext : tree_t = null;
 
     // The declaration of the variable in the current function context id => varDeclTree
-    let mut _varDecls : [dmut [usize => tree_t]] = [];
+    let mut _varDecls : [mut [usize => mut tree_t]] = [];
 
     // The declaration of the labels in the current function context id => labelDecl
-    let mut _labels : [dmut [usize => tree_t]] = [];
+    let mut _labels : [mut [usize => mut tree_t]] = [];
 
     // The location of the block opening / closing
     let mut _blockLocs : [mut &Word] = [];
