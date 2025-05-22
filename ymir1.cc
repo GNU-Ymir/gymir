@@ -14,6 +14,7 @@
 #include "langhooks.h"
 #include "langhooks-def.h"
 #include "common/common-target.h"
+#include "builtins.h"
 
 #include <map>
 
@@ -99,14 +100,13 @@ void d_add_builtin_version (const char* v) {
 }
 
 
-static void
-ymir_init_builtins () {
+static void ymir_init_builtin_types () {
   y_bool_type = make_unsigned_type (1);
   TREE_SET_CODE (y_bool_type, BOOLEAN_TYPE);
-  
+
   y_u8_type = make_unsigned_type (8);
   y_i8_type = make_signed_type (8);
-  
+
   y_u16_type = make_unsigned_type (16);
   y_i16_type = make_signed_type (16);
 
@@ -115,7 +115,7 @@ ymir_init_builtins () {
 
   y_u64_type = make_unsigned_type (64);
   y_i64_type = make_signed_type (64);
-    
+
   {
     machine_mode type_mode = TYPE_MODE (size_type_node);
     size_type_node = lang_hooks.types.type_for_mode (type_mode, 1);
@@ -135,7 +135,7 @@ ymir_init_builtins () {
 
   y_c16_type = make_unsigned_type (16);
   TYPE_STRING_FLAG (y_c16_type) = 1;
-  
+
   y_c32_type = make_unsigned_type (32);
   TYPE_STRING_FLAG (y_c32_type) = 1;
 
@@ -144,6 +144,58 @@ ymir_init_builtins () {
   y_f80_type = build_distinct_type_copy (long_double_type_node);
 }
 
+void ymir_define_builtin (built_in_function bcode, const char * name, const char * libname, tree fntype, int flags) {
+  tree decl = add_builtin_function(name, fntype, bcode, BUILT_IN_NORMAL, libname, NULL_TREE);
+  if ((flags & builtin_const) != 0)
+  TREE_READONLY(decl) = 1;
+  if ((flags & builtin_pure) != 0)
+  DECL_PURE_P(decl) = 1;
+  if ((flags & builtin_nothrow) != 0)
+  TREE_NOTHROW (decl) = 1;
+  if ((flags & builtin_noreturn) != 0)
+  TREE_THIS_VOLATILE(decl) = 1;
+  if ((flags & builtin_novops) != 0)
+  DECL_IS_NOVOPS(decl) = 1;
+
+  set_builtin_decl(bcode, decl, true);
+
+  if (libname != NULL) {
+    decl = add_builtin_function(libname, fntype, bcode, BUILT_IN_NORMAL, NULL, NULL_TREE);
+
+    if ((flags & builtin_const) != 0)
+    TREE_READONLY(decl) = 1;
+    if ((flags & builtin_pure) != 0)
+    DECL_PURE_P(decl) = 1;
+    if ((flags & builtin_nothrow) != 0)
+    TREE_NOTHROW (decl) = 1;
+    if ((flags & builtin_noreturn) != 0)
+    TREE_THIS_VOLATILE(decl) = 1;
+    if ((flags & builtin_novops) != 0)
+    DECL_IS_NOVOPS(decl) = 1;
+  }
+
+}
+
+
+/* Build builtin functions and types for the Ymir language frontend.  */
+
+void ymir_init_builtins (void)
+{
+    ymir_init_builtin_types ();
+
+    ymir_define_builtin (BUILT_IN_CLZ, "__builtin_clz", "clz", build_function_type_list (y_i32_type, y_u32_type, NULL_TREE), builtin_const);
+    ymir_define_builtin (BUILT_IN_CLZL, "__builtin_clzl", "clzl", build_function_type_list (y_i32_type, y_u64_type, NULL_TREE), builtin_const);
+    ymir_define_builtin (BUILT_IN_CLZLL, "__builtin_clzll", "clzll", build_function_type_list (y_i32_type, y_usize_type, NULL_TREE), builtin_const);
+
+    ymir_define_builtin (BUILT_IN_CTZ, "__builtin_ctz", "ctz", build_function_type_list (y_i32_type, y_u32_type, NULL_TREE), builtin_const);
+    ymir_define_builtin (BUILT_IN_CTZL, "__builtin_ctzl", "ctzl", build_function_type_list (y_i32_type, y_u64_type, NULL_TREE), builtin_const);
+    ymir_define_builtin (BUILT_IN_CTZLL, "__builtin_ctzll", "ctzll", build_function_type_list (y_i32_type, y_usize_type, NULL_TREE), builtin_const);
+
+    targetm.init_builtins ();
+    build_common_builtin_nodes ();
+}
+
+
 /* Language hooks.  */
  
 static bool
@@ -151,16 +203,11 @@ ymir_langhook_init (void)
 {
 
   ymir_binding_init ();
-  /* NOTE: Newer versions of GCC use only:
-     build_common_tree_nodes (false);
-     See Eugene's comment in the comments section. */
   build_common_tree_nodes (false);
  
   /* I don't know why this has to be done explicitly.  */
   void_list_node = build_tree_list (NULL_TREE, void_type_node);
- 
   ymir_init_builtins ();
-  build_common_builtin_nodes ();
 
   using_eh_for_cleanups ();
 
@@ -350,15 +397,16 @@ ymir_langhook_type_for_mode (enum machine_mode mode, int unsignedp)
     return complex_integer_type_node;
   }
 
-  // else if (VECTOR_MODE_P (mode)) {
-  // machine_mode inner_mode = (machine_mode) GET_MODE_INNER (mode);
-  // tree inner_type = ymir_langhook_type_for_mode (inner_mode, unsignedp);
+  if (VECTOR_MODE_P (mode)) {
+    machine_mode inner_mode = (machine_mode) GET_MODE_INNER (mode);
+    tree inner_type = ymir_langhook_type_for_mode (inner_mode, unsignedp);
 
-  // if (inner_type != NULL_TREE) {
-  //   return build_vector_type_for_mode (inner_type, mode);
-  // }
+    if (inner_type != NULL_TREE) {
+      return build_vector_type_for_mode (inner_type, mode);
+    }
+  }
 
-  /* gcc_unreachable */
+    /* gcc_unreachable */
   return NULL;
 }
  

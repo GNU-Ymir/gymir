@@ -64,6 +64,7 @@ extern "C" void ymir_binding_d_add_builtin_version (const char * version);
 extern "C" void ymir_binding_set_size_type (uint32_t size);
 extern "C" void ymir_binding_set_float_size_type (uint32_t size);
 extern "C" void ymir_binding_init ();
+extern "C" void ymir_init_builtins ();
 extern "C" void ymir_binding_activate_debug (bool);
 extern "C" void ymir_binding_activate_verbose (bool);
 extern "C" void ymir_binding_activate_standalone (bool);
@@ -78,3 +79,10 @@ extern "C" void ymir_binding_set_prefix (const char* pref);
 extern "C" void ymir_binding_set_executable_name (const char* pref);
 extern "C" void ymir_binding_insert_filtering_module (const char * filter);
 extern "C" void ymir_binding_activate_dependency_dumping (const char * loc);
+
+
+#define builtin_const 1 << 0
+#define builtin_noreturn 1 << 1
+#define builtin_novops 1 << 2
+#define builtin_pure 1 << 3
+#define builtin_nothrow 1 << 4
