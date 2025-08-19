@@ -71,6 +71,13 @@ pub def pointerTypeTree = c_binding_build_pointer_type;
 
 
 /**
+ * Prepare a tuple type for future finalization
+ * */
+pub fn prepareTupleTypeTree (name : [c8], isUnion : bool = false)-> tree_t {
+    c_binding_prepare_tuple_type (name.toStringZ (), isUnion)
+}
+
+/**
  * @params:
  *    - name: the name of the tuple type
  *    - fields: the type of the fields of the tuple
@@ -79,12 +86,38 @@ pub def pointerTypeTree = c_binding_build_pointer_type;
  *    - isPacked: true if the tuple is packed in memory
  * @returns: a tuple type tree
  */
-pub fn tupleTypeTree (name : [c8], fields : [tree_t], fieldNames : [[c8]], isUnion : bool = false, isPacked : bool = false)-> tree_t {
+pub fn setTupleFieldsTree (base : tree_t, fields : [tree_t], fieldNames : [[c8]]) {
     let fieldStringZ = copy [f.toStringZ () for f in fieldNames];
-    return c_binding_build_tuple_type (name.toStringZ (),
-                                       cast!u64 (fields.len), fields.ptr,
-                                       cast!u64 (fieldStringZ.len), fieldStringZ.ptr,
-                                       isUnion, isPacked);
+    c_binding_set_tuple_fields_type (base,
+                                    cast!u64 (fields.len), fields.ptr,
+                                    cast!u64 (fieldStringZ.len), fieldStringZ.ptr);
+}
+
+/**
+ * */
+pub fn finalizeTupleTypeTree (base : tree_t, isUnion : bool, isPacked : bool, size : u32) {
+    c_binding_finalize_tuple_type (base, isUnion, isPacked, size);
+}
+
+/**
+ * @params:
+ *    - name: the name of the tuple type
+ *    - fields: the type of the fields of the tuple
+ *    - fieldNames: the name of the fields of the tuple (can be smaller than fields, in that case ._0, ._1, etc. are added)
+ *    - isUnion: true if the tuple is an union type
+ *    - isPacked: true if the tuple is packed in memory
+ * @returns: a tuple type tree
+ */
+pub fn tupleTypeTree (name : [c8], fields : [tree_t], fieldNames : [[c8]], isUnion : bool = false, isPacked : bool = false, size : u32)-> tree_t {
+    let fieldStringZ = copy [f.toStringZ () for f in fieldNames];
+
+    let base = c_binding_prepare_tuple_type (name.toStringZ (), isUnion);
+    c_binding_set_tuple_fields_type (base,
+                                    cast!u64 (fields.len), fields.ptr,
+                                    cast!u64 (fieldStringZ.len), fieldStringZ.ptr);
+    c_binding_finalize_tuple_type (base, isUnion, isPacked, size);
+
+    return base;
 }
 
 /**

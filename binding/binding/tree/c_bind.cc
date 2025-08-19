@@ -139,6 +139,7 @@ extern "C" tree c_binding_get_char_type (int32_t size) {
 }
 
 extern "C" tree c_binding_build_array_type (tree innertype, uint64_t size) {
+
     auto len = build_int_cst_type (y_usize_type, size - 1);
     auto begin = build_int_cst_type (y_usize_type, 0);
     auto range = build_range_type (y_i32_type, fold (begin), fold (len));
@@ -153,24 +154,29 @@ extern "C" tree c_binding_build_pointer_type (tree innerType) {
     return build_pointer_type (innerType);
 }
 
-extern "C" tree c_binding_build_tuple_type (const char * name, uint64_t nbFields, tree* fieldTypes, uint64_t nbFieldNames, const char ** fieldNames, bool isUnion, bool isPacked) {
-    tree field_last = nullptr, field_begin = nullptr;
+extern "C" tree c_binding_prepare_tuple_type (const char * name, bool isUnion) {
     tree record_type = nullptr;
     if (isUnion) {
         record_type = make_node (UNION_TYPE);
     } else record_type = make_node (RECORD_TYPE);
 
-    auto size = 0;
+    TYPE_NAME (record_type) = get_identifier (name);
+    return record_type;
+}
+
+extern "C" void c_binding_set_tuple_fields_type (tree record_type, uint64_t nbFields, tree* fieldTypes, uint64_t nbFieldNames, const char ** fieldNames) {
+    tree field_last = nullptr, field_begin = nullptr;
+
     for (uint64_t i = 0 ; i < nbFields ; i++) {
+        tree type = fieldTypes [i];
         tree ident ;
         if (i >= nbFieldNames) {
             char buffer [64];
             snprintf (buffer, 64, "_%ld", i);
             ident = get_identifier (buffer);
-        } else ident = get_identifier (fieldNames [i]);
-
-        tree type = fieldTypes [i];
-        size += TREE_INT_CST_LOW (TYPE_SIZE_UNIT (type));
+        } else {
+            ident = get_identifier (fieldNames [i]);
+        }
 
         tree field = build_decl (BUILTINS_LOCATION, FIELD_DECL, ident, type);
         DECL_FIELD_CONTEXT (field) = record_type;
@@ -180,21 +186,30 @@ extern "C" tree c_binding_build_tuple_type (const char * name, uint64_t nbFields
         field_last = field;
     }
 
-    TYPE_NAME (record_type) = get_identifier (name);
     if (field_last != nullptr) TREE_CHAIN (field_last) = nullptr;
 
     TYPE_FIELDS (record_type) = field_begin;
+}
+
+
+extern "C" void c_binding_finalize_tuple_type (tree record_type, bool isUnion, bool isPacked, uint32_t size) {
     layout_type (record_type);
 
     if (isPacked && !isUnion) {
-        TYPE_SIZE (record_type) = bitsize_int (size * BITS_PER_UNIT);
-        TYPE_SIZE_UNIT (record_type) = size_int (size);
+        uint32_t size__ = 0;
+        tree field_decl = TYPE_FIELDS (record_type);
+        while (field_decl != nullptr) {
+            size += TREE_INT_CST_LOW (TYPE_SIZE_UNIT (TREE_TYPE (field_decl)));
+            field_decl = TREE_CHAIN (field_decl);
+        }
+
+        TYPE_SIZE (record_type) = bitsize_int (size__ * BITS_PER_UNIT);
+        TYPE_SIZE_UNIT (record_type) = size_int (size__);
         TYPE_PACKED (record_type) = 1;
         SET_TYPE_ALIGN (record_type, 1 * BITS_PER_UNIT);
-        compute_record_mode (record_type);
-    } else compute_record_mode (record_type);
+    }
 
-    return record_type;
+    compute_record_mode (record_type);
 }
 
 extern "C" tree c_binding_build_option_type (uint64_t nbFieldNames, const char ** fieldNames, uint64_t nbCommon, tree * commons, uint64_t nbUnions, tree * unions) {

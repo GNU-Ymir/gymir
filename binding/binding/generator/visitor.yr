@@ -46,6 +46,18 @@ pub record GenerateVisitor {
     // The list of validated tuples
     let mut _generatedTypes : [usize => mut tree_t] = copy [];
 
+    prv { // Tuple validation
+
+        // The list of finalized tuple types
+        let mut _finalizedTuples : [usize => mut tree_t] = copy [];
+
+        // The list of tuples to finalize
+        let mut _toFinalize : [usize => mut (tree_t, [usize], bool, bool, u32)] = copy [];
+
+        let dmut _tupleRecursiveLevel : [usize => u32] = copy [];
+
+    }
+
     /**
      * ================================================================================
      * ================================================================================
@@ -101,6 +113,7 @@ pub record GenerateVisitor {
     fn generateFrame (mut self, frame : &YILFrame) {
         let fnDecl = self:.generateFunctionDecl (frame);
         let asmName = decl::getAsmName (fnDecl);
+
         logging::info ("Generate frame %"s8, frame.getName ());
 
         self:.setCurrentFunctionContext (fnDecl);
@@ -261,11 +274,11 @@ pub record GenerateVisitor {
     /**
      * Generate a type tree from a YILType
      * */
-    fn generateType (mut self, type : &YILType)-> tree_t {
+    fn generateType (mut self, type : &YILType, fromPointer : bool = false)-> tree_t {
         match type {
             // Compounds
             a : &YILArray   => { return self:.generateArrayType (a); }
-            t : &YILTuple   => { return self:.generateTupleType (t); }
+            t : &YILTuple   => { return self:.generateTupleType (t, fromPointer); }
             p : &YILPointer => { return self:.generatePointerType (p); }
 
             // Scalars
@@ -296,20 +309,62 @@ pub record GenerateVisitor {
     /**
      * Generate a type tree from a tuple type
      * */
-    fn generateTupleType (mut self, type : &YILTuple)-> tree_t {
-        if let Ok (t) = self._generatedTypes [type.getUniqId ()] {
+    fn generateTupleType (mut self, type : &YILTuple, fromPointer : bool)-> tree_t {
+        if let Ok (t) = self._finalizedTuples [type.getUniqId ()] {
             return t;
         }
 
-        let inners = copy [self:.generateType (ti) for ti in type.getInners ()];
-        let t = types::tupleTypeTree ("tuple"s8,
-                                      inners,
-                                      type.getFieldNames (),
-                                      isUnion-> type.isUnion (),
-                                      isPacked-> type.isPacked ());
+        if let Ok ((base, __ig__...)) = self._toFinalize [type.getUniqId ()] {
+            return base;
+        }
 
-        self._generatedTypes [type.getUniqId ()] = t;
-        return t;
+        let lvl = if let Ok (r) = self._tupleRecursiveLevel [type.getUniqId ()] {
+            r
+        } else {
+            0
+        };
+
+        self._tupleRecursiveLevel [type.getUniqId ()] = lvl + 1;
+
+        {
+            let base = if let Ok (t) = self._generatedTypes [type.getUniqId ()] {
+                t
+            } else {
+                types::prepareTupleTypeTree (format ("tuple_%", type.getUniqId ()), isUnion-> type.isUnion ())
+            };
+
+            if fromPointer && lvl != 0 {
+                return base;
+            }
+
+            self._generatedTypes [type.getUniqId ()] = base;
+            let inners = copy [self:.generateType (ti) for ti in type.getInners ()];
+
+            // Recursive already set the inner fields
+            if type.getUniqId () in self._toFinalize || type.getUniqId () in self._finalizedTuples {
+                return base;
+            }
+
+            types::setTupleFieldsTree (base, inners, type.getFieldNames ());
+            let dependencies = self.listDependencies (copy [ti.getUniqId () for ti in type.getInners ()]);
+            if  dependencies.len == 0 {
+                types::finalizeTupleTypeTree (base, isUnion-> type.isUnion (), isPacked-> type.isPacked (), size-> type.getSize ());
+                self._finalizedTuples [type.getUniqId ()] = base;
+            } else {
+                self._toFinalize [type.getUniqId ()] = (base, dependencies, type.isUnion (), type.isPacked (), type.getSize ());
+            }
+
+            return base;
+
+        } exit {
+            if lvl != 0 {
+                self._tupleRecursiveLevel [type.getUniqId ()] = lvl;
+            } else {
+                self._tupleRecursiveLevel:.remove (type.getUniqId ());
+            }
+
+            self:.finalizeTupleTypes (self._tupleRecursiveLevel.len == 0);
+        }
     }
 
     /**
@@ -320,10 +375,67 @@ pub record GenerateVisitor {
             return t;
         }
 
-        let inner = self:.generateType (type.getInner ());
+        let inner = self:.generateType (type.getInner (), fromPointer-> true);
         let ret = types::pointerTypeTree (inner);
         self._generatedTypes [type.getUniqId ()] = ret;
         ret
+    }
+
+    /**
+     * Finalize the tuple types that may be recursively dependent
+     * */
+    fn finalizeTupleTypes (mut self, force : bool) {
+        let lst = self:.createTupleDependencyList (force);
+        for l in lst {
+            types::finalizeTupleTypeTree (l._0, isUnion-> l._1, isPacked-> l._2, size-> l._3);
+            self._finalizedTuples [l._4] = l._0;
+        }
+    }
+
+    fn listDependencies (self, lst : [usize])-> [usize] {
+        let dmut res : [usize] = [];
+        for l in lst {
+            if l in self._toFinalize { res ~= [l]; }
+        }
+
+        res
+    }
+
+    fn createTupleDependencyList (mut self, force : bool)-> [(tree_t, bool, bool, u32, usize)] {
+        let dmut result : [(tree_t, bool, bool, u32, usize)] = [];
+
+        while self._toFinalize.len != 0 {
+            let mut fnd : (usize, tree_t, bool, bool, u32) = (0, null, false, false, 0);
+            let mut lst : (usize, tree_t, bool, bool, u32) = (0, null, false, false, 0);
+            for id, l in self._toFinalize {
+                let mut found = true;
+                for z in l._1 {
+                    if z in self._toFinalize {
+                        found = false;
+                        break;
+                    }
+                }
+
+                if found {
+                    fnd = (id, l._0, l._2, l._3, l._4);
+                    break;
+                }
+
+                lst = (id, l._0, l._2, l._3, l._4);
+            }
+
+            if fnd._1 == null {
+                if force { fnd = lst; }
+                else {
+                    break;
+                }
+            }
+
+            self._toFinalize:.remove (fnd._0);
+            result ~= [(fnd._1, fnd._2, fnd._3, fnd._4, fnd._0)];
+        }
+
+        result
     }
 
     /**
@@ -425,6 +537,7 @@ pub record GenerateVisitor {
      * */
     fn generateField (mut self, value : &YILFieldValue)-> tree_t {
         let inner = self:.generateValue (value.getValue ());
+
         let name = if value.getName ().len == 0us {
             format ("_%", value.getIndex ())
         } else { value.getName () };
