@@ -15,11 +15,11 @@
 #include <string>
 
 #ifndef LIBYMIDGARD_DEBUG
-#define LIBYMIDGARD_DEBUG "gymidgard-debug"
+#define LIBYMIDGARD_DEBUG "gymidgard-debug_1.0"
 #endif
 
 #ifndef LIBYMIDGARD_RELEASE
-#define LIBYMIDGARD_RELEASE "gymidgard-release"
+#define LIBYMIDGARD_RELEASE "gymidgard-release_1.0"
 #endif
 
 #ifndef LIBGC
@@ -43,7 +43,7 @@
 #endif
 
 #ifndef LIBUNITTEST
-#define LIBUNITTEST "gymidgard-tests"
+#define LIBUNITTEST "gymidgard-tests_1.0"
 #endif
 
 typedef unsigned int uint;
