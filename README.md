@@ -26,7 +26,7 @@ git checkout bootstrap
 ./configure.sh
 
 # install deps
-cd ${install_dir}/gcc/gcc-src/gcc
+cd ${install_dir}/gcc/gcc-src
 ./contrib/download_prerequisites
 
 # configure
