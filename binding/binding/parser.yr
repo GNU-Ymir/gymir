@@ -43,9 +43,12 @@ extern (C) fn ymir_binding_parse_file (nb_files : u32, filenames : *(*c8)) {
             }
         }
 
-        let mut generator = GenerateVisitor ();
-        for n in nodes {
-            generator:.generate (n);
+        // Don't generate symbols if we are generating YIL object files
+        if !global::state::instance ().isExportYIL () {
+            let mut generator = GenerateVisitor ();
+            for n in nodes {
+                generator:.generate (n);
+            }
         }
     }
 }
@@ -96,6 +99,10 @@ extern (C) fn ymir_binding_activate_include_testing (a : bool) {
 
 extern (C) fn ymir_binding_activate_doc_dumping (file : *c8) {
     state::instance ():.activateDocDumping (Path (fromStringZ (file)));
+}
+
+extern (C) fn ymir_binding_activate_export_yil (file : *c8) {
+    state::instance ():.activateYILExport (Path (fromStringZ (file)));
 }
 
 extern (C) fn ymir_binding_add_include_dir (dir : *c8) {

@@ -260,6 +260,7 @@ ymir_init_options (unsigned int argc ATTRIBUTE_UNUSED, cl_decoded_option * decod
     case OPT_fdump_ymir:
       ymir_binding_activate_ymir_dumping (true);
       break;
+      break;
     case OPT_fdump_syms:
       ymir_binding_activate_import_dumping (true);
       break;
@@ -328,6 +329,8 @@ ymir_langhook_handle_option (size_t scode ATTRIBUTE_UNUSED,
     ymir_binding_add_version (arg);
   } else if (code == OPT_fmodule) {
     ymir_binding_insert_filtering_module (arg);
+  } else if (code == OPT_fyil) {
+    ymir_binding_activate_export_yil (arg);
   } else if (code == OPT_imultilib) {
     // set multilib
   } else {
