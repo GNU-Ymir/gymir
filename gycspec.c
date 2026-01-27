@@ -89,10 +89,6 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 		}
 		
 		if (decoded_options [i].opt_index == OPT_fyil) {
-			for_yil = true;
-		}
-
-		if (decoded_options [i].opt_index == OPT_nomidgardlib || decoded_options [i].opt_index == OPT_fyil) {
 			need_gc = false;
 			need_libs = false;
 			need_pthread = false;
@@ -101,8 +97,16 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 			need_dwarf = false;
 			need_m = false;
 #endif
+			for_yil = true;
 		}
-		
+
+		if (decoded_options [i].opt_index == OPT_nomidgardlib) {
+			need_gc = false;
+			need_libs = false;
+			need_pthread = false;
+			need_unittest = false;
+		}
+
 		if (decoded_options [i].opt_index == OPT_funittest) {
 			need_unittest = true;
 		}
@@ -176,7 +180,7 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 
 		*in_decoded_options_count = num_args;
 		*in_decoded_options = new_decoded_options;
-		*in_added_libraries = added_libraries;
+		*in_added_libraries += added_libraries;
 	}
 
 }
