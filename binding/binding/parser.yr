@@ -136,6 +136,12 @@ extern (C) fn ymir_binding_activate_include_testing (a : bool) {
     }
 }
 
+extern (C) fn ymir_binding_deactivate_testing_coverage (a : bool) {
+    if (a) {
+        state::instance ():.deactivateCodeCoverage ();        
+    }
+}
+
 extern (C) fn ymir_binding_activate_doc_dumping (file : *c8) {
     state::instance ():.activateDocDumping (Path (fromStringZ (file)));
 }

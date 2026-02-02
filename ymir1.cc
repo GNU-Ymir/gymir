@@ -42,14 +42,14 @@ tree y_global_trees[YTI_MAX];
  
 struct GTY (()) lang_type
 {
-  char dummy;
+    char dummy;
 };
  
 /* Language-dependent contents of a decl.  */
  
 struct GTY (()) lang_decl
 {
-  char dummy;
+    char dummy;
 };
  
 /* Language-dependent contents of an identifier.  This must include a
@@ -57,7 +57,7 @@ struct GTY (()) lang_decl
  
 struct GTY (()) lang_identifier
 {
-  struct tree_identifier common;
+    struct tree_identifier common;
 };
  
 /* The resulting tree type.  */
@@ -67,8 +67,8 @@ union GTY ((desc ("TREE_CODE (&%h.generic) == IDENTIFIER_NODE"),
                         "TS_COMMON) ? ((union lang_tree_node *) TREE_CHAIN "
                         "(&%h.generic)) : NULL"))) lang_tree_node
 {
-  union tree_node GTY ((tag ("0"), desc ("tree_node_structure (&%h)"))) generic;
-  struct lang_identifier GTY ((tag ("1"))) identifier;
+    union tree_node GTY ((tag ("0"), desc ("tree_node_structure (&%h)"))) generic;
+    struct lang_identifier GTY ((tag ("1"))) identifier;
 };
  
 /* We don't use language_function.  */
@@ -76,7 +76,7 @@ union GTY ((desc ("TREE_CODE (&%h.generic) == IDENTIFIER_NODE"),
 struct GTY (()) language_function
 {
 
-  int dummy;
+    int dummy;
 };
 
 
@@ -88,7 +88,7 @@ struct GTY (()) language_function
  * Dlang target callback for target information in __traits(getTargetInfo)
  */
 void d_add_target_info_handlers (const d_target_info_spec * handlers ATTRIBUTE_UNUSED) {
-  // we have no use to that for the moment
+    // we have no use to that for the moment
 }
 #endif
 
@@ -96,72 +96,56 @@ void d_add_target_info_handlers (const d_target_info_spec * handlers ATTRIBUTE_U
  * Thanks to dlang we can use their version system for our version system !
  */
 void d_add_builtin_version (const char* v) {
-  ymir_binding_d_add_builtin_version (v);
+    ymir_binding_d_add_builtin_version (v);
 }
 
 
 static void ymir_init_builtin_types () {
-  y_bool_type = make_unsigned_type (1);
-  TREE_SET_CODE (y_bool_type, BOOLEAN_TYPE);
+    y_bool_type = make_unsigned_type (1);
+    TREE_SET_CODE (y_bool_type, BOOLEAN_TYPE);
 
-  y_u8_type = make_unsigned_type (8);
-  y_i8_type = make_signed_type (8);
+    y_u8_type = make_unsigned_type (8);
+    y_i8_type = make_signed_type (8);
 
-  y_u16_type = make_unsigned_type (16);
-  y_i16_type = make_signed_type (16);
+    y_u16_type = make_unsigned_type (16);
+    y_i16_type = make_signed_type (16);
 
-  y_u32_type = make_unsigned_type (32);
-  y_i32_type = make_signed_type (32);
+    y_u32_type = make_unsigned_type (32);
+    y_i32_type = make_signed_type (32);
 
-  y_u64_type = make_unsigned_type (64);
-  y_i64_type = make_signed_type (64);
+    y_u64_type = make_unsigned_type (64);
+    y_i64_type = make_signed_type (64);
 
-  {
-    machine_mode type_mode = TYPE_MODE (size_type_node);
-    size_type_node = lang_hooks.types.type_for_mode (type_mode, 1);
-    y_usize_type = lang_hooks.types.type_for_mode (type_mode, 1);
-    y_isize_type = lang_hooks.types.type_for_mode (type_mode, 0);
-    uint32_t size = TREE_INT_CST_LOW (TYPE_SIZE_UNIT (y_usize_type));
+    {
+        machine_mode type_mode = TYPE_MODE (size_type_node);
+        size_type_node = lang_hooks.types.type_for_mode (type_mode, 1);
+        y_usize_type = lang_hooks.types.type_for_mode (type_mode, 1);
+        y_isize_type = lang_hooks.types.type_for_mode (type_mode, 0);
+        uint32_t size = TREE_INT_CST_LOW (TYPE_SIZE_UNIT (y_usize_type));
 
-    ymir_binding_set_size_type (size * 8);
+        ymir_binding_set_size_type (size * 8);
 
-    y_real_type = build_distinct_type_copy (long_double_type_node);
-    uint32_t floatSize = TREE_INT_CST_LOW (TYPE_SIZE_UNIT (y_real_type));
-    ymir_binding_set_float_size_type (floatSize * 8);
-  }
+        y_real_type = build_distinct_type_copy (long_double_type_node);
+        uint32_t floatSize = TREE_INT_CST_LOW (TYPE_SIZE_UNIT (y_real_type));
+        ymir_binding_set_float_size_type (floatSize * 8);
+    }
 
-  y_c8_type = make_unsigned_type (8);
-  TYPE_STRING_FLAG (y_c8_type) = 1;
+    y_c8_type = make_unsigned_type (8);
+    TYPE_STRING_FLAG (y_c8_type) = 1;
 
-  y_c16_type = make_unsigned_type (16);
-  TYPE_STRING_FLAG (y_c16_type) = 1;
+    y_c16_type = make_unsigned_type (16);
+    TYPE_STRING_FLAG (y_c16_type) = 1;
 
-  y_c32_type = make_unsigned_type (32);
-  TYPE_STRING_FLAG (y_c32_type) = 1;
+    y_c32_type = make_unsigned_type (32);
+    TYPE_STRING_FLAG (y_c32_type) = 1;
 
-  y_f32_type = build_distinct_type_copy (float_type_node);
-  y_f64_type = build_distinct_type_copy (double_type_node);
-  y_f80_type = build_distinct_type_copy (long_double_type_node);
+    y_f32_type = build_distinct_type_copy (float_type_node);
+    y_f64_type = build_distinct_type_copy (double_type_node);
+    y_f80_type = build_distinct_type_copy (long_double_type_node);
 }
 
 void ymir_define_builtin (built_in_function bcode, const char * name, const char * libname, tree fntype, int flags) {
-  tree decl = add_builtin_function(name, fntype, bcode, BUILT_IN_NORMAL, libname, NULL_TREE);
-  if ((flags & builtin_const) != 0)
-  TREE_READONLY(decl) = 1;
-  if ((flags & builtin_pure) != 0)
-  DECL_PURE_P(decl) = 1;
-  if ((flags & builtin_nothrow) != 0)
-  TREE_NOTHROW (decl) = 1;
-  if ((flags & builtin_noreturn) != 0)
-  TREE_THIS_VOLATILE(decl) = 1;
-  if ((flags & builtin_novops) != 0)
-  DECL_IS_NOVOPS(decl) = 1;
-
-  set_builtin_decl(bcode, decl, true);
-
-  if (libname != NULL) {
-    decl = add_builtin_function(libname, fntype, bcode, BUILT_IN_NORMAL, NULL, NULL_TREE);
-
+    tree decl = add_builtin_function(name, fntype, bcode, BUILT_IN_NORMAL, libname, NULL_TREE);
     if ((flags & builtin_const) != 0)
     TREE_READONLY(decl) = 1;
     if ((flags & builtin_pure) != 0)
@@ -172,7 +156,23 @@ void ymir_define_builtin (built_in_function bcode, const char * name, const char
     TREE_THIS_VOLATILE(decl) = 1;
     if ((flags & builtin_novops) != 0)
     DECL_IS_NOVOPS(decl) = 1;
-  }
+
+    set_builtin_decl(bcode, decl, true);
+
+    if (libname != NULL) {
+        decl = add_builtin_function(libname, fntype, bcode, BUILT_IN_NORMAL, NULL, NULL_TREE);
+
+        if ((flags & builtin_const) != 0)
+        TREE_READONLY(decl) = 1;
+        if ((flags & builtin_pure) != 0)
+        DECL_PURE_P(decl) = 1;
+        if ((flags & builtin_nothrow) != 0)
+        TREE_NOTHROW (decl) = 1;
+        if ((flags & builtin_noreturn) != 0)
+        TREE_THIS_VOLATILE(decl) = 1;
+        if ((flags & builtin_novops) != 0)
+        DECL_IS_NOVOPS(decl) = 1;
+    }
 
 }
 
@@ -202,95 +202,98 @@ static bool
 ymir_langhook_init (void)
 {
 
-  ymir_binding_init ();
-  build_common_tree_nodes (false);
+    ymir_binding_init ();
+    build_common_tree_nodes (false);
  
-  /* I don't know why this has to be done explicitly.  */
-  void_list_node = build_tree_list (NULL_TREE, void_type_node);
-  ymir_init_builtins ();
+    /* I don't know why this has to be done explicitly.  */
+    void_list_node = build_tree_list (NULL_TREE, void_type_node);
+    ymir_init_builtins ();
 
-  using_eh_for_cleanups ();
+    using_eh_for_cleanups ();
 
 
 #if MODULE_VERSION >= 110000    
-  /* Initialize target info tables, the keys required by the language are added
-     last, so that the OS and CPU handlers can override.  */
-  targetdm.d_register_cpu_target_info ();
-  targetdm.d_register_os_target_info ();
+    /* Initialize target info tables, the keys required by the language are added
+       last, so that the OS and CPU handlers can override.  */
+    targetdm.d_register_cpu_target_info ();
+    targetdm.d_register_os_target_info ();
 #endif
     
-  /* Emit all target-specific version identifiers.  */
-  targetdm.d_cpu_versions ();
-  targetdm.d_os_versions ();
+    /* Emit all target-specific version identifiers.  */
+    targetdm.d_cpu_versions ();
+    targetdm.d_os_versions ();
     
-  return true;
+    return true;
 }
 
 
 static bool
 ymir_post_options (const char ** fn ATTRIBUTE_UNUSED)
 {
-  global_options.x_flag_reorder_blocks_and_partition = 0;
-  global_options.x_flag_exceptions = 1;
+    global_options.x_flag_reorder_blocks_and_partition = 0;
+    global_options.x_flag_exceptions = 1;
 
-  return false;
+    return false;
 }
 
 static void
 ymir_init_options (unsigned int argc ATTRIBUTE_UNUSED, cl_decoded_option * decoded_options ATTRIBUTE_UNUSED)
 {
-  ymir_binding_set_executable_name (decoded_options [0].arg);
-  for (unsigned int i = 0 ; i < argc ; i++) {
-    //const char * arg = decoded_options [i].arg;
-    switch (decoded_options [i].opt_index) {
-    case OPT_g :
-    case OPT_ggdb :
-      ymir_binding_activate_debug (true);
-	    break;
-    case OPT_fv:
-    case OPT_v :
-      ymir_binding_activate_verbose (true);
-      break;
-    case OPT_nostdinc :
-      ymir_binding_activate_standalone (true);
-      break;
-    case OPT_funittest :
-      ymir_binding_activate_include_testing (true);
-	    break;
-    case OPT_fdump_ymir:
-      ymir_binding_activate_ymir_dumping (true);
-      break;
-      break;
-    case OPT_fdump_syms:
-      ymir_binding_activate_import_dumping (true);
-      break;
+    ymir_binding_set_executable_name (decoded_options [0].arg);
+    for (unsigned int i = 0 ; i < argc ; i++) {
+        //const char * arg = decoded_options [i].arg;
+        switch (decoded_options [i].opt_index) {
+        case OPT_g :
+        case OPT_ggdb :
+            ymir_binding_activate_debug (true);
+            break;
+        case OPT_fv:
+        case OPT_v :
+            ymir_binding_activate_verbose (true);
+            break;
+        case OPT_nostdinc :
+            ymir_binding_activate_standalone (true);
+            break;
+        case OPT_funittest :
+            ymir_binding_activate_include_testing (true);
+            break;
+        case OPT_fno_coverage :
+            ymir_binding_deactivate_testing_coverage (true);
+            break;
+        case OPT_fdump_ymir:
+            ymir_binding_activate_ymir_dumping (true);
+            break;
+            break;
+        case OPT_fdump_syms:
+            ymir_binding_activate_import_dumping (true);
+            break;
+        }
     }
-  }
 }
 
 static void
 ymir_init_options_struct (gcc_options *opts) {
-  opts->x_flag_exceptions = 0;
-  opts->x_warn_return_type = 0;
-  opts->x_warn_return_local_addr = 1;
+    opts->x_flag_exceptions = 0;
+    opts->x_warn_return_type = 0;
+    opts->x_warn_return_local_addr = 1;
   
-  /* Avoid range issues for complex multiply and divide.  */
-  opts->x_flag_complex_method = 2;
+    /* Avoid range issues for complex multiply and divide.  */
+    opts->x_flag_complex_method = 2;
 
-  /* Unlike C, there is no global 'errno' variable.  */
-  opts->x_flag_errno_math = 0;
-  opts->frontend_set_flag_errno_math = true;
+    /* Unlike C, there is no global 'errno' variable.  */
+    opts->x_flag_errno_math = 0;
+    opts->frontend_set_flag_errno_math = true;
 
-  /* Keep in sync with existing -fbounds-check flag.  */
-  //opts->x_flag_bounds_check = global.params.useArrayBounds;
+    /* Keep in sync with existing -fbounds-check flag.  */
+    //opts->x_flag_bounds_check = global.params.useArrayBounds;
 
-  /* D says that signed overflow is precisely defined.  */
-  opts->x_flag_wrapv = 1;
+    /* D says that signed overflow is precisely defined.  */
+    opts->x_flag_wrapv = 1;
 }
 
 static unsigned int
 ymir_option_lang_mask (void) {
-  return CL_YMIR;
+    return CL_YMIR;
 }
     
 //size_t, const char*, long long int, int, location_t, const cl_option_handlers*
@@ -303,144 +306,146 @@ ymir_langhook_handle_option (size_t scode ATTRIBUTE_UNUSED,
                              location_t loc ATTRIBUTE_UNUSED,
                              const struct cl_option_handlers *handlers ATTRIBUTE_UNUSED)
 {
-  opt_code code = (opt_code) scode;
-  if (code == OPT_I) {
-    // Add include dir
-    ymir_binding_add_include_dir (arg);
-  } else if (code == OPT_iprefix) {
-    ymir_binding_set_prefix (arg);
-  } else if (code == OPT_fv) {
-    ymir_binding_activate_verbose (true);
-  } else if (code == OPT_v) {
-    return false;
-  } else if (code == OPT_nostdinc)  {
-    ymir_binding_activate_standalone (true);
-  } else if (code == OPT_fdoc) {
-    ymir_binding_activate_doc_dumping (arg);
-  } else if (code == OPT_funittest) {
-    ymir_binding_activate_include_testing (true);
-  } else if (code == OPT_fdump_ymir) {
-    ymir_binding_activate_ymir_dumping (true);
-  } else if (code == OPT_fdump_syms) {
-    ymir_binding_activate_import_dumping (true);
-  } else if (code == OPT_fdump_deps) {
-    ymir_binding_activate_dependency_dumping (arg);
-  } else if (code == OPT_fversion_) {
-    ymir_binding_add_version (arg);
-  } else if (code == OPT_fmodule) {
-    ymir_binding_insert_filtering_module (arg);
-  } else if (code == OPT_fyil) {
-    ymir_binding_activate_export_yil (arg);
-  } else if (code == OPT_imultilib) {
-    // set multilib
-  } else {
-    switch (code) {
-    case OPT_nomidgardlib :
-	    break;
-    default :
-	    return false;
+    opt_code code = (opt_code) scode;
+    if (code == OPT_I) {
+        // Add include dir
+        ymir_binding_add_include_dir (arg);
+    } else if (code == OPT_iprefix) {
+        ymir_binding_set_prefix (arg);
+    } else if (code == OPT_fv) {
+        ymir_binding_activate_verbose (true);
+    } else if (code == OPT_v) {
+        return false;
+    } else if (code == OPT_nostdinc)  {
+        ymir_binding_activate_standalone (true);
+    } else if (code == OPT_fdoc) {
+        ymir_binding_activate_doc_dumping (arg);
+    } else if (code == OPT_funittest) {
+        ymir_binding_activate_include_testing (true);
+    } else if (code == OPT_fno_coverage) {
+        ymir_binding_deactivate_testing_coverage (true);
+    } else if (code == OPT_fdump_ymir) {        
+        ymir_binding_activate_ymir_dumping (true);
+    } else if (code == OPT_fdump_syms) {
+        ymir_binding_activate_import_dumping (true);
+    } else if (code == OPT_fdump_deps) {
+        ymir_binding_activate_dependency_dumping (arg);
+    } else if (code == OPT_fversion_) {
+        ymir_binding_add_version (arg);
+    } else if (code == OPT_fmodule) {
+        ymir_binding_insert_filtering_module (arg);
+    } else if (code == OPT_fyil) {
+        ymir_binding_activate_export_yil (arg);
+    } else if (code == OPT_imultilib) {
+        // set multilib
+    } else {
+        switch (code) {
+        case OPT_nomidgardlib :
+            break;
+        default :
+            return false;
+        }
     }
-  }
 
-  return true;
+    return true;
 }
 
 static void
 ymir_langhook_parse_file (void)
 {
-  ymir_binding_parse_file (num_in_fnames, in_fnames);
+    ymir_binding_parse_file (num_in_fnames, in_fnames);
 }
  
 static tree
 ymir_langhook_type_for_mode (enum machine_mode mode, int unsignedp)
 {
-  if (mode == QImode)
-  return unsignedp ? y_u8_type : y_i8_type;
+    if (mode == QImode)
+    return unsignedp ? y_u8_type : y_i8_type;
 
-  if (mode == HImode)
-  return unsignedp ? y_u16_type : y_i16_type;
+    if (mode == HImode)
+    return unsignedp ? y_u16_type : y_i16_type;
 
-  if (mode == SImode)
-  return unsignedp ? y_u32_type : y_i32_type;
+    if (mode == SImode)
+    return unsignedp ? y_u32_type : y_i32_type;
 
-  if (mode == DImode)
-  return unsignedp ? y_u64_type : y_i64_type;
+    if (mode == DImode)
+    return unsignedp ? y_u64_type : y_i64_type;
 
-  if (mode == TYPE_MODE (y_isize_type))
-  return unsignedp ? y_usize_type : y_isize_type;
+    if (mode == TYPE_MODE (y_isize_type))
+    return unsignedp ? y_usize_type : y_isize_type;
 
-  if (mode == TYPE_MODE (y_f32_type))
-  return y_f32_type;
+    if (mode == TYPE_MODE (y_f32_type))
+    return y_f32_type;
 
-  if (mode == TYPE_MODE (y_f64_type))
-  return y_f64_type;
+    if (mode == TYPE_MODE (y_f64_type))
+    return y_f64_type;
 
-  if (mode == TYPE_MODE (y_f80_type))
-  return y_f80_type;
+    if (mode == TYPE_MODE (y_f80_type))
+    return y_f80_type;
 
-  for (int i = 0; i < NUM_INT_N_ENTS; i ++)
-  {
-    if (int_n_enabled_p[i] && mode == int_n_data[i].m)
-    {
-      if (unsignedp)
-	    return int_n_trees[i].unsigned_type;
-      else
-	    return int_n_trees[i].signed_type;
-    }
-  }
+    for (int i = 0; i < NUM_INT_N_ENTS; i ++)
+        {
+            if (int_n_enabled_p[i] && mode == int_n_data[i].m)
+                {
+                    if (unsignedp)
+                    return int_n_trees[i].unsigned_type;
+                    else
+                    return int_n_trees[i].signed_type;
+                }
+        }
   
-  if (COMPLEX_MODE_P (mode)) {
-    if (mode == TYPE_MODE (complex_float_type_node))
-    return complex_float_type_node;
-    if (mode == TYPE_MODE (complex_double_type_node))
-    return complex_double_type_node;
-    if (mode == TYPE_MODE (complex_long_double_type_node))
-    return complex_long_double_type_node;
-    if (mode == TYPE_MODE (complex_integer_type_node) && !unsignedp)
-    return complex_integer_type_node;
-  }
-
-  if (VECTOR_MODE_P (mode)) {
-    machine_mode inner_mode = (machine_mode) GET_MODE_INNER (mode);
-    tree inner_type = ymir_langhook_type_for_mode (inner_mode, unsignedp);
-
-    if (inner_type != NULL_TREE) {
-      return build_vector_type_for_mode (inner_type, mode);
+    if (COMPLEX_MODE_P (mode)) {
+        if (mode == TYPE_MODE (complex_float_type_node))
+        return complex_float_type_node;
+        if (mode == TYPE_MODE (complex_double_type_node))
+        return complex_double_type_node;
+        if (mode == TYPE_MODE (complex_long_double_type_node))
+        return complex_long_double_type_node;
+        if (mode == TYPE_MODE (complex_integer_type_node) && !unsignedp)
+        return complex_integer_type_node;
     }
-  }
+
+    if (VECTOR_MODE_P (mode)) {
+        machine_mode inner_mode = (machine_mode) GET_MODE_INNER (mode);
+        tree inner_type = ymir_langhook_type_for_mode (inner_mode, unsignedp);
+
+        if (inner_type != NULL_TREE) {
+            return build_vector_type_for_mode (inner_type, mode);
+        }
+    }
 
     /* gcc_unreachable */
-  return NULL;
+    return NULL;
 }
  
 static tree
 ymir_langhook_type_for_size (unsigned int bits,
                              int unsignedp)
 {
-  if (bits <= TYPE_PRECISION (y_u8_type))
-  return unsignedp ? y_u8_type : y_i8_type;
+    if (bits <= TYPE_PRECISION (y_u8_type))
+    return unsignedp ? y_u8_type : y_i8_type;
 
-  if (bits <= TYPE_PRECISION (y_i16_type))
-  return unsignedp ? y_u16_type : y_u16_type;
+    if (bits <= TYPE_PRECISION (y_i16_type))
+    return unsignedp ? y_u16_type : y_u16_type;
 
-  if (bits <= TYPE_PRECISION (y_i32_type))
-  return unsignedp ? y_u32_type : y_i32_type;
+    if (bits <= TYPE_PRECISION (y_i32_type))
+    return unsignedp ? y_u32_type : y_i32_type;
     
-  if (bits <= TYPE_PRECISION (y_i64_type))
-  return unsignedp ? y_u64_type : y_i64_type;
+    if (bits <= TYPE_PRECISION (y_i64_type))
+    return unsignedp ? y_u64_type : y_i64_type;
 
-  for (int i = 0; i < NUM_INT_N_ENTS; i ++)
-  {
-    if (int_n_enabled_p[i] && bits == int_n_data[i].bitsize)
-	  {
-	    if (unsignedp)
-      return int_n_trees[i].unsigned_type;
-	    else
-      return int_n_trees[i].signed_type;
-	  }
-  }
+    for (int i = 0; i < NUM_INT_N_ENTS; i ++)
+        {
+            if (int_n_enabled_p[i] && bits == int_n_data[i].bitsize)
+                {
+                    if (unsignedp)
+                    return int_n_trees[i].unsigned_type;
+                    else
+                    return int_n_trees[i].signed_type;
+                }
+        }
 
-  return NULL;
+    return NULL;
 }
 
 /* Record a builtin function.  We just ignore builtin functions.  */
@@ -448,55 +453,55 @@ ymir_langhook_type_for_size (unsigned int bits,
 static tree
 ymir_langhook_builtin_function (tree decl)
 {
-  return decl;
+    return decl;
 }
  
 static bool
 ymir_langhook_global_bindings_p (void)
 {
-  return (__current_function_ctx__ == NULL_TREE);
+    return (__current_function_ctx__ == NULL_TREE);
 }
 
 tree ymir_get_global_context(void)
 {
-  if (!__global_context__) {
-    __global_context__ = build_translation_unit_decl (NULL_TREE);
-  }
+    if (!__global_context__) {
+        __global_context__ = build_translation_unit_decl (NULL_TREE);
+    }
 
-  return __global_context__;
+    return __global_context__;
 }
 
 extern "C" tree ymir_get_global_context_bind () {
-  return ymir_get_global_context ();
+    return ymir_get_global_context ();
 }
 
 static tree
 ymir_langhook_pushdecl (tree decl ATTRIBUTE_UNUSED)
 {
-  gcc_unreachable ();
-  return decl;
+    gcc_unreachable ();
+    return decl;
 }
  
 static tree
 ymir_langhook_getdecls (void)
 {
-  return NULL;
+    return NULL;
 }
 
 static GTY(()) tree ymir_eh_personality_decl;
 
 static tree
 ymir_eh_personality (void) {
-  if (!ymir_eh_personality_decl) {
-    ymir_eh_personality_decl = build_personality_function ("gyc");
-  }
+    if (!ymir_eh_personality_decl) {
+        ymir_eh_personality_decl = build_personality_function ("gyc");
+    }
 
-  return ymir_eh_personality_decl;
+    return ymir_eh_personality_decl;
 }
 
 static tree
 ymir_build_eh_runtime_type (tree type ATTRIBUTE_UNUSED) {
-  return NULL;
+    return NULL;
 }
 
 
