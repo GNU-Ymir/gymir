@@ -13,6 +13,7 @@ ymir: ymir1$(exeext)
 GYC_INCLUDES = -I$(srcdir)/../include -I$(srcdir)/ -I$(srcdir)/gcc -I../gcc -I$(srcdir)/../libcpp/include
 
 CFLAGS-ymir/gycspec.o += $(DRIVER_DEFINES)
+ymir/gycspec.o: $(CORETYPES_H) $(PLUGIN_HEADERS) $(INSN_ATTR_H)
 
 # Driver
 GYC_OBJS = $(GCC_OBJS) ymir/gycspec.o
