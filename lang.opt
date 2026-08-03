@@ -56,6 +56,9 @@ YMIR Joined Separate
 funittest
 YMIR Driver
 
+fno-coverage
+YMIR Driver
+
 fdump-ymir
 YMIR
 
