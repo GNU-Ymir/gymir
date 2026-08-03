@@ -1,7 +1,7 @@
 in parser;
 
 use ymirc::parser;
-use ymirc::lint::serialize::import;
+use ymirc::lint::serialize;
 use ymirc::{args, utils::_, errors::_};
 use ymirc::global::_;
 use std::{io, conv, fs::path};

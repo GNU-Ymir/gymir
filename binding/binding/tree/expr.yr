@@ -1,7 +1,6 @@
 in expr;
 
-use ymirc::lexing::word;
-use ymirc::syntax::keys;
+use ymirc::lexing::{word, keys};
 
 use binding::tree::{c_tree, chain, stmtlist, decl};
 use std::conv;
