@@ -80,7 +80,7 @@ pub enum
 | Y_SOFTFLOAT                = "Ymir_SoftFloat"
 | Y_HARDFLOAT                = "Ymir_HardFloat"
 | GLIBC                      = "CRuntime_GlibC"
- -> GNU_VERSIONS;
+-> GNU_VERSIONS;
 
 pub enum
 | WINDOWS          = ("Windows"         , GNU_VERSIONS::WINDOWS)
@@ -156,4 +156,4 @@ pub enum
 | Y_SOFTFLOAT      = ("D_SoftFloat"     , GNU_VERSIONS::Y_SOFTFLOAT)
 | Y_HARDFLOAT      = ("D_HardFloat"     , GNU_VERSIONS::Y_HARDFLOAT)
 | GLIBC            = ("CRuntime_Glibc"  , GNU_VERSIONS::GLIBC)
- -> D_VERSIONS;
+-> D_VERSIONS;
