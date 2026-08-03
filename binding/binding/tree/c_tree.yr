@@ -10,7 +10,7 @@ pub def location_t: u32;
  * Trasnform a ymirc word into a GCC location
  * */
 pub fn wordToLocation(word: &Word)-> location_t {
-    if (word.isEof()) {
+    if (word.isEof) {
         return c_binding_get_unknwon_location();
     } else {
         return c_binding_build_debug_location(word.filename.toStringZ(), word.line, word.col);

@@ -2,7 +2,7 @@ in parser;
 
 use ymirc::parser;
 use ymirc::lint::serialize;
-use ymirc::{args, utils::_, errors::_};
+use ymirc::{args, utils::_, errors};
 use ymirc::global::_;
 use std::{io, conv, fs::path};
 
@@ -44,7 +44,7 @@ extern (C) fn ymir_binding_parse_ymir_file(filename: [c8]) {
     }
 
     // Don't generate symbols if we are generating YIL object files
-    if !global::state::instance().isExportYIL() {
+    if !global::state::isExportYIL() {
         let mut generator = GenerateVisitor();
         for n in nodes {
             generator:.generate(n);
@@ -54,7 +54,7 @@ extern (C) fn ymir_binding_parse_ymir_file(filename: [c8]) {
 
 extern (C) fn ymir_binding_parse_yil_file(filename: Path, ref mut importer: YILImporter) {
     // We don't import YIL if exporting yil, it's useless
-    if !state::instance().isExportYIL() {
+    if !state::isExportYIL() {
         importer:.import(filename);
     }
 } catch {
@@ -96,92 +96,92 @@ extern (C) fn ymir_binding_d_add_builtin_version(version: *c8) {
     let v = version.fromStringZ();
     for d_v in D_VERSIONS::__members__ {
         if d_v._0 == v {
-            state::instance():.addVersion(d_v._1);
+            state::addVersion(d_v._1);
             return;
         }
     }
 }
 
 extern (C) fn ymir_binding_set_size_type(size: u32) {
-    state::instance():.setSizeTypeSize(size);
+    state::setPointerArchSize(size);
 }
 
 extern (C) fn ymir_binding_set_float_size_type(size: u32) {
-    state::instance():.setFloatTypeSize(size);
+    state::setFloatArchSize(size);
 }
 
 extern (C) fn ymir_binding_activate_debug(a: bool) {
     if (a) {
-        state::instance():.activateDebug();
-        state::instance():.addVersion(Versions::DEBUG);
+        state::activateDebug();
+        state::addVersion(Versions::DEBUG);
     }
 }
 
 extern (C) fn ymir_binding_activate_verbose(a: bool) {
     if (a)
-        state::instance():.activateVerbose();
+        state::activateVerbose();
 }
 
 extern (C) fn ymir_binding_activate_standalone(a: bool) {
     if (a) {
-        state::instance():.activateStandalone();
-        state::instance():.addVersion(Versions::STANDALONE);
+        state::activateStandalone();
+        state::addVersion(Versions::STANDALONE);
     }
 }
 
 extern (C) fn ymir_binding_activate_include_testing(a: bool) {
     if (a) {
-        state::instance():.activateUnittest();
-        state::instance():.addVersion(Versions::UNITTEST);
+        state::activateUnittest();
+        state::addVersion(Versions::UNITTEST);
     }
 }
 
 extern (C) fn ymir_binding_deactivate_testing_coverage(a: bool) {
     if (a) {
-        state::instance():.deactivateCodeCoverage();
+        state::deactivateCodeCoverage();
     }
 }
 
 extern (C) fn ymir_binding_activate_doc_dumping(file: *c8) {
-    state::instance():.activateDocDumping(Path(fromStringZ(file)));
+    state::activateDocDumping(Path(fromStringZ(file)));
 }
 
 extern (C) fn ymir_binding_activate_export_yil(file: *c8) {
-    state::instance():.activateYILExport(Path(fromStringZ(file)));
+    state::activateYILExport(Path(fromStringZ(file)));
 }
 
 extern (C) fn ymir_binding_add_include_dir(dir: *c8) {
-    state::instance():.addIncludeDir(fromStringZ(dir));
+    state::addIncludeDir(fromStringZ(dir));
 }
 
 extern (C) fn ymir_binding_add_version(ver: *c8) {
-    state::instance():.addVersion(fromStringZ(ver));
+    state::addVersion(fromStringZ(ver));
 }
 
 extern (C) fn ymir_binding_set_prefix(pref: *c8) {
-    state::instance():.setPrefix(fromStringZ(pref));
+    state::setPrefix(fromStringZ(pref));
 }
 
 extern (C) fn ymir_binding_set_executable_name(name: *c8) {
-    state::instance():.setExecutable(fromStringZ(name));
+    state::setExecutable(fromStringZ(name));
 }
 
 extern (C) fn ymir_binding_activate_ymir_dumping(a: bool) {
     if (a) {
-        state::instance():.activateYmirDumping();
+        state::activateYmirDumping();
     }
 }
 
 extern (C) fn ymir_binding_activate_import_dumping(a: bool) {
     if (a) {
-        state::instance():.activateSymTreeDumping();
+        state::activateSymTreeDumping();
     }
 }
 
 extern (C) fn ymir_binding_insert_filtering_module(name: *c8) {
-    state::instance():.insertPathFilter(Path(fromStringZ(name)).stripExtension());
+    state::insertPathFilter(Path(fromStringZ(name)).stripExtension());
 }
 
 extern (C) fn ymir_binding_activate_dependency_dumping(loc: *c8) {
-    state::instance():.activateDependencyDumping(Path(fromStringZ(loc)));
+    state::activateDependencyDumping(Path(fromStringZ(loc)));
 }

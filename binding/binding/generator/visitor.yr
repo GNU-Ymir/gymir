@@ -113,24 +113,24 @@ pub record GenerateVisitor {
         let fnDecl = self:.generateFunctionDecl(frame);
         let asmName = decl::getAsmName(fnDecl);
 
-        logging::info("Generate frame %"s8, frame.getName());
+        logging::info("Generate frame %"s8, frame.name);
 
         self:.setCurrentFunctionContext(fnDecl);
         self:.enterFrame();
 
         let args = self:.generateFrameArguments(frame);
-        let resDecl = decl::buildResultDecl(frame.getLoc(), self:.generateType(frame.getReturnType()));
+        let resDecl = decl::buildResultDecl(frame.loc, self:.generateType(frame.retType));
         decl::setDeclArguments(fnDecl, args);
 
         c_binding_set_result_decl(fnDecl, resDecl);
 
-        let bodyLoc = frame.getBody().getLoc();
+        let bodyLoc = frame.body.loc;
 
         // We need to enter a block, even if function body is already a block
         // because we need a bind for the function
         self:.enterBlock(bodyLoc);
         let mut bodyLst = TreeStatementList();
-        self:.generateInstr(frame.getBody(), ref bodyLst);
+        self:.generateInstr(frame.body, ref bodyLst);
 
         let (bind, body) = self:.quitBlock(bodyLoc, bodyLst.getTree());
 
@@ -139,7 +139,7 @@ pub record GenerateVisitor {
         c_binding_set_decl_saved_tree(fnDecl, bind);
         c_binding_set_external(fnDecl, false);
         c_binding_set_preserved(fnDecl, true);
-        if (frame.isGlobalCtor()) {
+        if (frame.isGlobalCtor) {
             c_binding_set_public(fnDecl, false);
             c_binding_set_global_ctor(fnDecl, true);
         } else {
@@ -147,7 +147,7 @@ pub record GenerateVisitor {
         }
 
         c_binding_set_static(fnDecl, true);
-        c_binding_set_weak(fnDecl, frame.isWeak());
+        c_binding_set_weak(fnDecl, frame.isWeak);
 
         self:.quitFrame();
         self:.setCurrentFunctionContext(null);
@@ -161,13 +161,13 @@ pub record GenerateVisitor {
      * Generate a function declaration from a frame generator
      * */
     fn generateFunctionDecl(mut self, frame: &YILFrame)-> tree_t {
-        let params = frame.getParameters();
+        let params = frame.params;
 
-        let args = copy [self:.generateType(p.getType()) for p in params];
-        let ret = self:.generateType(frame.getReturnType());
+        let args = copy [self:.generateType(p.type) for p in params];
+        let ret = self:.generateType(frame.retType);
         let fnType = types::functionTypeTree(ret, args);
-        let fnDecl = decl::functionDeclTree(EOF_WORD, frame.getName(), fnType);
-        decl::setAsmName(fnDecl, frame.getName());
+        let fnDecl = decl::functionDeclTree(EOF_WORD, frame.name, fnType);
+        decl::setAsmName(fnDecl, frame.name);
 
         return fnDecl;
     }
@@ -181,17 +181,17 @@ pub record GenerateVisitor {
      * */
     fn generateFrameArguments(mut self, frame: &YILFrame)-> [tree_t] {
         copy [{
-            let type = self:.generateType(v.getType());
+            let type = self:.generateType(v.type);
 
-            let var = decl::paramDeclTree(v.getLoc(), v.getName(), type);
-            self:.insertVariable(v.getVarId(), var);
+            let var = decl::paramDeclTree(v.loc, v.name, type);
+            self:.insertVariable(v.id, var);
 
             c_binding_set_decl_context(var, self.getCurrentFunctionContext());
             c_binding_set_arg_type(var, type);
             c_binding_set_used(var, true);
 
             var
-        } for v in frame.getParameters()]
+        } for v in frame.params]
     }
 
     /**
@@ -207,22 +207,22 @@ pub record GenerateVisitor {
      * Declare a constant value in the text segment
      * */
     fn generateConstant(mut self, cst: &YILConstant) {
-        let value = self:.generateValue(cst.getValue());
+        let value = self:.generateValue(cst.value);
         let type = c_binding_get_type(value);
 
-        logging::info("Generate constant %"s8, cst.getName());
+        logging::info("Generate constant %"s8, cst.name);
 
-        let var = decl::varDeclTree(cst.getLoc(), cst.getName(), type);
+        let var = decl::varDeclTree(cst.loc, cst.name, type);
         c_binding_set_decl_initial(var, value);
         c_binding_set_decl_context(var, tree::decl::ymir_get_global_context());
 
         c_binding_set_static(var, true);
-        c_binding_set_public(var, !cst.isLocal());
+        c_binding_set_public(var, !cst.isLocal);
         c_binding_set_constant(var, true);
         c_binding_set_readonly(var, true);
         c_binding_set_used(var, true);
         c_binding_set_addressable(var, true);
-        c_binding_set_weak(var, cst.isWeak());
+        c_binding_set_weak(var, cst.isWeak);
 
         c_binding_insert_global(var);
     }
@@ -239,15 +239,15 @@ pub record GenerateVisitor {
      * Declare a global variable in the data segment
      * */
     fn generateGlobalVar(mut self, gv: &YILGlobalVar) {
-        let value = self:.generateValue(gv.getValue());
+        let value = self:.generateValue(gv.value);
         let type = c_binding_get_type(value);
 
-        logging::info("Generate global var %"s8, gv.getName());
+        logging::info("Generate global var %"s8, gv.name);
 
-        let var = decl::varDeclTree(gv.getLoc(), gv.getName(), type);
+        let var = decl::varDeclTree(gv.loc, gv.name, type);
         c_binding_set_decl_context(var, tree::decl::ymir_get_global_context());
         c_binding_set_decl_initial(var, value);
-        if (gv.isThreadLocal()) {
+        if (gv.isThreadLocal) {
             c_binding_set_thread_local(var);
         }
 
@@ -257,7 +257,7 @@ pub record GenerateVisitor {
         c_binding_set_used(var, true);
         c_binding_set_addressable(var, true);
         c_binding_set_public(var, true);
-        c_binding_set_weak(var, gv.isWeak());
+        c_binding_set_weak(var, gv.isWeak);
 
         c_binding_insert_global(var);
     }
@@ -281,8 +281,8 @@ pub record GenerateVisitor {
             p: &YILPointer => { return self:.generatePointerType(p); }
 
             // Scalars
-            f: &YILFloat => { return types::floatTypeTree(cast!i32(f.getSize() * 8u32)); }
-            i: &YILInt => { return types::intTypeTree(cast!i32(i.getSize() * 8u32), i.isSigned()); }
+            f: &YILFloat => { return types::floatTypeTree(cast!i32(f.size * 8u32)); }
+            i: &YILInt => { return types::intTypeTree(cast!i32(i.size * 8u32), i.signed); }
             YILVoid() => { return types::voidTypeTree(); }
             _ => {
                 eprintln(type.__typeinfo__.name);
@@ -295,13 +295,13 @@ pub record GenerateVisitor {
      * Gneerate a type tree from a YILArray
      * */
     fn generateArrayType(mut self, type: &YILArray)-> tree_t {
-        if let Ok(t) = self._generatedTypes[type.getUniqId()] {
+        if let Ok(t) = self._generatedTypes[type.uid] {
             return t;
         }
 
-        let inner = self:.generateType(type.getInner());
-        let t = c_binding_build_array_type(inner, cast!u64(type.getLen()));
-        self._generatedTypes[type.getUniqId()] = t;
+        let inner = self:.generateType(type.inner);
+        let t = c_binding_build_array_type(inner, cast!u64(type.len));
+        self._generatedTypes[type.uid] = t;
         return t;
     }
 
@@ -309,57 +309,57 @@ pub record GenerateVisitor {
      * Generate a type tree from a tuple type
      * */
     fn generateTupleType(mut self, type: &YILTuple, fromPointer: bool)-> tree_t {
-        if let Ok(t) = self._finalizedTuples[type.getUniqId()] {
+        if let Ok(t) = self._finalizedTuples[type.uid] {
             return t;
         }
 
-        if let Ok((base, __ig__...)) = self._toFinalize[type.getUniqId()] {
+        if let Ok((base, __ig__...)) = self._toFinalize[type.uid] {
             return base;
         }
 
-        let lvl = if let Ok(r) = self._tupleRecursiveLevel[type.getUniqId()] {
+        let lvl = if let Ok(r) = self._tupleRecursiveLevel[type.uid] {
             r
         } else {
             0
         };
 
-        self._tupleRecursiveLevel[type.getUniqId()] = lvl + 1;
+        self._tupleRecursiveLevel[type.uid] = lvl + 1;
 
         {
-            let base = if let Ok(t) = self._generatedTypes[type.getUniqId()] {
+            let base = if let Ok(t) = self._generatedTypes[type.uid] {
                 t
             } else {
-                types::prepareTupleTypeTree(format("tuple_%", type.getUniqId()), isUnion-> type.isUnion())
+                types::prepareTupleTypeTree(format("tuple_%", type.uid), isUnion-> type.isUnion)
             };
 
             if fromPointer && lvl != 0 {
                 return base;
             }
 
-            self._generatedTypes[type.getUniqId()] = base;
-            let inners = copy [self:.generateType(ti) for ti in type.getInners()];
+            self._generatedTypes[type.uid] = base;
+            let inners = copy [self:.generateType(ti) for ti in type.inners];
 
             // Recursive already set the inner fields
-            if type.getUniqId() in self._toFinalize || type.getUniqId() in self._finalizedTuples {
+            if type.uid in self._toFinalize || type.uid in self._finalizedTuples {
                 return base;
             }
 
-            types::setTupleFieldsTree(base, inners, type.getFieldNames());
-            let dependencies = self.listDependencies(copy [ti.getUniqId() for ti in type.getInners()]);
+            types::setTupleFieldsTree(base, inners, type.fieldNames);
+            let dependencies = self.listDependencies(copy [ti.uid for ti in type.inners]);
             if  dependencies.len == 0 {
-                types::finalizeTupleTypeTree(base, isUnion-> type.isUnion(), isPacked-> type.isPacked(), size-> type.getSize());
-                self._finalizedTuples[type.getUniqId()] = base;
+                types::finalizeTupleTypeTree(base, isUnion-> type.isUnion, isPacked-> type.isPacked, size-> type.size);
+                self._finalizedTuples[type.uid] = base;
             } else {
-                self._toFinalize[type.getUniqId()] = (base, dependencies, type.isUnion(), type.isPacked(), type.getSize());
+                self._toFinalize[type.uid] = (base, dependencies, type.isUnion, type.isPacked, type.size);
             }
 
             return base;
 
         } exit {
             if lvl != 0 {
-                self._tupleRecursiveLevel[type.getUniqId()] = lvl;
+                self._tupleRecursiveLevel[type.uid] = lvl;
             } else {
-                self._tupleRecursiveLevel:.remove(type.getUniqId());
+                self._tupleRecursiveLevel:.remove(type.uid);
             }
 
             self:.finalizeTupleTypes(self._tupleRecursiveLevel.len == 0);
@@ -370,13 +370,13 @@ pub record GenerateVisitor {
      * Generate a type tree from a pointer type
      * */
     fn generatePointerType(mut self, type: &YILPointer)-> tree_t {
-        if let Ok(t) = self._generatedTypes[type.getUniqId()] {
+        if let Ok(t) = self._generatedTypes[type.uid] {
             return t;
         }
 
-        let inner = self:.generateType(type.getInner(), fromPointer-> true);
+        let inner = self:.generateType(type.inner, fromPointer-> true);
         let ret = types::pointerTypeTree(inner);
-        self._generatedTypes[type.getUniqId()] = ret;
+        self._generatedTypes[type.uid] = ret;
         ret
     }
 
@@ -477,29 +477,29 @@ pub record GenerateVisitor {
      * Transform a YIL array access into a tree_t
      * */
     fn generateArrayAccess(mut self, value: &YILArrayAccessValue)-> tree_t {
-        let arr = self:.generateValue(value.getValue());
-        let index = self:.generateValue(value.getIndex());
+        let arr = self:.generateValue(value.value);
+        let index = self:.generateValue(value.index);
 
-        return expr::arrayAccessExprTree(value.getLoc(), arr, index);
+        return expr::arrayAccessExprTree(value.loc, arr, index);
     }
 
     /**
      * Transform a YIL Addr into a tree_t
      * */
     fn generateAddr(mut self, value: &YILAddrValue)-> tree_t {
-        let type = self:.generateType(value.getType());
-        let inner = self:.generateValue(value.getValue());
+        let type = self:.generateType(value.type);
+        let inner = self:.generateValue(value.value);
 
         c_binding_set_addressable(inner, true);
-        return expr::addressExprTree(value.getLoc(), type, inner);
+        return expr::addressExprTree(value.loc, type, inner);
     }
 
     /**
      * Transform a YIL array literal into a tree_t
      * */
     fn generateArrayLit(mut self, value: &YILArrayValue)-> tree_t {
-        let type = self:.generateType(value.getType());
-        let params = copy [self:.generateValue(i) for i in value.getValue()];
+        let type = self:.generateType(value.type);
+        let params = copy [self:.generateValue(i) for i in value.value];
         return expr::buildConstructorIndexed(type, params);
     }
 
@@ -507,54 +507,54 @@ pub record GenerateVisitor {
      * Transform a YIL string literal into a tree_t
      * */
     fn generateStringLit(self, value: &YILStringValue)-> tree_t {
-        c_binding_build_string_literal(cast!u64(value.getValue().len), value.getValue().ptr)
+        c_binding_build_string_literal(cast!u64(value.value.len), value.value.ptr)
     }
 
     /**
      * Transform a YIL binary op into a tree_t
      * */
     fn generateBinary(mut self, value: &YILBinaryValue)-> tree_t {
-        let left = self:.generateValue(value.getLeft());
-        let right = self:.generateValue(value.getRight());
-        let type = self:.generateType(value.getType());
+        let left = self:.generateValue(value.left);
+        let right = self:.generateValue(value.right);
+        let type = self:.generateType(value.type);
 
-        return expr::binaryExprTree(value.getLoc(), value.getOperator(), type, left, right);
+        return expr::binaryExprTree(value.loc, value.op, type, left, right);
     }
 
     /**
      * Transform a YIL cast into a tree_t
      * */
     fn generateCast(mut self, value: &YILCastValue)-> tree_t {
-        let type = self:.generateType(value.getType());
-        let inner = self:.generateValue(value.getValue());
+        let type = self:.generateType(value.type);
+        let inner = self:.generateValue(value.value);
 
-        return expr::castExprTree(value.getLoc(), type, inner);
+        return expr::castExprTree(value.loc, type, inner);
     }
 
     /**
      * Transform a YIL field access into a tree_t
      * */
     fn generateField(mut self, value: &YILFieldValue)-> tree_t {
-        let inner = self:.generateValue(value.getValue());
+        let inner = self:.generateValue(value.tuple);
 
-        let name = if value.getName().len == 0us {
-            format("_%", value.getIndex())
-        } else { value.getName() };
+        let name = if value.name.len == 0us {
+            format("_%", value.index)
+        } else { value.name };
 
-        return expr::fieldAccessExprTree(value.getLoc(), inner, name);
+        return expr::fieldAccessExprTree(value.loc, inner, name);
     }
 
     /**
      * Transform a YIL float literal into a tree_t
      * */
     fn generateFloat(mut self, value: &YILFloatValue)-> tree_t {
-        let type = self:.generateType(value.getType());
-        let bf = value.getValue();
-        if (bf.isNan()) {
+        let type = self:.generateType(value.type);
+        let bf = value.value;
+        if (bf.isNan) {
             return expr::buildNanCst(type);
-        } else if (bf.isPositiveInf()) {
+        } else if (bf.isPositiveInf) {
             return expr::buildInfPosCst(type);
-        } else if (bf.isNegativeInf()) {
+        } else if (bf.isNegativeInf) {
             return expr::buildInfNegCst(type);
         } else {
             return expr::buildFloatCst(type, bf.toHexString());
@@ -565,9 +565,9 @@ pub record GenerateVisitor {
      * Transform a YIL Int literal into a tree_t
      * */
     fn generateInt(mut self, value: &YILIntValue)-> tree_t {
-        let type = self:.generateType(value.getType());
-        let bi = value.getValue();
-        if let i: &YILInt = value.getType() && i.isSigned() {
+        let type = self:.generateType(value.type);
+        let bi = value.value;
+        if let i: &YILInt = value.type && i.signed {
             return expr::buildIntCst(type, bi.toN!{i64} ());
         } else {
             return expr::buildIntCst(type, bi.toN!{u64} ());
@@ -578,43 +578,43 @@ pub record GenerateVisitor {
      * Transform a YIL Name call into a tree_t
      * */
     fn generateNameCall(mut self, value: &YILNameCallValue)-> tree_t {
-        let retType = self:.generateType(value.getType());
-        let params = copy [self:.generateValue(pi) for pi in value.getParameters()];
-        return expr::callExprTree(value.getLoc(), retType, value.getFuncName(), params);
+        let retType = self:.generateType(value.type);
+        let params = copy [self:.generateValue(pi) for pi in value.params];
+        return expr::callExprTree(value.loc, retType, value.funcName, params);
     }
 
     /**
      * Transform a YIL Ptr call into a tree
      * */
     fn generatePtrCall(mut self, value: &YILPtrCallValue)-> tree_t {
-        let retType = self:.generateType(value.getType());
-        let params = copy [self:.generateValue(pi) for pi in value.getParameters()];
+        let retType = self:.generateType(value.type);
+        let params = copy [self:.generateValue(pi) for pi in value.params];
         let types  = copy [c_binding_get_type(pt) for pt in params];
 
-        let func = self:.generateValue(value.getFuncPtr());
+        let func = self:.generateValue(value.funcPtr);
         let fnType = tree::types::pointerTypeTree(c_binding_build_function_type(retType, cast!u64(types.len), types.ptr));
-        let fptr = expr::castExprTree(value.getLoc(), fnType, func);
+        let fptr = expr::castExprTree(value.loc, fnType, func);
 
-        return expr::callExprTree(value.getLoc(), retType, fptr, params);
+        return expr::callExprTree(value.loc, retType, fptr, params);
     }
 
     /**
      * Transform a YIL tuple into a tree_t
      * */
     fn generateTupleValue(mut self, value: &YILTupleValue)-> tree_t {
-        let type = self:.generateType(value.getType());
-        let params = copy [self:.generateValue(pi) for pi in value.getValue()];
-        return expr::buildConstructorFields(type, params, value.getFieldNames());
+        let type = self:.generateType(value.type);
+        let params = copy [self:.generateValue(pi) for pi in value.values];
+        return expr::buildConstructorFields(type, params, value.fieldNames);
     }
 
     /**
      * Transform a YIL unary op into a tree_t
      * */
     fn generateUnary(mut self, value: &YILUnaryValue)-> tree_t {
-        let val = self:.generateValue(value.getValue());
-        let type = self:.generateType(value.getType());
+        let val = self:.generateValue(value.left);
+        let type = self:.generateType(value.type);
 
-        return expr::unaryExprTree(value.getLoc(), value.getOperator(), type, val);
+        return expr::unaryExprTree(value.loc, value.op, type, val);
     }
 
     /**
@@ -628,27 +628,27 @@ pub record GenerateVisitor {
      * Transform a YIL unref into a tree_t
      * */
     fn generateUnref(mut self, value: &YILUnrefValue)-> tree_t {
-        let val = self:.generateValue(value.getValue());
-        let type = self:.generateType(value.getType());
+        let val = self:.generateValue(value.value);
+        let type = self:.generateType(value.type);
 
-        return c_binding_unref_pointer(expr::castExprTree(value.getLoc(), types::pointerTypeTree(type), val), 0u64);
+        return c_binding_unref_pointer(expr::castExprTree(value.loc, types::pointerTypeTree(type), val), 0u64);
     }
 
 
     fn generateVarValue(mut self, value: &YILVar)-> tree_t {
-        if (value.getVarId() != 0us) { // local variable
-            match self.getVariable(value.getVarId()) {
+        if (value.id != 0us) { // local variable
+            match self.getVariable(value.id) {
                 Ok(v: _) => return v;
                 _ => panic;
             }
         }
 
         // Else it is a global ref
-        let type = self:.generateType(value.getType());
+        let type = self:.generateType(value.type);
 
-        let var = decl::varDeclTree(value.getLoc(), value.getName(), type);
+        let var = decl::varDeclTree(value.loc, value.name, type);
         c_binding_set_external(var, true);
-        if (value.isThreadLocal()) {
+        if (value.isThreadLocal) {
             c_binding_set_thread_local(var);
         }
 
@@ -661,7 +661,7 @@ pub record GenerateVisitor {
     fn generateBeginCatch(mut self, value: &YILBeginCatch)-> tree_t {
         let ehptrT = c_binding_build_call_ehptr();
         let catchType = pointerTypeTree(voidTypeTree());
-        return expr::callExprTree(value.getLoc(), catchType, value.getName(), copy [ehptrT]);
+        return expr::callExprTree(value.loc, catchType, value.name, copy [ehptrT]);
     }
 
     /**
@@ -699,14 +699,14 @@ pub record GenerateVisitor {
      * Transform a YIL affectation into a tree_t
      * */
     fn generateAffect(mut self, aff: &YILAffect, ref mut list: TreeStatementList) {
-        let left = self:.generateValue(aff.getLeft());
-        let right = self:.generateValue(aff.getRight());
+        let left = self:.generateValue(aff.left);
+        let right = self:.generateValue(aff.right);
 
-        let ret = expr::affectExprTree(aff.getLoc(),
-                                        left,
-                                        right,
-                                        self:.getStackVarDeclChain(),
-                                        self.getCurrentFunctionContext());
+        let ret = expr::affectExprTree(aff.loc,
+                                       left,
+                                       right,
+                                       self:.getStackVarDeclChain(),
+                                       self.getCurrentFunctionContext());
         list:.append(ret);
     }
 
@@ -715,12 +715,12 @@ pub record GenerateVisitor {
      * */
     fn generateBlock(mut self, b: &YILBlock, ref mut list: TreeStatementList) {
         let mut blockList = TreeStatementList();
-        self:.enterBlock(b.getLoc());
-        for i in b.getInners() {
+        self:.enterBlock(b.loc);
+        for i in b.instrs {
             self:.generateInstr(i, ref blockList);
         }
 
-        let (bl, _) = self:.quitBlock(b.getLoc(), blockList.getTree());
+        let (bl, _) = self:.quitBlock(b.loc, blockList.getTree());
         list:.append(bl);
     }
 
@@ -728,7 +728,7 @@ pub record GenerateVisitor {
      * Transform a YIL call into a tree_t
      * */
     fn generateCall(mut self, c: &YILCall, ref mut list: TreeStatementList) {
-        let value = self:.generateValue(c.getContent());
+        let value = self:.generateValue(c.content);
         list:.append(value);
     }
 
@@ -736,14 +736,14 @@ pub record GenerateVisitor {
      * Transform a YIL conditional jump into a tree_t
      * */
     fn generateCondJmp(mut self, c: &YILCondJmp, ref mut list: TreeStatementList) {
-        let labelThen = self:.retreiveLabel(c.getThenLabel());
-        let labelElse = self:.retreiveLabel(c.getElseLabel());
-        let gotoThen = expr::gotoExprTree(c.getLoc(), labelThen);
-        let gotoElse = expr::gotoExprTree(c.getLoc(), labelElse);
+        let labelThen = self:.retreiveLabel(c.then);
+        let labelElse = self:.retreiveLabel(c.else_);
+        let gotoThen = expr::gotoExprTree(c.loc, labelThen);
+        let gotoElse = expr::gotoExprTree(c.loc, labelElse);
 
-        let test = self:.generateValue(c.getCond());
+        let test = self:.generateValue(c.cond);
 
-        let c_loc = wordToLocation(c.getLoc());
+        let c_loc = wordToLocation(c.loc);
         list:.append(c_binding_build_cond_expr(c_loc, test, gotoThen, gotoElse));
     }
 
@@ -751,8 +751,8 @@ pub record GenerateVisitor {
      * Transform a YIL goto into a tree_t
      * */
     fn generateGoto(mut self, c: &YILGoto, ref mut list: TreeStatementList) {
-        let lbl = self:.retreiveLabel(c.getLabel());
-        list:.append(expr::gotoExprTree(c.getLoc(), lbl));
+        let lbl = self:.retreiveLabel(c.label);
+        list:.append(expr::gotoExprTree(c.loc, lbl));
     }
 
     /**
@@ -760,7 +760,7 @@ pub record GenerateVisitor {
      * */
     fn generateLabel(mut self, c: &YILLabel, ref mut list: TreeStatementList) {
         let lbl = self:.retreiveLabel(c);
-        list:.append(expr::labelExprTree(c.getLoc(), lbl));
+        list:.append(expr::labelExprTree(c.loc, lbl));
     }
 
     /**
@@ -773,12 +773,12 @@ pub record GenerateVisitor {
      * ==========
      * * */
     fn retreiveLabel(mut self, c: &YILLabel)-> tree_t {
-        match self.getLabel(c.getLabelId()) {
+        match self.getLabel(c.id) {
             Ok(l: tree_t) => return l;
         }
 
-        let lbl = decl::labelDeclTree(c.getLoc(), self.getCurrentFunctionContext(), c.getName());
-        self:.insertLabel(c.getLabelId(), lbl);
+        let lbl = decl::labelDeclTree(c.loc, self.getCurrentFunctionContext(), c.name);
+        self:.insertLabel(c.id, lbl);
 
         lbl
     }
@@ -787,14 +787,14 @@ pub record GenerateVisitor {
      * Transform a YIL return into a tree_t
      * */
     fn generateReturn(mut self, c: &YILReturn, ref mut list: TreeStatementList) {
-        match c.getValue() {
+        match c.value {
             YILUnit() => {
-                list:.append(expr::returnExprTree(c.getLoc()));
+                list:.append(expr::returnExprTree(c.loc));
             }
             val: _ => {
                 let ret = c_binding_get_result_decl(self.getCurrentFunctionContext());
                 let inner = self:.generateValue(val);
-                list:.append(expr::returnExprTree(c.getLoc(), ret, inner));
+                list:.append(expr::returnExprTree(c.loc, ret, inner));
             }
         }
     }
@@ -803,14 +803,14 @@ pub record GenerateVisitor {
      * Transform a YIL variable declaration into a tree_t
      * */
     fn generateVarDecl(mut self, v: &YILVarDecl, ref mut list: TreeStatementList) {
-        let type = self:.generateType(v.getType());
-        let var = decl::varDeclTree(v.getLoc(), v.getName(), type);
+        let type = self:.generateType(v.type);
+        let var = decl::varDeclTree(v.loc, v.name, type);
         c_binding_set_decl_context(var, self.getCurrentFunctionContext());
 
         self:.getStackVarDeclChain():.append(var);
-        self:.insertVariable(v.getVarId(), var);
+        self:.insertVariable(v.id, var);
 
-        let decl = decl::buildDeclTree(v.getLoc(), types::voidTypeTree(), var);
+        let decl = decl::buildDeclTree(v.loc, types::voidTypeTree(), var);
         list:.append(decl);
     }
 
@@ -821,19 +821,19 @@ pub record GenerateVisitor {
         let mut tryList = TreeStatementList();
         let mut finallyList = TreeStatementList();
 
-        self:.enterBlock(t.getLoc());
-        for i in t.getTryPart() {
+        self:.enterBlock(t.loc);
+        for i in t.tryPart {
             self:.generateInstr(i, ref tryList);
         }
-        let (tr, _) = self:.quitBlock(t.getLoc(), tryList.getTree());
+        let (tr, _) = self:.quitBlock(t.loc, tryList.getTree());
 
-        self:.enterBlock(t.getLoc());
-        for i in t.getFinallyPart() {
+        self:.enterBlock(t.loc);
+        for i in t.finPart {
             self:.generateInstr(i, ref finallyList);
         }
-        let (fin, _) = self:.quitBlock(t.getLoc(), finallyList.getTree());
+        let (fin, _) = self:.quitBlock(t.loc, finallyList.getTree());
 
-        list:.append(buildTryFinally(t.getLoc(), tr, fin));
+        list:.append(buildTryFinally(t.loc, tr, fin));
     }
 
     /**
@@ -843,22 +843,22 @@ pub record GenerateVisitor {
         let mut tryList = TreeStatementList();
         let mut catchList = TreeStatementList();
 
-        self:.enterBlock(t.getLoc());
-        for i in t.getTryPart() {
+        self:.enterBlock(t.loc);
+        for i in t.tryPart {
             self:.generateInstr(i, ref tryList);
         }
-        let (tr, _) = self:.quitBlock(t.getLoc(), tryList.getTree());
+        let (tr, _) = self:.quitBlock(t.loc, tryList.getTree());
 
-        self:.enterBlock(t.getLoc());
-        for i in t.getCatchPart() {
+        self:.enterBlock(t.loc);
+        for i in t.catchPart {
             self:.generateInstr(i, ref catchList);
         }
-        let (ct, _) = self:.quitBlock(t.getLoc(), catchList.getTree());
+        let (ct, _) = self:.quitBlock(t.loc, catchList.getTree());
 
         let mut catchers = TreeStatementList();
-        catchers:.append(buildCatcherExpr(t.getLoc(), ct));
+        catchers:.append(buildCatcherExpr(t.loc, ct));
 
-        list:.append(buildTryCatch(t.getLoc(), tr, catchers.getTree()));
+        list:.append(buildTryCatch(t.loc, tr, catchers.getTree()));
     }
 
     /**
