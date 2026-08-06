@@ -1,7 +1,6 @@
 in expr;
 
-use ymirc::lexing::word;
-use ymirc::syntax::keys;
+use ymirc::lexing::{word, keys};
 
 use binding::tree::{c_tree, chain, stmtlist, decl};
 use std::conv;
@@ -16,29 +15,29 @@ use std::conv;
  *     - segmentContext: the segmentContext in which variable are declared
  * @returns: a tree containing the affectation
  */
-pub fn affectExprTree (loc : &Word, left : tree_t, right : tree_t, dmut stackContext : &TreeChain, segmentContext : tree_t)-> tree_t {
-    let lType = c_binding_get_type (left);
-    let rType = c_binding_get_type (right);
-    let location = wordToLocation (loc);
-    if (c_binding_is_scalar (lType) || rType == lType) {
-        return c_binding_build_modify_expr (location, lType, left, right);
+pub fn affectExprTree(loc: &Word, left: tree_t, right: tree_t, dmut stackContext: &TreeChain, segmentContext: tree_t)-> tree_t {
+    let lType = c_binding_get_type(left);
+    let rType = c_binding_get_type(right);
+    let location = wordToLocation(loc);
+    if (c_binding_is_scalar(lType) || rType == lType) {
+        return c_binding_build_modify_expr(location, lType, left, right);
     } else {
-        let lValue = c_binding_get_value_operand (left);
-        let rValue = c_binding_get_value_operand (right);
+        let lValue = c_binding_get_value_operand(left);
+        let rValue = c_binding_get_value_operand(right);
 
         let name = "#_aff("s8 ~ std::conv::to!{[c8]} (loc.line) ~ ")"s8;
-        let var = c_binding_build_var_decl (location, name.ptr, rType);
-        c_binding_set_decl_context (var, segmentContext);
-        stackContext:.append (var);
+        let var = c_binding_build_var_decl(location, name.ptr, rType);
+        c_binding_set_decl_context(var, segmentContext);
+        stackContext:.append(var);
 
-        let mut list = TreeStatementList ();
+        let mut list = TreeStatementList();
 
-        list:.append (c_binding_get_list_operand (left));
-        list:.append (c_binding_get_list_operand (right));
-        list:.append (c_binding_build_modify_expr (location, rType, var, rValue));
-        list:.append (c_binding_build_memcpy (location, lValue, var));
+        list:.append(c_binding_get_list_operand(left));
+        list:.append(c_binding_get_list_operand(right));
+        list:.append(c_binding_build_modify_expr(location, rType, var, rValue));
+        list:.append(c_binding_build_memcpy(location, lValue, var));
 
-        return c_binding_build_compound (list.getTree (), var);
+        return c_binding_build_compound(list.getTree(), var);
     }
 }
 
@@ -51,8 +50,8 @@ pub fn affectExprTree (loc : &Word, left : tree_t, right : tree_t, dmut stackCon
  *    - func: the function to call
  *    - params: the parameters to pass to the call
  * */
-pub fn callExprTree (loc : &Word, type : tree_t, func : tree_t, params : [tree_t])-> tree_t {
-    return c_binding_build_call (wordToLocation (loc), type, func, cast!u64 (params.len), params.ptr);
+pub fn callExprTree(loc: &Word, type: tree_t, func: tree_t, params: [tree_t])-> tree_t {
+    return c_binding_build_call(wordToLocation(loc), type, func, cast!u64(params.len), params.ptr);
 }
 
 
@@ -65,10 +64,10 @@ pub fn callExprTree (loc : &Word, type : tree_t, func : tree_t, params : [tree_t
  *     - params: the parameters passed to the function
  * @returns: a call expr tree
  */
-pub fn callExprTree (loc : &Word, type : tree_t, func : [c8], params : [tree_t])-> tree_t {
-    let types = copy [c_binding_get_type (i) for i in params];
-    let fnPtr = funcPtrExprTree (loc, func, type, types);
-    return c_binding_build_call (wordToLocation (loc), type, fnPtr, cast!u64 (params.len), params.ptr);
+pub fn callExprTree(loc: &Word, type: tree_t, func: [c8], params: [tree_t])-> tree_t {
+    let types = copy [c_binding_get_type(i) for i in params];
+    let fnPtr = funcPtrExprTree(loc, func, type, types);
+    return c_binding_build_call(wordToLocation(loc), type, fnPtr, cast!u64(params.len), params.ptr);
 }
 
 /**
@@ -80,13 +79,13 @@ pub fn callExprTree (loc : &Word, type : tree_t, func : [c8], params : [tree_t])
  *     - params: the types of the paramters of the function
  * @returns: a function pointer expression tree
  * */
-pub fn funcPtrExprTree (loc : &Word, name : [c8], type : tree_t, params : [tree_t])-> tree_t {
-    let location = wordToLocation (loc);
+pub fn funcPtrExprTree(loc: &Word, name: [c8], type: tree_t, params: [tree_t])-> tree_t {
+    let location = wordToLocation(loc);
 
-    let fnType = c_binding_build_function_type (type, cast!u64 (params.len), params.ptr);
-    let fnDecl = c_binding_build_function_decl (location, name.toStringZ (), fnType);
+    let fnType = c_binding_build_function_type(type, cast!u64(params.len), params.ptr);
+    let fnDecl = c_binding_build_function_decl(location, name.toStringZ(), fnType);
 
-    return c_binding_build_address (location, c_binding_build_pointer_type (fnType), fnDecl);
+    return c_binding_build_address(location, c_binding_build_pointer_type(fnType), fnDecl);
 }
 
 /**
@@ -97,8 +96,8 @@ pub fn funcPtrExprTree (loc : &Word, name : [c8], type : tree_t, params : [tree_
  *    - index: the index of the access
  * @returns: the access expression tree
  * */
-pub fn arrayAccessExprTree (loc : &Word, array : tree_t, index : tree_t)-> tree_t {
-    return c_binding_build_array_ref (wordToLocation (loc), array, index);
+pub fn arrayAccessExprTree(loc: &Word, array: tree_t, index: tree_t)-> tree_t {
+    return c_binding_build_array_ref(wordToLocation(loc), array, index);
 }
 
 
@@ -113,20 +112,20 @@ pub fn arrayAccessExprTree (loc : &Word, array : tree_t, index : tree_t)-> tree_
  * @returns: the binary expression tree
  * @info: perform conversion of type to make sure the operation is valid
  */
-pub fn binaryExprTree (loc : &Word, op : BinaryOperators, type : tree_t, left : tree_t, right : tree_t)-> tree_t {
-    let lType = c_binding_get_type (left);
-    let rType = c_binding_get_type (right);
-    let pointer = c_binding_is_pointer (lType);
-    let fl = c_binding_is_float (lType);
+pub fn binaryExprTree(loc: &Word, op: BinaryOperators, type: tree_t, left: tree_t, right: tree_t)-> tree_t {
+    let lType = c_binding_get_type(left);
+    let rType = c_binding_get_type(right);
+    let pointer = c_binding_is_pointer(lType);
+    let fl = c_binding_is_float(lType);
 
-    if (c_binding_get_type_size (lType) >= c_binding_get_type_size (rType)) {
-        return c_binding_build_binary (wordToLocation (loc),
-                                       op.toStringZ (),
-                                       type, left, c_binding_convert (lType, right), pointer, fl);
+    if (c_binding_get_type_size(lType) >= c_binding_get_type_size(rType)) {
+        return c_binding_build_binary(wordToLocation(loc),
+                                       op.toStringZ(),
+                                       type, left, c_binding_convert(lType, right), pointer, fl);
     } else {
-        return c_binding_build_binary (wordToLocation (loc),
-                                       op.toStringZ (),
-                                       type, c_binding_convert (rType, left), right, pointer, fl);
+        return c_binding_build_binary(wordToLocation(loc),
+                                       op.toStringZ(),
+                                       type, c_binding_convert(rType, left), right, pointer, fl);
     }
 }
 
@@ -139,21 +138,21 @@ pub fn binaryExprTree (loc : &Word, op : BinaryOperators, type : tree_t, left : 
  *    - operand: the operand involved in the operation
  * @returns: the unary expression tree
  * */
-pub fn unaryExprTree (loc : &Word, op : UnaryOperators, type : tree_t, operand : tree_t)-> tree_t {
-    let otype = c_binding_get_type (operand);
+pub fn unaryExprTree(loc: &Word, op: UnaryOperators, type: tree_t, operand: tree_t)-> tree_t {
+    let otype = c_binding_get_type(operand);
 
-    return c_binding_build_unary (wordToLocation (loc),
-                                  op.toStringZ (),
-                                  type, operand, c_binding_is_bool (otype));
+    return c_binding_build_unary(wordToLocation(loc),
+                                  op.toStringZ(),
+                                  type, operand, c_binding_is_bool(otype));
 }
 
 /**
  * @returns: an address expression
  * */
-pub fn addressExprTree (loc : &Word, type : tree_t, value : tree_t)-> tree_t {
-    let location = wordToLocation (loc);
+pub fn addressExprTree(loc: &Word, type: tree_t, value: tree_t)-> tree_t {
+    let location = wordToLocation(loc);
 
-    return c_binding_build_address (location, type, value);
+    return c_binding_build_address(location, type, value);
 }
 
 /**
@@ -167,12 +166,12 @@ pub fn addressExprTree (loc : &Word, type : tree_t, value : tree_t)-> tree_t {
  * @returns: the binary expression tree
  * @warning: does not perform conversion of type to make sure the operation is valid
  */
-pub fn binaryExprNoConvTree (loc : &Word, op : BinaryOperators, type : tree_t, left : tree_t, right : tree_t)-> tree_t {
-    let pointer = c_binding_is_pointer (c_binding_get_type (left));
-    let fl = c_binding_is_float (c_binding_get_type (left));
+pub fn binaryExprNoConvTree(loc: &Word, op: BinaryOperators, type: tree_t, left: tree_t, right: tree_t)-> tree_t {
+    let pointer = c_binding_is_pointer(c_binding_get_type(left));
+    let fl = c_binding_is_float(c_binding_get_type(left));
 
-    return c_binding_build_binary (wordToLocation (loc),
-                                   op.toStringZ (),
+    return c_binding_build_binary(wordToLocation(loc),
+                                   op.toStringZ(),
                                    type, left, right, pointer, fl);
 }
 
@@ -183,23 +182,23 @@ pub fn binaryExprNoConvTree (loc : &Word, op : BinaryOperators, type : tree_t, l
  *     - type: the type of the cast
  *     - value: the value to cast
  * */
-pub fn castExprTree (_ : &Word, type : tree_t, value : tree_t)-> tree_t {
-    return c_binding_convert (type, value);
+pub fn castExprTree(_: &Word, type: tree_t, value: tree_t)-> tree_t {
+    return c_binding_convert(type, value);
 }
 
 /**
  * Access to a field by its name in a struct type
  * */
-pub fn fieldAccessExprTree (_ : &Word, str : tree_t, fieldName : [c8])-> tree_t {
-    c_binding_access_field_by_name (str, fieldName.toStringZ ())
+pub fn fieldAccessExprTree(_: &Word, str: tree_t, fieldName: [c8])-> tree_t {
+    c_binding_access_field_by_name(str, fieldName.toStringZ())
 }
 
 /**
  * Build a label expr refering to a label decl
  * */
-pub fn labelExprTree (loc : &Word, label : tree_t)-> tree_t {
-    let location = wordToLocation (loc);
-    return c_binding_build_label_expr (location, label);
+pub fn labelExprTree(loc: &Word, label: tree_t)-> tree_t {
+    let location = wordToLocation(loc);
+    return c_binding_build_label_expr(location, label);
 }
 
 /**
@@ -208,8 +207,8 @@ pub fn labelExprTree (loc : &Word, label : tree_t)-> tree_t {
  *     - loc: the location of the goto
  *     - label: the label to goto
  */
-pub fn gotoExprTree (loc : &Word, label : tree_t)-> tree_t {
-    return c_binding_build_goto_expr (wordToLocation (loc), label);
+pub fn gotoExprTree(loc: &Word, label: tree_t)-> tree_t {
+    return c_binding_build_goto_expr(wordToLocation(loc), label);
 }
 
 /**
@@ -219,10 +218,10 @@ pub fn gotoExprTree (loc : &Word, label : tree_t)-> tree_t {
  *     - resultDecl: the declaration of the return of the current function
  *     - value: the value to return
  * */
-pub fn returnExprTree (loc : &Word, resultDecl : tree_t, value : tree_t)-> tree_t {
-    let location = wordToLocation (loc);
-    let inside = c_binding_build_modify_expr_no_conv (location, c_binding_get_type (resultDecl), resultDecl, value);
-    return c_binding_build_return_expr (location, inside);
+pub fn returnExprTree(loc: &Word, resultDecl: tree_t, value: tree_t)-> tree_t {
+    let location = wordToLocation(loc);
+    let inside = c_binding_build_modify_expr_no_conv(location, c_binding_get_type(resultDecl), resultDecl, value);
+    return c_binding_build_return_expr(location, inside);
 }
 
 /**
@@ -230,96 +229,96 @@ pub fn returnExprTree (loc : &Word, resultDecl : tree_t, value : tree_t)-> tree_
  * @params:
  *    - loc: the location of the return
  * */
-pub fn returnExprTree (loc : &Word)-> tree_t {
-    let location = wordToLocation (loc);
-    return c_binding_build_return_expr (location, null);
+pub fn returnExprTree(loc: &Word)-> tree_t {
+    let location = wordToLocation(loc);
+    return c_binding_build_return_expr(location, null);
 }
 
 /**
  * Build an int constant from a value
  * */
-pub fn buildIntCst (type : tree_t, value : u64)-> tree_t {
-    c_binding_build_int_cst_value (type, value)
+pub fn buildIntCst(type: tree_t, value: u64)-> tree_t {
+    c_binding_build_int_cst_value(type, value)
 }
 
 /**
  * Build an int constant from a value
  * */
-pub fn buildIntCst (type : tree_t, value : i64)-> tree_t {
-    c_binding_build_int_cst_value (type, value)
+pub fn buildIntCst(type: tree_t, value: i64)-> tree_t {
+    c_binding_build_int_cst_value(type, value)
 }
 
-pub fn buildFloatCst (type : tree_t, value : f32)-> tree_t {
-    c_binding_build_float_cst_value_32 (type, value)
+pub fn buildFloatCst(type: tree_t, value: f32)-> tree_t {
+    c_binding_build_float_cst_value_32(type, value)
 }
 
-pub fn buildNanCst (type : tree_t)-> tree_t {
-    c_binding_build_nan_cst_value (type)
+pub fn buildNanCst(type: tree_t)-> tree_t {
+    c_binding_build_nan_cst_value(type)
 }
 
-pub fn buildInfPosCst (type : tree_t)-> tree_t {
-    c_binding_build_inf_pos_cst_value (type)
+pub fn buildInfPosCst(type: tree_t)-> tree_t {
+    c_binding_build_inf_pos_cst_value(type)
 }
 
-pub fn buildInfNegCst (type : tree_t)-> tree_t {
-    c_binding_build_inf_neg_cst_value (type)
+pub fn buildInfNegCst(type: tree_t)-> tree_t {
+    c_binding_build_inf_neg_cst_value(type)
 }
 
-pub fn buildFloatCst (type : tree_t, value : f64)-> tree_t {
-    c_binding_build_float_cst_value_64 (type, value)
+pub fn buildFloatCst(type: tree_t, value: f64)-> tree_t {
+    c_binding_build_float_cst_value_64(type, value)
 }
 
-pub fn buildFloatCst (type : tree_t, value : [c8])-> tree_t {
-    c_binding_build_float_cst_value_str (type, value.toStringZ ())
+pub fn buildFloatCst(type: tree_t, value: [c8])-> tree_t {
+    c_binding_build_float_cst_value_str(type, value.toStringZ())
 }
 
-pub fn blockTree (loc : &Word, varChain : tree_t, blockChain : tree_t)-> tree_t {
-    c_binding_build_block_tree (wordToLocation (loc), varChain, blockChain)
+pub fn blockTree(loc: &Word, varChain: tree_t, blockChain: tree_t)-> tree_t {
+    c_binding_build_block_tree(wordToLocation(loc), varChain, blockChain)
 }
 
-pub fn bindTree (loc : &Word, varChain : tree_t, content : tree_t, block : tree_t)-> tree_t {
-    c_binding_build_bind_tree (wordToLocation (loc), varChain, content, block)
+pub fn bindTree(loc: &Word, varChain: tree_t, content: tree_t, block: tree_t)-> tree_t {
+    c_binding_build_bind_tree(wordToLocation(loc), varChain, content, block)
 }
 
 /**
  * Build a constructor where each parameters is indexed by its position
  * */
-pub fn buildConstructorIndexed (type : tree_t, elems : [tree_t])-> tree_t {
-    c_binding_build_constructor_indexed (type, cast!u64 (elems.len), elems.ptr)
+pub fn buildConstructorIndexed(type: tree_t, elems: [tree_t])-> tree_t {
+    c_binding_build_constructor_indexed(type, cast!u64(elems.len), elems.ptr)
 }
 
 /**
- * Build the construction of a structure (or tuple, slice etc.) using field names
+ * Build the construction of a structure(or tuple, slice etc.) using field names
  * */
-pub fn buildConstructorFields (type : tree_t, elems : [tree_t], fields : [[c8]])-> tree_t {
-    let fieldStringZ = copy [f.toStringZ () for f in fields];
-    return c_binding_build_constructor_fields (type,
-                                               cast!u64 (elems.len),
+pub fn buildConstructorFields(type: tree_t, elems: [tree_t], fields: [[c8]])-> tree_t {
+    let fieldStringZ = copy [f.toStringZ() for f in fields];
+    return c_binding_build_constructor_fields(type,
+                                               cast!u64(elems.len),
                                                elems.ptr,
-                                               cast!u64 (fieldStringZ.len),
+                                               cast!u64(fieldStringZ.len),
                                                fieldStringZ.ptr);
 }
 
 /**
  * Build a try finally control flow
  * */
-pub fn buildTryFinally (loc : &Word, try : tree_t, fin : tree_t)-> tree_t {
-    let l = wordToLocation (loc);
-    return c_binding_build_try_finally_declaration (l, try, fin);
+pub fn buildTryFinally(loc: &Word, try: tree_t, fin: tree_t)-> tree_t {
+    let l = wordToLocation(loc);
+    return c_binding_build_try_finally_declaration(l, try, fin);
 }
 
 /**
  * Build a try catch control flow
  * */
-pub fn buildTryCatch (loc : &Word, try : tree_t, ct : tree_t)-> tree_t {
-    let l = wordToLocation (loc);
-    return c_binding_build_try_catch_declaration (l, try, ct);
+pub fn buildTryCatch(loc: &Word, try: tree_t, ct: tree_t)-> tree_t {
+    let l = wordToLocation(loc);
+    return c_binding_build_try_catch_declaration(l, try, ct);
 }
 
 /**
  * Build the catcher part of a try catch
  * */
-pub fn buildCatcherExpr (loc : &Word, ct : tree_t)-> tree_t {
-    let l = wordToLocation (loc);
-    return c_binding_build_catcher_expression (l, ct);
+pub fn buildCatcherExpr(loc: &Word, ct: tree_t)-> tree_t {
+    let l = wordToLocation(loc);
+    return c_binding_build_catcher_expression(l, ct);
 }
