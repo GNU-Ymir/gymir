@@ -12,12 +12,19 @@
 #include <algorithm>
 #include <string>
 
+/* Major.minor of the midgard stdlib this driver links against.  Single
+   source of truth is ymir/bootstrap/YMIR_VERSION's MIDGARD_VERSION,
+   threaded in via -DLIBYMIDGARD_VERSION in Make-lang.in.  */
+#ifndef LIBYMIDGARD_VERSION
+#define LIBYMIDGARD_VERSION "1.2"
+#endif
+
 #ifndef LIBYMIDGARD_DEBUG
-#define LIBYMIDGARD_DEBUG "gymidgard-debug_1.1"
+#define LIBYMIDGARD_DEBUG "gymidgard-debug_" LIBYMIDGARD_VERSION
 #endif
 
 #ifndef LIBYMIDGARD_RELEASE
-#define LIBYMIDGARD_RELEASE "gymidgard-release_1.1"
+#define LIBYMIDGARD_RELEASE "gymidgard-release_" LIBYMIDGARD_VERSION
 #endif
 
 #ifndef LIBGC
@@ -41,7 +48,7 @@
 #endif
 
 #ifndef LIBUNITTEST
-#define LIBUNITTEST "gymidgard-tests_1.1"
+#define LIBUNITTEST "gymidgard-tests_" LIBYMIDGARD_VERSION
 #endif
 
 typedef unsigned int uint;
