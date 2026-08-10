@@ -1,0 +1,32 @@
+# Single source of truth for the release this repo's `.github/workflows/release.yml` builds and
+# publishes. Sourced (`. ./YMIR_VERSION`) by that workflow, and passed straight through to
+# `Dockerfile` as build-args. Nothing here is bumped automatically - update it by hand, copying
+# from ymir/bootstrap/YMIR_VERSION in a local checkout of github.com/GNU-Ymir/bootstrap, before
+# dispatching a release. gymir and bootstrap are released in lockstep (same tag on both repos),
+# so this file's values should always agree with whatever bootstrap/YMIR_VERSION says at the
+# GYC_VERSION tag below - that's the "bootstrap is the value of truth" contract: this file only
+# ever restates it, never invents a version of its own.
+#
+# - GYC_VERSION: the version this release is published under - the tag created on this repo
+#   (github.com/GNU-Ymir/gymir) - and the matching git tag that must already exist on
+#   github.com/GNU-Ymir/bootstrap, checked out during the build to get the self-hosted ymirc
+#   source that gets compiled into ymir1 (see Make-lang.in's `ymir/libymirc.a` target, which
+#   runs `gyllir build --release` against exactly that checkout). The release workflow fails
+#   fast if that tag doesn't exist on bootstrap yet.
+# - YMIR_BOOTSTRAP_VERSION / GCC_VERSION: the prebuilt `gyc` release this build's own ymirc
+#   source is *compiled with* (not the version being built) - the same fact bootstrap/
+#   YMIR_VERSION records from the bootstrap repo's point of view. Published as a .deb by
+#   github.com/GNU-Ymir/gymir (release tag = YMIR_BOOTSTRAP_VERSION, asset =
+#   gyc-<GCC major>_<YMIR_BOOTSTRAP_VERSION>_amd64.deb - only the GCC *major* appears in the
+#   asset name).
+# - GYLLIR_VERSION: the `gyllir` build tool release installed alongside it - it's what actually
+#   invokes gyc to build ymir/bootstrap/libymirc.a during `make` (see Make-lang.in). Published
+#   by github.com/GNU-Ymir/Gyllir (release tag = GYLLIR_VERSION, asset =
+#   gyllir_<GYLLIR_VERSION>_amd64.deb).
+# - MIDGARD_VERSION: the standard library (midgard) bundled into the produced gyc .deb,
+#   published by github.com/GNU-Ymir/yruntime (release tag = MIDGARD_VERSION).
+GYC_VERSION=1.2.0
+YMIR_BOOTSTRAP_VERSION=1.1.1
+GCC_VERSION=15.2.1
+GYLLIR_VERSION=1.2.0
+MIDGARD_VERSION=1.2.1

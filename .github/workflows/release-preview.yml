@@ -1,0 +1,109 @@
+name: Preview Release
+
+# Rolling pre-release, manually triggered (pick the branch/ref from the "Run workflow" button).
+# The tag/release name is the constant `preview`, independent of YMIR_VERSION's GYC_VERSION: every
+# run replaces the previous preview, so there is only ever one preview tag and one preview
+# release. The asset name is constant too (gyc-<major>_preview_amd64.deb), which keeps the
+# download URL stable across runs. The name cannot collide with release.yml's bare <version> tags.
+#
+# The toolchain/bootstrap inputs are still pinned exactly as release.yml pins them (from
+# YMIR_VERSION, bootstrap is still the value of truth and must still carry the GYC_VERSION tag) -
+# only the *gymir frontend source* being previewed is rolling, since that's the ref this workflow
+# was dispatched against.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  preview-release:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v7
+
+      # The self-hosted runners have no gh CLI of their own; the release steps below need one.
+      - uses: ./.github/actions/setup-gh
+
+      - name: Compute versions
+        id: version
+        run: |
+          . ./YMIR_VERSION
+          GCC_MAJOR_VERSION="${GCC_VERSION%%.*}"
+          echo "gcc_version=${GCC_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "gcc_major_version=${GCC_MAJOR_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "ymir_bootstrap_version=${YMIR_BOOTSTRAP_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "gyc_release_tag=${YMIR_BOOTSTRAP_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "gyc_asset=gyc-${GCC_MAJOR_VERSION}_${YMIR_BOOTSTRAP_VERSION}_amd64.deb" >> "$GITHUB_OUTPUT"
+          echo "gyllir_version=${GYLLIR_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "gyllir_release_tag=${GYLLIR_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "gyllir_asset=gyllir_${GYLLIR_VERSION}_amd64.deb" >> "$GITHUB_OUTPUT"
+          echo "midgard_version=${MIDGARD_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "bootstrap_tag=${GYC_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag_name=preview" >> "$GITHUB_OUTPUT"
+          echo "out_asset=gyc-${GCC_MAJOR_VERSION}_preview_amd64.deb" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure bootstrap has a matching tag
+        env:
+          TAG: ${{ steps.version.outputs.bootstrap_tag }}
+        run: |
+          if ! git ls-remote --exit-code --tags https://github.com/GNU-Ymir/bootstrap.git "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "::error::github.com/GNU-Ymir/bootstrap has no tag $TAG - tag that release on bootstrap (matching its gyllir.toml version) before previewing gymir."
+            exit 1
+          fi
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Build gyc .deb
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: export
+          push: false
+          load: true
+          tags: gyc-preview-build:latest
+          build-args: |
+            GCC_VERSION=${{ steps.version.outputs.gcc_version }}
+            GCC_MAJOR_VERSION=${{ steps.version.outputs.gcc_major_version }}
+            COMPILER_MAJOR_VERSION=${{ steps.version.outputs.gcc_major_version }}
+            GYC_RELEASE_TAG=${{ steps.version.outputs.gyc_release_tag }}
+            GYC_ASSET=${{ steps.version.outputs.gyc_asset }}
+            GYLLIR_RELEASE_TAG=${{ steps.version.outputs.gyllir_release_tag }}
+            GYLLIR_ASSET=${{ steps.version.outputs.gyllir_asset }}
+            BOOTSTRAP_RELEASE_TAG=${{ steps.version.outputs.bootstrap_tag }}
+            MIDGARD_RELEASE_TAG=${{ steps.version.outputs.midgard_version }}
+            GYC_VERSION_NUMBER=preview
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Extract .deb
+        env:
+          OUT_ASSET: ${{ steps.version.outputs.out_asset }}
+        run: |
+          CID="$(docker create gyc-preview-build:latest)"
+          docker cp "${CID}:/${OUT_ASSET}" "./${OUT_ASSET}"
+          docker rm "${CID}"
+
+      - name: Replace existing preview tag/release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag_name }}
+        run: gh release delete "$TAG" --yes --cleanup-tag || true
+
+      - name: Publish preview release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag_name }}
+          GCC_VERSION: ${{ steps.version.outputs.gcc_version }}
+          YMIR_BOOTSTRAP_VERSION: ${{ steps.version.outputs.ymir_bootstrap_version }}
+          GYLLIR_VERSION: ${{ steps.version.outputs.gyllir_version }}
+          MIDGARD_VERSION: ${{ steps.version.outputs.midgard_version }}
+          BOOTSTRAP_TAG: ${{ steps.version.outputs.bootstrap_tag }}
+          OUT_ASSET: ${{ steps.version.outputs.out_asset }}
+        run: |
+          gh release create "$TAG" \
+            --target "${{ github.sha }}" \
+            --title "Preview (gcc ${GCC_VERSION}, bootstrap ${BOOTSTRAP_TAG})" \
+            --notes "Automated preview release, built against bootstrap tag ${BOOTSTRAP_TAG} (compiled with gyc ${YMIR_BOOTSTRAP_VERSION} and gyllir ${GYLLIR_VERSION}, bundling midgard ${MIDGARD_VERSION}) @ ${{ github.sha }}. This tag is rolling - it always points at the most recent preview build." \
+            --prerelease \
+            "${OUT_ASSET}"
