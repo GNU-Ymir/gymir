@@ -1,0 +1,6 @@
+Package: gyc-@GCC_MAJOR_VERSION@
+Version: @GCC_VERSION@
+Maintainer: ecadorel
+Architecture: amd64
+Description: gnu ymir compiler
+Depends: g++-@GCC_MAJOR_VERSION@ (>= @GCC_MAJOR_VERSION@), gcc-@GCC_MAJOR_VERSION@ (>= @GCC_MAJOR_VERSION@), libgc-dev, libdwarf-dev

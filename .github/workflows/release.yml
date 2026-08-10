@@ -1,0 +1,112 @@
+name: Release
+
+# Manual: builds and publishes gyc-<major>_<version>_amd64.deb as a GitHub release asset. The
+# tag is a bare <version> (no leading v), read from YMIR_VERSION's GYC_VERSION - this repo does
+# not bump anything here, bootstrap is the value of truth: YMIR_VERSION only restates by hand
+# whatever github.com/GNU-Ymir/bootstrap's own YMIR_VERSION says at the matching tag. Fails
+# instead of overwriting if the target version has already been released, and fails fast if
+# bootstrap hasn't been tagged with this version yet.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v7
+
+      # The self-hosted runners have no gh CLI of their own; the release steps below need one.
+      - uses: ./.github/actions/setup-gh
+
+      - name: Compute versions and tag name
+        id: version
+        run: |
+          . ./YMIR_VERSION
+          GCC_MAJOR_VERSION="${GCC_VERSION%%.*}"
+          TAG_NAME="${GYC_VERSION}"
+          echo "gcc_version=${GCC_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "gcc_major_version=${GCC_MAJOR_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "gyc_version_number=${GYC_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "ymir_bootstrap_version=${YMIR_BOOTSTRAP_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "gyc_release_tag=${YMIR_BOOTSTRAP_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "gyc_asset=gyc-${GCC_MAJOR_VERSION}_${YMIR_BOOTSTRAP_VERSION}_amd64.deb" >> "$GITHUB_OUTPUT"
+          echo "gyllir_version=${GYLLIR_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "gyllir_release_tag=${GYLLIR_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "gyllir_asset=gyllir_${GYLLIR_VERSION}_amd64.deb" >> "$GITHUB_OUTPUT"
+          echo "midgard_version=${MIDGARD_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
+          echo "out_asset=gyc-${GCC_MAJOR_VERSION}_${TAG_NAME}_amd64.deb" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure bootstrap has a matching tag
+        env:
+          TAG: ${{ steps.version.outputs.tag_name }}
+        run: |
+          if ! git ls-remote --exit-code --tags https://github.com/GNU-Ymir/bootstrap.git "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "::error::github.com/GNU-Ymir/bootstrap has no tag $TAG - tag that release on bootstrap (matching its gyllir.toml version) before releasing gymir."
+            exit 1
+          fi
+
+      - name: Ensure this version has not already been released
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag_name }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "::error::Release $TAG already exists - update YMIR_VERSION's GYC_VERSION (from bootstrap) before releasing again."
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "::error::Tag $TAG already exists on origin (with no matching release) - update YMIR_VERSION's GYC_VERSION before releasing again."
+            exit 1
+          fi
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Build gyc .deb
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: export
+          push: false
+          load: true
+          tags: gyc-release-build:latest
+          build-args: |
+            GCC_VERSION=${{ steps.version.outputs.gcc_version }}
+            GCC_MAJOR_VERSION=${{ steps.version.outputs.gcc_major_version }}
+            COMPILER_MAJOR_VERSION=${{ steps.version.outputs.gcc_major_version }}
+            GYC_RELEASE_TAG=${{ steps.version.outputs.gyc_release_tag }}
+            GYC_ASSET=${{ steps.version.outputs.gyc_asset }}
+            GYLLIR_RELEASE_TAG=${{ steps.version.outputs.gyllir_release_tag }}
+            GYLLIR_ASSET=${{ steps.version.outputs.gyllir_asset }}
+            BOOTSTRAP_RELEASE_TAG=${{ steps.version.outputs.tag_name }}
+            MIDGARD_RELEASE_TAG=${{ steps.version.outputs.midgard_version }}
+            GYC_VERSION_NUMBER=${{ steps.version.outputs.gyc_version_number }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Extract .deb
+        env:
+          OUT_ASSET: ${{ steps.version.outputs.out_asset }}
+        run: |
+          CID="$(docker create gyc-release-build:latest)"
+          docker cp "${CID}:/${OUT_ASSET}" "./${OUT_ASSET}"
+          docker rm "${CID}"
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag_name }}
+          GCC_VERSION: ${{ steps.version.outputs.gcc_version }}
+          YMIR_BOOTSTRAP_VERSION: ${{ steps.version.outputs.ymir_bootstrap_version }}
+          GYLLIR_VERSION: ${{ steps.version.outputs.gyllir_version }}
+          MIDGARD_VERSION: ${{ steps.version.outputs.midgard_version }}
+          OUT_ASSET: ${{ steps.version.outputs.out_asset }}
+        run: |
+          gh release create "$TAG" \
+            --target "${{ github.sha }}" \
+            --title "Release $TAG" \
+            --notes "gyc ${TAG} (gcc ${GCC_VERSION}), built against bootstrap tag ${TAG}, compiled with gyc ${YMIR_BOOTSTRAP_VERSION} and gyllir ${GYLLIR_VERSION}, bundling midgard ${MIDGARD_VERSION} @ ${{ github.sha }}." \
+            "${OUT_ASSET}"
