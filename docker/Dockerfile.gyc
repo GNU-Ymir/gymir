@@ -1,19 +1,26 @@
 # syntax=docker/dockerfile:1
 
-# Builds gyc-<GCC_MAJOR_VERSION>_<GYC_VERSION_NUMBER>_amd64.deb - the GCC-based Ymir compiler -
-# from this checkout of the ymir frontend (gcc/ymir in a full GCC source tree), bundled with the
-# midgard standard library. Adapted from GNU-Ymir/CD_suite's amd64/deb/jobs/{clone_gcc,
-# bootstrap_build} Dockerfiles, collapsed into one file and pointed at a local checkout instead
-# of re-cloning this repo from GitHub. Nothing is built from source for the *compiler that does
-# the compiling*: the previous gyc/gyllir release is downloaded as a prebuilt .deb, exactly like
-# GNU-Ymir/bootstrap's own Dockerfile does. All build-args below are read from YMIR_VERSION at
-# the repo root by `.github/workflows/release.yml` - that file is the single source of truth,
-# copied from ymir/bootstrap/YMIR_VERSION by hand at release time (nothing here bumps a version).
+# Pass 1 of 2 (see docker/Dockerfile.midgard for pass 2): builds the gyc compiler itself - no
+# midgard yet - from this checkout of the ymir frontend (gcc/ymir in a full GCC source tree).
+# Split out of what used to be a single Dockerfile so `.github/workflows/release.yml` can run it
+# as its own CI job: this pass is the expensive, most failure-prone one (network clones of
+# gcc.gnu.org, a full GCC configure+make), so a flake here can be re-run on its own without
+# redoing the midgard pass (or vice versa).
 #
-# To build locally:
+# Nothing is built from source for the *compiler that does the compiling*: the previous gyc/
+# gyllir release is downloaded as a prebuilt .deb, exactly like GNU-Ymir/bootstrap's own
+# Dockerfile does. All build-args below are read from YMIR_VERSION at the repo root by the
+# release workflows - that file is the single source of truth, copied from
+# ymir/bootstrap/YMIR_VERSION by hand at release time (nothing here bumps a version).
+#
+# Output: /gyc-<GCC_MAJOR_VERSION>_<GYC_VERSION_NUMBER>_<ARCH>.deb - a real, installable gyc
+# package, just without the midgard stdlib bundled in yet. docker/Dockerfile.midgard installs it
+# as its own compiler and packages the final gyc+midgard .deb on top of it.
+#
+# To build locally (run from the repo root, so the build context is correct):
 #   . ./YMIR_VERSION
 #   GCC_MAJOR_VERSION="${GCC_VERSION%%.*}"
-#   docker build \
+#   docker build -f docker/Dockerfile.gyc \
 #     --build-arg GCC_VERSION="$GCC_VERSION" \
 #     --build-arg GCC_MAJOR_VERSION="$GCC_MAJOR_VERSION" \
 #     --build-arg COMPILER_MAJOR_VERSION="$GCC_MAJOR_VERSION" \
@@ -24,6 +31,7 @@
 #     --build-arg BOOTSTRAP_RELEASE_TAG="$GYC_VERSION" \
 #     --build-arg MIDGARD_RELEASE_TAG="$MIDGARD_VERSION" \
 #     --build-arg GYC_VERSION_NUMBER="$GYC_VERSION" \
+#     --build-arg GYC_PACKAGE_VERSION="$GYC_VERSION" \
 #     --target export --output type=local,dest=out .
 
 ARG UBUNTU_VERSION="26.04"
@@ -85,6 +93,7 @@ RUN gyllir -h || true
 # ---------------------------------------------------------------------------
 FROM toolchain AS fetch_gcc_version
 
+ARG GCC_MAJOR_VERSION
 ARG GCC_VERSION
 ARG BOOTSTRAP_RELEASE_TAG
 ARG MIDGARD_RELEASE_TAG
@@ -93,8 +102,8 @@ RUN test -n "$BOOTSTRAP_RELEASE_TAG" || \
     (echo "BOOTSTRAP_RELEASE_TAG build-arg is required - see YMIR_VERSION's GYC_VERSION" >&2 && exit 1)
 
 WORKDIR /gcc/gcc-src
-RUN git fetch origin releases/gcc-${GCC_VERSION}:refs/releases/gcc-${GCC_VERSION} --depth=1
-RUN git switch refs/releases/gcc-${GCC_VERSION} --detach
+RUN git fetch origin releases/gcc-${GCC_MAJOR_VERSION}:refs/releases/gcc-${GCC_MAJOR_VERSION} --depth=1
+RUN git switch refs/releases/gcc-${GCC_MAJOR_VERSION} --detach
 
 WORKDIR /gcc/gcc-src/gcc/ymir
 COPY . .
@@ -115,9 +124,9 @@ RUN git fetch --tags \
 
 # Keep the compiled ymirc's baked-in include-path constant (MIDGARD_VERSION in this checkout's
 # own YMIR_VERSION, read by Make-lang.in via `sed` at `make` time) in sync with the midgard
-# release this build actually pairs with (MIDGARD_RELEASE_TAG, checked out below in
-# build_midgard) - the tag's own committed YMIR_VERSION would otherwise be free to drift from
-# what this repo's root YMIR_VERSION intends.
+# release this build actually pairs with (MIDGARD_RELEASE_TAG, checked out by Dockerfile.midgard
+# in pass 2) - the tag's own committed YMIR_VERSION would otherwise be free to drift from what
+# this repo's root YMIR_VERSION intends.
 RUN if [ -f YMIR_VERSION ]; then \
 		grep -q '^MIDGARD_VERSION=' YMIR_VERSION \
 			&& sed -i "s/^MIDGARD_VERSION=.*/MIDGARD_VERSION=${MIDGARD_RELEASE_TAG}/" YMIR_VERSION \
@@ -145,14 +154,18 @@ RUN make -j$(( $(nproc) - 1 ))
 RUN make install DESTDIR=/gcc/gcc-install
 
 # ---------------------------------------------------------------------------
-# build_first_deb: stage the raw gyc binaries into a throwaway .deb, just so build_midgard below
-# can install it (and its Depends:) in a clean image rather than dragging the whole gcc-build
-# tree along.
+# package: stage the gyc binaries into an installable (but midgard-less) .deb.
 # ---------------------------------------------------------------------------
-FROM make AS build_first_deb
+FROM make AS package
 
-ARG GCC_VERSION
 ARG GCC_MAJOR_VERSION
+# The dpkg `Version:` field - a real Debian version, distinct from GYC_VERSION_NUMBER below,
+# which is only a filename token (the preview workflow sets that one to the non-numeric
+# `preview` to keep its download URL stable, and dpkg rejects that as a version).
+ARG GYC_PACKAGE_VERSION
+
+RUN test -n "$GYC_PACKAGE_VERSION" || \
+    (echo "GYC_PACKAGE_VERSION build-arg is required - see YMIR_VERSION's GYC_VERSION" >&2 && exit 1)
 
 WORKDIR /gcc
 RUN mkdir -p gcc-bin/DEBIAN gcc-bin/usr/bin \
@@ -168,81 +181,10 @@ RUN ln -s x86_64-linux-gnu-gyc-${GCC_MAJOR_VERSION} gyc-${GCC_MAJOR_VERSION} \
 
 WORKDIR /gcc/gcc-bin/DEBIAN
 COPY packaging/control.in /gcc/gcc-bin/DEBIAN/control
-RUN sed -i "s/@GCC_MAJOR_VERSION@/${GCC_MAJOR_VERSION}/g; s/@GCC_VERSION@/${GCC_VERSION}/g" /gcc/gcc-bin/DEBIAN/control
+RUN sed -i "s/@GCC_MAJOR_VERSION@/${GCC_MAJOR_VERSION}/g; s/@GCC_VERSION@/${GYC_PACKAGE_VERSION}/g" /gcc/gcc-bin/DEBIAN/control
 
 WORKDIR /gcc
 RUN dpkg --build gcc-bin
-
-# ---------------------------------------------------------------------------
-# build_midgard: fresh image, install the gyc-only .deb from above, build midgard against it and
-# bundle it in, produce the final gyc-<major>_<GYC_VERSION_NUMBER>_amd64.deb.
-# ---------------------------------------------------------------------------
-FROM ubuntu:${UBUNTU_VERSION} AS build_midgard
-
-ARG GCC_VERSION
-ARG GCC_MAJOR_VERSION
-ARG GYC_VERSION_NUMBER
-ARG MIDGARD_RELEASE_TAG
-ARG ARCH
-
-RUN test -n "$GYC_VERSION_NUMBER" || \
-    (echo "GYC_VERSION_NUMBER build-arg is required - see YMIR_VERSION's GYC_VERSION" >&2 && exit 1)
-
-WORKDIR /gcc
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        gcc-${GCC_MAJOR_VERSION} g++-${GCC_MAJOR_VERSION} flex autoconf automake libtool cmake \
-        patchelf libdwarf-dev git libgc-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN mkdir -p gcc-bin/DEBIAN gcc-bin/usr/bin \
-    gcc-bin/usr/lib/gcc/x86_64-linux-gnu/${GCC_MAJOR_VERSION} \
-    gcc-bin/usr/libexec/gcc/x86_64-linux-gnu/${GCC_MAJOR_VERSION}
-COPY --from=build_first_deb gcc/gcc-install/usr/bin/x86_64-linux-gnu-gyc-${GCC_MAJOR_VERSION} gcc-bin/usr/bin/
-COPY --from=build_first_deb gcc/gcc-install/usr/libexec/gcc/x86_64-linux-gnu/${GCC_MAJOR_VERSION}/ymir1 gcc-bin/usr/libexec/gcc/x86_64-linux-gnu/${GCC_MAJOR_VERSION}/ymir1
-
-COPY --from=build_first_deb /gcc/gcc-bin.deb .
-RUN apt-get update && apt-get install -y --no-install-recommends ./gcc-bin.deb && rm -rf /var/lib/apt/lists/*
-
-RUN git clone https://github.com/GNU-Ymir/yruntime.git
-WORKDIR /gcc/yruntime
-RUN git fetch --all --tags
-RUN git checkout "${MIDGARD_RELEASE_TAG}"
-
-# midgard's own CMakeLists.txt names the built libs/install dir after the major.minor of
-# YMIR_BOOTSTRAP_VERSION in this checkout's YMIR_VERSION file - not after MIDGARD_RELEASE_TAG
-# itself, and the two can drift. Read the same file CMake reads instead of re-deriving it.
-RUN sed -nE 's/^YMIR_BOOTSTRAP_VERSION=([0-9]+\.[0-9]+).*/\1/p' YMIR_VERSION > /tmp/midgard_short_version
-RUN test -s /tmp/midgard_short_version || (echo "could not derive MIDGARD_SHORT_VERSION from $(pwd)/YMIR_VERSION" >&2 && exit 1)
-
-RUN mkdir .build
-WORKDIR /gcc/yruntime/.build
-RUN touch __lib_test_.o __lib_debug_.o __lib_release_.o
-RUN cmake ..
-RUN make
-RUN make install DESTDIR=/gcc/gcc-bin
-
-WORKDIR /gcc/yruntime/midgard
-RUN MIDGARD_SHORT_VERSION="$(cat /tmp/midgard_short_version)" \
-	&& mkdir -p /gcc/gcc-bin/usr/libexec/gcc/x86_64-linux-gnu/${GCC_MAJOR_VERSION}/include/ymir/$MIDGARD_SHORT_VERSION \
-	&& cp -r * /gcc/gcc-bin/usr/libexec/gcc/x86_64-linux-gnu/${GCC_MAJOR_VERSION}/include/ymir/$MIDGARD_SHORT_VERSION
-
-WORKDIR /gcc/gcc-bin/usr/lib
-RUN MIDGARD_SHORT_VERSION="$(cat /tmp/midgard_short_version)" \
-	&& ln -s libgymidgard-debug_$MIDGARD_SHORT_VERSION.a libgymidgard-debug.a \
-	&& ln -s libgymidgard-tests_$MIDGARD_SHORT_VERSION.a libgymidgard-tests.a \
-	&& ln -s libgymidgard-release_$MIDGARD_SHORT_VERSION.a libgymidgard-release.a
-
-WORKDIR /gcc/gcc-bin/DEBIAN
-COPY packaging/control.in /gcc/gcc-bin/DEBIAN/control
-RUN sed -i "s/@GCC_MAJOR_VERSION@/${GCC_MAJOR_VERSION}/g; s/@GCC_VERSION@/${GYC_VERSION_NUMBER}/g" /gcc/gcc-bin/DEBIAN/control
-
-WORKDIR /gcc/gcc-bin/usr/bin
-RUN ln -s x86_64-linux-gnu-gyc-${GCC_MAJOR_VERSION} gyc-${GCC_MAJOR_VERSION} \
-    && ln -s gyc-${GCC_MAJOR_VERSION} gyc
-
-WORKDIR /gcc
-RUN dpkg --build gcc-bin
-RUN mv gcc-bin.deb /gyc-${GCC_MAJOR_VERSION}_${GYC_VERSION_NUMBER}_${ARCH}.deb
 
 # ---------------------------------------------------------------------------
 # export: nothing but the produced .deb, for a cheap `docker create` + `docker cp`.
@@ -253,5 +195,5 @@ ARG GCC_MAJOR_VERSION
 ARG GYC_VERSION_NUMBER
 ARG ARCH
 
-COPY --from=build_midgard /gyc-${GCC_MAJOR_VERSION}_${GYC_VERSION_NUMBER}_${ARCH}.deb /
+COPY --from=package /gcc/gcc-bin.deb /gyc-${GCC_MAJOR_VERSION}_${GYC_VERSION_NUMBER}_${ARCH}.deb
 CMD ["true"]
