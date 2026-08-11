@@ -17,9 +17,14 @@ GYC_INCLUDES = -I$(srcdir)/../include -I$(srcdir)/ -I$(srcdir)/gcc -I../gcc -I$(
 # build dependency of ymir1, see ymir/libymirc.a below) - avoid duplicating it
 # as a literal in gycspec.c.
 MIDGARD_VERSION := $(shell sed -nE 's/^MIDGARD_VERSION=([0-9]+\.[0-9]+).*/\1/p' $(srcdir)/ymir/bootstrap/YMIR_VERSION)
-DRIVER_DEFINES += -DLIBYMIDGARD_VERSION='"$(MIDGARD_VERSION)"'
 
-CFLAGS-ymir/gycspec.o += $(DRIVER_DEFINES)
+# This must not go through DRIVER_DEFINES: gcc/Makefile.in assigns that one with
+# `=` *after* it includes the per-language fragments, so anything appended to it
+# here is silently dropped and gycspec.c falls back to its built-in literal.
+YMIR_VERSION_DEFINES = \
+	-DLIBYMIDGARD_VERSION='"$(MIDGARD_VERSION)"'
+
+CFLAGS-ymir/gycspec.o += $(DRIVER_DEFINES) $(YMIR_VERSION_DEFINES)
 ymir/gycspec.o: $(CORETYPES_H) $(PLUGIN_HEADERS) $(INSN_ATTR_H)
 
 # Driver
