@@ -38,6 +38,11 @@ ARG GCC_MAJOR_VERSION
 ARG GYC_VERSION_NUMBER
 ARG GYC_PACKAGE_VERSION
 ARG MIDGARD_RELEASE_TAG
+# Re-declared from the global ARG above: a global (pre-FROM) ARG is only in scope for `FROM`
+# lines, so without this `${ARCH}` expands to empty in this stage and the .deb below is named
+# gyc-<major>_<version>_.deb, which the `export` stage - which *does* redeclare it - then fails
+# to COPY.
+ARG ARCH
 
 RUN test -n "$GCC_MAJOR_VERSION" || \
     (echo "GCC_MAJOR_VERSION build-arg is required - see YMIR_VERSION" >&2 && exit 1)
