@@ -15,11 +15,47 @@ GYC_INCLUDES = -I$(srcdir)/../include -I$(srcdir)/ -I$(srcdir)/gcc -I../gcc -I$(
 # Single source of truth for the midgard stdlib version gyc links against is
 # MIDGARD_VERSION in ymir/bootstrap/YMIR_VERSION (bootstrap/ is already a hard
 # build dependency of ymir1, see ymir/libymirc.a below) - avoid duplicating it
-# as a literal in gycspec.c.
+# as a literal in gycspec.c.  The major.minor form names the libraries and the
+# include directory; the full form is only reported by `gyc --version`.
 MIDGARD_VERSION := $(shell sed -nE 's/^MIDGARD_VERSION=([0-9]+\.[0-9]+).*/\1/p' $(srcdir)/ymir/bootstrap/YMIR_VERSION)
-DRIVER_DEFINES += -DLIBYMIDGARD_VERSION='"$(MIDGARD_VERSION)"'
+MIDGARD_FULL_VERSION := $(shell sed -nE 's/^MIDGARD_VERSION=(.+)/\1/p' $(srcdir)/ymir/bootstrap/YMIR_VERSION)
 
-CFLAGS-ymir/gycspec.o += $(DRIVER_DEFINES)
+# The date of that midgard tag cannot be derived from this source tree: yruntime
+# is not part of the build, and `make` has no business going to the network to
+# ask.  Release builds resolve it from the remote once and hand it to make in the
+# environment (see docker/Dockerfile.gyc); anywhere else it stays empty and
+# gycspec.c prints the midgard version without a date.
+MIDGARD_VERSION_DATE ?=
+
+# Likewise for the frontend version `gyc --version` reports: it is the version
+# of the ymirc release this gyc is built from, i.e. bootstrap's own gyllir.toml
+# `version` - the very value bootstrap/tools/set-version.sh bakes into ymirc as
+# __YMIR_VERSION_FULL__, so the driver and the frontend can never disagree.
+YMIR_FULL_VERSION := $(shell sed -nE 's/^version = "([^"]+)".*/\1/p' $(srcdir)/ymir/bootstrap/gyllir.toml | head -n1)
+
+# Date printed next to it, in the YYYYMMDD form GCC uses for its own DATESTAMP:
+# the date of the bootstrap tag this gyc is built from - release builds check
+# that tag out, see docker/Dockerfile.gyc.  Development builds sit on a commit
+# the version has not been tagged on yet, so fall back to the date of whatever
+# bootstrap commit is checked out; a source tree with no git at all leaves this
+# empty and gycspec.c then prints the version without a date.
+YMIR_VERSION_DATE := $(shell git -C $(srcdir)/ymir/bootstrap for-each-ref --format='%(creatordate:format:%Y%m%d)' 'refs/tags/$(YMIR_FULL_VERSION)' 2>/dev/null)
+ifeq ($(YMIR_VERSION_DATE),)
+YMIR_VERSION_DATE := $(shell git -C $(srcdir)/ymir/bootstrap log -1 --format=%cd --date=format:%Y%m%d 2>/dev/null)
+endif
+
+# These must not go through DRIVER_DEFINES: gcc/Makefile.in assigns that one
+# with `=` *after* it includes the per-language fragments, so anything appended
+# to it here is silently dropped and gycspec.c falls back to its built-in
+# literals.
+YMIR_VERSION_DEFINES = \
+	-DLIBYMIDGARD_VERSION='"$(MIDGARD_VERSION)"' \
+	-DMIDGARD_FULL_VERSION='"$(MIDGARD_FULL_VERSION)"' \
+	-DMIDGARD_VERSION_DATE='"$(MIDGARD_VERSION_DATE)"' \
+	-DYMIR_FULL_VERSION='"$(YMIR_FULL_VERSION)"' \
+	-DYMIR_VERSION_DATE='"$(YMIR_VERSION_DATE)"'
+
+CFLAGS-ymir/gycspec.o += $(DRIVER_DEFINES) $(YMIR_VERSION_DEFINES)
 ymir/gycspec.o: $(CORETYPES_H) $(PLUGIN_HEADERS) $(INSN_ATTR_H)
 
 # Driver

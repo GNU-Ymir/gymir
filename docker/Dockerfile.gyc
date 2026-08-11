@@ -133,6 +133,21 @@ RUN if [ -f YMIR_VERSION ]; then \
 			|| echo "MIDGARD_VERSION=${MIDGARD_RELEASE_TAG}" >> YMIR_VERSION; \
 	fi
 
+# Date of the midgard release this build bundles, YYYYMMDD, reported next to its version by
+# `gyc --version`.  yruntime is not part of this image - Dockerfile.midgard clones it in pass 2 -
+# and `make` must stay offline, so resolve it here, straight off the remote's tag (a blobless
+# single-tag clone, ~100K), and hand it to make below.  Cosmetic enough not to be worth failing a
+# release over: an unreachable remote leaves the file empty and gycspec.c then prints the midgard
+# version with no date.
+RUN git clone --bare --filter=blob:none --depth 1 --branch "${MIDGARD_RELEASE_TAG}" \
+		https://github.com/GNU-Ymir/yruntime.git /tmp/yruntime-tag.git 2>/dev/null \
+		&& git -C /tmp/yruntime-tag.git for-each-ref \
+			--format='%(creatordate:format:%Y%m%d)' "refs/tags/${MIDGARD_RELEASE_TAG}" \
+			> /tmp/midgard_date \
+		|| echo "::warning::could not read the date of yruntime tag ${MIDGARD_RELEASE_TAG}" >&2; \
+	rm -rf /tmp/yruntime-tag.git; \
+	touch /tmp/midgard_date
+
 WORKDIR /gcc/gcc-src/
 RUN ./contrib/download_prerequisites
 
@@ -150,7 +165,9 @@ RUN CC=gcc-${COMPILER_MAJOR_VERSION} CXX=g++-${COMPILER_MAJOR_VERSION} ../gcc-sr
 
 FROM configure AS make
 WORKDIR /gcc/gcc-build
-RUN make -j$(( $(nproc) - 1 ))
+# MIDGARD_VERSION_DATE is picked up from the environment by ymir/Make-lang.in - see the file
+# written in the fetch_gcc_version stage above.
+RUN MIDGARD_VERSION_DATE="$(cat /tmp/midgard_date)" make -j$(( $(nproc) - 1 ))
 RUN make install DESTDIR=/gcc/gcc-install
 
 # ---------------------------------------------------------------------------
