@@ -1,0 +1,32 @@
+name: Setup buildx
+description: >-
+  Sets up a persistent, shared BuildKit builder for the self-hosted runners. docker/setup-buildx-action
+  otherwise creates a throwaway builder per job and destroys it on cleanup, which forces every build to
+  ship its layer cache off-box (`cache-to: type=gha`) just to get it back on the next job. Since all our
+  jobs land on the same machine, a named builder with cleanup disabled keeps that cache on local disk
+  instead: no upload, no GitHub 10GB cache cap, and cross-job reuse (clone-gcc -> build-gyc) still works
+  because it is literally the same BuildKit instance.
+
+runs:
+  using: composite
+  steps:
+    # buildkitd-config-inline only takes effect when the builder is *created*. This one is created once
+    # and reused forever after, so changing the GC policy below needs a `docker buildx rm ymir-persistent`
+    # on the runner to be picked up.
+    - uses: docker/setup-buildx-action@v4
+      with:
+        name: ymir-persistent
+        # Keep the builder (and therefore its cache) alive between jobs and between runs.
+        cleanup: false
+        # Belt and braces: if the builder is ever removed by hand, keep its state volume anyway.
+        keep-state: true
+        buildkitd-config-inline: |
+          [worker.oci]
+            gc = true
+            [[worker.oci.gcpolicy]]
+              filters = ["type==source.local", "type==exec.cachemount", "type==source.git.checkout"]
+              keepDuration = "168h"
+              keepBytes = "20GB"
+            [[worker.oci.gcpolicy]]
+              all = true
+              keepBytes = "80GB"
