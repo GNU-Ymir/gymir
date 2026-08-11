@@ -19,6 +19,33 @@
 #define LIBYMIDGARD_VERSION "1.2"
 #endif
 
+/* Full versions reported by --version: the midgard release above, and the
+   ymirc release this driver was built from (bootstrap's gyllir.toml version,
+   the same value ymirc reports as __YMIR_VERSION_FULL__).  Both are threaded
+   in by Make-lang.in - never hand-edit them here.  */
+#ifndef MIDGARD_FULL_VERSION
+#define MIDGARD_FULL_VERSION LIBYMIDGARD_VERSION
+#endif
+
+#ifndef YMIR_FULL_VERSION
+#define YMIR_FULL_VERSION ""
+#endif
+
+/* Dates of the tags those two versions were cut from, YYYYMMDD, like GCC's own
+   DATESTAMP.  Either is empty when the build had no way to look it up, and the
+   version is then reported on its own.  */
+#ifndef YMIR_VERSION_DATE
+#define YMIR_VERSION_DATE ""
+#endif
+
+#ifndef MIDGARD_VERSION_DATE
+#define MIDGARD_VERSION_DATE ""
+#endif
+
+/* A build that could not read one of the version files would otherwise print
+   a bare, empty version line.  */
+#define VERSION_OR_UNKNOWN(v) ((v)[0] != '\0' ? (v) : "unknown")
+
 #ifndef LIBYMIDGARD_DEBUG
 #define LIBYMIDGARD_DEBUG "gymidgard-debug_" LIBYMIDGARD_VERSION
 #endif
@@ -53,6 +80,31 @@
 
 typedef unsigned int uint;
 
+/* Report one "<name> version <version> <date>" line, leaving the date out when
+   the build had no way to look it up.  */
+static void
+print_version_line (FILE * out, const char * name, const char * version,
+					const char * date)
+{
+	if (date[0] != '\0') {
+		fprintf (out, "%s version %s %s\n", name, VERSION_OR_UNKNOWN (version), date);
+	} else {
+		fprintf (out, "%s version %s\n", name, VERSION_OR_UNKNOWN (version));
+	}
+}
+
+/* Report the versions of the Ymir frontend and of the midgard stdlib bundled
+   with it.  The GCC version line, the copyright and the warranty notice are
+   deliberately left to the driver (gcc.cc), which prints them right after
+   lang_specific_driver returns - hence these lines come first, and hence
+   --version is passed through rather than consumed here.  */
+static void
+print_ymir_version (FILE * out)
+{
+	print_version_line (out, "Ymir", YMIR_FULL_VERSION, YMIR_VERSION_DATE);
+	print_version_line (out, "Midgard", MIDGARD_FULL_VERSION, MIDGARD_VERSION_DATE);
+}
+
 void
 lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 					  unsigned int * in_decoded_options_count,
@@ -77,7 +129,9 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 	bool yr_file_found = false;
 	bool in_debug = false;
 	bool for_yil = false;
-		
+	bool version_asked = false;
+	bool verbose = false;
+
 	for (i = 0 ; i < argc ; i++) {
 		const char * arg = decoded_options [i].arg;
 		if (decoded_options [i].opt_index == OPT_l) {
@@ -119,6 +173,22 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 		if (decoded_options [i].opt_index == OPT_g) {
 			in_debug = true;
 		}
+
+		if (decoded_options [i].opt_index == OPT__version) {
+			version_asked = true;
+		}
+
+		if (decoded_options [i].opt_index == OPT_v) {
+			verbose = true;
+		}
+	}
+
+	/* --version goes to stdout, alongside the driver's own version block; -v
+	   goes to stderr, alongside the configuration dump gcc.cc prints there.  */
+	if (version_asked) {
+		print_ymir_version (stdout);
+	} else if (verbose) {
+		print_ymir_version (stderr);
 	}
 
 	if (yr_file_found) {
