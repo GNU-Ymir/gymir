@@ -6,6 +6,15 @@ name: Release
 # whatever github.com/GNU-Ymir/bootstrap's own YMIR_VERSION says at the matching tag. Fails
 # instead of overwriting if the target version has already been released, and fails fast if
 # bootstrap hasn't been tagged with this version yet.
+#
+# Split into five jobs (checks -> clone-gcc -> build-gyc -> build-midgard -> publish) so a
+# flaky/failing pass can be re-run on its own from the Actions UI ("Re-run failed jobs") without
+# redoing the whole thing - most usefully, a midgard flake doesn't force redoing the expensive gcc
+# compile in build-gyc, and a build-gyc flake doesn't force re-cloning gcc.gnu.org in clone-gcc.
+# clone-gcc only populates the docker/Dockerfile.gyc `clone_gcc` layer (no artifact to pass along);
+# build-gyc resumes from it instead of redoing it. That works with no cache-to/cache-from because
+# every job here shares one persistent, on-disk BuildKit builder - see .github/actions/setup-buildx.
+# Intermediate .deb artifacts hop between the other jobs as workflow artifacts.
 on:
   workflow_dispatch:
 
@@ -13,12 +22,27 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  checks:
     runs-on: [self-hosted, linux, x64]
+    outputs:
+      gcc_version: ${{ steps.version.outputs.gcc_version }}
+      gcc_major_version: ${{ steps.version.outputs.gcc_major_version }}
+      gyc_version_number: ${{ steps.version.outputs.gyc_version_number }}
+      gyc_package_version: ${{ steps.version.outputs.gyc_package_version }}
+      ymir_bootstrap_version: ${{ steps.version.outputs.ymir_bootstrap_version }}
+      gyc_release_tag: ${{ steps.version.outputs.gyc_release_tag }}
+      gyc_asset: ${{ steps.version.outputs.gyc_asset }}
+      gyllir_version: ${{ steps.version.outputs.gyllir_version }}
+      gyllir_release_tag: ${{ steps.version.outputs.gyllir_release_tag }}
+      gyllir_asset: ${{ steps.version.outputs.gyllir_asset }}
+      midgard_version: ${{ steps.version.outputs.midgard_version }}
+      tag_name: ${{ steps.version.outputs.tag_name }}
+      intermediate_asset: ${{ steps.version.outputs.intermediate_asset }}
+      out_asset: ${{ steps.version.outputs.out_asset }}
     steps:
       - uses: actions/checkout@v7
 
-      # The self-hosted runners have no gh CLI of their own; the release steps below need one.
+      # The self-hosted runners have no gh CLI of their own; the steps below need one.
       - uses: ./.github/actions/setup-gh
 
       - name: Compute versions and tag name
@@ -30,6 +54,7 @@ jobs:
           echo "gcc_version=${GCC_VERSION}" >> "$GITHUB_OUTPUT"
           echo "gcc_major_version=${GCC_MAJOR_VERSION}" >> "$GITHUB_OUTPUT"
           echo "gyc_version_number=${GYC_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "gyc_package_version=${GYC_VERSION}" >> "$GITHUB_OUTPUT"
           echo "ymir_bootstrap_version=${YMIR_BOOTSTRAP_VERSION}" >> "$GITHUB_OUTPUT"
           echo "gyc_release_tag=${YMIR_BOOTSTRAP_VERSION}" >> "$GITHUB_OUTPUT"
           echo "gyc_asset=gyc-${GCC_MAJOR_VERSION}_${YMIR_BOOTSTRAP_VERSION}_amd64.deb" >> "$GITHUB_OUTPUT"
@@ -38,6 +63,7 @@ jobs:
           echo "gyllir_asset=gyllir_${GYLLIR_VERSION}_amd64.deb" >> "$GITHUB_OUTPUT"
           echo "midgard_version=${MIDGARD_VERSION}" >> "$GITHUB_OUTPUT"
           echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
+          echo "intermediate_asset=gyc-${GCC_MAJOR_VERSION}_${TAG_NAME}_amd64.deb" >> "$GITHUB_OUTPUT"
           echo "out_asset=gyc-${GCC_MAJOR_VERSION}_${TAG_NAME}_amd64.deb" >> "$GITHUB_OUTPUT"
 
       - name: Ensure bootstrap has a matching tag
@@ -63,47 +89,135 @@ jobs:
             exit 1
           fi
 
-      - uses: docker/setup-buildx-action@v4
+  clone-gcc:
+    name: "Pass 1: clone gcc"
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-buildx
 
-      - name: Build gyc .deb
+      - name: Clone upstream gcc.gnu.org (cached independently of every version knob below it)
         uses: docker/build-push-action@v7
         with:
           context: .
+          file: docker/Dockerfile.gyc
+          target: clone_gcc
+          push: false
+
+  build-gyc:
+    name: "Pass 2: build gyc"
+    needs: [checks, clone-gcc]
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-buildx
+
+      - name: Build gyc .deb (no midgard yet)
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: docker/Dockerfile.gyc
           target: export
           push: false
           load: true
-          tags: gyc-release-build:latest
+          tags: gyc-build:latest
           build-args: |
-            GCC_VERSION=${{ steps.version.outputs.gcc_version }}
-            GCC_MAJOR_VERSION=${{ steps.version.outputs.gcc_major_version }}
-            COMPILER_MAJOR_VERSION=${{ steps.version.outputs.gcc_major_version }}
-            GYC_RELEASE_TAG=${{ steps.version.outputs.gyc_release_tag }}
-            GYC_ASSET=${{ steps.version.outputs.gyc_asset }}
-            GYLLIR_RELEASE_TAG=${{ steps.version.outputs.gyllir_release_tag }}
-            GYLLIR_ASSET=${{ steps.version.outputs.gyllir_asset }}
-            BOOTSTRAP_RELEASE_TAG=${{ steps.version.outputs.tag_name }}
-            MIDGARD_RELEASE_TAG=${{ steps.version.outputs.midgard_version }}
-            GYC_VERSION_NUMBER=${{ steps.version.outputs.gyc_version_number }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+            GCC_VERSION=${{ needs.checks.outputs.gcc_version }}
+            GCC_MAJOR_VERSION=${{ needs.checks.outputs.gcc_major_version }}
+            COMPILER_MAJOR_VERSION=${{ needs.checks.outputs.gcc_major_version }}
+            GYC_RELEASE_TAG=${{ needs.checks.outputs.gyc_release_tag }}
+            GYC_ASSET=${{ needs.checks.outputs.gyc_asset }}
+            GYLLIR_RELEASE_TAG=${{ needs.checks.outputs.gyllir_release_tag }}
+            GYLLIR_ASSET=${{ needs.checks.outputs.gyllir_asset }}
+            BOOTSTRAP_RELEASE_TAG=${{ needs.checks.outputs.tag_name }}
+            MIDGARD_RELEASE_TAG=${{ needs.checks.outputs.midgard_version }}
+            GYC_VERSION_NUMBER=${{ needs.checks.outputs.gyc_version_number }}
+            GYC_PACKAGE_VERSION=${{ needs.checks.outputs.gyc_package_version }}
 
       - name: Extract .deb
         env:
-          OUT_ASSET: ${{ steps.version.outputs.out_asset }}
+          ASSET: ${{ needs.checks.outputs.intermediate_asset }}
         run: |
-          CID="$(docker create gyc-release-build:latest)"
-          docker cp "${CID}:/${OUT_ASSET}" "./${OUT_ASSET}"
+          CID="$(docker create gyc-build:latest)"
+          docker cp "${CID}:/${ASSET}" "./${ASSET}"
           docker rm "${CID}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gyc-compiler-only-deb
+          path: ${{ needs.checks.outputs.intermediate_asset }}
+          retention-days: 3
+
+  build-midgard:
+    name: "Pass 3: build midgard, bundle final .deb"
+    needs: [checks, build-gyc]
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: gyc-compiler-only-deb
+          path: artifacts
+
+      - name: Stage the pass-1 .deb where Dockerfile.midgard expects it
+        env:
+          ASSET: ${{ needs.checks.outputs.intermediate_asset }}
+        run: mv "artifacts/${ASSET}" artifacts/gyc.deb
+
+      - uses: ./.github/actions/setup-buildx
+
+      - name: Build final gyc+midgard .deb
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: docker/Dockerfile.midgard
+          target: export
+          push: false
+          load: true
+          tags: gyc-midgard-build:latest
+          build-args: |
+            GCC_MAJOR_VERSION=${{ needs.checks.outputs.gcc_major_version }}
+            MIDGARD_RELEASE_TAG=${{ needs.checks.outputs.midgard_version }}
+            GYC_VERSION_NUMBER=${{ needs.checks.outputs.gyc_version_number }}
+            GYC_PACKAGE_VERSION=${{ needs.checks.outputs.gyc_package_version }}
+
+      - name: Extract final .deb
+        env:
+          ASSET: ${{ needs.checks.outputs.out_asset }}
+        run: |
+          CID="$(docker create gyc-midgard-build:latest)"
+          docker cp "${CID}:/${ASSET}" "./${ASSET}"
+          docker rm "${CID}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gyc-final-deb
+          path: ${{ needs.checks.outputs.out_asset }}
+          retention-days: 3
+
+  publish:
+    needs: [checks, build-midgard]
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup-gh
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: gyc-final-deb
+          path: .
 
       - name: Publish release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ steps.version.outputs.tag_name }}
-          GCC_VERSION: ${{ steps.version.outputs.gcc_version }}
-          YMIR_BOOTSTRAP_VERSION: ${{ steps.version.outputs.ymir_bootstrap_version }}
-          GYLLIR_VERSION: ${{ steps.version.outputs.gyllir_version }}
-          MIDGARD_VERSION: ${{ steps.version.outputs.midgard_version }}
-          OUT_ASSET: ${{ steps.version.outputs.out_asset }}
+          TAG: ${{ needs.checks.outputs.tag_name }}
+          GCC_VERSION: ${{ needs.checks.outputs.gcc_version }}
+          YMIR_BOOTSTRAP_VERSION: ${{ needs.checks.outputs.ymir_bootstrap_version }}
+          GYLLIR_VERSION: ${{ needs.checks.outputs.gyllir_version }}
+          MIDGARD_VERSION: ${{ needs.checks.outputs.midgard_version }}
+          OUT_ASSET: ${{ needs.checks.outputs.out_asset }}
         run: |
           gh release create "$TAG" \
             --target "${{ github.sha }}" \

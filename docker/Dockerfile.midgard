@@ -1,0 +1,129 @@
+# syntax=docker/dockerfile:1
+
+# Pass 2 of 2 (see docker/Dockerfile.gyc for pass 1): installs the midgard-less gyc .deb
+# docker/Dockerfile.gyc produced, builds the midgard standard library against it, and bundles
+# both into the final gyc-<GCC_MAJOR_VERSION>_<GYC_VERSION_NUMBER>_<ARCH>.deb this release
+# actually ships. Split into its own file/CI job so a flake here (e.g. cloning yruntime) can be
+# re-run without redoing the much more expensive gyc compile in pass 1.
+#
+# Build context must contain artifacts/gyc.deb - the exact file docker/Dockerfile.gyc's `export`
+# stage produced - `.github/workflows/release.yml` downloads it there as a job artifact before
+# running this build. All other build-args are read from YMIR_VERSION at the repo root, same as
+# pass 1.
+#
+# To build locally, after building docker/Dockerfile.gyc (see its own header for that command),
+# from the repo root:
+#   . ./YMIR_VERSION
+#   GCC_MAJOR_VERSION="${GCC_VERSION%%.*}"
+#   mkdir -p artifacts
+#   cp "out/gyc-${GCC_MAJOR_VERSION}_${GYC_VERSION}_amd64.deb" artifacts/gyc.deb
+#   docker build -f docker/Dockerfile.midgard \
+#     --build-arg GCC_MAJOR_VERSION="$GCC_MAJOR_VERSION" \
+#     --build-arg MIDGARD_RELEASE_TAG="$MIDGARD_VERSION" \
+#     --build-arg GYC_VERSION_NUMBER="$GYC_VERSION" \
+#     --build-arg GYC_PACKAGE_VERSION="$GYC_VERSION" \
+#     --target export --output type=local,dest=out .
+
+ARG UBUNTU_VERSION="26.04"
+ARG ARCH="amd64"
+
+FROM ubuntu:${UBUNTU_VERSION} AS build_midgard
+
+ARG GCC_MAJOR_VERSION
+# GYC_VERSION_NUMBER is only the token in the produced .deb's *filename*; the preview workflow
+# sets it to `preview` so its download URL stays constant across runs. GYC_PACKAGE_VERSION is
+# the dpkg `Version:` field, which must be a real Debian version (dpkg rejects one that does not
+# start with a digit) - the preview workflow passes `<GYC_VERSION>~preview`, which sorts *below*
+# the eventual `<GYC_VERSION>` release so apt upgrades a preview install onto the real release.
+ARG GYC_VERSION_NUMBER
+ARG GYC_PACKAGE_VERSION
+ARG MIDGARD_RELEASE_TAG
+# Re-declared from the global ARG above: a global (pre-FROM) ARG is only in scope for `FROM`
+# lines, so without this `${ARCH}` expands to empty in this stage and the .deb below is named
+# gyc-<major>_<version>_.deb, which the `export` stage - which *does* redeclare it - then fails
+# to COPY.
+ARG ARCH
+
+RUN test -n "$GCC_MAJOR_VERSION" || \
+    (echo "GCC_MAJOR_VERSION build-arg is required - see YMIR_VERSION" >&2 && exit 1)
+RUN test -n "$GYC_VERSION_NUMBER" || \
+    (echo "GYC_VERSION_NUMBER build-arg is required - see YMIR_VERSION's GYC_VERSION" >&2 && exit 1)
+RUN test -n "$GYC_PACKAGE_VERSION" || \
+    (echo "GYC_PACKAGE_VERSION build-arg is required - see YMIR_VERSION's GYC_VERSION" >&2 && exit 1)
+RUN test -n "$MIDGARD_RELEASE_TAG" || \
+    (echo "MIDGARD_RELEASE_TAG build-arg is required - see YMIR_VERSION" >&2 && exit 1)
+
+WORKDIR /gcc
+# build-essential is what provides `make` and the unversioned `gcc`/`g++` (`cc`) that CMake picks
+# up as CMAKE_MAKE_PROGRAM / CMAKE_C_COMPILER - the versioned gcc-<N>/g++-<N> below are only
+# there because the gyc .deb depends on them, they install no unversioned symlink.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential gcc-${GCC_MAJOR_VERSION} g++-${GCC_MAJOR_VERSION} \
+        flex autoconf automake libtool cmake \
+        patchelf libdwarf-dev git libgc-dev ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# The midgard-less gyc .deb from Dockerfile.gyc (pass 1) - installed both to get a working `gyc`
+# for midgard's own build below, and to re-stage its exact installed files into the final
+# package's tree.
+COPY artifacts/gyc.deb ./gcc-bin.deb
+RUN apt-get update && apt-get install -y --no-install-recommends ./gcc-bin.deb && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p gcc-bin/DEBIAN gcc-bin/usr/bin \
+    gcc-bin/usr/lib/gcc/x86_64-linux-gnu/${GCC_MAJOR_VERSION} \
+    gcc-bin/usr/libexec/gcc/x86_64-linux-gnu/${GCC_MAJOR_VERSION}
+RUN cp /usr/bin/x86_64-linux-gnu-gyc-${GCC_MAJOR_VERSION} gcc-bin/usr/bin/ \
+    && cp /usr/libexec/gcc/x86_64-linux-gnu/${GCC_MAJOR_VERSION}/ymir1 gcc-bin/usr/libexec/gcc/x86_64-linux-gnu/${GCC_MAJOR_VERSION}/ymir1
+
+RUN git clone https://github.com/GNU-Ymir/yruntime.git
+WORKDIR /gcc/yruntime
+RUN git fetch --all --tags
+RUN git checkout "${MIDGARD_RELEASE_TAG}"
+
+# midgard's own CMakeLists.txt names the built libs/install dir after the major.minor of
+# YMIR_BOOTSTRAP_VERSION in this checkout's YMIR_VERSION file - not after MIDGARD_RELEASE_TAG
+# itself, and the two can drift. Read the same file CMake reads instead of re-deriving it.
+RUN sed -nE 's/^YMIR_BOOTSTRAP_VERSION=([0-9]+\.[0-9]+).*/\1/p' YMIR_VERSION > /tmp/midgard_short_version
+RUN test -s /tmp/midgard_short_version || (echo "could not derive MIDGARD_SHORT_VERSION from $(pwd)/YMIR_VERSION" >&2 && exit 1)
+
+RUN mkdir .build
+WORKDIR /gcc/yruntime/.build
+RUN touch __lib_test_.o __lib_debug_.o __lib_release_.o
+RUN cmake ..
+RUN make
+RUN make install DESTDIR=/gcc/gcc-bin
+
+WORKDIR /gcc/yruntime/midgard
+RUN MIDGARD_SHORT_VERSION="$(cat /tmp/midgard_short_version)" \
+	&& mkdir -p /gcc/gcc-bin/usr/libexec/gcc/x86_64-linux-gnu/${GCC_MAJOR_VERSION}/include/ymir/$MIDGARD_SHORT_VERSION \
+	&& cp -r * /gcc/gcc-bin/usr/libexec/gcc/x86_64-linux-gnu/${GCC_MAJOR_VERSION}/include/ymir/$MIDGARD_SHORT_VERSION
+
+WORKDIR /gcc/gcc-bin/usr/lib
+RUN MIDGARD_SHORT_VERSION="$(cat /tmp/midgard_short_version)" \
+	&& ln -s libgymidgard-debug_$MIDGARD_SHORT_VERSION.a libgymidgard-debug.a \
+	&& ln -s libgymidgard-tests_$MIDGARD_SHORT_VERSION.a libgymidgard-tests.a \
+	&& ln -s libgymidgard-release_$MIDGARD_SHORT_VERSION.a libgymidgard-release.a
+
+WORKDIR /gcc/gcc-bin/DEBIAN
+COPY packaging/control.in /gcc/gcc-bin/DEBIAN/control
+RUN sed -i "s/@GCC_MAJOR_VERSION@/${GCC_MAJOR_VERSION}/g; s/@GCC_VERSION@/${GYC_PACKAGE_VERSION}/g" /gcc/gcc-bin/DEBIAN/control
+
+WORKDIR /gcc/gcc-bin/usr/bin
+RUN ln -s x86_64-linux-gnu-gyc-${GCC_MAJOR_VERSION} gyc-${GCC_MAJOR_VERSION} \
+    && ln -s gyc-${GCC_MAJOR_VERSION} gyc
+
+WORKDIR /gcc
+RUN dpkg --build gcc-bin
+RUN mv gcc-bin.deb /gyc-${GCC_MAJOR_VERSION}_${GYC_VERSION_NUMBER}_${ARCH}.deb
+
+# ---------------------------------------------------------------------------
+# export: nothing but the produced .deb, for a cheap `docker create` + `docker cp`.
+# ---------------------------------------------------------------------------
+FROM scratch AS export
+
+ARG GCC_MAJOR_VERSION
+ARG GYC_VERSION_NUMBER
+ARG ARCH
+
+COPY --from=build_midgard /gyc-${GCC_MAJOR_VERSION}_${GYC_VERSION_NUMBER}_${ARCH}.deb /
+CMD ["true"]

@@ -1,0 +1,255 @@
+name: Check
+
+# Cheap pre-flight for the release workflows: verifies that every *remote* thing
+# .github/workflows/release.yml and release-preview.yml reach for (through docker/Dockerfile.gyc
+# and docker/Dockerfile.midgard) actually exists, before anyone spends an hour of self-hosted
+# runner time on a full GCC compile only to have it die on a 404.
+#
+# Everything checked here is derived from YMIR_VERSION at the repo root - the single source of
+# truth both release workflows read - so one run answers "is YMIR_VERSION releasable right now?":
+#
+#   YMIR_VERSION field     | must already exist on
+#   -----------------------+---------------------------------------------------------------------
+#   GYC_VERSION            | GNU-Ymir/bootstrap, as a tag - the self-hosted ymirc source
+#                          |   Dockerfile.gyc checks out ("bootstrap is the value of truth")
+#   YMIR_BOOTSTRAP_VERSION | GNU-Ymir/gymir, as a release carrying the prebuilt compiler asset
+#                          |   gyc-<GCC major>_<version>_amd64.deb
+#   GYLLIR_VERSION         | GNU-Ymir/Gyllir, as a release carrying gyllir_<version>_amd64.deb -
+#                          |   the build tool that drives gyc (see Make-lang.in)
+#   MIDGARD_VERSION        | GNU-Ymir/yruntime, as a tag - the stdlib bundled into the final .deb
+#   GCC_VERSION            | gcc.gnu.org, as a releases/gcc-<major> branch
+#
+# Checks after the first use `if: ${{ !cancelled() }}` so a single run reports *everything* that
+# needs fixing instead of one thing per run, while each failing check still shows up red on its
+# own step.
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - YMIR_VERSION
+      - docker/**
+      - packaging/**
+      - .github/**
+  push:
+    branches: [master]
+    paths:
+      - YMIR_VERSION
+      - docker/**
+      - packaging/**
+      - .github/**
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    name: "Preflight: remote refs named by YMIR_VERSION"
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v7
+
+      # The self-hosted runners have no gh CLI of their own; the release-asset steps need one.
+      - uses: ./.github/actions/setup-gh
+
+      # Exported to $GITHUB_ENV rather than step outputs: every step below reads them as plain
+      # shell variables, which keeps the check scripts copy-pasteable into a local terminal.
+      - name: Read YMIR_VERSION
+        run: |
+          set -euo pipefail
+          . ./YMIR_VERSION
+
+          missing=""
+          for var in GYC_VERSION YMIR_BOOTSTRAP_VERSION GCC_VERSION GYLLIR_VERSION MIDGARD_VERSION; do
+            [ -n "${!var:-}" ] || missing="${missing} ${var}"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::YMIR_VERSION does not set:${missing}"
+            exit 1
+          fi
+
+          GCC_MAJOR_VERSION="${GCC_VERSION%%.*}"
+          {
+            echo "GYC_VERSION=${GYC_VERSION}"
+            echo "YMIR_BOOTSTRAP_VERSION=${YMIR_BOOTSTRAP_VERSION}"
+            echo "GCC_VERSION=${GCC_VERSION}"
+            echo "GCC_MAJOR_VERSION=${GCC_MAJOR_VERSION}"
+            echo "GYLLIR_VERSION=${GYLLIR_VERSION}"
+            echo "MIDGARD_VERSION=${MIDGARD_VERSION}"
+            echo "GYC_ASSET=gyc-${GCC_MAJOR_VERSION}_${YMIR_BOOTSTRAP_VERSION}_amd64.deb"
+            echo "GYLLIR_ASSET=gyllir_${GYLLIR_VERSION}_amd64.deb"
+          } >> "$GITHUB_ENV"
+
+          echo "Releasing GYC_VERSION=${GYC_VERSION} (gcc ${GCC_VERSION}), compiled with gyc"
+          echo "${YMIR_BOOTSTRAP_VERSION} + gyllir ${GYLLIR_VERSION}, bundling midgard ${MIDGARD_VERSION}."
+
+      # GYC_VERSION - the tag Dockerfile.gyc checks out in GNU-Ymir/bootstrap to get the ymirc
+      # source that becomes ymir1. gymir and bootstrap release in lockstep, so this is the tag
+      # this release is *also* published under here.
+      - name: "bootstrap: tag ${{ env.GYC_VERSION }} exists"
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          if ! git ls-remote --exit-code --tags https://github.com/GNU-Ymir/bootstrap.git "refs/tags/${GYC_VERSION}" >/dev/null 2>&1; then
+            echo "::error::github.com/GNU-Ymir/bootstrap has no tag ${GYC_VERSION} - tag that release on bootstrap (matching its gyllir.toml version) before releasing gymir."
+            exit 1
+          fi
+          echo "GNU-Ymir/bootstrap @ ${GYC_VERSION}: ok"
+
+      # MIDGARD_VERSION - the tag Dockerfile.midgard checks out in GNU-Ymir/yruntime to build the
+      # stdlib bundled into the shipped .deb.
+      - name: "yruntime: tag ${{ env.MIDGARD_VERSION }} exists"
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          if ! git ls-remote --exit-code --tags https://github.com/GNU-Ymir/yruntime.git "refs/tags/${MIDGARD_VERSION}" >/dev/null 2>&1; then
+            echo "::error::github.com/GNU-Ymir/yruntime has no tag ${MIDGARD_VERSION} - tag the midgard release there, or correct MIDGARD_VERSION in YMIR_VERSION."
+            exit 1
+          fi
+          echo "GNU-Ymir/yruntime @ ${MIDGARD_VERSION}: ok"
+
+      # The two prebuilt .debs Dockerfile.gyc's `toolchain` stage curls: the compiler that does
+      # the compiling, and the tool that drives it. A release existing is not enough - the build
+      # fetches one exact asset filename off it, so check the asset (and that its download URL
+      # really serves bytes, which a release with a still-uploading asset would not).
+      - name: "gymir / Gyllir: prebuilt toolchain .debs are downloadable"
+        if: ${{ !cancelled() }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          rc=0
+          check_asset() {
+            repo="$1"; tag="$2"; asset="$3"; field="$4"
+            if ! assets="$(gh api "repos/${repo}/releases/tags/${tag}" --jq '.assets[].name' 2>/dev/null)"; then
+              echo "::error::github.com/${repo} has no release tagged ${tag} (YMIR_VERSION's ${field}) - Dockerfile.gyc downloads ${asset} from it."
+              return 1
+            fi
+            if ! printf '%s\n' "$assets" | grep -qxF "$asset"; then
+              echo "::error::github.com/${repo} release ${tag} carries no asset named ${asset} (YMIR_VERSION's ${field}). Assets it does carry: $(printf '%s ' $assets)"
+              return 1
+            fi
+            # The exact URL the Dockerfile curls. A one-byte range request validates the redirect
+            # chain to the asset storage without pulling down the whole .deb.
+            if ! curl -fsSL -r 0-0 -o /dev/null "https://github.com/${repo}/releases/download/${tag}/${asset}"; then
+              echo "::error::github.com/${repo} release ${tag} lists ${asset} but its download URL does not serve - asset upload may be incomplete."
+              return 1
+            fi
+            echo "${repo} @ ${tag} -> ${asset}: ok"
+          }
+
+          check_asset "GNU-Ymir/gymir" "${YMIR_BOOTSTRAP_VERSION}" "${GYC_ASSET}" "YMIR_BOOTSTRAP_VERSION/GCC_VERSION" || rc=1
+          check_asset "GNU-Ymir/Gyllir" "${GYLLIR_VERSION}" "${GYLLIR_ASSET}" "GYLLIR_VERSION" || rc=1
+          exit "$rc"
+
+      # GCC_VERSION's major - the upstream branch Dockerfile.gyc fetches and detaches onto after
+      # its shallow clone of gcc.gnu.org.
+      - name: "gcc.gnu.org: branch releases/gcc-${{ env.GCC_MAJOR_VERSION }} exists"
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          branch="releases/gcc-${GCC_MAJOR_VERSION}"
+
+          # git:// (port 9418) is what Dockerfile.gyc itself clones over, so try it first; the
+          # https:// endpoint is only a fallback for a runner that blocks the port, and it answers
+          # 429 under load often enough that it cannot be the sole verdict.
+          for url in "git://gcc.gnu.org/git/gcc.git" "https://gcc.gnu.org/git/gcc.git"; do
+            if timeout 180 git ls-remote --exit-code --heads "$url" "refs/heads/${branch}" >/dev/null 2>&1; then
+              echo "${url} -> ${branch}: ok"
+              exit 0
+            fi
+            echo "::warning::could not resolve ${branch} via ${url}"
+          done
+
+          # Neither endpoint answered. That is either a wrong GCC_VERSION or an unreachable/
+          # rate-limiting gcc.gnu.org, and those deserve very different verdicts - a preflight that
+          # cries "bad version" every time upstream throttles is one nobody reads. Ask the GitHub
+          # mirror, which carries the same releases/gcc-N branches, purely to tell the two apart.
+          if timeout 180 git ls-remote --exit-code --heads https://github.com/gcc-mirror/gcc.git "refs/heads/${branch}" >/dev/null 2>&1; then
+            echo "::warning::gcc.gnu.org is unreachable from this runner, but ${branch} does exist (confirmed via github.com/gcc-mirror/gcc), so GCC_VERSION ${GCC_VERSION} is fine. The release build clones gcc.gnu.org directly and will fail until it is reachable again."
+            exit 0
+          fi
+
+          echo "::error::no ${branch} branch on gcc.gnu.org or github.com/gcc-mirror/gcc - GCC_VERSION (${GCC_VERSION}) in YMIR_VERSION does not name a released GCC series."
+          exit 1
+
+      # Dockerfile.midgard names midgard's built libs and include dir after the major.minor of
+      # YMIR_BOOTSTRAP_VERSION in *yruntime's own* YMIR_VERSION, and hard-fails if it cannot
+      # derive it. Same sed, run here against the tag, so that failure lands in a 10-second job
+      # instead of after the gyc compile.
+      - name: "yruntime: midgard short version is derivable at ${{ env.MIDGARD_VERSION }}"
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          url="https://raw.githubusercontent.com/GNU-Ymir/yruntime/${MIDGARD_VERSION}/YMIR_VERSION"
+          if ! curl -fsSL -o /tmp/yruntime_ymir_version "$url"; then
+            echo "::error::GNU-Ymir/yruntime has no YMIR_VERSION at tag ${MIDGARD_VERSION} - Dockerfile.midgard reads YMIR_BOOTSTRAP_VERSION out of it to name libgymidgard-*_<major.minor>.a."
+            exit 1
+          fi
+
+          short="$(sed -nE 's/^YMIR_BOOTSTRAP_VERSION=([0-9]+\.[0-9]+).*/\1/p' /tmp/yruntime_ymir_version)"
+          if [ -z "$short" ]; then
+            echo "::error::could not derive MIDGARD_SHORT_VERSION from yruntime@${MIDGARD_VERSION}'s YMIR_VERSION - Dockerfile.midgard will fail the same way."
+            exit 1
+          fi
+          echo "midgard short version at ${MIDGARD_VERSION}: ${short}"
+
+      # Advisory only. YMIR_VERSION is copied by hand from bootstrap/YMIR_VERSION at the
+      # GYC_VERSION tag, so a stale copy is the likeliest way for these to disagree - but the
+      # build only *needs* the tags checked above to resolve, so drift is a warning, not a
+      # failure. MIDGARD_VERSION is deliberately excluded: Dockerfile.gyc overwrites bootstrap's
+      # copy of it with this repo's value precisely because the two are allowed to drift.
+      - name: "bootstrap: YMIR_VERSION agrees with this checkout"
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          url="https://raw.githubusercontent.com/GNU-Ymir/bootstrap/${GYC_VERSION}/YMIR_VERSION"
+          if ! curl -fsSL -o /tmp/bootstrap_ymir_version "$url"; then
+            echo "::warning::GNU-Ymir/bootstrap has no YMIR_VERSION at tag ${GYC_VERSION} - skipping the consistency comparison."
+            exit 0
+          fi
+
+          for var in YMIR_BOOTSTRAP_VERSION GCC_VERSION GYLLIR_VERSION; do
+            theirs="$(sed -nE "s/^${var}=(.*)/\1/p" /tmp/bootstrap_ymir_version | tail -n1)"
+            ours="${!var}"
+            if [ -z "$theirs" ]; then
+              echo "::warning::bootstrap@${GYC_VERSION}'s YMIR_VERSION does not set ${var}"
+            elif [ "$theirs" != "$ours" ]; then
+              echo "::warning::${var} is ${ours} here but ${theirs} in bootstrap@${GYC_VERSION} - YMIR_VERSION is meant to only restate bootstrap's, re-copy it."
+            else
+              echo "${var}=${ours}: agrees with bootstrap@${GYC_VERSION}"
+            fi
+          done
+
+      # Advisory only: this is release.yml's own guard, run early. It is not a build-validity
+      # problem (and it is expected to "fail" on master right after a release has shipped), so it
+      # only warns - release.yml still refuses to overwrite.
+      - name: "gymir: ${{ env.GYC_VERSION }} is not already released"
+        if: ${{ !cancelled() }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if gh release view "${GYC_VERSION}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            echo "::warning::${GYC_VERSION} has already been released on ${GITHUB_REPOSITORY} - release.yml will refuse to run until YMIR_VERSION's GYC_VERSION is bumped (from bootstrap)."
+          elif git ls-remote --exit-code --tags origin "refs/tags/${GYC_VERSION}" >/dev/null 2>&1; then
+            echo "::warning::tag ${GYC_VERSION} already exists on origin with no matching release - release.yml will refuse to run until YMIR_VERSION's GYC_VERSION is bumped."
+          else
+            echo "${GYC_VERSION} is free to release."
+          fi
+
+      - name: Summary
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          {
+            echo "## Release preflight for \`${GYC_VERSION}\`"
+            echo
+            echo "| YMIR_VERSION | value | resolves to |"
+            echo "| --- | --- | --- |"
+            echo "| \`GYC_VERSION\` | ${GYC_VERSION} | [bootstrap@${GYC_VERSION}](https://github.com/GNU-Ymir/bootstrap/tree/${GYC_VERSION}) |"
+            echo "| \`YMIR_BOOTSTRAP_VERSION\` | ${YMIR_BOOTSTRAP_VERSION} | [${GYC_ASSET}](https://github.com/GNU-Ymir/gymir/releases/download/${YMIR_BOOTSTRAP_VERSION}/${GYC_ASSET}) |"
+            echo "| \`GYLLIR_VERSION\` | ${GYLLIR_VERSION} | [${GYLLIR_ASSET}](https://github.com/GNU-Ymir/Gyllir/releases/download/${GYLLIR_VERSION}/${GYLLIR_ASSET}) |"
+            echo "| \`MIDGARD_VERSION\` | ${MIDGARD_VERSION} | [yruntime@${MIDGARD_VERSION}](https://github.com/GNU-Ymir/yruntime/tree/${MIDGARD_VERSION}) |"
+            echo "| \`GCC_VERSION\` | ${GCC_VERSION} | gcc.gnu.org \`releases/gcc-${GCC_MAJOR_VERSION}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"

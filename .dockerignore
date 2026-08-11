@@ -1,6 +1,8 @@
 .git
 # Dev-only, gitignored, nested checkout of github.com/GNU-Ymir/bootstrap - the release build
-# fetches its own copy fresh at the exact release tag instead (see Dockerfile).
+# fetches its own copy fresh at the exact release tag instead (see Dockerfile.gyc).
+# Note: do NOT ignore artifacts/ here - Dockerfile.midgard's build context needs
+# artifacts/gyc.deb (the pass-1 output downloaded as a CI job artifact).
 bootstrap/
 binding/*.o
 *~
