@@ -25,7 +25,7 @@
 #   gyllir_<GYLLIR_VERSION>_amd64.deb).
 # - MIDGARD_VERSION: the standard library (midgard) bundled into the produced gyc .deb,
 #   published by github.com/GNU-Ymir/yruntime (release tag = MIDGARD_VERSION).
-GYC_VERSION=1.2.1
+GYC_VERSION=1.2.2
 YMIR_BOOTSTRAP_VERSION=1.1.1
 GCC_VERSION=15.2.1
 GYLLIR_VERSION=1.2.0
