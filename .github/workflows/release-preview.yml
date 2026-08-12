@@ -199,6 +199,50 @@ jobs:
           name: gyc-preview-final-deb
           path: .
 
+      # The bootstrap tag this preview is pinned to is a real bootstrap release, so the changelog
+      # is the same one release.yml publishes: bootstrap's changes since its previous release.
+      # Only the gymir frontend source is rolling here, and it carries no version of its own.
+      - name: Build release notes
+        env:
+          GCC_VERSION: ${{ needs.checks.outputs.gcc_version }}
+          YMIR_BOOTSTRAP_VERSION: ${{ needs.checks.outputs.ymir_bootstrap_version }}
+          GYLLIR_VERSION: ${{ needs.checks.outputs.gyllir_version }}
+          MIDGARD_VERSION: ${{ needs.checks.outputs.midgard_version }}
+          BOOTSTRAP_TAG: ${{ needs.checks.outputs.bootstrap_tag }}
+        run: |
+          set -euo pipefail
+
+          CHANGELOG="${GITHUB_WORKSPACE}/.github/scripts/changelog.sh"
+          CLONE="${RUNNER_TEMP}/bootstrap.git"
+
+          # Bare + blobless: only the commit/tag metadata the changelog walks is needed, never a
+          # worktree. The checks job already proved the tag is there.
+          rm -rf "$CLONE"
+          git clone --quiet --bare --filter=blob:none https://github.com/GNU-Ymir/bootstrap.git "$CLONE"
+
+          # `${BOOTSTRAP_TAG}^`, not `${BOOTSTRAP_TAG}`: `git describe` of a tagged commit is that
+          # tag itself, so describing its parent is what yields the *previous* release.
+          BASE="$(cd "$CLONE" && bash "$CHANGELOG" --print-base --to "${BOOTSTRAP_TAG}^")"
+
+          {
+            echo "Automated preview release, built from \`${GITHUB_REF_NAME}\` against bootstrap tag ${BOOTSTRAP_TAG} (gcc ${GCC_VERSION}, compiled with gyc ${YMIR_BOOTSTRAP_VERSION} and gyllir ${GYLLIR_VERSION}, bundling midgard ${MIDGARD_VERSION}) @ ${GITHUB_SHA}."
+            echo "This tag is rolling - it always points at the most recent preview build."
+            echo
+            if [ -n "$BASE" ]; then
+              echo "## What's changed in bootstrap ${BOOTSTRAP_TAG} since ${BASE}"
+            else
+              echo "## What's changed in bootstrap ${BOOTSTRAP_TAG}"
+            fi
+            echo
+            (cd "$CLONE" && bash "$CHANGELOG" --since "$BASE" --to "$BOOTSTRAP_TAG")
+            if [ -n "$BASE" ]; then
+              echo
+              echo "**Full changelog**: https://github.com/GNU-Ymir/bootstrap/compare/${BASE}...${BOOTSTRAP_TAG}"
+            fi
+          } > "${RUNNER_TEMP}/release-notes.md"
+
+          cat "${RUNNER_TEMP}/release-notes.md" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Replace existing preview tag/release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -210,15 +254,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ needs.checks.outputs.tag_name }}
           GCC_VERSION: ${{ needs.checks.outputs.gcc_version }}
-          YMIR_BOOTSTRAP_VERSION: ${{ needs.checks.outputs.ymir_bootstrap_version }}
-          GYLLIR_VERSION: ${{ needs.checks.outputs.gyllir_version }}
-          MIDGARD_VERSION: ${{ needs.checks.outputs.midgard_version }}
           BOOTSTRAP_TAG: ${{ needs.checks.outputs.bootstrap_tag }}
           OUT_ASSET: ${{ needs.checks.outputs.out_asset }}
         run: |
           gh release create "$TAG" \
             --target "${{ github.sha }}" \
             --title "Preview (gcc ${GCC_VERSION}, bootstrap ${BOOTSTRAP_TAG})" \
-            --notes "Automated preview release, built against bootstrap tag ${BOOTSTRAP_TAG} (compiled with gyc ${YMIR_BOOTSTRAP_VERSION} and gyllir ${GYLLIR_VERSION}, bundling midgard ${MIDGARD_VERSION}) @ ${{ github.sha }}. This tag is rolling - it always points at the most recent preview build." \
+            --notes-file "${RUNNER_TEMP}/release-notes.md" \
             --prerelease \
             "${OUT_ASSET}"
