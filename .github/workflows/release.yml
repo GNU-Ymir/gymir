@@ -209,18 +209,58 @@ jobs:
           name: gyc-final-deb
           path: .
 
-      - name: Publish release
+      # A gymir release is really a bootstrap release - the tag is bootstrap's version and this
+      # repo only restates it (see the header) - so the changelog is bootstrap's, for the range
+      # between the previous bootstrap release and the tag being built. gymir's own commits are
+      # not listed: they carry no version of their own.
+      - name: Build release notes
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ needs.checks.outputs.tag_name }}
           GCC_VERSION: ${{ needs.checks.outputs.gcc_version }}
           YMIR_BOOTSTRAP_VERSION: ${{ needs.checks.outputs.ymir_bootstrap_version }}
           GYLLIR_VERSION: ${{ needs.checks.outputs.gyllir_version }}
           MIDGARD_VERSION: ${{ needs.checks.outputs.midgard_version }}
+        run: |
+          set -euo pipefail
+
+          CHANGELOG="${GITHUB_WORKSPACE}/.github/scripts/changelog.sh"
+          CLONE="${RUNNER_TEMP}/bootstrap.git"
+
+          # Bare + blobless: only the commit/tag metadata the changelog walks is needed, never a
+          # worktree. The checks job already proved the tag is there.
+          rm -rf "$CLONE"
+          git clone --quiet --bare --filter=blob:none https://github.com/GNU-Ymir/bootstrap.git "$CLONE"
+
+          # `${TAG}^`, not `${TAG}`: `git describe` of a tagged commit is that tag itself, so
+          # describing its parent is what yields the *previous* release.
+          BASE="$(cd "$CLONE" && bash "$CHANGELOG" --print-base --to "${TAG}^")"
+
+          {
+            echo "gyc ${TAG} (gcc ${GCC_VERSION}), built against bootstrap tag ${TAG}, compiled with gyc ${YMIR_BOOTSTRAP_VERSION} and gyllir ${GYLLIR_VERSION}, bundling midgard ${MIDGARD_VERSION} @ ${GITHUB_SHA}."
+            echo
+            if [ -n "$BASE" ]; then
+              echo "## What's changed in bootstrap since ${BASE}"
+            else
+              echo "## What's changed in bootstrap"
+            fi
+            echo
+            (cd "$CLONE" && bash "$CHANGELOG" --since "$BASE" --to "$TAG")
+            if [ -n "$BASE" ]; then
+              echo
+              echo "**Full changelog**: https://github.com/GNU-Ymir/bootstrap/compare/${BASE}...${TAG}"
+            fi
+          } > "${RUNNER_TEMP}/release-notes.md"
+
+          cat "${RUNNER_TEMP}/release-notes.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.checks.outputs.tag_name }}
           OUT_ASSET: ${{ needs.checks.outputs.out_asset }}
         run: |
           gh release create "$TAG" \
             --target "${{ github.sha }}" \
             --title "Release $TAG" \
-            --notes "gyc ${TAG} (gcc ${GCC_VERSION}), built against bootstrap tag ${TAG}, compiled with gyc ${YMIR_BOOTSTRAP_VERSION} and gyllir ${GYLLIR_VERSION}, bundling midgard ${MIDGARD_VERSION} @ ${{ github.sha }}." \
+            --notes-file "${RUNNER_TEMP}/release-notes.md" \
             "${OUT_ASSET}"
