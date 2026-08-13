@@ -51,10 +51,26 @@ else
 fi
 
 # --first-parent so only the merges made *into* the released branch are walked, never the merges
-# a feature branch took from master along the way. GitHub puts the PR number in the merge subject
-# and the PR title in the body, hence \037 (unit separator) between the fields and \036 (record
-# separator) between commits - neither can appear in a commit message.
+# a feature branch took from master along the way. Both the subject and the body are needed to
+# recover the PR title - which of the two holds it depends on the merge shape, see below - hence
+# \037 (unit separator) between the fields and \036 (record separator) between commits: neither
+# can appear in a commit message.
 git log --first-parent --merges --pretty=format:'%h%x1f%s%x1f%b%x1e' "$RANGE" | awk '
+function trim(s) {
+  gsub(/^[ \t\r\n]+|[ \t\r\n]+$/, "", s)
+  return s
+}
+
+# The first non-empty line of a commit body, trimmed.
+function firstLine(s,   cnt, lines, i, line) {
+  cnt = split(s, lines, "\n")
+  for (i = 1; i <= cnt; i++) {
+    line = trim(lines[i])
+    if (line != "") return line
+  }
+  return ""
+}
+
 BEGIN {
   RS = "\036"
   FS = "\037"
@@ -84,19 +100,31 @@ BEGIN {
   gsub(/^[\n\r]+/, "", sha)
   if (sha == "") next
 
-  # Only pull request merges: a plain `Merge branch ...` is not a change of its own.
-  if (!match(subj, /#[0-9]+/)) next
-  pr = substr(subj, RSTART, RLENGTH)
+  # GitHub writes a pull request merge in one of two shapes, and this repository has both:
+  #   - `Merge pull request #N from owner/branch`, the PR title being the first body line;
+  #   - `<PR title> (#N)`, the body holding the PR description instead - often empty.
+  # Anything else is a plain branch merge, not a change of its own.
+  pr = ""; head = ""
 
-  # GitHub writes the PR title as the first non-empty line of the merge commit body.
-  head = ""
-  cnt = split(msg, lines, "\n")
-  for (i = 1; i <= cnt; i++) {
-    line = lines[i]
-    gsub(/^[ \t\r]+|[ \t\r]+$/, "", line)
-    if (line != "") { head = line; break }
+  if (match(subj, /^Merge pull request #[0-9]+/)) {
+    match(subj, /#[0-9]+/)
+    pr = substr(subj, RSTART, RLENGTH)
+    head = firstLine(msg)
+  } else if (match(subj, /\(#[0-9]+\)[ \t\r]*$/)) {
+    pr = substr(subj, RSTART, RLENGTH)
+    sub(/^\(/, "", pr); sub(/\)[ \t\r]*$/, "", pr)
+    head = trim(substr(subj, 1, RSTART - 1))
   }
-  if (head == "") next
+
+  if (pr == "") next
+
+  # A recognised merge whose title cannot be recovered is still a change - say so rather than
+  # dropping it without a trace, which is how a missing PR goes unnoticed.
+  if (head == "") {
+    print "changelog: ignoring " pr " (" sha "), no pull request title in the merge commit" > "/dev/stderr"
+    skipped++
+    next
+  }
 
   # `[YMI-XXX][kind] Log`, the kind being optional.
   rest = head; ticket = ""; kind = ""; text = head
@@ -117,6 +145,8 @@ BEGIN {
       text = rest
     }
   }
+
+  text = trim(text)
 
   # Off-format titles are dropped rather than guessed at, but never silently: the skip goes to
   # stderr so the release job log says which PRs were left out of the notes.
