@@ -1,6 +1,6 @@
 in version;
 
-pub enum
+pub enum GNU_VERSIONS
 | GNU                        = "GNU"
 | YMIR                       = "Ymir_Version1"
 | BIG_ENDIAN                 = "BigEndian"
@@ -79,10 +79,9 @@ pub enum
 | ELFV2                      = "ELFv2"
 | Y_SOFTFLOAT                = "Ymir_SoftFloat"
 | Y_HARDFLOAT                = "Ymir_HardFloat"
-| GLIBC                      = "CRuntime_GlibC"
--> GNU_VERSIONS;
+| GLIBC                      = "CRuntime_GlibC";
 
-pub enum
+pub enum D_VERSIONS
 | WINDOWS          = ("Windows"         , GNU_VERSIONS::WINDOWS)
 | WIN32            = ("Win32"           , GNU_VERSIONS::WIN32)
 | WIN64            = ("Win64"           , GNU_VERSIONS::WIN64)
@@ -155,5 +154,4 @@ pub enum
 | ELFV2            = ("ELFv2"           , GNU_VERSIONS::ELFV2)
 | Y_SOFTFLOAT      = ("D_SoftFloat"     , GNU_VERSIONS::Y_SOFTFLOAT)
 | Y_HARDFLOAT      = ("D_HardFloat"     , GNU_VERSIONS::Y_HARDFLOAT)
-| GLIBC            = ("CRuntime_Glibc"  , GNU_VERSIONS::GLIBC)
--> D_VERSIONS;
+| GLIBC            = ("CRuntime_Glibc"  , GNU_VERSIONS::GLIBC);
