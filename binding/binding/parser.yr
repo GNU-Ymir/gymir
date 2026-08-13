@@ -17,7 +17,7 @@ extern (C) fn c_binding_fatal_error();
 extern (C) fn ymir_binding_init() {
     _yrt_exc_init();
 
-    __version DEBUG {
+    cte if __version!DEBUG {
         _yrt_force_debug(1);
     }
 }
@@ -32,7 +32,7 @@ extern (C) fn ymir_binding_parse_ymir_file(filename: [c8]) {
     } catch {
         err: &ErrorMsg => {
             println(format("%", err));
-            __version DEBUG {
+            cte if __version!DEBUG {
                 for j in err.getRecursiveTrace() {
                     println(j);
                 }
@@ -41,7 +41,7 @@ extern (C) fn ymir_binding_parse_ymir_file(filename: [c8]) {
             c_binding_fatal_error();
             return;
         }
-    }
+    };
 
     // Don't generate symbols if we are generating YIL object files
     if !global::state::isExportYIL() {
@@ -60,7 +60,7 @@ extern (C) fn ymir_binding_parse_yil_file(filename: Path, ref mut importer: YILI
 } catch {
     err: &ErrorMsg => {
         println(format("%", err));
-        __version DEBUG {
+        cte if __version!DEBUG {
             for j in err.getRecursiveTrace() {
                 println(j);
             }
