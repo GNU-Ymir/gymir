@@ -1,0 +1,316 @@
+name: Preview Release (bootstrap head)
+
+# Rolling pre-release built against *bootstrap's head*, manually triggered (pick this repo's
+# branch/ref from the "Run workflow" button). Sibling of release-preview.yml, which builds the
+# same thing against the bootstrap *tag* named by YMIR_VERSION's GYC_VERSION; this one is for
+# seeing what the not-yet-tagged self-hosted compiler source does, before a release is cut.
+#
+# What differs from release-preview.yml, and only this:
+#   - BOOTSTRAP_RELEASE_TAG is the commit github.com/GNU-Ymir/bootstrap's default branch points at
+#     right now, resolved here at dispatch time rather than read from YMIR_VERSION. It is resolved
+#     to a *sha*, not passed as a branch name: a branch name is a constant string, so BuildKit
+#     would happily reuse the layer that checked out last week's head, while a sha changes whenever
+#     head moves and busts exactly the layers that need rebuilding.
+#   - No "bootstrap must carry the GYC_VERSION tag" check - the whole point is that this build
+#     runs ahead of that tag existing.
+# Everything else (the prebuilt gyc/gyllir toolchain that compiles it, the midgard release bundled
+# into it) is still pinned by YMIR_VERSION exactly as the other two workflows pin it. In
+# particular midgard stays on its tag: gyc bakes in the major.minor of MIDGARD_VERSION as its
+# include path, so a rolling midgard would need a version number it does not have.
+#
+# The tag/release name is the constant `preview-head`: every run replaces the previous one, so
+# there is only ever one such tag and one such release, and the asset name
+# (gyc-<major>_preview-head_amd64.deb) is constant too, keeping the download URL stable. Neither
+# can collide with release.yml's bare <version> tags nor with release-preview.yml's `preview`.
+#
+# Split into five jobs (checks -> clone-gcc -> build-gyc -> build-midgard -> publish), same as the
+# other two workflows, so a flaky/failing pass can be re-run on its own from the Actions UI
+# without redoing the whole thing. See docker/Dockerfile.gyc and docker/Dockerfile.midgard for the
+# build passes; clone-gcc only warms the `clone_gcc` layer so build-gyc resumes from the clone
+# instead of redoing it. That layer (and every other) is kept by the shared persistent BuildKit
+# builder from .github/actions/setup-buildx, on the runner's own disk - no cache-to/cache-from
+# needed.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# One head preview at a time: the runners share one docker daemon (hence one `gyc-preview-head-
+# build:latest` tag) and all runs of this workflow write the same rolling git tag, so two in
+# flight would clobber each other. Queue rather than cancel - a half-published release is worse
+# than a slow one.
+concurrency:
+  group: release-preview-head
+  cancel-in-progress: false
+
+jobs:
+  checks:
+    runs-on: [self-hosted, linux, x64]
+    outputs:
+      gcc_version: ${{ steps.version.outputs.gcc_version }}
+      gcc_major_version: ${{ steps.version.outputs.gcc_major_version }}
+      ymir_bootstrap_version: ${{ steps.version.outputs.ymir_bootstrap_version }}
+      gyc_release_tag: ${{ steps.version.outputs.gyc_release_tag }}
+      gyc_asset: ${{ steps.version.outputs.gyc_asset }}
+      gyllir_version: ${{ steps.version.outputs.gyllir_version }}
+      gyllir_release_tag: ${{ steps.version.outputs.gyllir_release_tag }}
+      gyllir_asset: ${{ steps.version.outputs.gyllir_asset }}
+      midgard_version: ${{ steps.version.outputs.midgard_version }}
+      gyc_version: ${{ steps.version.outputs.gyc_version }}
+      bootstrap_sha: ${{ steps.bootstrap.outputs.bootstrap_sha }}
+      bootstrap_short_sha: ${{ steps.bootstrap.outputs.bootstrap_short_sha }}
+      gyc_package_version: ${{ steps.bootstrap.outputs.gyc_package_version }}
+      tag_name: ${{ steps.version.outputs.tag_name }}
+      intermediate_asset: ${{ steps.version.outputs.intermediate_asset }}
+      out_asset: ${{ steps.version.outputs.out_asset }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Compute versions
+        id: version
+        run: |
+          . ./YMIR_VERSION
+          GCC_MAJOR_VERSION="${GCC_VERSION%%.*}"
+          echo "gcc_version=${GCC_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "gcc_major_version=${GCC_MAJOR_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "ymir_bootstrap_version=${YMIR_BOOTSTRAP_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "gyc_release_tag=${YMIR_BOOTSTRAP_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "gyc_asset=gyc-${GCC_MAJOR_VERSION}_${YMIR_BOOTSTRAP_VERSION}_amd64.deb" >> "$GITHUB_OUTPUT"
+          echo "gyllir_version=${GYLLIR_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "gyllir_release_tag=${GYLLIR_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "gyllir_asset=gyllir_${GYLLIR_VERSION}_amd64.deb" >> "$GITHUB_OUTPUT"
+          echo "midgard_version=${MIDGARD_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "gyc_version=${GYC_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag_name=preview-head" >> "$GITHUB_OUTPUT"
+          echo "intermediate_asset=gyc-${GCC_MAJOR_VERSION}_preview-head_amd64.deb" >> "$GITHUB_OUTPUT"
+          echo "out_asset=gyc-${GCC_MAJOR_VERSION}_preview-head_amd64.deb" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve bootstrap head
+        id: bootstrap
+        env:
+          GYC_VERSION: ${{ steps.version.outputs.gyc_version }}
+        run: |
+          set -euo pipefail
+
+          # The default branch's tip, whatever that branch is named - `HEAD` on the remote is the
+          # symref to it, so nothing here hardcodes `master`.
+          SHA="$(git ls-remote https://github.com/GNU-Ymir/bootstrap.git HEAD | cut -f1)"
+          if [ -z "$SHA" ]; then
+            echo "::error::could not resolve HEAD of github.com/GNU-Ymir/bootstrap"
+            exit 1
+          fi
+          SHORT_SHA="${SHA:0:7}"
+
+          echo "bootstrap_sha=${SHA}" >> "$GITHUB_OUTPUT"
+          echo "bootstrap_short_sha=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+
+          # The .deb's dpkg `Version:` field, unlike the tag/asset name, cannot be a constant
+          # string: dpkg rejects a version that does not start with a digit, and a *constant* one
+          # would leave apt unable to tell two head builds apart. So: the release this build is
+          # heading towards, then `~preview.head`, then the build date and the bootstrap commit.
+          #   - `~` sorts below an empty suffix, so 1.3.1~preview.head.* < 1.3.1 and apt upgrades a
+          #     head install onto the real release once it ships;
+          #   - end-of-string sorts below any ordinary character, so 1.3.1~preview < this - a head
+          #     build is ahead of the tagged preview, and dpkg agrees;
+          #   - the leading YYYYMMDD orders successive head builds by date (the sha alone would
+          #     order them alphabetically, i.e. arbitrarily), and the sha says exactly which
+          #     bootstrap commit is installed - `dpkg -l gyc-<major>` is then enough to know.
+          echo "gyc_package_version=${GYC_VERSION}~preview.head.$(date -u +%Y%m%d).g${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+
+          echo "bootstrap head is ${SHA}" >> "$GITHUB_STEP_SUMMARY"
+
+  clone-gcc:
+    name: "Pass 1: clone gcc"
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-buildx
+
+      - name: Clone upstream gcc.gnu.org (cached independently of every version knob below it)
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: docker/Dockerfile.gyc
+          target: clone_gcc
+          push: false
+
+  build-gyc:
+    name: "Pass 2: build gyc"
+    needs: [checks, clone-gcc]
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-buildx
+
+      # BOOTSTRAP_RELEASE_TAG is a commit sha here rather than a tag name; Dockerfile.gyc only ever
+      # feeds it to `git switch --detach` after a full clone + `git fetch --tags`, which resolves
+      # either the same way.
+      - name: Build gyc .deb (no midgard yet)
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: docker/Dockerfile.gyc
+          target: export
+          push: false
+          load: true
+          tags: gyc-preview-head-build:latest
+          build-args: |
+            GCC_VERSION=${{ needs.checks.outputs.gcc_version }}
+            GCC_MAJOR_VERSION=${{ needs.checks.outputs.gcc_major_version }}
+            COMPILER_MAJOR_VERSION=${{ needs.checks.outputs.gcc_major_version }}
+            GYC_RELEASE_TAG=${{ needs.checks.outputs.gyc_release_tag }}
+            GYC_ASSET=${{ needs.checks.outputs.gyc_asset }}
+            GYLLIR_RELEASE_TAG=${{ needs.checks.outputs.gyllir_release_tag }}
+            GYLLIR_ASSET=${{ needs.checks.outputs.gyllir_asset }}
+            BOOTSTRAP_RELEASE_TAG=${{ needs.checks.outputs.bootstrap_sha }}
+            MIDGARD_RELEASE_TAG=${{ needs.checks.outputs.midgard_version }}
+            GYC_VERSION_NUMBER=preview-head
+            GYC_PACKAGE_VERSION=${{ needs.checks.outputs.gyc_package_version }}
+
+      - name: Extract .deb
+        env:
+          ASSET: ${{ needs.checks.outputs.intermediate_asset }}
+        run: |
+          CID="$(docker create gyc-preview-head-build:latest)"
+          docker cp "${CID}:/${ASSET}" "./${ASSET}"
+          docker rm "${CID}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gyc-preview-head-compiler-only-deb
+          path: ${{ needs.checks.outputs.intermediate_asset }}
+          retention-days: 3
+
+  build-midgard:
+    name: "Pass 3: build midgard, bundle final .deb"
+    needs: [checks, build-gyc]
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: gyc-preview-head-compiler-only-deb
+          path: artifacts
+
+      - name: Stage the pass-1 .deb where Dockerfile.midgard expects it
+        env:
+          ASSET: ${{ needs.checks.outputs.intermediate_asset }}
+        run: mv "artifacts/${ASSET}" artifacts/gyc.deb
+
+      - uses: ./.github/actions/setup-buildx
+
+      - name: Build final gyc+midgard .deb
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: docker/Dockerfile.midgard
+          target: export
+          push: false
+          load: true
+          tags: gyc-midgard-preview-head-build:latest
+          build-args: |
+            GCC_MAJOR_VERSION=${{ needs.checks.outputs.gcc_major_version }}
+            MIDGARD_RELEASE_TAG=${{ needs.checks.outputs.midgard_version }}
+            GYC_VERSION_NUMBER=preview-head
+            GYC_PACKAGE_VERSION=${{ needs.checks.outputs.gyc_package_version }}
+
+      - name: Extract final .deb
+        env:
+          ASSET: ${{ needs.checks.outputs.out_asset }}
+        run: |
+          CID="$(docker create gyc-midgard-preview-head-build:latest)"
+          docker cp "${CID}:/${ASSET}" "./${ASSET}"
+          docker rm "${CID}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gyc-preview-head-final-deb
+          path: ${{ needs.checks.outputs.out_asset }}
+          retention-days: 3
+
+  publish:
+    needs: [checks, build-midgard]
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v7
+
+      # The self-hosted runners have no gh CLI of their own; the release steps below need one.
+      - uses: ./.github/actions/setup-gh
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: gyc-preview-head-final-deb
+          path: .
+
+      # Bootstrap head is not a release, so - unlike release.yml and release-preview.yml, which
+      # both changelog a tag against the tag before it - the range here ends at a bare commit: the
+      # changes accumulated in bootstrap *since its last release*, which is what a head preview is
+      # for. Only the gymir frontend source is separately rolling, and it carries no version.
+      - name: Build release notes
+        env:
+          GCC_VERSION: ${{ needs.checks.outputs.gcc_version }}
+          YMIR_BOOTSTRAP_VERSION: ${{ needs.checks.outputs.ymir_bootstrap_version }}
+          GYLLIR_VERSION: ${{ needs.checks.outputs.gyllir_version }}
+          MIDGARD_VERSION: ${{ needs.checks.outputs.midgard_version }}
+          BOOTSTRAP_SHA: ${{ needs.checks.outputs.bootstrap_sha }}
+          BOOTSTRAP_SHORT_SHA: ${{ needs.checks.outputs.bootstrap_short_sha }}
+          GYC_PACKAGE_VERSION: ${{ needs.checks.outputs.gyc_package_version }}
+        run: |
+          set -euo pipefail
+
+          CHANGELOG="${GITHUB_WORKSPACE}/.github/scripts/changelog.sh"
+          CLONE="${RUNNER_TEMP}/bootstrap.git"
+
+          # Bare + blobless: only the commit/tag metadata the changelog walks is needed, never a
+          # worktree. A bare clone fetches every branch, so the head the checks job resolved is in
+          # here whichever branch it came from.
+          rm -rf "$CLONE"
+          git clone --quiet --bare --filter=blob:none https://github.com/GNU-Ymir/bootstrap.git "$CLONE"
+
+          # No `^` here (release.yml needs one because its --to *is* the tag being cut, and
+          # describing a tagged commit yields that tag): head is an untagged commit, so the base
+          # `git describe` finds from it is already the previous release.
+          BASE="$(cd "$CLONE" && bash "$CHANGELOG" --print-base --to "$BOOTSTRAP_SHA")"
+          SUBJECT="$(cd "$CLONE" && git log -1 --pretty=format:%s "$BOOTSTRAP_SHA")"
+
+          {
+            echo "Automated preview release, built from \`${GITHUB_REF_NAME}\` @ ${GITHUB_SHA} against **bootstrap head** ${BOOTSTRAP_SHORT_SHA} (\`${SUBJECT}\`) - compiled with gyc ${YMIR_BOOTSTRAP_VERSION} and gyllir ${GYLLIR_VERSION} on gcc ${GCC_VERSION}, bundling midgard ${MIDGARD_VERSION}."
+            echo
+            echo "Unlike the \`preview\` release, the self-hosted compiler source here is **not** a tagged bootstrap release - it is whatever bootstrap's default branch pointed at when this ran. Both this tag and its asset are rolling: they always describe the most recent head build. Installed package version: \`${GYC_PACKAGE_VERSION}\`."
+            echo
+            if [ -n "$BASE" ]; then
+              echo "## What's changed in bootstrap since ${BASE}"
+            else
+              echo "## What's changed in bootstrap"
+            fi
+            echo
+            (cd "$CLONE" && bash "$CHANGELOG" --since "$BASE" --to "$BOOTSTRAP_SHA")
+            if [ -n "$BASE" ]; then
+              echo
+              echo "**Full changelog**: https://github.com/GNU-Ymir/bootstrap/compare/${BASE}...${BOOTSTRAP_SHA}"
+            fi
+          } > "${RUNNER_TEMP}/release-notes.md"
+
+          cat "${RUNNER_TEMP}/release-notes.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Replace existing preview-head tag/release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.checks.outputs.tag_name }}
+        run: gh release delete "$TAG" --yes --cleanup-tag || true
+
+      - name: Publish preview-head release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.checks.outputs.tag_name }}
+          GCC_VERSION: ${{ needs.checks.outputs.gcc_version }}
+          BOOTSTRAP_SHORT_SHA: ${{ needs.checks.outputs.bootstrap_short_sha }}
+          OUT_ASSET: ${{ needs.checks.outputs.out_asset }}
+        run: |
+          gh release create "$TAG" \
+            --target "${{ github.sha }}" \
+            --title "Preview from bootstrap head (gcc ${GCC_VERSION}, bootstrap ${BOOTSTRAP_SHORT_SHA})" \
+            --notes-file "${RUNNER_TEMP}/release-notes.md" \
+            --prerelease \
+            "${OUT_ASSET}"
