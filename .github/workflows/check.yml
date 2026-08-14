@@ -173,26 +173,31 @@ jobs:
           echo "::error::no ${branch} branch on gcc.gnu.org or github.com/gcc-mirror/gcc - GCC_VERSION (${GCC_VERSION}) in YMIR_VERSION does not name a released GCC series."
           exit 1
 
-      # Dockerfile.midgard names midgard's built libs and include dir after the major.minor of
-      # YMIR_BOOTSTRAP_VERSION in *yruntime's own* YMIR_VERSION, and hard-fails if it cannot
-      # derive it. Same sed, run here against the tag, so that failure lands in a 10-second job
-      # instead of after the gyc compile.
-      - name: "yruntime: midgard short version is derivable at ${{ env.MIDGARD_VERSION }}"
+      # The gyc built in pass 1 links -lgymidgard-*_<major.minor of MIDGARD_VERSION> and includes
+      # from ymir/<same>; midgard's CMakeLists.txt names what it builds after the major.minor of
+      # *its own* VERSION file. Nothing at build time reconciles the two - they just have to
+      # agree, so compare them here rather than shipping a .deb whose libs no compiler looks for.
+      - name: "yruntime: VERSION at ${{ env.MIDGARD_VERSION }} matches what gyc will link"
         if: ${{ !cancelled() }}
         run: |
           set -euo pipefail
-          url="https://raw.githubusercontent.com/GNU-Ymir/yruntime/${MIDGARD_VERSION}/YMIR_VERSION"
-          if ! curl -fsSL -o /tmp/yruntime_ymir_version "$url"; then
-            echo "::error::GNU-Ymir/yruntime has no YMIR_VERSION at tag ${MIDGARD_VERSION} - Dockerfile.midgard reads YMIR_BOOTSTRAP_VERSION out of it to name libgymidgard-*_<major.minor>.a."
+          url="https://raw.githubusercontent.com/GNU-Ymir/yruntime/${MIDGARD_VERSION}/VERSION"
+          if ! curl -fsSL -o /tmp/yruntime_version "$url"; then
+            echo "::error::GNU-Ymir/yruntime has no VERSION at tag ${MIDGARD_VERSION} - its CMakeLists.txt reads that file to name libgymidgard-*_<major.minor>.a."
             exit 1
           fi
 
-          short="$(sed -nE 's/^YMIR_BOOTSTRAP_VERSION=([0-9]+\.[0-9]+).*/\1/p' /tmp/yruntime_ymir_version)"
-          if [ -z "$short" ]; then
-            echo "::error::could not derive MIDGARD_SHORT_VERSION from yruntime@${MIDGARD_VERSION}'s YMIR_VERSION - Dockerfile.midgard will fail the same way."
+          built="$(tr -d '[:space:]' < /tmp/yruntime_version | cut -d. -f1,2)"
+          wanted="$(printf '%s\n' "${MIDGARD_VERSION}" | cut -d. -f1,2)"
+          if [ -z "$built" ]; then
+            echo "::error::yruntime@${MIDGARD_VERSION}'s VERSION is empty or malformed - its cmake configure will fail the same way."
             exit 1
           fi
-          echo "midgard short version at ${MIDGARD_VERSION}: ${short}"
+          if [ "$built" != "$wanted" ]; then
+            echo "::error::yruntime@${MIDGARD_VERSION} builds libgymidgard-*_${built}.a, but this gyc links libgymidgard-*_${wanted}.a - correct VERSION in yruntime at that tag, or MIDGARD_VERSION in YMIR_VERSION."
+            exit 1
+          fi
+          echo "midgard short version at ${MIDGARD_VERSION}: ${built}"
 
       # Advisory only. YMIR_VERSION is copied by hand from bootstrap/YMIR_VERSION at the
       # GYC_VERSION tag, so a stale copy is the likeliest way for these to disagree - but the
