@@ -821,19 +821,27 @@ pub record GenerateVisitor {
         let mut tryList = TreeStatementList();
         let mut finallyList = TreeStatementList();
 
+        // The try part and the finally part share a single enclosing lexical
+        // scope, since a local declared in the try part (e.g. a scope-guarded
+        // entity) is still legitimately read from the paired finally part.
+        // Giving them independent (sibling) scopes would end that local's
+        // lexical scope before the finally part runs, which is a real
+        // use-after-scope for tools that poison stack slots at scope exit
+        // (e.g. ASan).
         self:.enterBlock(t.loc);
         for i in t.tryPart {
             self:.generateInstr(i, ref tryList);
         }
-        let (tr, _) = self:.quitBlock(t.loc, tryList.getTree());
-
-        self:.enterBlock(t.loc);
         for i in t.finPart {
             self:.generateInstr(i, ref finallyList);
         }
-        let (fin, _) = self:.quitBlock(t.loc, finallyList.getTree());
 
-        list:.append(buildTryFinally(t.loc, tr, fin));
+        let tf = buildTryFinally(t.loc, tryList.getTree(), finallyList.getTree());
+        let mut wrapList = TreeStatementList();
+        wrapList:.append(tf);
+        let (bind, _) = self:.quitBlock(t.loc, wrapList.getTree());
+
+        list:.append(bind);
     }
 
     /**
@@ -843,22 +851,28 @@ pub record GenerateVisitor {
         let mut tryList = TreeStatementList();
         let mut catchList = TreeStatementList();
 
+        // Same reasoning as generateTryFinally: keep the try part and the
+        // catch part in a single shared lexical scope, so a try-declared
+        // local that is still legitimately reachable from the catch part
+        // (e.g. rethrow/cleanup patterns) doesn't have its scope end before
+        // the catch part runs.
         self:.enterBlock(t.loc);
         for i in t.tryPart {
             self:.generateInstr(i, ref tryList);
         }
-        let (tr, _) = self:.quitBlock(t.loc, tryList.getTree());
-
-        self:.enterBlock(t.loc);
         for i in t.catchPart {
             self:.generateInstr(i, ref catchList);
         }
-        let (ct, _) = self:.quitBlock(t.loc, catchList.getTree());
 
         let mut catchers = TreeStatementList();
-        catchers:.append(buildCatcherExpr(t.loc, ct));
+        catchers:.append(buildCatcherExpr(t.loc, catchList.getTree()));
 
-        list:.append(buildTryCatch(t.loc, tr, catchers.getTree()));
+        let tc = buildTryCatch(t.loc, tryList.getTree(), catchers.getTree());
+        let mut wrapList = TreeStatementList();
+        wrapList:.append(tc);
+        let (bind, _) = self:.quitBlock(t.loc, wrapList.getTree());
+
+        list:.append(bind);
     }
 
     /**
