@@ -169,6 +169,8 @@ extern (C) fn ymir_binding_set_executable_name(name: *c8) {
 extern (C) fn ymir_binding_activate_ymir_dumping(a: bool) {
     if (a) {
         state::activateYmirDumping();
+        state::activateYilOptDumpingEach();
+        state::activateYilOptDumping();
     }
 }
 
@@ -184,4 +186,9 @@ extern (C) fn ymir_binding_insert_filtering_module(name: *c8) {
 
 extern (C) fn ymir_binding_activate_dependency_dumping(loc: *c8) {
     state::activateDependencyDumping(Path(fromStringZ(loc)));
+}
+
+
+extern (C) fn ymir_binding_activate_optimization_level(level: u32) {
+    state::setOptLevel(level);
 }
