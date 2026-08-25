@@ -214,6 +214,8 @@ jobs:
             MIDGARD_RELEASE_TAG=${{ needs.checks.outputs.midgard_version }}
             GYC_VERSION_NUMBER=preview-head
             GYC_PACKAGE_VERSION=${{ needs.checks.outputs.gyc_package_version }}
+            GYLLIR_RELEASE_TAG=${{ needs.checks.outputs.gyllir_release_tag }}
+            GYLLIR_ASSET=${{ needs.checks.outputs.gyllir_asset }}
 
       - name: Extract final .deb
         env:

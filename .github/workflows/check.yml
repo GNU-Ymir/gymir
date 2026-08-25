@@ -174,23 +174,24 @@ jobs:
           exit 1
 
       # The gyc built in pass 1 links -lgymidgard-*_<major.minor of MIDGARD_VERSION> and includes
-      # from ymir/<same>; midgard's CMakeLists.txt names what it builds after the major.minor of
-      # *its own* VERSION file. Nothing at build time reconciles the two - they just have to
-      # agree, so compare them here rather than shipping a .deb whose libs no compiler looks for.
+      # from ymir/<same>; midgard's own install step (docker/Dockerfile.midgard, formerly its
+      # CMakeLists.txt) names what it builds after the major.minor of *its own* VERSION file.
+      # Nothing at build time reconciles the two - they just have to agree, so compare them here
+      # rather than shipping a .deb whose libs no compiler looks for.
       - name: "yruntime: VERSION at ${{ env.MIDGARD_VERSION }} matches what gyc will link"
         if: ${{ !cancelled() }}
         run: |
           set -euo pipefail
           url="https://raw.githubusercontent.com/GNU-Ymir/yruntime/${MIDGARD_VERSION}/VERSION"
           if ! curl -fsSL -o /tmp/yruntime_version "$url"; then
-            echo "::error::GNU-Ymir/yruntime has no VERSION at tag ${MIDGARD_VERSION} - its CMakeLists.txt reads that file to name libgymidgard-*_<major.minor>.a."
+            echo "::error::GNU-Ymir/yruntime has no VERSION at tag ${MIDGARD_VERSION} - its own install step reads that file to name libgymidgard-*_<major.minor>.a."
             exit 1
           fi
 
           built="$(tr -d '[:space:]' < /tmp/yruntime_version | cut -d. -f1,2)"
           wanted="$(printf '%s\n' "${MIDGARD_VERSION}" | cut -d. -f1,2)"
           if [ -z "$built" ]; then
-            echo "::error::yruntime@${MIDGARD_VERSION}'s VERSION is empty or malformed - its cmake configure will fail the same way."
+            echo "::error::yruntime@${MIDGARD_VERSION}'s VERSION is empty or malformed - its own install step will fail the same way."
             exit 1
           fi
           if [ "$built" != "$wanted" ]; then
