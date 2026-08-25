@@ -131,6 +131,10 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 	bool for_yil = false;
 	bool version_asked = false;
 	bool verbose = false;
+	/* -nomidgardlib must win regardless of where it sits relative to -funittest (or any other
+	   flag that turns a need_* back on) on the command line - a target's flags are appended in
+	   whatever order its gyllir.toml lists them, so this can't be a simple in-loop reset.  */
+	bool nomidgardlib = false;
 
 	for (i = 0 ; i < argc ; i++) {
 		const char * arg = decoded_options [i].arg;
@@ -160,10 +164,7 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 		}
 
 		if (decoded_options [i].opt_index == OPT_nomidgardlib) {
-			need_gc = false;
-			need_libs = false;
-			need_pthread = false;
-			need_unittest = false;
+			nomidgardlib = true;
 		}
 
 		if (decoded_options [i].opt_index == OPT_funittest) {
@@ -181,6 +182,17 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 		if (decoded_options [i].opt_index == OPT_v) {
 			verbose = true;
 		}
+	}
+
+	if (nomidgardlib) {
+		need_gc = false;
+		need_libs = false;
+		need_pthread = false;
+		need_unittest = false;
+#ifdef __linux__
+		need_m = false;
+		need_dwarf = false;
+#endif
 	}
 
 	/* --version goes to stdout, alongside the driver's own version block; -v
