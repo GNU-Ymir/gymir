@@ -39,29 +39,29 @@ tree y_global_trees[YTI_MAX];
 
 
 /* Language-dependent contents of a type.  */
- 
+
 struct GTY (()) lang_type
 {
     char dummy;
 };
- 
+
 /* Language-dependent contents of a decl.  */
- 
+
 struct GTY (()) lang_decl
 {
     char dummy;
 };
- 
+
 /* Language-dependent contents of an identifier.  This must include a
    tree_identifier.  */
- 
+
 struct GTY (()) lang_identifier
 {
     struct tree_identifier common;
 };
- 
+
 /* The resulting tree type.  */
- 
+
 union GTY ((desc ("TREE_CODE (&%h.generic) == IDENTIFIER_NODE"),
             chain_next ("CODE_CONTAINS_STRUCT (TREE_CODE (&%h.generic), "
                         "TS_COMMON) ? ((union lang_tree_node *) TREE_CHAIN "
@@ -70,9 +70,9 @@ union GTY ((desc ("TREE_CODE (&%h.generic) == IDENTIFIER_NODE"),
     union tree_node GTY ((tag ("0"), desc ("tree_node_structure (&%h)"))) generic;
     struct lang_identifier GTY ((tag ("1"))) identifier;
 };
- 
+
 /* We don't use language_function.  */
- 
+
 struct GTY (()) language_function
 {
 
@@ -197,14 +197,14 @@ void ymir_init_builtins (void)
 
 
 /* Language hooks.  */
- 
+
 static bool
 ymir_langhook_init (void)
 {
 
     ymir_binding_init ();
     build_common_tree_nodes (false);
- 
+
     /* I don't know why this has to be done explicitly.  */
     void_list_node = build_tree_list (NULL_TREE, void_type_node);
     ymir_init_builtins ();
@@ -212,17 +212,17 @@ ymir_langhook_init (void)
     using_eh_for_cleanups ();
 
 
-#if MODULE_VERSION >= 110000    
+#if MODULE_VERSION >= 110000
     /* Initialize target info tables, the keys required by the language are added
        last, so that the OS and CPU handlers can override.  */
     targetdm.d_register_cpu_target_info ();
     targetdm.d_register_os_target_info ();
 #endif
-    
+
     /* Emit all target-specific version identifiers.  */
     targetdm.d_cpu_versions ();
     targetdm.d_os_versions ();
-    
+
     return true;
 }
 
@@ -241,7 +241,7 @@ ymir_init_options (unsigned int argc ATTRIBUTE_UNUSED, cl_decoded_option * decod
 {
     ymir_binding_set_executable_name (decoded_options [0].arg);
     for (unsigned int i = 0 ; i < argc ; i++) {
-        //const char * arg = decoded_options [i].arg;
+        const char * arg = decoded_options [i].arg;
         switch (decoded_options [i].opt_index) {
         case OPT_g :
         case OPT_ggdb :
@@ -267,6 +267,10 @@ ymir_init_options (unsigned int argc ATTRIBUTE_UNUSED, cl_decoded_option * decod
         case OPT_fdump_syms:
             ymir_binding_activate_import_dumping (true);
             break;
+		case OPT_O:
+            /* Bare "-O" has no argument and means level 1.  */
+            ymir_binding_activate_optimization_level (arg ? (uint32_t) atoi (arg) : 1);
+			break;
         }
     }
 }
@@ -276,7 +280,7 @@ ymir_init_options_struct (gcc_options *opts) {
     opts->x_flag_exceptions = 0;
     opts->x_warn_return_type = 0;
     opts->x_warn_return_local_addr = 1;
-  
+
     /* Avoid range issues for complex multiply and divide.  */
     opts->x_flag_complex_method = 2;
 
@@ -295,7 +299,7 @@ static unsigned int
 ymir_option_lang_mask (void) {
     return CL_YMIR;
 }
-    
+
 //size_t, const char*, long long int, int, location_t, const cl_option_handlers*
 
 static bool
@@ -324,7 +328,7 @@ ymir_langhook_handle_option (size_t scode ATTRIBUTE_UNUSED,
         ymir_binding_activate_include_testing (true);
     } else if (code == OPT_fno_coverage) {
         ymir_binding_deactivate_testing_coverage (true);
-    } else if (code == OPT_fdump_ymir) {        
+    } else if (code == OPT_fdump_ymir) {
         ymir_binding_activate_ymir_dumping (true);
     } else if (code == OPT_fdump_syms) {
         ymir_binding_activate_import_dumping (true);
@@ -336,7 +340,7 @@ ymir_langhook_handle_option (size_t scode ATTRIBUTE_UNUSED,
         ymir_binding_insert_filtering_module (arg);
     } else if (code == OPT_fyil) {
         ymir_binding_activate_export_yil (arg);
-    } else if (code == OPT_imultilib) {
+	} else if (code == OPT_imultilib) {
         // set multilib
     } else {
         switch (code) {
@@ -355,7 +359,7 @@ ymir_langhook_parse_file (void)
 {
     ymir_binding_parse_file (num_in_fnames, in_fnames);
 }
- 
+
 static tree
 ymir_langhook_type_for_mode (enum machine_mode mode, int unsignedp)
 {
@@ -393,7 +397,7 @@ ymir_langhook_type_for_mode (enum machine_mode mode, int unsignedp)
                     return int_n_trees[i].signed_type;
                 }
         }
-  
+
     if (COMPLEX_MODE_P (mode)) {
         if (mode == TYPE_MODE (complex_float_type_node))
         return complex_float_type_node;
@@ -417,7 +421,7 @@ ymir_langhook_type_for_mode (enum machine_mode mode, int unsignedp)
     /* gcc_unreachable */
     return NULL;
 }
- 
+
 static tree
 ymir_langhook_type_for_size (unsigned int bits,
                              int unsignedp)
@@ -430,7 +434,7 @@ ymir_langhook_type_for_size (unsigned int bits,
 
     if (bits <= TYPE_PRECISION (y_i32_type))
     return unsignedp ? y_u32_type : y_i32_type;
-    
+
     if (bits <= TYPE_PRECISION (y_i64_type))
     return unsignedp ? y_u64_type : y_i64_type;
 
@@ -449,13 +453,13 @@ ymir_langhook_type_for_size (unsigned int bits,
 }
 
 /* Record a builtin function.  We just ignore builtin functions.  */
- 
+
 static tree
 ymir_langhook_builtin_function (tree decl)
 {
     return decl;
 }
- 
+
 static bool
 ymir_langhook_global_bindings_p (void)
 {
@@ -481,7 +485,7 @@ ymir_langhook_pushdecl (tree decl ATTRIBUTE_UNUSED)
     gcc_unreachable ();
     return decl;
 }
- 
+
 static tree
 ymir_langhook_getdecls (void)
 {
@@ -522,8 +526,8 @@ ymir_build_eh_runtime_type (tree type ATTRIBUTE_UNUSED) {
 #undef LANG_HOOKS_EH_RUNTIME_TYPE
 #undef LANG_HOOKS_POST_OPTIONS
 
-#define LANG_HOOKS_NAME "Ymir" 
-#define LANG_HOOKS_INIT ymir_langhook_init 
+#define LANG_HOOKS_NAME "Ymir"
+#define LANG_HOOKS_INIT ymir_langhook_init
 #define LANG_HOOKS_INIT_OPTIONS	 ymir_init_options
 #define LANG_HOOKS_INIT_OPTIONS_STRUCT	    ymir_init_options_struct
 #define LANG_HOOKS_OPTION_LANG_MASK ymir_option_lang_mask
@@ -540,6 +544,6 @@ ymir_build_eh_runtime_type (tree type ATTRIBUTE_UNUSED) {
 #define LANG_HOOKS_POST_OPTIONS		    ymir_post_options
 
 struct lang_hooks lang_hooks = LANG_HOOKS_INITIALIZER;
- 
+
 #include "gt-ymir-ymir1.h"
 #include "gtype-ymir.h"
