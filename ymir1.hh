@@ -81,7 +81,7 @@ extern "C" void ymir_binding_set_prefix (const char* pref);
 extern "C" void ymir_binding_set_executable_name (const char* pref);
 extern "C" void ymir_binding_insert_filtering_module (const char * filter);
 extern "C" void ymir_binding_activate_dependency_dumping (const char * loc);
-
+extern "C" void ymir_binding_activate_optimization_level(uint32_t level);
 
 #define builtin_const 1 << 0
 #define builtin_noreturn 1 << 1
