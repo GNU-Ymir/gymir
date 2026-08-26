@@ -22,6 +22,8 @@
 #     --build-arg MIDGARD_RELEASE_TAG="$MIDGARD_VERSION" \
 #     --build-arg GYC_VERSION_NUMBER="$GYC_VERSION" \
 #     --build-arg GYC_PACKAGE_VERSION="$GYC_VERSION" \
+#     --build-arg GYLLIR_RELEASE_TAG="$GYLLIR_VERSION" \
+#     --build-arg GYLLIR_ASSET="gyllir_${GYLLIR_VERSION}_amd64.deb" \
 #     --target export --output type=local,dest=out .
 
 ARG UBUNTU_VERSION="26.04"
@@ -38,6 +40,10 @@ ARG GCC_MAJOR_VERSION
 ARG GYC_VERSION_NUMBER
 ARG GYC_PACKAGE_VERSION
 ARG MIDGARD_RELEASE_TAG
+# The gyllir release to build midgard with - see YMIR_VERSION's GYLLIR_VERSION. `gyllir build`
+# is what actually builds midgard now (its gyllir.toml replaced the old CMakeLists.txt).
+ARG GYLLIR_RELEASE_TAG
+ARG GYLLIR_ASSET
 # Re-declared from the global ARG above: a global (pre-FROM) ARG is only in scope for `FROM`
 # lines, so without this `${ARCH}` expands to empty in this stage and the .deb below is named
 # gyc-<major>_<version>_.deb, which the `export` stage - which *does* redeclare it - then fails
@@ -52,15 +58,18 @@ RUN test -n "$GYC_PACKAGE_VERSION" || \
     (echo "GYC_PACKAGE_VERSION build-arg is required - see YMIR_VERSION's GYC_VERSION" >&2 && exit 1)
 RUN test -n "$MIDGARD_RELEASE_TAG" || \
     (echo "MIDGARD_RELEASE_TAG build-arg is required - see YMIR_VERSION" >&2 && exit 1)
+RUN test -n "$GYLLIR_RELEASE_TAG" && test -n "$GYLLIR_ASSET" || \
+    (echo "GYLLIR_RELEASE_TAG and GYLLIR_ASSET build-args are required - see YMIR_VERSION" >&2 && exit 1)
 
 WORKDIR /gcc
-# build-essential is what provides `make` and the unversioned `gcc`/`g++` (`cc`) that CMake picks
-# up as CMAKE_MAKE_PROGRAM / CMAKE_C_COMPILER - the versioned gcc-<N>/g++-<N> below are only
-# there because the gyc .deb depends on them, they install no unversioned symlink.
+# build-essential is what provides `make` and the unversioned `gcc`/`g++` (`cc`) that gyc shells
+# out to when compiling midgard's C sources - the versioned gcc-<N>/g++-<N> below are only there
+# because the gyc .deb depends on them, they install no unversioned symlink. curl is needed to
+# fetch the gyllir .deb below.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential gcc-${GCC_MAJOR_VERSION} g++-${GCC_MAJOR_VERSION} \
-        flex autoconf automake libtool cmake \
-        patchelf libdwarf-dev git libgc-dev ca-certificates \
+        flex autoconf automake libtool \
+        patchelf libdwarf-dev git libgc-dev ca-certificates curl \
     && rm -rf /var/lib/apt/lists/*
 
 # The midgard-less gyc .deb from Dockerfile.gyc (pass 1) - installed both to get a working `gyc`
@@ -68,6 +77,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # package's tree.
 COPY artifacts/gyc.deb ./gcc-bin.deb
 RUN apt-get update && apt-get install -y --no-install-recommends ./gcc-bin.deb && rm -rf /var/lib/apt/lists/*
+
+# `gyllir build` (not cmake) is what builds midgard's own gyllir.toml below.
+RUN curl -fsSL -o /tmp/gyllir.deb \
+        "https://github.com/GNU-Ymir/Gyllir/releases/download/${GYLLIR_RELEASE_TAG}/${GYLLIR_ASSET}" \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends /tmp/gyllir.deb \
+    && rm -f /tmp/gyllir.deb \
+    && rm -rf /var/lib/apt/lists/*
+RUN gyllir --version
 
 RUN mkdir -p gcc-bin/DEBIAN gcc-bin/usr/bin \
     gcc-bin/usr/lib/gcc/x86_64-linux-gnu/${GCC_MAJOR_VERSION} \
@@ -89,34 +107,23 @@ RUN printf '%s\n' "${MIDGARD_RELEASE_TAG}" | sed -nE 's/^([0-9]+\.[0-9]+).*/\1/p
 RUN test -s /tmp/midgard_short_version || \
     (echo "MIDGARD_RELEASE_TAG (${MIDGARD_RELEASE_TAG}) is not a <major>.<minor>... version - cannot derive MIDGARD_SHORT_VERSION" >&2 && exit 1)
 
-RUN mkdir .build
-WORKDIR /gcc/yruntime/.build
-RUN touch __lib_test_.o __lib_debug_.o __lib_release_.o
-RUN cmake ..
-RUN make
-RUN make install DESTDIR=/gcc/gcc-bin
+RUN gyllir build
+
+# gyllir build produces unversioned libs at the repo root (libgymidgard_debug.a, ...); gyc looks
+# them up as -lgymidgard-{debug,release,tests}_<MIDGARD_SHORT_VERSION>, so rename them into that
+# shape here - same as yruntime's own `install` script does for a real (non-packaged) install.
+RUN MIDGARD_SHORT_VERSION="$(cat /tmp/midgard_short_version)" \
+	&& mkdir -p /gcc/gcc-bin/usr/lib \
+	&& for name in debug release tests; do \
+		src="libgymidgard_${name}.a"; \
+		test -f "$src" || { echo "gyllir build produced no ${src} - check yruntime@${MIDGARD_RELEASE_TAG}'s gyllir.toml targets" >&2; exit 1; }; \
+		install -m 644 "$src" "/gcc/gcc-bin/usr/lib/libgymidgard-${name}_${MIDGARD_SHORT_VERSION}.a"; \
+	done
 
 WORKDIR /gcc/yruntime/midgard
 RUN MIDGARD_SHORT_VERSION="$(cat /tmp/midgard_short_version)" \
 	&& mkdir -p /gcc/gcc-bin/usr/libexec/gcc/x86_64-linux-gnu/${GCC_MAJOR_VERSION}/include/ymir/$MIDGARD_SHORT_VERSION \
 	&& cp -r * /gcc/gcc-bin/usr/libexec/gcc/x86_64-linux-gnu/${GCC_MAJOR_VERSION}/include/ymir/$MIDGARD_SHORT_VERSION
-
-WORKDIR /gcc/gcc-bin/usr/lib
-# yruntime's CMakeLists.txt derives the same short version from its own VERSION file, independently
-# of anything passed in here - nothing reconciles the two, they just have to agree. `ln -s` below
-# happily points at a name that does not exist, so check first rather than ship a .deb of dangling
-# symlinks that only fails when someone links a program against it.
-RUN MIDGARD_SHORT_VERSION="$(cat /tmp/midgard_short_version)"; \
-	for kind in debug tests release; do \
-		test -f "libgymidgard-${kind}_${MIDGARD_SHORT_VERSION}.a" || { \
-			echo "midgard built no libgymidgard-${kind}_${MIDGARD_SHORT_VERSION}.a - it produced $(ls libgymidgard-${kind}_*.a 2>/dev/null || echo nothing) instead, so yruntime@${MIDGARD_RELEASE_TAG}'s VERSION disagrees with MIDGARD_VERSION" >&2; \
-			exit 1; \
-		}; \
-	done
-RUN MIDGARD_SHORT_VERSION="$(cat /tmp/midgard_short_version)" \
-	&& ln -s libgymidgard-debug_$MIDGARD_SHORT_VERSION.a libgymidgard-debug.a \
-	&& ln -s libgymidgard-tests_$MIDGARD_SHORT_VERSION.a libgymidgard-tests.a \
-	&& ln -s libgymidgard-release_$MIDGARD_SHORT_VERSION.a libgymidgard-release.a
 
 WORKDIR /gcc/gcc-bin/DEBIAN
 COPY packaging/control.in /gcc/gcc-bin/DEBIAN/control
