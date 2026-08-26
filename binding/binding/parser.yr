@@ -27,7 +27,7 @@ extern (C) fn ymir_binding_parse_ymir_file(filename: [c8]) {
     let nodes = {
         let dmut parser = copy Parser(file-> filename);
         parser:.parseAll();
-        parser.getExpYILNodes()
+        parser.getOptYILNodes()
     } catch {
         err: &ErrorMsg => {
             println(format("%", err));
