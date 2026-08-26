@@ -2,7 +2,7 @@ in parser;
 
 use ymirc::parser;
 use ymirc::lint::serialize;
-use ymirc::{args, utils::_, errors};
+use ymirc::{utils::_, errors};
 use ymirc::global::_;
 use std::{io, conv, fs::path};
 
@@ -25,8 +25,7 @@ extern (C) fn ymir_binding_init() {
 
 extern (C) fn ymir_binding_parse_ymir_file(filename: [c8]) {
     let nodes = {
-        let args = YmirArguments(file-> filename);
-        let dmut parser = copy Parser(args);
+        let dmut parser = copy Parser(file-> filename);
         parser:.parseAll();
         parser.getExpYILNodes()
     } catch {
