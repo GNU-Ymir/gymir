@@ -1,0 +1,33 @@
+name: Plane sync
+
+# synchronize and edited are included so a reference added to the branch,
+# title or body after opening still gets picked up; the script stays silent
+# on those events and only ever attaches the link once.
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review, synchronize, edited, closed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: plane-sync-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    # Forked pull requests do not get repository secrets, so skip them
+    # instead of failing the check.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+
+      - name: Mirror pull request onto Plane
+        env:
+          PLANE_BASE_URL: ${{ vars.PLANE_BASE_URL }}
+          PLANE_WORKSPACE_SLUG: ${{ vars.PLANE_WORKSPACE_SLUG }}
+          PLANE_API_TOKEN: ${{ secrets.PLANE_API_TOKEN }}
+        run: python3 .github/scripts/plane_sync.py
