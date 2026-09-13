@@ -74,7 +74,27 @@ ALL_GYMIRFLAGS = -O3 $(PICFLAG) -fv
 YCOMPILE.base = $(CXX) $(NO_PIE_CFLAGS) -c $(ALL_YFLAGS) $(INCLUDES) -o $@ -std=c++17
 YCOMPILE = $(YCOMPILE.base) -MT $@ -MMD -MP -MF $(@D)/$(DEPDIR)/$(*F).TPo
 YPOSTCOMPILE = @mv $(@D)/$(DEPDIR)/$(*F).TPo $(@D)/$(DEPDIR)/$(*F).Po
-YLINKER = /usr/bin/gyc $(NO_PIE_CFLAG) $(ALL_GYMIRFLAGS) -lstdc++ -lgymidgard-debug -ldwarf
+YLINKER = /usr/bin/gyc $(NO_PIE_CFLAG) $(ALL_GYMIRFLAGS) -nomidgardlib -lstdc++
+
+# Left to itself the bootstrap gyc appends a midgard runtime of its own at the
+# end of the link line - but the version it appends is the one *it* was built
+# with (LIBYMIDGARD_VERSION baked into its gycspec.o), and ymir/libymirc.a
+# below is not compiled against that one.  gyllir builds it against the std
+# bootstrap's gyllir.lock pins, cloned and built into bootstrap/.deps/std, and
+# the two only agree until a bootstrap lags a midgard release.  When they
+# disagree the mismatch reaches the link as an ABI one, not as a missing file:
+# 1.4 making std::stream's lazy globals thread-local left libymirc.a's TLS
+# reference to __PRINT_SET__ against the 1.3 archive's plain-data definition.
+# Nor can the runtime be named from MIDGARD_VERSION: that is the midgard the
+# gyc being built will ship, which nothing guarantees is installed on the
+# machine building it (the release build's toolchain carries only its own).
+# So turn the injection off with -nomidgardlib and link the archive gyllir
+# built next to libymirc.a - the same sources, the same compiler - along with
+# the four libraries the driver used to bring in behind it.  They belong at
+# the *end* of the link line, after ymir/libymirc.a - static archives only
+# resolve backwards - which is where the driver put them and why YLINKER above
+# no longer carries them.
+YMIR_RUNTIME_LIBS = $(srcdir)/ymir/bootstrap/.deps/std/libgymidgard_debug.a -lgc -lpthread -lm -ldwarf
 
 GYMIRCOMPILE.base = /usr/bin/gyc $(NO_PIE_CFLAGS) -c $(ALL_GYMIRFLAGS) -o $@
 GYMIRCOMPILE = $(GYMIRCOMPILE.base)
@@ -93,7 +113,8 @@ binding_objs := $(shell find $(ROOT_DIR)/$(srcdir)/ymir/binding | grep [.]yr)
 
 ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)
 	+$(YLINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) -o $@ \
-	attribs.o $(ymir_OBJS) $(D_TARGET_OBJS) $(BACKEND) $(LIBS) $(BACKENDLIBS) libbackend.a
+	attribs.o $(ymir_OBJS) $(D_TARGET_OBJS) $(BACKEND) $(LIBS) $(BACKENDLIBS) libbackend.a \
+	$(YMIR_RUNTIME_LIBS)
 
 ymir/libbinding.a: $(binding_objs) ymir/libymirc.a
 	  $(GYMIRCOMPILE) -I$(ROOT_DIR)/$(srcdir)/ymir/bootstrap/src/ymirc.yr $(srcdir)/ymir/binding/__lib__.yr -c -o $(srcdir)/ymir/binding/libbinding.o ; \
