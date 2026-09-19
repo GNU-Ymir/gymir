@@ -1,10 +1,10 @@
 in visitor;
 
-use ymirc::lint::node::{_, global::_, instr::_, type::_, value::_};
-use ymirc::global::_;
-use ymirc::utils::_;
-use ymirc::lexing::{word, keys};
 use binding::tree::_;
+
+use ymirc::utils::_;
+use ymirc::lexing::word;
+use ymirc::lint::node::{_, global::_, instr::_, type::_, value::_};
 
 use std::io;
 
