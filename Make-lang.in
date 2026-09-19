@@ -88,13 +88,13 @@ YLINKER = /usr/bin/gyc $(NO_PIE_CFLAG) $(ALL_GYMIRFLAGS) -nomidgardlib -lstdc++
 # Nor can the runtime be named from MIDGARD_VERSION: that is the midgard the
 # gyc being built will ship, which nothing guarantees is installed on the
 # machine building it (the release build's toolchain carries only its own).
-# So turn the injection off with -nomidgardlib and link the archive gyllir
-# built next to libymirc.a - the same sources, the same compiler - along with
-# the four libraries the driver used to bring in behind it.  They belong at
+# So turn the injection off with -nomidgardlib and name the installed midgard
+# runtime libymirc.a is compiled against explicitly, along with the four
+# libraries the driver used to bring in behind it.  They belong at
 # the *end* of the link line, after ymir/libymirc.a - static archives only
 # resolve backwards - which is where the driver put them and why YLINKER above
 # no longer carries them.
-YMIR_RUNTIME_LIBS = $(srcdir)/ymir/bootstrap/.deps/std/libgymidgard_debug.a -lgc -lpthread -lm -ldwarf
+YMIR_RUNTIME_LIBS = -lgymidgard-debug_1.6 -lgc -lpthread -lm -ldwarf
 
 GYMIRCOMPILE.base = /usr/bin/gyc $(NO_PIE_CFLAGS) -c $(ALL_GYMIRFLAGS) -o $@
 GYMIRCOMPILE = $(GYMIRCOMPILE.base)
