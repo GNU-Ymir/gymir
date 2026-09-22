@@ -11,11 +11,16 @@ use generator::visitor;
 
 
 extern (C) fn _yrt_exc_init();
+extern (C) fn _yrt_i_gc_add_tls_roots();
 extern (C) fn _yrt_force_debug(f: i32);
 extern (C) fn c_binding_fatal_error();
 
 extern (C) fn ymir_binding_init() {
     _yrt_exc_init();
+
+    // ymir1 does not go through _yrt_init_runtime, and ymirc keeps its state in
+    // @thread globals, which the GC never scans unless their TLS block is a root.
+    _yrt_i_gc_add_tls_roots();
 
     cte if __version!DEBUG {
         _yrt_force_debug(1);
