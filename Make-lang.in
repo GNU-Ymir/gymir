@@ -94,7 +94,7 @@ YLINKER = /usr/bin/gyc $(NO_PIE_CFLAG) $(ALL_GYMIRFLAGS) -nomidgardlib -lstdc++
 # the *end* of the link line, after ymir/libymirc.a - static archives only
 # resolve backwards - which is where the driver put them and why YLINKER above
 # no longer carries them.
-YMIR_RUNTIME_LIBS = -lgymidgard-debug_1.6 -lgc -lpthread -lm -ldwarf
+YMIR_RUNTIME_LIBS = -lgymidgard-debug_1.9 -lgc -lpthread -lm -ldwarf
 
 GYMIRCOMPILE.base = /usr/bin/gyc $(NO_PIE_CFLAGS) -c $(ALL_GYMIRFLAGS) -o $@
 GYMIRCOMPILE = $(GYMIRCOMPILE.base)
