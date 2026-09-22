@@ -96,7 +96,23 @@ YLINKER = /usr/bin/gyc $(NO_PIE_CFLAG) $(ALL_GYMIRFLAGS) -nomidgardlib -lstdc++
 # no longer carries them.
 YMIR_RUNTIME_LIBS = -lgymidgard-debug_1.9 -lgc -lpthread -lm -ldwarf
 
-GYMIRCOMPILE.base = /usr/bin/gyc $(NO_PIE_CFLAGS) -c $(ALL_GYMIRFLAGS) -o $@
+# The same disagreement one stage earlier, on the include side.  /usr/bin/gyc
+# resolves `use std::...` against /usr/include/ymir/<the midgard *it* was built
+# with>, so left alone the binding below compiles against a std that is not the
+# one ymir/libymirc.a was built from - an ABI mismatch again rather than a
+# missing file.  The version component of that path is baked into the bootstrap
+# compiler's own ymirc as global::common::MIDGARD_VERSION, and no flag spells
+# it: -iprefix replaces only the /usr part, and -nostdinc drops the core package
+# altogether (it is what the runtime itself is built with, and it takes the
+# implicit `use ::core` with it, so the binding stops compiling).  Which is why
+# gyllir stages the std it pins under the bootstrap compiler's version number
+# rather than under its own - point -iprefix at that staging tree and the
+# binding and libymirc.a share one std by construction.  It is written by the
+# gyllir run in the ymir/libymirc.a rule below, which the binding already waits
+# on, so there is nothing else to order here.
+MIDGARD_IPREFIX = $(ROOT_DIR)/$(srcdir)/ymir/bootstrap/.deps/std/.iprefix
+
+GYMIRCOMPILE.base = /usr/bin/gyc $(NO_PIE_CFLAGS) -c $(ALL_GYMIRFLAGS) -iprefix $(MIDGARD_IPREFIX) -o $@
 GYMIRCOMPILE = $(GYMIRCOMPILE.base)
 
 # The compiler proper
