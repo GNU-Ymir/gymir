@@ -19,6 +19,7 @@
 #
 # To build locally (run from the repo root, so the build context is correct):
 #   . ./YMIR_VERSION
+#   eval "$(bash .github/scripts/midgard-branch.sh --branch="$MIDGARD_BRANCH" --expect-gyc="$GYC_VERSION" --mode=preview)"
 #   GCC_MAJOR_VERSION="${GCC_VERSION%%.*}"
 #   docker build -f docker/Dockerfile.gyc \
 #     --build-arg GCC_VERSION="$GCC_VERSION" \
@@ -30,7 +31,8 @@
 #     --build-arg GYLLIR_RELEASE_TAG="$GYLLIR_VERSION" \
 #     --build-arg GYLLIR_ASSET="gyllir_${GYLLIR_VERSION}_amd64.deb" \
 #     --build-arg BOOTSTRAP_RELEASE_TAG="$GYC_VERSION" \
-#     --build-arg MIDGARD_RELEASE_TAG="$MIDGARD_VERSION" \
+#     --build-arg MIDGARD_VERSION="$midgard_version" \
+#     --build-arg MIDGARD_VERSION_DATE="$midgard_version_date" \
 #     --build-arg GYC_VERSION_NUMBER="$GYC_VERSION" \
 #     --build-arg GYC_PACKAGE_VERSION="$GYC_VERSION" \
 #     --target export --output type=local,dest=out .
@@ -112,10 +114,15 @@ FROM toolchain AS fetch_gcc_version
 ARG GCC_MAJOR_VERSION
 ARG GCC_VERSION
 ARG BOOTSTRAP_RELEASE_TAG
-ARG MIDGARD_RELEASE_TAG
+# The midgard this gyc will ship (Dockerfile.midgard builds it in pass 2): the version declared
+# by the head of YMIR_VERSION's MIDGARD_BRANCH on yruntime, as resolved by
+# .github/scripts/midgard-branch.sh.
+ARG MIDGARD_VERSION
 
 RUN test -n "$BOOTSTRAP_RELEASE_TAG" || \
     (echo "BOOTSTRAP_RELEASE_TAG build-arg is required - see YMIR_VERSION's GYC_VERSION" >&2 && exit 1)
+RUN test -n "$MIDGARD_VERSION" || \
+    (echo "MIDGARD_VERSION build-arg is required - see .github/scripts/midgard-branch.sh" >&2 && exit 1)
 
 WORKDIR /gcc/gcc-src
 RUN git fetch origin releases/gcc-${GCC_MAJOR_VERSION}:refs/releases/gcc-${GCC_MAJOR_VERSION} --depth=1
@@ -139,30 +146,14 @@ RUN git fetch --tags \
     (echo "::error::github.com/GNU-Ymir/bootstrap has no tag ${BOOTSTRAP_RELEASE_TAG} - tag that release on bootstrap before releasing gymir" >&2 && exit 1)
 
 # Keep the compiled ymirc's baked-in include-path constant (MIDGARD_VERSION in this checkout's
-# own YMIR_VERSION, read by Make-lang.in via `sed` at `make` time) in sync with the midgard
-# release this build actually pairs with (MIDGARD_RELEASE_TAG, checked out by Dockerfile.midgard
-# in pass 2) - the tag's own committed YMIR_VERSION would otherwise be free to drift from what
-# this repo's root YMIR_VERSION intends.
+# own YMIR_VERSION, read by Make-lang.in via `sed` at `make` time) in sync with the midgard this
+# build actually ships (MIDGARD_VERSION, built by Dockerfile.midgard in pass 2) - the tag's own
+# committed YMIR_VERSION would otherwise be free to drift from it.
 RUN if [ -f YMIR_VERSION ]; then \
 		grep -q '^MIDGARD_VERSION=' YMIR_VERSION \
-			&& sed -i "s/^MIDGARD_VERSION=.*/MIDGARD_VERSION=${MIDGARD_RELEASE_TAG}/" YMIR_VERSION \
-			|| echo "MIDGARD_VERSION=${MIDGARD_RELEASE_TAG}" >> YMIR_VERSION; \
+			&& sed -i "s/^MIDGARD_VERSION=.*/MIDGARD_VERSION=${MIDGARD_VERSION}/" YMIR_VERSION \
+			|| echo "MIDGARD_VERSION=${MIDGARD_VERSION}" >> YMIR_VERSION; \
 	fi
-
-# Date of the midgard release this build bundles, YYYYMMDD, reported next to its version by
-# `gyc --version`.  yruntime is not part of this image - Dockerfile.midgard clones it in pass 2 -
-# and `make` must stay offline, so resolve it here, straight off the remote's tag (a blobless
-# single-tag clone, ~100K), and hand it to make below.  Cosmetic enough not to be worth failing a
-# release over: an unreachable remote leaves the file empty and gycspec.c then prints the midgard
-# version with no date.
-RUN git clone --bare --filter=blob:none --depth 1 --branch "${MIDGARD_RELEASE_TAG}" \
-		https://github.com/GNU-Ymir/yruntime.git /tmp/yruntime-tag.git 2>/dev/null \
-		&& git -C /tmp/yruntime-tag.git for-each-ref \
-			--format='%(creatordate:format:%Y%m%d)' "refs/tags/${MIDGARD_RELEASE_TAG}" \
-			> /tmp/midgard_date \
-		|| echo "::warning::could not read the date of yruntime tag ${MIDGARD_RELEASE_TAG}" >&2; \
-	rm -rf /tmp/yruntime-tag.git; \
-	touch /tmp/midgard_date
 
 WORKDIR /gcc/gcc-src/
 RUN ./contrib/download_prerequisites
@@ -182,10 +173,14 @@ RUN CC=gcc-${COMPILER_MAJOR_VERSION} CXX=g++-${COMPILER_MAJOR_VERSION} ../gcc-sr
 FROM configure AS make
 WORKDIR /gcc/gcc-build
 ARG YMIR_BOOTSTRAP_MIDGARD_VERSION
-# MIDGARD_VERSION_DATE is picked up from the environment by ymir/Make-lang.in - see the file
-# written in the fetch_gcc_version stage above. YMIR_BOOTSTRAP_MIDGARD_VERSION too, so ymir1 links
-# the very midgard the toolchain stage installed.
-RUN MIDGARD_VERSION_DATE="$(cat /tmp/midgard_date)" \
+# Date of the yruntime commit this build bundles, YYYYMMDD, reported next to its version by
+# `gyc --version`. There is no yruntime in this image and `make` must stay offline, so the
+# workflow resolves it along with the commit (.github/scripts/midgard-branch.sh). Optional: left
+# empty, gycspec.c prints the midgard version with no date.
+ARG MIDGARD_VERSION_DATE
+# Both are picked up from the environment by ymir/Make-lang.in. YMIR_BOOTSTRAP_MIDGARD_VERSION so
+# ymir1 links the very midgard the toolchain stage installed.
+RUN MIDGARD_VERSION_DATE="${MIDGARD_VERSION_DATE}" \
     YMIR_BOOTSTRAP_MIDGARD_VERSION="${YMIR_BOOTSTRAP_MIDGARD_VERSION}" \
     make -j$(( $(nproc) - 1 ))
 RUN make install DESTDIR=/gcc/gcc-install

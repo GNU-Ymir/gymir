@@ -23,18 +23,23 @@
 #   invokes gyc to build ymir/bootstrap/libymirc.a during `make` (see Make-lang.in). Published
 #   by github.com/GNU-Ymir/Gyllir (release tag = GYLLIR_VERSION, asset =
 #   gyllir_<GYLLIR_VERSION>_amd64.deb).
-# - MIDGARD_VERSION: the standard library (midgard) bundled into the produced gyc .deb,
-#   published by github.com/GNU-Ymir/yruntime (release tag = MIDGARD_VERSION).
+# - MIDGARD_BRANCH: the github.com/GNU-Ymir/yruntime branch whose head is the standard library
+#   (midgard) bundled into the produced gyc .deb - a branch, not a release tag. A yruntime release
+#   is built with the gyc that bundles it, so it can only be tagged once that gyc is out; pinning a
+#   tag here would ask for it before. That branch must declare (gyllir.toml) a version not tagged
+#   yet, name GYC_VERSION as YMIR_BOOTSTRAP_VERSION in its own YMIR_VERSION, and - unless it is the
+#   default branch - have an open pull request (see .github/scripts/midgard-branch.sh).
+#   release.yml marks its head with the tag temp/<version> while it builds, then dispatches
+#   yruntime's release on it, which tags <version> for real and merges that pull request.
 # - YMIR_BOOTSTRAP_MIDGARD_VERSION: the midgard the ymirc source at GYC_VERSION is *compiled
 #   against* - the std bootstrap's gyllir.toml/gyllir.lock pin, which gyllir stages under the
 #   -iprefix the binding is compiled with. ymir1 links that midgard's runtime
 #   (-lgymidgard-debug_<major.minor>, see Make-lang.in's YMIR_RUNTIME_LIBS), so it must be
 #   installed on the build machine next to YMIR_BOOTSTRAP_VERSION's gyc. Not to be confused with
-#   MIDGARD_VERSION: that one is the midgard the gyc being built *ships*, which only exists once
-#   this release does.
+#   the midgard the gyc being built *ships*, which only exists once this release does.
 GYC_VERSION=1.7.0
 YMIR_BOOTSTRAP_VERSION=1.6.0
 YMIR_BOOTSTRAP_MIDGARD_VERSION=1.9.0
 GCC_VERSION=15.3.1
 GYLLIR_VERSION=1.8.0
-MIDGARD_VERSION=1.10.0
+MIDGARD_BRANCH=MID-87-compile-from-1.7

@@ -36,7 +36,9 @@ jobs:
       gyllir_version: ${{ steps.version.outputs.gyllir_version }}
       gyllir_release_tag: ${{ steps.version.outputs.gyllir_release_tag }}
       gyllir_asset: ${{ steps.version.outputs.gyllir_asset }}
-      midgard_version: ${{ steps.version.outputs.midgard_version }}
+      midgard_version: ${{ steps.midgard.outputs.midgard_version }}
+      midgard_sha: ${{ steps.midgard.outputs.midgard_sha }}
+      midgard_version_date: ${{ steps.midgard.outputs.midgard_version_date }}
       bootstrap_tag: ${{ steps.version.outputs.bootstrap_tag }}
       gyc_package_version: ${{ steps.version.outputs.gyc_package_version }}
       tag_name: ${{ steps.version.outputs.tag_name }}
@@ -58,7 +60,6 @@ jobs:
           echo "gyllir_version=${GYLLIR_VERSION}" >> "$GITHUB_OUTPUT"
           echo "gyllir_release_tag=${GYLLIR_VERSION}" >> "$GITHUB_OUTPUT"
           echo "gyllir_asset=gyllir_${GYLLIR_VERSION}_amd64.deb" >> "$GITHUB_OUTPUT"
-          echo "midgard_version=${MIDGARD_VERSION}" >> "$GITHUB_OUTPUT"
           echo "bootstrap_tag=${GYC_VERSION}" >> "$GITHUB_OUTPUT"
           # The .deb's dpkg `Version:` field, unlike the tag/asset name, cannot be the constant
           # `preview` - dpkg rejects a version that does not start with a digit. Stamp the
@@ -70,6 +71,17 @@ jobs:
           echo "tag_name=preview" >> "$GITHUB_OUTPUT"
           echo "intermediate_asset=gyc-${GCC_MAJOR_VERSION}_preview_amd64.deb" >> "$GITHUB_OUTPUT"
           echo "out_asset=gyc-${GCC_MAJOR_VERSION}_preview_amd64.deb" >> "$GITHUB_OUTPUT"
+
+      # The midgard bundled is the head of MIDGARD_BRANCH, as in release.yml - but nothing is tagged
+      # or handed over to yruntime from here, and what would make a release fail (an already-tagged
+      # version, another gyc in the branch's YMIR_VERSION) only warns: a preview has no release of
+      # its own to protect.
+      - name: Resolve midgard
+        id: midgard
+        run: |
+          set -euo pipefail
+          . ./YMIR_VERSION
+          bash .github/scripts/midgard-branch.sh --branch="${MIDGARD_BRANCH}" --expect-gyc="${GYC_VERSION}" --mode=preview >> "$GITHUB_OUTPUT"
 
       - name: Ensure bootstrap has a matching tag
         env:
@@ -122,7 +134,8 @@ jobs:
             GYLLIR_RELEASE_TAG=${{ needs.checks.outputs.gyllir_release_tag }}
             GYLLIR_ASSET=${{ needs.checks.outputs.gyllir_asset }}
             BOOTSTRAP_RELEASE_TAG=${{ needs.checks.outputs.bootstrap_tag }}
-            MIDGARD_RELEASE_TAG=${{ needs.checks.outputs.midgard_version }}
+            MIDGARD_VERSION=${{ needs.checks.outputs.midgard_version }}
+            MIDGARD_VERSION_DATE=${{ needs.checks.outputs.midgard_version_date }}
             GYC_VERSION_NUMBER=preview
             GYC_PACKAGE_VERSION=${{ needs.checks.outputs.gyc_package_version }}
 
@@ -170,7 +183,8 @@ jobs:
           tags: gyc-midgard-preview-build:latest
           build-args: |
             GCC_MAJOR_VERSION=${{ needs.checks.outputs.gcc_major_version }}
-            MIDGARD_RELEASE_TAG=${{ needs.checks.outputs.midgard_version }}
+            MIDGARD_VERSION=${{ needs.checks.outputs.midgard_version }}
+            MIDGARD_REF=${{ needs.checks.outputs.midgard_sha }}
             GYC_VERSION_NUMBER=preview
             GYC_PACKAGE_VERSION=${{ needs.checks.outputs.gyc_package_version }}
             GYLLIR_RELEASE_TAG=${{ needs.checks.outputs.gyllir_release_tag }}
@@ -214,6 +228,7 @@ jobs:
           YMIR_BOOTSTRAP_MIDGARD_VERSION: ${{ needs.checks.outputs.ymir_bootstrap_midgard_version }}
           GYLLIR_VERSION: ${{ needs.checks.outputs.gyllir_version }}
           MIDGARD_VERSION: ${{ needs.checks.outputs.midgard_version }}
+          MIDGARD_SHA: ${{ needs.checks.outputs.midgard_sha }}
           BOOTSTRAP_TAG: ${{ needs.checks.outputs.bootstrap_tag }}
         run: |
           set -euo pipefail
@@ -231,7 +246,7 @@ jobs:
           BASE="$(cd "$CLONE" && bash "$CHANGELOG" --print-base --to "${BOOTSTRAP_TAG}^")"
 
           {
-            echo "Automated preview release, built from \`${GITHUB_REF_NAME}\` against bootstrap tag ${BOOTSTRAP_TAG} (gcc ${GCC_VERSION}, compiled with gyc ${YMIR_BOOTSTRAP_VERSION} (against midgard ${YMIR_BOOTSTRAP_MIDGARD_VERSION}) and gyllir ${GYLLIR_VERSION}, bundling midgard ${MIDGARD_VERSION}) @ ${GITHUB_SHA}."
+            echo "Automated preview release, built from \`${GITHUB_REF_NAME}\` against bootstrap tag ${BOOTSTRAP_TAG} (gcc ${GCC_VERSION}, compiled with gyc ${YMIR_BOOTSTRAP_VERSION} (against midgard ${YMIR_BOOTSTRAP_MIDGARD_VERSION}) and gyllir ${GYLLIR_VERSION}, bundling midgard ${MIDGARD_VERSION} (yruntime@${MIDGARD_SHA:0:7})) @ ${GITHUB_SHA}."
             echo "This tag is rolling - it always points at the most recent preview build."
             echo
             if [ -n "$BASE" ]; then
