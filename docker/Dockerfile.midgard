@@ -14,12 +14,14 @@
 # To build locally, after building docker/Dockerfile.gyc (see its own header for that command),
 # from the repo root:
 #   . ./YMIR_VERSION
+#   eval "$(bash .github/scripts/midgard-branch.sh --branch="$MIDGARD_BRANCH" --expect-gyc="$GYC_VERSION" --mode=preview)"   # same values as pass 1
 #   GCC_MAJOR_VERSION="${GCC_VERSION%%.*}"
 #   mkdir -p artifacts
 #   cp "out/gyc-${GCC_MAJOR_VERSION}_${GYC_VERSION}_amd64.deb" artifacts/gyc.deb
 #   docker build -f docker/Dockerfile.midgard \
 #     --build-arg GCC_MAJOR_VERSION="$GCC_MAJOR_VERSION" \
-#     --build-arg MIDGARD_RELEASE_TAG="$MIDGARD_VERSION" \
+#     --build-arg MIDGARD_VERSION="$midgard_version" \
+#     --build-arg MIDGARD_REF="$midgard_sha" \
 #     --build-arg GYC_VERSION_NUMBER="$GYC_VERSION" \
 #     --build-arg GYC_PACKAGE_VERSION="$GYC_VERSION" \
 #     --build-arg GYLLIR_RELEASE_TAG="$GYLLIR_VERSION" \
@@ -39,7 +41,13 @@ ARG GCC_MAJOR_VERSION
 # the eventual `<GYC_VERSION>` release so apt upgrades a preview install onto the real release.
 ARG GYC_VERSION_NUMBER
 ARG GYC_PACKAGE_VERSION
-ARG MIDGARD_RELEASE_TAG
+# The midgard to bundle: the head of YMIR_VERSION's MIDGARD_BRANCH on yruntime, pinned to a commit
+# (MIDGARD_REF), and the version its gyllir.toml declares there (MIDGARD_VERSION) - both resolved
+# once per run by .github/scripts/midgard-branch.sh, and the version the same one pass 1 baked
+# into gyc. release.yml also holds a temp/<version> tag on that commit while it builds, so the
+# clone below still finds it if the branch is force-pushed meanwhile.
+ARG MIDGARD_VERSION
+ARG MIDGARD_REF
 # The gyllir release to build midgard with - see YMIR_VERSION's GYLLIR_VERSION. `gyllir build`
 # is what actually builds midgard now (its gyllir.toml replaced the old CMakeLists.txt).
 ARG GYLLIR_RELEASE_TAG
@@ -56,8 +64,8 @@ RUN test -n "$GYC_VERSION_NUMBER" || \
     (echo "GYC_VERSION_NUMBER build-arg is required - see YMIR_VERSION's GYC_VERSION" >&2 && exit 1)
 RUN test -n "$GYC_PACKAGE_VERSION" || \
     (echo "GYC_PACKAGE_VERSION build-arg is required - see YMIR_VERSION's GYC_VERSION" >&2 && exit 1)
-RUN test -n "$MIDGARD_RELEASE_TAG" || \
-    (echo "MIDGARD_RELEASE_TAG build-arg is required - see YMIR_VERSION" >&2 && exit 1)
+RUN test -n "$MIDGARD_VERSION" && test -n "$MIDGARD_REF" || \
+    (echo "MIDGARD_VERSION and MIDGARD_REF build-args are required - see .github/scripts/midgard-branch.sh" >&2 && exit 1)
 RUN test -n "$GYLLIR_RELEASE_TAG" && test -n "$GYLLIR_ASSET" || \
     (echo "GYLLIR_RELEASE_TAG and GYLLIR_ASSET build-args are required - see YMIR_VERSION" >&2 && exit 1)
 
@@ -96,16 +104,21 @@ RUN cp /usr/bin/x86_64-linux-gnu-gyc-${GCC_MAJOR_VERSION} gcc-bin/usr/bin/ \
 RUN git clone https://github.com/GNU-Ymir/yruntime.git
 WORKDIR /gcc/yruntime
 RUN git fetch --all --tags
-RUN git checkout "${MIDGARD_RELEASE_TAG}"
+RUN git checkout --detach "${MIDGARD_REF}"
+
+# The commit must declare the version pass 1 was built for - a mismatch means the two passes were
+# handed values from different resolutions.
+RUN declared="$(sed -nE '/^\[/q; s/^version *= *"([^"]+)".*/\1/p' gyllir.toml)" \
+    && test "$declared" = "$MIDGARD_VERSION" || \
+    (echo "yruntime@${MIDGARD_REF} declares version '${declared}' in gyllir.toml, not ${MIDGARD_VERSION}" >&2 && exit 1)
 
 # The short version naming the packaged libs and the installed include dir is not a free choice
 # here: the gyc from pass 1 has it baked in as LIBYMIDGARD_VERSION - the major.minor of
-# MIDGARD_VERSION in the root YMIR_VERSION, which Dockerfile.gyc pins into bootstrap's copy and
-# Make-lang.in seds out at `make` time (see gycspec.c). MIDGARD_RELEASE_TAG *is* that
-# MIDGARD_VERSION, so derive it from there rather than from anything in the yruntime checkout.
-RUN printf '%s\n' "${MIDGARD_RELEASE_TAG}" | sed -nE 's/^([0-9]+\.[0-9]+).*/\1/p' > /tmp/midgard_short_version
+# MIDGARD_VERSION, which Dockerfile.gyc pins into bootstrap's YMIR_VERSION and Make-lang.in seds
+# out at `make` time (see gycspec.c) - so derive it from that same value.
+RUN printf '%s\n' "${MIDGARD_VERSION}" | sed -nE 's/^([0-9]+\.[0-9]+).*/\1/p' > /tmp/midgard_short_version
 RUN test -s /tmp/midgard_short_version || \
-    (echo "MIDGARD_RELEASE_TAG (${MIDGARD_RELEASE_TAG}) is not a <major>.<minor>... version - cannot derive MIDGARD_SHORT_VERSION" >&2 && exit 1)
+    (echo "MIDGARD_VERSION (${MIDGARD_VERSION}) is not a <major>.<minor>... version - cannot derive MIDGARD_SHORT_VERSION" >&2 && exit 1)
 
 RUN gyllir build
 
@@ -116,7 +129,7 @@ RUN MIDGARD_SHORT_VERSION="$(cat /tmp/midgard_short_version)" \
 	&& mkdir -p /gcc/gcc-bin/usr/lib \
 	&& for name in debug release tests; do \
 		src="libgymidgard_${name}.a"; \
-		test -f "$src" || { echo "gyllir build produced no ${src} - check yruntime@${MIDGARD_RELEASE_TAG}'s gyllir.toml targets" >&2; exit 1; }; \
+		test -f "$src" || { echo "gyllir build produced no ${src} - check yruntime@${MIDGARD_REF}'s gyllir.toml targets" >&2; exit 1; }; \
 		install -m 644 "$src" "/gcc/gcc-bin/usr/lib/libgymidgard-${name}_${MIDGARD_SHORT_VERSION}.a"; \
 	done
 

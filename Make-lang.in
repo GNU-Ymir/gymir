@@ -20,11 +20,12 @@ GYC_INCLUDES = -I$(srcdir)/../include -I$(srcdir)/ -I$(srcdir)/gcc -I../gcc -I$(
 MIDGARD_VERSION := $(shell sed -nE 's/^MIDGARD_VERSION=([0-9]+\.[0-9]+).*/\1/p' $(srcdir)/ymir/bootstrap/YMIR_VERSION)
 MIDGARD_FULL_VERSION := $(shell sed -nE 's/^MIDGARD_VERSION=(.+)/\1/p' $(srcdir)/ymir/bootstrap/YMIR_VERSION)
 
-# The date of that midgard tag cannot be derived from this source tree: yruntime
-# is not part of the build, and `make` has no business going to the network to
-# ask.  Release builds resolve it from the remote once and hand it to make in the
-# environment (see docker/Dockerfile.gyc); anywhere else it stays empty and
-# gycspec.c prints the midgard version without a date.
+# The date of that midgard cannot be derived from this source tree: yruntime is
+# not part of the build, and `make` has no business going to the network to ask.
+# Release builds resolve it from the remote once - the date of the yruntime
+# commit they bundle, see .github/scripts/midgard-branch.sh - and hand it to make
+# in the environment (see docker/Dockerfile.gyc); anywhere else it stays empty
+# and gycspec.c prints the midgard version without a date.
 MIDGARD_VERSION_DATE ?=
 
 # Likewise for the frontend version `gyc --version` reports: it is the version
@@ -94,9 +95,36 @@ YLINKER = /usr/bin/gyc $(NO_PIE_CFLAG) $(ALL_GYMIRFLAGS) -nomidgardlib -lstdc++
 # the *end* of the link line, after ymir/libymirc.a - static archives only
 # resolve backwards - which is where the driver put them and why YLINKER above
 # no longer carries them.
-YMIR_RUNTIME_LIBS = -lgymidgard-debug_1.6 -lgc -lpthread -lm -ldwarf
+#
+# That midgard is YMIR_BOOTSTRAP_MIDGARD_VERSION in this repo's own YMIR_VERSION
+# (not bootstrap's copy, whose MIDGARD_VERSION release builds overwrite with
+# the one being shipped, see docker/Dockerfile.gyc).  Release builds hand it to
+# make in the environment, so the value docker/Dockerfile.gyc installs (from
+# that midgard's yruntime release) is the one linked here.
+YMIR_BOOTSTRAP_MIDGARD_VERSION ?= $(shell sed -nE 's/^YMIR_BOOTSTRAP_MIDGARD_VERSION=(.+)/\1/p' $(srcdir)/ymir/YMIR_VERSION)
+YMIR_BOOTSTRAP_MIDGARD_SHORT_VERSION := $(shell echo '$(YMIR_BOOTSTRAP_MIDGARD_VERSION)' | sed -nE 's/^([0-9]+\.[0-9]+).*/\1/p')
+ifeq ($(YMIR_BOOTSTRAP_MIDGARD_SHORT_VERSION),)
+$(error YMIR_BOOTSTRAP_MIDGARD_VERSION ('$(YMIR_BOOTSTRAP_MIDGARD_VERSION)') is not a <major>.<minor>... version - see ymir/YMIR_VERSION)
+endif
+YMIR_RUNTIME_LIBS = -lgymidgard-debug_$(YMIR_BOOTSTRAP_MIDGARD_SHORT_VERSION) -lgc -lpthread -lm -ldwarf
 
-GYMIRCOMPILE.base = /usr/bin/gyc $(NO_PIE_CFLAGS) -c $(ALL_GYMIRFLAGS) -o $@
+# The same disagreement one stage earlier, on the include side.  /usr/bin/gyc
+# resolves `use std::...` against /usr/include/ymir/<the midgard *it* was built
+# with>, so left alone the binding below compiles against a std that is not the
+# one ymir/libymirc.a was built from - an ABI mismatch again rather than a
+# missing file.  The version component of that path is baked into the bootstrap
+# compiler's own ymirc as global::common::MIDGARD_VERSION, and no flag spells
+# it: -iprefix replaces only the /usr part, and -nostdinc drops the core package
+# altogether (it is what the runtime itself is built with, and it takes the
+# implicit `use ::core` with it, so the binding stops compiling).  Which is why
+# gyllir stages the std it pins under the bootstrap compiler's version number
+# rather than under its own - point -iprefix at that staging tree and the
+# binding and libymirc.a share one std by construction.  It is written by the
+# gyllir run in the ymir/libymirc.a rule below, which the binding already waits
+# on, so there is nothing else to order here.
+MIDGARD_IPREFIX = $(ROOT_DIR)/$(srcdir)/ymir/bootstrap/.deps/std/.iprefix
+
+GYMIRCOMPILE.base = /usr/bin/gyc $(NO_PIE_CFLAGS) -c $(ALL_GYMIRFLAGS) -iprefix $(MIDGARD_IPREFIX) -o $@
 GYMIRCOMPILE = $(GYMIRCOMPILE.base)
 
 # The compiler proper

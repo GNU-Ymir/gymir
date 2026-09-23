@@ -15,11 +15,25 @@ name: Release
 # build-gyc resumes from it instead of redoing it. That works with no cache-to/cache-from because
 # every job here shares one persistent, on-disk BuildKit builder - see .github/actions/setup-buildx.
 # Intermediate .deb artifacts hop between the other jobs as workflow artifacts.
+#
+# The midgard bundled is the head of YMIR_VERSION's MIDGARD_BRANCH on yruntime, not a release: a
+# yruntime release is built with the gyc that bundles it, so it can only come after this one. The
+# checks job marks that commit with the tag temp/<midgard version> once everything else has been
+# checked; the final yruntime job removes it whatever happened, and - once this gyc is published -
+# dispatches yruntime's own release on the branch, which builds midgard with this gyc, tags
+# <midgard version> on that same commit and merges the branch's pull request. Every write to
+# yruntime goes through the YRUNTIME_TOKEN secret (contents + actions write on GNU-Ymir/yruntime):
+# this workflow's own GITHUB_TOKEN reaches no other repository.
 on:
   workflow_dispatch:
 
 permissions:
   contents: write
+
+# Two runs in flight would fight over the same temp/<version> tag on yruntime.
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
   checks:
@@ -30,12 +44,17 @@ jobs:
       gyc_version_number: ${{ steps.version.outputs.gyc_version_number }}
       gyc_package_version: ${{ steps.version.outputs.gyc_package_version }}
       ymir_bootstrap_version: ${{ steps.version.outputs.ymir_bootstrap_version }}
+      ymir_bootstrap_midgard_version: ${{ steps.version.outputs.ymir_bootstrap_midgard_version }}
       gyc_release_tag: ${{ steps.version.outputs.gyc_release_tag }}
       gyc_asset: ${{ steps.version.outputs.gyc_asset }}
       gyllir_version: ${{ steps.version.outputs.gyllir_version }}
       gyllir_release_tag: ${{ steps.version.outputs.gyllir_release_tag }}
       gyllir_asset: ${{ steps.version.outputs.gyllir_asset }}
-      midgard_version: ${{ steps.version.outputs.midgard_version }}
+      midgard_version: ${{ steps.midgard.outputs.midgard_version }}
+      midgard_sha: ${{ steps.midgard.outputs.midgard_sha }}
+      midgard_version_date: ${{ steps.midgard.outputs.midgard_version_date }}
+      midgard_branch: ${{ steps.midgard.outputs.midgard_branch }}
+      midgard_temp_tag: ${{ steps.midgard.outputs.midgard_temp_tag }}
       tag_name: ${{ steps.version.outputs.tag_name }}
       intermediate_asset: ${{ steps.version.outputs.intermediate_asset }}
       out_asset: ${{ steps.version.outputs.out_asset }}
@@ -56,15 +75,28 @@ jobs:
           echo "gyc_version_number=${GYC_VERSION}" >> "$GITHUB_OUTPUT"
           echo "gyc_package_version=${GYC_VERSION}" >> "$GITHUB_OUTPUT"
           echo "ymir_bootstrap_version=${YMIR_BOOTSTRAP_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "ymir_bootstrap_midgard_version=${YMIR_BOOTSTRAP_MIDGARD_VERSION}" >> "$GITHUB_OUTPUT"
           echo "gyc_release_tag=${YMIR_BOOTSTRAP_VERSION}" >> "$GITHUB_OUTPUT"
           echo "gyc_asset=gyc-${GCC_MAJOR_VERSION}_${YMIR_BOOTSTRAP_VERSION}_amd64.deb" >> "$GITHUB_OUTPUT"
           echo "gyllir_version=${GYLLIR_VERSION}" >> "$GITHUB_OUTPUT"
           echo "gyllir_release_tag=${GYLLIR_VERSION}" >> "$GITHUB_OUTPUT"
           echo "gyllir_asset=gyllir_${GYLLIR_VERSION}_amd64.deb" >> "$GITHUB_OUTPUT"
-          echo "midgard_version=${MIDGARD_VERSION}" >> "$GITHUB_OUTPUT"
           echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
           echo "intermediate_asset=gyc-${GCC_MAJOR_VERSION}_${TAG_NAME}_amd64.deb" >> "$GITHUB_OUTPUT"
           echo "out_asset=gyc-${GCC_MAJOR_VERSION}_${TAG_NAME}_amd64.deb" >> "$GITHUB_OUTPUT"
+
+      # The midgard bundled: the head of MIDGARD_BRANCH (see the header, and the script for what
+      # makes that branch releasable - an untagged version, this gyc in its YMIR_VERSION, an open
+      # pull request).
+      - name: Resolve midgard
+        id: midgard
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          . ./YMIR_VERSION
+          bash .github/scripts/midgard-branch.sh --branch="${MIDGARD_BRANCH}" --expect-gyc="${GYC_VERSION}" --mode=release >> "$GITHUB_OUTPUT"
+          echo "midgard_branch=${MIDGARD_BRANCH}" >> "$GITHUB_OUTPUT"
 
       - name: Ensure bootstrap has a matching tag
         env:
@@ -88,6 +120,22 @@ jobs:
             echo "::error::Tag $TAG already exists on origin (with no matching release) - update YMIR_VERSION's GYC_VERSION before releasing again."
             exit 1
           fi
+
+      # Last, so a run that fails its checks leaves nothing on yruntime. Forced: a leftover from a
+      # run whose cleanup could not reach yruntime would otherwise block every later release.
+      - name: Mark the bundled midgard commit with ${{ steps.midgard.outputs.midgard_temp_tag }}
+        env:
+          GH_TOKEN: ${{ secrets.YRUNTIME_TOKEN }}
+          TAG: ${{ steps.midgard.outputs.midgard_temp_tag }}
+          SHA: ${{ steps.midgard.outputs.midgard_sha }}
+        run: |
+          set -euo pipefail
+          if gh api "repos/GNU-Ymir/yruntime/git/ref/tags/${TAG}" >/dev/null 2>&1; then
+            gh api -X PATCH "repos/GNU-Ymir/yruntime/git/refs/tags/${TAG}" -f sha="$SHA" -F force=true >/dev/null
+          else
+            gh api -X POST repos/GNU-Ymir/yruntime/git/refs -f ref="refs/tags/${TAG}" -f sha="$SHA" >/dev/null
+          fi
+          echo "GNU-Ymir/yruntime ${TAG} -> ${SHA}"
 
   clone-gcc:
     name: "Pass 1: clone gcc"
@@ -127,10 +175,12 @@ jobs:
             COMPILER_MAJOR_VERSION=${{ needs.checks.outputs.gcc_major_version }}
             GYC_RELEASE_TAG=${{ needs.checks.outputs.gyc_release_tag }}
             GYC_ASSET=${{ needs.checks.outputs.gyc_asset }}
+            YMIR_BOOTSTRAP_MIDGARD_VERSION=${{ needs.checks.outputs.ymir_bootstrap_midgard_version }}
             GYLLIR_RELEASE_TAG=${{ needs.checks.outputs.gyllir_release_tag }}
             GYLLIR_ASSET=${{ needs.checks.outputs.gyllir_asset }}
             BOOTSTRAP_RELEASE_TAG=${{ needs.checks.outputs.tag_name }}
-            MIDGARD_RELEASE_TAG=${{ needs.checks.outputs.midgard_version }}
+            MIDGARD_VERSION=${{ needs.checks.outputs.midgard_version }}
+            MIDGARD_VERSION_DATE=${{ needs.checks.outputs.midgard_version_date }}
             GYC_VERSION_NUMBER=${{ needs.checks.outputs.gyc_version_number }}
             GYC_PACKAGE_VERSION=${{ needs.checks.outputs.gyc_package_version }}
 
@@ -178,7 +228,8 @@ jobs:
           tags: gyc-midgard-build:latest
           build-args: |
             GCC_MAJOR_VERSION=${{ needs.checks.outputs.gcc_major_version }}
-            MIDGARD_RELEASE_TAG=${{ needs.checks.outputs.midgard_version }}
+            MIDGARD_VERSION=${{ needs.checks.outputs.midgard_version }}
+            MIDGARD_REF=${{ needs.checks.outputs.midgard_sha }}
             GYC_VERSION_NUMBER=${{ needs.checks.outputs.gyc_version_number }}
             GYC_PACKAGE_VERSION=${{ needs.checks.outputs.gyc_package_version }}
             GYLLIR_RELEASE_TAG=${{ needs.checks.outputs.gyllir_release_tag }}
@@ -220,8 +271,10 @@ jobs:
           TAG: ${{ needs.checks.outputs.tag_name }}
           GCC_VERSION: ${{ needs.checks.outputs.gcc_version }}
           YMIR_BOOTSTRAP_VERSION: ${{ needs.checks.outputs.ymir_bootstrap_version }}
+          YMIR_BOOTSTRAP_MIDGARD_VERSION: ${{ needs.checks.outputs.ymir_bootstrap_midgard_version }}
           GYLLIR_VERSION: ${{ needs.checks.outputs.gyllir_version }}
           MIDGARD_VERSION: ${{ needs.checks.outputs.midgard_version }}
+          MIDGARD_SHA: ${{ needs.checks.outputs.midgard_sha }}
         run: |
           set -euo pipefail
 
@@ -238,7 +291,7 @@ jobs:
           BASE="$(cd "$CLONE" && bash "$CHANGELOG" --print-base --to "${TAG}^")"
 
           {
-            echo "gyc ${TAG} (gcc ${GCC_VERSION}), built against bootstrap tag ${TAG}, compiled with gyc ${YMIR_BOOTSTRAP_VERSION} and gyllir ${GYLLIR_VERSION}, bundling midgard ${MIDGARD_VERSION} @ ${GITHUB_SHA}."
+            echo "gyc ${TAG} (gcc ${GCC_VERSION}), built against bootstrap tag ${TAG}, compiled with gyc ${YMIR_BOOTSTRAP_VERSION} (against midgard ${YMIR_BOOTSTRAP_MIDGARD_VERSION}) and gyllir ${GYLLIR_VERSION}, bundling midgard ${MIDGARD_VERSION} (yruntime@${MIDGARD_SHA:0:7}) @ ${GITHUB_SHA}."
             echo
             if [ -n "$BASE" ]; then
               echo "## What's changed in bootstrap since ${BASE}"
@@ -266,3 +319,43 @@ jobs:
             --title "Release $TAG" \
             --notes-file "${RUNNER_TEMP}/release-notes.md" \
             "${OUT_ASSET}"
+
+  # Runs whatever happened after the checks job created the temporary tag, so it never outlives
+  # the run; hands the branch over to yruntime only once this gyc is actually published.
+  yruntime:
+    name: "Hand midgard over to yruntime"
+    needs: [checks, build-gyc, build-midgard, publish]
+    if: ${{ always() && needs.checks.result == 'success' }}
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup-gh
+
+      - name: Remove ${{ needs.checks.outputs.midgard_temp_tag }} from yruntime
+        env:
+          GH_TOKEN: ${{ secrets.YRUNTIME_TOKEN }}
+          TAG: ${{ needs.checks.outputs.midgard_temp_tag }}
+        run: |
+          set -euo pipefail
+          if gh api "repos/GNU-Ymir/yruntime/git/ref/tags/${TAG}" >/dev/null 2>&1; then
+            gh api -X DELETE "repos/GNU-Ymir/yruntime/git/refs/tags/${TAG}"
+          fi
+          echo "GNU-Ymir/yruntime ${TAG}: removed"
+
+      # yruntime's release.yml, run on the branch: builds and tests midgard with the gyc just
+      # published (the branch's YMIR_VERSION names it - checked by the checks job), tags the
+      # version on the commit bundled here, and merges the branch's pull request. `sha` makes it
+      # refuse to run if the branch has moved since, rather than tag a commit this gyc does not
+      # carry.
+      - name: Dispatch yruntime's release of midgard ${{ needs.checks.outputs.midgard_version }}
+        if: ${{ needs.publish.result == 'success' }}
+        env:
+          GH_TOKEN: ${{ secrets.YRUNTIME_TOKEN }}
+          BRANCH: ${{ needs.checks.outputs.midgard_branch }}
+          SHA: ${{ needs.checks.outputs.midgard_sha }}
+          VERSION: ${{ needs.checks.outputs.midgard_version }}
+        run: |
+          set -euo pipefail
+          gh workflow run release.yml --repo GNU-Ymir/yruntime --ref "$BRANCH" -f sha="$SHA"
+          echo "Dispatched GNU-Ymir/yruntime's release of ${VERSION} on ${BRANCH} @ ${SHA:0:7}: https://github.com/GNU-Ymir/yruntime/actions/workflows/release.yml" >> "$GITHUB_STEP_SUMMARY"
