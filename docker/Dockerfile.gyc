@@ -26,6 +26,7 @@
 #     --build-arg COMPILER_MAJOR_VERSION="$GCC_MAJOR_VERSION" \
 #     --build-arg GYC_RELEASE_TAG="$YMIR_BOOTSTRAP_VERSION" \
 #     --build-arg GYC_ASSET="gyc-${GCC_MAJOR_VERSION}_${YMIR_BOOTSTRAP_VERSION}_amd64.deb" \
+#     --build-arg YMIR_BOOTSTRAP_MIDGARD_VERSION="$YMIR_BOOTSTRAP_MIDGARD_VERSION" \
 #     --build-arg GYLLIR_RELEASE_TAG="$GYLLIR_VERSION" \
 #     --build-arg GYLLIR_ASSET="gyllir_${GYLLIR_VERSION}_amd64.deb" \
 #     --build-arg BOOTSTRAP_RELEASE_TAG="$GYC_VERSION" \
@@ -65,9 +66,12 @@ ARG GYC_RELEASE_TAG
 ARG GYC_ASSET
 ARG GYLLIR_RELEASE_TAG
 ARG GYLLIR_ASSET
+ARG YMIR_BOOTSTRAP_MIDGARD_VERSION
 
 RUN test -n "$GYC_RELEASE_TAG" && test -n "$GYC_ASSET" || \
     (echo "GYC_RELEASE_TAG and GYC_ASSET build-args are required - see YMIR_VERSION" >&2 && exit 1)
+RUN test -n "$YMIR_BOOTSTRAP_MIDGARD_VERSION" || \
+    (echo "YMIR_BOOTSTRAP_MIDGARD_VERSION build-arg is required - see YMIR_VERSION" >&2 && exit 1)
 RUN test -n "$GYLLIR_RELEASE_TAG" && test -n "$GYLLIR_ASSET" || \
     (echo "GYLLIR_RELEASE_TAG and GYLLIR_ASSET build-args are required - see YMIR_VERSION" >&2 && exit 1)
 
@@ -86,6 +90,18 @@ RUN apt-get update \
 
 RUN gyc --version
 RUN gyllir -h || true
+
+# ymir1 is linked against the midgard runtime the bootstrap source is compiled against
+# (YMIR_BOOTSTRAP_MIDGARD_VERSION, see Make-lang.in's YMIR_RUNTIME_LIBS) - the std bootstrap's
+# gyllir.lock pins, whose sources gyllir stages under the -iprefix the binding is compiled with.
+# The gyc .deb above only carries the midgard *it* was released with, which lags whenever bootstrap
+# moves to a newer std, so install that runtime from its own yruntime release: the same commit, built
+# by that release with the same gyc. Installed under the name gyc's -l flag looks up.
+RUN short="$(printf '%s\n' "$YMIR_BOOTSTRAP_MIDGARD_VERSION" | sed -nE 's/^([0-9]+\.[0-9]+).*/\1/p')" \
+    && test -n "$short" \
+    && curl -fsSL -o "/usr/lib/libgymidgard-debug_${short}.a" \
+        "https://github.com/GNU-Ymir/yruntime/releases/download/${YMIR_BOOTSTRAP_MIDGARD_VERSION}/libmidgard_debug_${YMIR_BOOTSTRAP_MIDGARD_VERSION}.a" || \
+    (echo "::error::could not install midgard ${YMIR_BOOTSTRAP_MIDGARD_VERSION}'s runtime from its yruntime release (asset libmidgard_debug_${YMIR_BOOTSTRAP_MIDGARD_VERSION}.a) - YMIR_VERSION's YMIR_BOOTSTRAP_MIDGARD_VERSION" >&2 && exit 1)
 
 # ---------------------------------------------------------------------------
 # fetch_gcc_version: check out the target upstream GCC release, merge in this checkout as the
@@ -165,9 +181,13 @@ RUN CC=gcc-${COMPILER_MAJOR_VERSION} CXX=g++-${COMPILER_MAJOR_VERSION} ../gcc-sr
 
 FROM configure AS make
 WORKDIR /gcc/gcc-build
+ARG YMIR_BOOTSTRAP_MIDGARD_VERSION
 # MIDGARD_VERSION_DATE is picked up from the environment by ymir/Make-lang.in - see the file
-# written in the fetch_gcc_version stage above.
-RUN MIDGARD_VERSION_DATE="$(cat /tmp/midgard_date)" make -j$(( $(nproc) - 1 ))
+# written in the fetch_gcc_version stage above. YMIR_BOOTSTRAP_MIDGARD_VERSION too, so ymir1 links
+# the very midgard the toolchain stage installed.
+RUN MIDGARD_VERSION_DATE="$(cat /tmp/midgard_date)" \
+    YMIR_BOOTSTRAP_MIDGARD_VERSION="${YMIR_BOOTSTRAP_MIDGARD_VERSION}" \
+    make -j$(( $(nproc) - 1 ))
 RUN make install DESTDIR=/gcc/gcc-install
 
 # ---------------------------------------------------------------------------

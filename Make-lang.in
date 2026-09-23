@@ -94,7 +94,19 @@ YLINKER = /usr/bin/gyc $(NO_PIE_CFLAG) $(ALL_GYMIRFLAGS) -nomidgardlib -lstdc++
 # the *end* of the link line, after ymir/libymirc.a - static archives only
 # resolve backwards - which is where the driver put them and why YLINKER above
 # no longer carries them.
-YMIR_RUNTIME_LIBS = -lgymidgard-debug_1.10 -lgc -lpthread -lm -ldwarf
+#
+# That midgard is YMIR_BOOTSTRAP_MIDGARD_VERSION in this repo's own YMIR_VERSION
+# (not bootstrap's copy, whose MIDGARD_VERSION release builds overwrite with
+# the one being shipped, see docker/Dockerfile.gyc).  Release builds hand it to
+# make in the environment, so the value docker/Dockerfile.gyc installs (from
+# that midgard's yruntime release) is the one linked here.
+YMIR_BOOTSTRAP_MIDGARD_VERSION ?= $(shell sed -nE 's/^YMIR_BOOTSTRAP_MIDGARD_VERSION=(.+)/\1/p' $(srcdir)/ymir/YMIR_VERSION)
+YMIR_BOOTSTRAP_MIDGARD_SHORT_VERSION := $(shell echo '$(YMIR_BOOTSTRAP_MIDGARD_VERSION)' | sed -nE 's/^([0-9]+\.[0-9]+).*/\1/p')
+ifeq ($(YMIR_BOOTSTRAP_MIDGARD_SHORT_VERSION),)
+$(error YMIR_BOOTSTRAP_MIDGARD_VERSION ('$(YMIR_BOOTSTRAP_MIDGARD_VERSION)') is not a <major>.<minor>... version - see ymir/YMIR_VERSION)
+endif
+YMIR_RUNTIME_LIBS = -lgymidgard-debug_$(YMIR_BOOTSTRAP_MIDGARD_SHORT_VERSION) -lgc -lpthread -lm -ldwarf
+
 
 # The same disagreement one stage earlier, on the include side.  /usr/bin/gyc
 # resolves `use std::...` against /usr/include/ymir/<the midgard *it* was built

@@ -51,6 +51,7 @@ jobs:
       gcc_version: ${{ steps.version.outputs.gcc_version }}
       gcc_major_version: ${{ steps.version.outputs.gcc_major_version }}
       ymir_bootstrap_version: ${{ steps.version.outputs.ymir_bootstrap_version }}
+      ymir_bootstrap_midgard_version: ${{ steps.version.outputs.ymir_bootstrap_midgard_version }}
       gyc_release_tag: ${{ steps.version.outputs.gyc_release_tag }}
       gyc_asset: ${{ steps.version.outputs.gyc_asset }}
       gyllir_version: ${{ steps.version.outputs.gyllir_version }}
@@ -74,6 +75,7 @@ jobs:
           echo "gcc_version=${GCC_VERSION}" >> "$GITHUB_OUTPUT"
           echo "gcc_major_version=${GCC_MAJOR_VERSION}" >> "$GITHUB_OUTPUT"
           echo "ymir_bootstrap_version=${YMIR_BOOTSTRAP_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "ymir_bootstrap_midgard_version=${YMIR_BOOTSTRAP_MIDGARD_VERSION}" >> "$GITHUB_OUTPUT"
           echo "gyc_release_tag=${YMIR_BOOTSTRAP_VERSION}" >> "$GITHUB_OUTPUT"
           echo "gyc_asset=gyc-${GCC_MAJOR_VERSION}_${YMIR_BOOTSTRAP_VERSION}_amd64.deb" >> "$GITHUB_OUTPUT"
           echo "gyllir_version=${GYLLIR_VERSION}" >> "$GITHUB_OUTPUT"
@@ -160,6 +162,7 @@ jobs:
             COMPILER_MAJOR_VERSION=${{ needs.checks.outputs.gcc_major_version }}
             GYC_RELEASE_TAG=${{ needs.checks.outputs.gyc_release_tag }}
             GYC_ASSET=${{ needs.checks.outputs.gyc_asset }}
+            YMIR_BOOTSTRAP_MIDGARD_VERSION=${{ needs.checks.outputs.ymir_bootstrap_midgard_version }}
             GYLLIR_RELEASE_TAG=${{ needs.checks.outputs.gyllir_release_tag }}
             GYLLIR_ASSET=${{ needs.checks.outputs.gyllir_asset }}
             BOOTSTRAP_RELEASE_TAG=${{ needs.checks.outputs.bootstrap_sha }}
@@ -253,6 +256,7 @@ jobs:
         env:
           GCC_VERSION: ${{ needs.checks.outputs.gcc_version }}
           YMIR_BOOTSTRAP_VERSION: ${{ needs.checks.outputs.ymir_bootstrap_version }}
+          YMIR_BOOTSTRAP_MIDGARD_VERSION: ${{ needs.checks.outputs.ymir_bootstrap_midgard_version }}
           GYLLIR_VERSION: ${{ needs.checks.outputs.gyllir_version }}
           MIDGARD_VERSION: ${{ needs.checks.outputs.midgard_version }}
           BOOTSTRAP_SHA: ${{ needs.checks.outputs.bootstrap_sha }}
@@ -277,7 +281,7 @@ jobs:
           SUBJECT="$(cd "$CLONE" && git log -1 --pretty=format:%s "$BOOTSTRAP_SHA")"
 
           {
-            echo "Automated preview release, built from \`${GITHUB_REF_NAME}\` @ ${GITHUB_SHA} against **bootstrap head** ${BOOTSTRAP_SHORT_SHA} (\`${SUBJECT}\`) - compiled with gyc ${YMIR_BOOTSTRAP_VERSION} and gyllir ${GYLLIR_VERSION} on gcc ${GCC_VERSION}, bundling midgard ${MIDGARD_VERSION}."
+            echo "Automated preview release, built from \`${GITHUB_REF_NAME}\` @ ${GITHUB_SHA} against **bootstrap head** ${BOOTSTRAP_SHORT_SHA} (\`${SUBJECT}\`) - compiled with gyc ${YMIR_BOOTSTRAP_VERSION} (against midgard ${YMIR_BOOTSTRAP_MIDGARD_VERSION}) and gyllir ${GYLLIR_VERSION} on gcc ${GCC_VERSION}, bundling midgard ${MIDGARD_VERSION}."
             echo
             echo "Unlike the \`preview\` release, the self-hosted compiler source here is **not** a tagged bootstrap release - it is whatever bootstrap's default branch pointed at when this ran. Both this tag and its asset are rolling: they always describe the most recent head build. Installed package version: \`${GYC_PACKAGE_VERSION}\`."
             echo
