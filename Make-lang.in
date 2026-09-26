@@ -145,7 +145,7 @@ ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)
 	$(YMIR_RUNTIME_LIBS)
 
 ymir/libbinding.a: $(binding_objs) ymir/libymirc.a
-	  $(GYMIRCOMPILE) -I$(ROOT_DIR)/$(srcdir)/ymir/bootstrap/src/ymirc.yr $(srcdir)/ymir/binding/__lib__.yr -c -o $(srcdir)/ymir/binding/libbinding.o ; \
+	  $(GYMIRCOMPILE) -I$(ROOT_DIR)/$(srcdir)/ymir/bootstrap/src/ymirc.yr $(srcdir)/ymir/binding/__lib__.yr -c -o $(srcdir)/ymir/binding/libbinding.o && \
       cp $(srcdir)/ymir/binding/libbinding.o $@
 
 ymir/tree_%.o: ymir/binding/binding/tree/%.cc ymir/libymirc.a
@@ -153,7 +153,7 @@ ymir/tree_%.o: ymir/binding/binding/tree/%.cc ymir/libymirc.a
 	  $(YPOSTCOMPILE)
 
 ymir/libymirc.a: $(bootstrap_objs)
-	  cd $(srcdir)/ymir/bootstrap/ ; gyllir build --release || (echo "gyllir failed $$?"; sh -c 'exit 1') ; cd - ; \
+	  (cd $(srcdir)/ymir/bootstrap/ && gyllir build --release) || { echo "gyllir failed $$?"; exit 1; } ; \
 	  cp $(srcdir)/ymir/bootstrap/libymirc.a $@
 
 ymir.all.cross: 

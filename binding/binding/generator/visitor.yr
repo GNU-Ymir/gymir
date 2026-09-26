@@ -159,6 +159,7 @@ pub record GenerateVisitor {
 
     /**
      * Generate a function declaration from a frame generator
+     * @info: the declaration is the one the calls to the frame use, so GCC can inline them
      * */
     fn generateFunctionDecl(mut self, frame: &YILFrame)-> tree_t {
         let params = frame.params;
@@ -167,7 +168,14 @@ pub record GenerateVisitor {
         let ret = self:.generateType(frame.retType);
         let fnType = types::functionTypeTree(ret, args);
         let fnDecl = decl::functionDeclTree(EOF_WORD, frame.name, fnType);
-        decl::setAsmName(fnDecl, frame.name);
+
+        // A frame already generated under that name keeps its body
+        if (c_binding_get_decl_initial(fnDecl) != null) {
+            return decl::unregisteredFunctionDeclTree(EOF_WORD, frame.name, fnType);
+        }
+
+        // A call generated before the frame declared it with the type of that call
+        c_binding_set_type(fnDecl, fnType);
 
         return fnDecl;
     }
