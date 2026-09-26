@@ -84,7 +84,7 @@ pub fn funcPtrExprTree(loc: &Word, name: [c8], type: tree_t, params: [tree_t])->
     let location = wordToLocation(loc);
 
     let fnType = c_binding_build_function_type(type, cast!u64(params.len), params.ptr);
-    let fnDecl = c_binding_build_function_decl(location, name.toStringZ(), fnType);
+    let fnDecl = decl::functionDeclTree(loc, name, fnType);
 
     return c_binding_build_address(location, c_binding_build_pointer_type(fnType), fnDecl);
 }

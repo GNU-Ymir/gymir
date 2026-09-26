@@ -708,11 +708,13 @@ extern "C" tree c_binding_build_param_decl (location_t loc, const char * name, t
     return build_decl (loc, PARM_DECL, get_identifier (name), type);
 }
 
+/**
+ * Build the declaration of an external function, DECL_EXTERNAL and TREE_PUBLIC. The frame defining
+ * the function, if the translation unit has one, sets its flags when it is generated.
+ */
 extern "C" tree c_binding_build_function_decl (location_t loc, const char * name, tree type) {
     auto fnDecl = build_fn_decl (name, type);
     TREE_NOTHROW (fnDecl) = 0;
-    TREE_PUBLIC (fnDecl) = 0;
-    TREE_STATIC (fnDecl) = 1;
 
     return fnDecl;
 }

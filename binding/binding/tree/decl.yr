@@ -6,6 +6,13 @@ use std::conv;
 
 lazy dmut __LAST_LABEL_ID__ = copy [0us];
 
+/*
+ * The function declarations of the translation unit, by assembler name. The calls to a function
+ * and the frame defining it must share one FUNCTION_DECL, otherwise GCC sees every call as one to
+ * an external function without a body, and can neither inline nor clone it.
+ */
+lazy mut __FUNCTION_DECLS__: [[c8] => mut tree_t] = copy [];
+
 extern (C) fn ymir_get_global_context_bind()-> tree_t;
 
 /**
@@ -55,13 +62,37 @@ pub fn labelDeclTree(loc: &Word, context: tree_t, name: [c8])-> tree_t {
 }
 
 /**
- * @returns: a function decl tree
+ * @returns: the function decl tree of the function `name` in the translation unit. The first
+ *           request creates it as an external function of type `type`, the next ones get that
+ *           same declaration back, whatever their type.
  * @params:
  *    - loc: the location of the declaration
- *    - name: the name of the function
+ *    - name: the mangled name of the function
+ *    - type: the type of the function
  */
 pub fn functionDeclTree(loc: &Word, name: [c8], type: tree_t)-> tree_t {
-    return c_binding_build_function_decl(wordToLocation(loc), name.toStringZ(), type);
+    if let Ok(fnDecl) = __FUNCTION_DECLS__[name] {
+        return fnDecl;
+    }
+
+    let fnDecl = unregisteredFunctionDeclTree(loc, name, type);
+    __FUNCTION_DECLS__[name] = fnDecl;
+
+    return fnDecl;
+}
+
+/**
+ * @returns: a new function decl tree, that calls by name will not use
+ * @params:
+ *    - loc: the location of the declaration
+ *    - name: the mangled name of the function
+ *    - type: the type of the function
+ */
+pub fn unregisteredFunctionDeclTree(loc: &Word, name: [c8], type: tree_t)-> tree_t {
+    let fnDecl = c_binding_build_function_decl(wordToLocation(loc), name.toStringZ(), type);
+    setAsmName(fnDecl, name);
+
+    return fnDecl;
 }
 
 /**
