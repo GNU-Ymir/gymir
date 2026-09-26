@@ -122,6 +122,9 @@ pub record GenerateVisitor {
         let resDecl = decl::buildResultDecl(frame.loc, self:.generateType(frame.retType));
         decl::setDeclArguments(fnDecl, args);
 
+        // Without its context GCC takes the result for a non-local, and a function inlined or
+        // cloned keeps writing the result of the original instead of its own
+        c_binding_set_decl_context(resDecl, fnDecl);
         c_binding_set_result_decl(fnDecl, resDecl);
 
         let bodyLoc = frame.body.loc;
