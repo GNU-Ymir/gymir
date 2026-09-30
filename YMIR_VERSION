@@ -39,7 +39,7 @@
 #   the midgard the gyc being built *ships*, which only exists once this release does.
 GYC_VERSION=1.9.0
 YMIR_BOOTSTRAP_VERSION=1.8.0
-YMIR_BOOTSTRAP_MIDGARD_VERSION=1.13.1
+YMIR_BOOTSTRAP_MIDGARD_VERSION=1.12.0
 GCC_VERSION=15.3.1
 GYLLIR_VERSION=1.8.0
 MIDGARD_BRANCH=MID-98-compile-from-1.9
