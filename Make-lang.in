@@ -122,9 +122,18 @@ YMIR_RUNTIME_LIBS = -lgymidgard-debug_$(YMIR_BOOTSTRAP_MIDGARD_SHORT_VERSION) -l
 # binding and libymirc.a share one std by construction.  It is written by the
 # gyllir run in the ymir/libymirc.a rule below, which the binding already waits
 # on, so there is nothing else to order here.
+#
+# gyllir only builds that tree when the pinned std differs from the one the
+# bootstrap compiler ships.  When the two match, gyllir builds libymirc.a against
+# the compiler's own std and creates no tree.  A missing -iprefix directory is not
+# ignored either: gyc falls back to /usr/include/ymir/<version>, where the gyc
+# .deb puts nothing (its std lives under /usr/libexec/gcc/...).  So -iprefix is
+# passed only when the tree exists.  Otherwise gyc keeps its own std, the same one
+# libymirc.a used.  The check runs in the shell when the recipe runs, after
+# gyllir has run, not when make reads this file.
 MIDGARD_IPREFIX = $(ROOT_DIR)/$(srcdir)/ymir/bootstrap/.deps/std/.iprefix
 
-GYMIRCOMPILE.base = /usr/bin/gyc $(NO_PIE_CFLAGS) -c $(ALL_GYMIRFLAGS) -iprefix $(MIDGARD_IPREFIX) -o $@
+GYMIRCOMPILE.base = /usr/bin/gyc $(NO_PIE_CFLAGS) -c $(ALL_GYMIRFLAGS) $$(test -d $(MIDGARD_IPREFIX) && echo -iprefix $(MIDGARD_IPREFIX)) -o $@
 GYMIRCOMPILE = $(GYMIRCOMPILE.base)
 
 # The compiler proper
