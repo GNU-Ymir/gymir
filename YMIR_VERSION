@@ -37,9 +37,9 @@
 #   (-lgymidgard-debug_<major.minor>, see Make-lang.in's YMIR_RUNTIME_LIBS), so it must be
 #   installed on the build machine next to YMIR_BOOTSTRAP_VERSION's gyc. Not to be confused with
 #   the midgard the gyc being built *ships*, which only exists once this release does.
-GYC_VERSION=1.9.1
-YMIR_BOOTSTRAP_VERSION=1.8.0
-YMIR_BOOTSTRAP_MIDGARD_VERSION=1.12.0
+GYC_VERSION=1.10.0
+YMIR_BOOTSTRAP_VERSION=1.9.1
+YMIR_BOOTSTRAP_MIDGARD_VERSION=1.14.0
 GCC_VERSION=15.3.1
 GYLLIR_VERSION=1.8.0
-MIDGARD_BRANCH=MID-98-compile-from-1.9
+MIDGARD_BRANCH=MID-102-compile-from-1.10
