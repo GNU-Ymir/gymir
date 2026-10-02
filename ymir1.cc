@@ -201,8 +201,6 @@ void ymir_init_builtins (void)
 static bool
 ymir_langhook_init (void)
 {
-
-    ymir_binding_init ();
     build_common_tree_nodes (false);
 
     /* I don't know why this has to be done explicitly.  */
@@ -239,6 +237,9 @@ ymir_post_options (const char ** fn ATTRIBUTE_UNUSED)
 static void
 ymir_init_options (unsigned int argc ATTRIBUTE_UNUSED, cl_decoded_option * decoded_options ATTRIBUTE_UNUSED)
 {
+    /* The options are handled before LANG_HOOKS_INIT, and the state they fill must
+       already be a GC root.  */
+    ymir_binding_init ();
     ymir_binding_set_executable_name (decoded_options [0].arg);
     for (unsigned int i = 0 ; i < argc ; i++) {
         const char * arg = decoded_options [i].arg;
