@@ -294,6 +294,10 @@ ymir_init_options_struct (gcc_options *opts) {
 
     /* D says that signed overflow is precisely defined.  */
     opts->x_flag_wrapv = 1;
+
+    /* The GC scans the heap conservatively: a stale pointer left in the padding
+       of an aggregate copied from the stack would keep its target alive.  */
+    opts->x_flag_zero_init_padding_bits = ZERO_INIT_PADDING_BITS_ALL;
 }
 
 static unsigned int
