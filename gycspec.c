@@ -54,10 +54,6 @@
 #define LIBYMIDGARD_RELEASE "gymidgard-release_" LIBYMIDGARD_VERSION
 #endif
 
-#ifndef LIBGC
-#define LIBGC "gc"
-#endif
-
 #ifndef LIBM
 #define LIBM "m"
 #endif
@@ -118,7 +114,6 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 	int added_libraries = *in_added_libraries;
 
 	
-	bool need_gc = *in_decoded_options_count != 1;
 	bool need_pthread = *in_decoded_options_count != 1;
 	bool need_libs = true, need_unittest = false;
 	
@@ -139,7 +134,6 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 	for (i = 0 ; i < argc ; i++) {
 		const char * arg = decoded_options [i].arg;
 		if (decoded_options [i].opt_index == OPT_l) {
-			if (arg != NULL && (strcmp (arg, LIBGC) == 0)) need_gc = false;
 			if (arg != NULL && (strcmp (arg, LIBPTHREAD) == 0)) need_pthread = false;
 #ifdef __linux__
 			if (arg != NULL && (strcmp (arg, LIBM) == 0)) need_m = false;
@@ -152,7 +146,6 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 		}
 		
 		if (decoded_options [i].opt_index == OPT_fyil) {
-			need_gc = false;
 			need_libs = false;
 			need_pthread = false;
 			need_unittest = false;
@@ -185,7 +178,6 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 	}
 
 	if (nomidgardlib) {
-		need_gc = false;
 		need_libs = false;
 		need_pthread = false;
 		need_unittest = false;
@@ -205,9 +197,9 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 
 	if (yr_file_found) {
 #ifdef __linux__		
-		num_args = argc + (need_gc + need_pthread + need_libs + need_m + need_dwarf + need_unittest + for_yil);
+		num_args = argc + (need_pthread + need_libs + need_m + need_dwarf + need_unittest + for_yil);
 #else
-		num_args = argc + (need_gc + need_pthread + need_libs + need_unittest + for_yil);
+		num_args = argc + (need_pthread + need_libs + need_unittest + for_yil);
 #endif
 		new_decoded_options = XNEWVEC (cl_decoded_option, num_args);
 
@@ -235,12 +227,6 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 
 		if (need_unittest) {
 			generate_option (OPT_l, LIBUNITTEST, 1, CL_DRIVER, &new_decoded_options [i]);
-			added_libraries ++;
-			i++;
-		}
-
-		if (need_gc) {
-			generate_option (OPT_l, LIBGC, 1, CL_DRIVER, &new_decoded_options [i]);
 			added_libraries ++;
 			i++;
 		}
