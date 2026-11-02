@@ -403,7 +403,7 @@ pub record GenerateVisitor {
     }
 
     fn listDependencies(self, lst: [usize])-> [usize] {
-        let dmut res: [usize] = [];
+        let mut res: [usize] = [];
         for l in lst {
             if l in self._toFinalize { res ~= [l]; }
         }
