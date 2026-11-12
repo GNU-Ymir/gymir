@@ -106,7 +106,7 @@ YMIR_BOOTSTRAP_MIDGARD_SHORT_VERSION := $(shell echo '$(YMIR_BOOTSTRAP_MIDGARD_V
 ifeq ($(YMIR_BOOTSTRAP_MIDGARD_SHORT_VERSION),)
 $(error YMIR_BOOTSTRAP_MIDGARD_VERSION ('$(YMIR_BOOTSTRAP_MIDGARD_VERSION)') is not a <major>.<minor>... version - see ymir/YMIR_VERSION)
 endif
-YMIR_RUNTIME_LIBS = -lgymidgard-debug_$(YMIR_BOOTSTRAP_MIDGARD_SHORT_VERSION) -lgc -lpthread -lm -ldwarf
+YMIR_RUNTIME_LIBS = -lgymidgard-debug_$(YMIR_BOOTSTRAP_MIDGARD_SHORT_VERSION) -lpthread -lm -ldwarf
 
 # The same disagreement one stage earlier, on the include side.  /usr/bin/gyc
 # resolves `use std::...` against /usr/include/ymir/<the midgard *it* was built

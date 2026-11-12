@@ -77,7 +77,7 @@ WORKDIR /gcc
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential gcc-${GCC_MAJOR_VERSION} g++-${GCC_MAJOR_VERSION} \
         flex autoconf automake libtool \
-        patchelf libdwarf-dev git libgc-dev ca-certificates curl \
+        patchelf libdwarf-dev git ca-certificates curl \
     && rm -rf /var/lib/apt/lists/*
 
 # The midgard-less gyc .deb from Dockerfile.gyc (pass 1) - installed both to get a working `gyc`
