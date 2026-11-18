@@ -111,7 +111,8 @@ pub fn arrayAccessExprTree(loc: &Word, array: tree_t, index: tree_t)-> tree_t {
  *     - left: the left operand
  *     - right: the right operand
  * @returns: the binary expression tree
- * @info: perform conversion of type to make sure the operation is valid
+ * @info: perform conversion of type to make sure the operation is valid, but
+ *        an offset added to or subtracted from a pointer stays an integer
  */
 pub fn binaryExprTree(loc: &Word, op: BinaryOperators, type: tree_t, left: tree_t, right: tree_t)-> tree_t {
     let lType = c_binding_get_type(left);
@@ -119,7 +120,12 @@ pub fn binaryExprTree(loc: &Word, op: BinaryOperators, type: tree_t, left: tree_
     let pointer = c_binding_is_pointer(lType);
     let fl = c_binding_is_float(lType);
 
-    if (c_binding_get_type_size(lType) >= c_binding_get_type_size(rType)) {
+    let isOffset = pointer && !c_binding_is_pointer(rType)
+        && (op == BinaryOperators::PLUS || op == BinaryOperators::MINUS);
+
+    if (isOffset) {
+        return c_binding_build_binary(wordToLocation(loc), op.toStringZ(), type, left, right, pointer, fl);
+    } else if (c_binding_get_type_size(lType) >= c_binding_get_type_size(rType)) {
         return c_binding_build_binary(wordToLocation(loc),
                                        op.toStringZ(),
                                        type, left, c_binding_convert(lType, right), pointer, fl);
