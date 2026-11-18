@@ -802,7 +802,10 @@ extern "C" tree c_binding_build_binary (location_t loc, const char * op, tree ty
     else _yrt_exc_panic (__FILE__, __FUNCTION__, __LINE__);
 
 
-    if (code == POINTER_PLUS_EXPR && !ptrofftype_p (right)) {
+    if (code == POINTER_DIFF_EXPR && !POINTER_TYPE_P (TREE_TYPE (right))) {
+        tree offset = fold_build1_loc (loc, NEGATE_EXPR, sizetype, convert_to_ptrofftype (right));
+        return build2_loc (loc, POINTER_PLUS_EXPR, type, left, offset);
+    } else if (code == POINTER_PLUS_EXPR && !ptrofftype_p (right)) {
         return build2_loc (loc, code, type, left, convert_to_ptrofftype (right));
     } else {
         return build2_loc (loc, code, type, left, right);
