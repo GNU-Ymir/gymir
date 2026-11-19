@@ -215,18 +215,20 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 			i ++;
 		}
 		
+		// the test runner before midgard: it calls the runtime and the std, and the linker only takes from a
+		// static archive what the inputs before it still need
+		if (need_unittest) {
+			generate_option (OPT_l, LIBUNITTEST, 1, CL_DRIVER, &new_decoded_options [i]);
+			added_libraries ++;
+			i++;
+		}
+
 		if (need_libs) {
 			if (in_debug) {
 				generate_option (OPT_l, LIBYMIDGARD_DEBUG, 1, CL_DRIVER, &new_decoded_options [i]);
 			} else {
 				generate_option (OPT_l, LIBYMIDGARD_RELEASE, 1, CL_DRIVER, &new_decoded_options [i]);
 			}
-			added_libraries ++;
-			i++;
-		}
-
-		if (need_unittest) {
-			generate_option (OPT_l, LIBUNITTEST, 1, CL_DRIVER, &new_decoded_options [i]);
 			added_libraries ++;
 			i++;
 		}
