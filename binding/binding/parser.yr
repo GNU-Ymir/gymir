@@ -22,9 +22,9 @@ extern (C) fn ymir_binding_init() {
     // hold the @thread globals of ymirc, is made known to the collector here.
     _yrt_nh_register_thread();
 
-    cte if __version!DEBUG {
-        _yrt_force_debug(1);
-    }
+#if DEBUG
+    _yrt_force_debug(1);
+#end
 }
 
 
@@ -36,11 +36,11 @@ extern (C) fn ymir_binding_parse_ymir_file(filename: [c8]) {
     } catch {
         err: &ErrorMsg => {
             println(format("%", err));
-            cte if __version!DEBUG {
-                for j in err.getRecursiveTrace() {
-                    println(j);
-                }
+#if DEBUG
+            for j in err.getRecursiveTrace() {
+                println(j);
             }
+#end
 
             c_binding_fatal_error();
             return;
@@ -64,11 +64,11 @@ extern (C) fn ymir_binding_parse_yil_file(filename: Path, ref mut importer: YILI
 } catch {
     err: &ErrorMsg => {
         println(format("%", err));
-        cte if __version!DEBUG {
-            for j in err.getRecursiveTrace() {
-                println(j);
-            }
+#if DEBUG
+        for j in err.getRecursiveTrace() {
+            println(j);
         }
+#end
 
         c_binding_fatal_error();
         return;
