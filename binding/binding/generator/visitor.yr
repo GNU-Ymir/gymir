@@ -45,6 +45,10 @@ pub record GenerateVisitor {
     // The list of validated tuples
     let mut _generatedTypes: [usize => mut tree_t] = copy [];
 
+    // The constants of the translation unit that are local to it, which a reference has to bind
+    // to without making them public(see 'generateVarValue')
+    let mut _localConstants: [[c8] => mut ()] = copy [];
+
     prv { // Tuple validation
 
         // The list of finalized tuple types
@@ -71,6 +75,25 @@ pub record GenerateVisitor {
      */
     pub self () {}
 
+
+    /**
+     * Generate the GCC trees of every node of a translation unit
+     * @params:
+     *    - nodes: the nodes to transform
+     * @info: the local constants are known before anything is generated, a reference to one of
+     *    them may well come first
+     */
+    pub fn generateAll(mut self, nodes: [&YILNode]) {
+        for n in nodes {
+            if let c: &YILConstant = n && c.isLocal {
+                self._localConstants[c.name] = ();
+            }
+        }
+
+        for n in nodes {
+            self:.generate(n);
+        }
+    }
 
     /**
      * Generate the GCC trees from gen
@@ -657,8 +680,13 @@ pub record GenerateVisitor {
         // Else it is a global ref
         let type = self:.generateType(value.type);
 
+        // public unless it names a constant local to the unit: a declaration that is not public
+        // binds locally for GCC, which then addresses it PC relative even under -fPIC, and a shared
+        // object cannot be linked with such a reference to a symbol it does not define(a vtable of
+        // its host), nor to one of its own that stays preemptible
         let var = decl::varDeclTree(value.loc, value.name, type);
         c_binding_set_external(var, true);
+        c_binding_set_public(var, value.name !in self._localConstants);
         if (value.isThreadLocal) {
             c_binding_set_thread_local(var);
         }
