@@ -50,9 +50,7 @@ extern (C) fn ymir_binding_parse_ymir_file(filename: [c8]) {
     // Don't generate symbols if we are generating YIL object files
     if !global::state::isExportYIL() {
         let mut generator = GenerateVisitor();
-        for n in nodes {
-            generator:.generate(n);
-        }
+        generator:.generateAll(nodes);
     }
 }
 
@@ -90,9 +88,7 @@ extern (C) fn ymir_binding_parse_file(nb_files: u32, filenames: *(*c8)) {
 
     if !importer.isEmpty() {
         let mut generator = GenerateVisitor();
-        for n in importer.getNodes() {
-            generator:.generate(n);
-        }
+        generator:.generateAll(importer.getNodes());
     }
 }
 
